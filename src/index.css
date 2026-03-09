@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", "Noto Sans Arabic", sans-serif;
+
+  --color-primary: #3273dc;
+  --color-secondary: #92d02a;
+  --color-background-light: #f8fafc;
+  --color-background-dark: #0f172a;
+
+  --radius-default: 12px;
+}
+
+@layer base {
+  .arabic-text {
+    font-family: 'Noto Sans Arabic', sans-serif;
+    direction: rtl;
+  }
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, rgba(50, 115, 220, 0.1) 0%, rgba(146, 208, 42, 0.1) 100%);
+}
