@@ -1,5 +1,6 @@
 import React from "react";
 import { BookOpen, Code, BarChart3, Brain } from "lucide-react";
+import { t } from "@/i18n";
 
 interface CoursesMenuProps {
   open: boolean;
@@ -19,7 +20,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
         <div>
 
           <h4 className="font-semibold text-slate-900 mb-4">
-            K-12 Curriculum
+            {t("courses.k12")}
           </h4>
 
           <ul className="space-y-3 text-sm text-slate-600">
@@ -28,28 +29,28 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> KG Foundation
+              <BookOpen size={18}/> {t("courses.kg")}
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> Grade 1-5
+              <BookOpen size={18}/> {t("courses.grade1to5")}
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> Grade 6-8
+              <BookOpen size={18}/> {t("courses.grade6to8")}
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> Grade 9-12
+              <BookOpen size={18}/> {t("courses.grade9to12")}
             </li>
 
           </ul>
@@ -60,7 +61,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
         <div>
 
           <h4 className="font-semibold text-slate-900 mb-4">
-            Professional Skills
+            {t("courses.professional")}
           </h4>
 
           <ul className="space-y-3 text-sm text-slate-600">
@@ -69,28 +70,28 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BarChart3 size={18}/> Digital Marketing
+              <BarChart3 size={18}/> {t("courses.digitalMarketing")}
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BarChart3 size={18}/> Trading & Finance
+              <BarChart3 size={18}/> {t("courses.trading")}
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <Code size={18}/> Web Development
+              <Code size={18}/> {t("courses.webDevelopment")}
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <Brain size={18}/> AI & Automation
+              <Brain size={18}/> {t("courses.ai")}
             </li>
 
           </ul>

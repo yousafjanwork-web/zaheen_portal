@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { t } from "@/i18n";
 
 interface LearningMenuProps {
   open: boolean;
@@ -21,7 +22,7 @@ const LearningMenu: React.FC<LearningMenuProps> = ({ open, onClose }) => {
             onClick={onClose}
             className="block px-3 py-2 rounded-md hover:bg-slate-100"
           >
-            Practice Corner
+            {t("learning.practice")}
           </Link>
         </li>
 
@@ -33,7 +34,7 @@ const LearningMenu: React.FC<LearningMenuProps> = ({ open, onClose }) => {
             onClick={onClose}
             className="block px-3 py-2 rounded-md hover:bg-slate-100"
           >
-            Study Material
+            {t("learning.studyMaterial")}
           </a>
         </li>
 
@@ -43,7 +44,7 @@ const LearningMenu: React.FC<LearningMenuProps> = ({ open, onClose }) => {
             onClick={onClose}
             className="block px-3 py-2 rounded-md hover:bg-slate-100"
           >
-            Board Results
+            {t("learning.boardResults")}
           </Link>
         </li>
 

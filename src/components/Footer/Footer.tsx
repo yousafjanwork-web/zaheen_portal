@@ -1,10 +1,10 @@
 import React from "react";
-import { Globe, Video, MessageSquare, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
 import logo from "@/assets/images/ZaheenLogo.png";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Youtube } from "lucide-react";
+import { t } from "@/i18n";
 
 const Footer: React.FC = () => {
 
@@ -22,18 +22,17 @@ const Footer: React.FC = () => {
           params: {
             msisdn,
             serviceId: 205,
-            unsubMethod:'CRM'
+            unsubMethod: "CRM"
           }
         }
       );
 
       logout();
-
-      alert("Unsubscribed successfully");
+      alert(t("footer.unsubscribeSuccess"));
 
     } catch {
 
-      alert("Unsubscribe failed");
+      alert(t("footer.unsubscribeFail"));
 
     }
 
@@ -56,39 +55,39 @@ const Footer: React.FC = () => {
             />
 
             <p className="text-sm mb-6">
-              Empowering learners with world-class education and professional training.
+              {t("footer.description")}
             </p>
 
             <div className="flex space-x-4 text-slate-400">
 
-  <a
-    href="https://www.facebook.com/zaheenpk87"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:text-white transition"
-  >
-    <Facebook size={20} />
-  </a>
+              <a
+                href="https://www.facebook.com/zaheenpk87"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <Facebook size={20} />
+              </a>
 
-  <a
-    href="https://www.instagram.com/zaheenpk3/"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:text-white transition"
-  >
-    <Instagram size={20} />
-  </a>
+              <a
+                href="https://www.instagram.com/zaheenpk3/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <Instagram size={20} />
+              </a>
 
-  <a
-    href="https://www.youtube.com/@zaheen-pk"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="hover:text-white transition"
-  >
-    <Youtube size={20} />
-  </a>
+              <a
+                href="https://www.youtube.com/@zaheen-pk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <Youtube size={20} />
+              </a>
 
-</div>
+            </div>
 
           </div>
 
@@ -96,14 +95,16 @@ const Footer: React.FC = () => {
           <div>
 
             <h4 className="text-white font-bold mb-4">
-              Quick Links
+              {t("footer.quickLinks")}
             </h4>
 
             <ul className="space-y-2 text-sm">
-              <li>About Us</li>
-              <li>Courses</li>
-              <li>Pricing</li>
-              <li>Testimonials</li>
+
+              <li>{t("footer.about")}</li>
+              <li>{t("footer.courses")}</li>
+              <li>{t("footer.pricing")}</li>
+              <li>{t("footer.testimonials")}</li>
+
             </ul>
 
           </div>
@@ -112,7 +113,7 @@ const Footer: React.FC = () => {
           <div>
 
             <h4 className="text-white font-bold mb-4">
-              Support
+              {t("footer.support")}
             </h4>
 
             <ul className="space-y-2 text-sm">
@@ -123,27 +124,22 @@ const Footer: React.FC = () => {
                     onClick={handleUnsubscribe}
                     className="text-red-400 hover:text-red-300 underline"
                   >
-                    Unsubscribe
+                    {t("footer.unsubscribe")}
                   </button>
                 </li>
               )}
 
               <li>
-  <Link
-    to="/privacy"
-    className="hover:text-white"
-  >
-    Privacy Policy
-  </Link>
-</li>
+                <Link to="/privacy" className="hover:text-white">
+                  {t("footer.privacy")}
+                </Link>
+              </li>
+
               <li>
-    <Link
-    to="/terms"
-    className="hover:text-white"
-  >
-    Terms of Service
-  </Link>
-</li>
+                <Link to="/terms" className="hover:text-white">
+                  {t("footer.terms")}
+                </Link>
+              </li>
 
             </ul>
 
@@ -153,7 +149,7 @@ const Footer: React.FC = () => {
           <div>
 
             <h4 className="text-white font-bold mb-4">
-              Contact
+              {t("footer.contact")}
             </h4>
 
             <ul className="space-y-3 text-sm">
@@ -170,7 +166,7 @@ const Footer: React.FC = () => {
 
               <li className="flex items-center gap-2">
                 <MapPin size={16} />
-                Pakistan
+                {t("footer.country")}
               </li>
 
             </ul>
@@ -180,7 +176,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-slate-800 pt-6 text-sm text-center">
-          © 2024 Zaheen Educational Portal
+          {t("footer.copyright")}
         </div>
 
       </div>

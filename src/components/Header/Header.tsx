@@ -1,14 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  ChevronDown,
-  Menu,
-  X,
-  Moon,
-  Sun
-} from "lucide-react";
+import { ChevronDown, Menu, X, Moon, Sun } from "lucide-react";
+import { t, setLanguage, getLanguage } from "@/i18n";
 
 import { Link } from "react-router-dom";
-
 import logo from "@/assets/images/ZaheenLogo.png";
 
 import CoursesMenu from "@/components/Header/CoursesMenu";
@@ -28,11 +22,11 @@ interface HeaderProps {
 }
 
 const boards = [
-  "Federal Board",
-  "Punjab Board",
-  "Sindh Board",
-  "KPK Board",
-  "Balochistan Board"
+  { key: "boards.federal" },
+  { key: "boards.punjab" },
+  { key: "boards.sindh" },
+  { key: "boards.kpk" },
+  { key: "boards.balochistan" }
 ];
 
 const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
@@ -49,28 +43,22 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   const [learningOpen, setLearningOpen] = useState(false);
 
   const [boardOpen, setBoardOpen] = useState(false);
-  const [selectedBoard, setSelectedBoard] = useState("Federal Board");
+  const [selectedBoard, setSelectedBoard] = useState("boards.federal");
 
-  const [language, setLanguage] = useState("EN");
   const [languageOpen, setLanguageOpen] = useState(false);
-
   const [isScrolled, setIsScrolled] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  /* Scroll effect */
+  /* Scroll */
 
   useEffect(() => {
-
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
-
     window.addEventListener("scroll", handleScroll);
-
     return () => window.removeEventListener("scroll", handleScroll);
-
   }, []);
 
-  /* Close dropdowns when clicking outside */
+  /* Outside click */
 
   useEffect(() => {
 
@@ -82,24 +70,22 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
         setCoursesOpen(false);
         setLearningOpen(false);
         setLanguageOpen(false);
-        
 
       }
 
     };
 
-   
     document.addEventListener("mousedown", handleClickOutside);
 
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
 
   }, []);
 
- const closeMenus = () => {
-      setCoursesOpen(false)
-      setLearningOpen(false)
-    }
+  const closeMenus = () => {
+    setCoursesOpen(false);
+    setLearningOpen(false);
+  };
+
   return (
     <>
       <header
@@ -109,6 +95,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
             : "bg-white"
         }`}
       >
+
         <div
           ref={dropdownRef}
           className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16"
@@ -118,13 +105,11 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
 <div className="flex items-center gap-6">
 
-{/* LOGO */}
-
 <Link to="/" onClick={closeMenus}>
 <img src={logo} alt="Zaheen" className="h-10 cursor-pointer"/>
 </Link>
 
-{/* BOARD SELECTOR */}
+{/* BOARD */}
 
 <div className="relative hidden lg:block">
 
@@ -132,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 onClick={() => setBoardOpen(!boardOpen)}
 className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-sm font-medium"
 >
-{selectedBoard}
+{t(selectedBoard)}
 <ChevronDown size={16}/>
 </button>
 
@@ -141,16 +126,18 @@ className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-sm f
 <div className="absolute top-12 left-0 w-56 bg-white shadow-lg rounded-xl border p-2">
 
 {boards.map((b) => (
+
 <button
-key={b}
+key={b.key}
 onClick={()=>{
-setSelectedBoard(b)
+setSelectedBoard(b.key)
 setBoardOpen(false)
 }}
 className="block w-full text-left px-3 py-2 rounded-md hover:bg-slate-100"
 >
-{b}
+{t(b.key)}
 </button>
+
 ))}
 
 </div>
@@ -159,15 +146,15 @@ className="block w-full text-left px-3 py-2 rounded-md hover:bg-slate-100"
 
 </div>
 
-{/* NAVIGATION */}
+{/* NAV */}
 
 <nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
 
 <Link to="/" onClick={closeMenus} className="hover:text-primary">
-Home
+{t("menu.home")}
 </Link>
 
-{/* COURSES MENU */}
+{/* COURSES */}
 
 <div className="relative">
 
@@ -178,18 +165,18 @@ setLearningOpen(false)
 }}
 className="flex items-center gap-1 hover:text-primary"
 >
-Courses
+{t("menu.courses")}
 <ChevronDown size={16}/>
 </button>
 
 <CoursesMenu
-  open={coursesOpen}
-  onClose={() => setCoursesOpen(false)}
+open={coursesOpen}
+onClose={() => setCoursesOpen(false)}
 />
 
 </div>
 
-{/* LEARNING HUB */}
+{/* LEARNING */}
 
 <div className="relative">
 
@@ -200,26 +187,26 @@ setCoursesOpen(false)
 }}
 className="flex items-center gap-1 hover:text-primary"
 >
-Learning Hub
+{t("menu.learningHub")}
 <ChevronDown size={16}/>
 </button>
 
 <LearningMenu
-  open={learningOpen}
-  onClose={() => setLearningOpen(false)}
+open={learningOpen}
+onClose={() => setLearningOpen(false)}
 />
 
 </div>
 
 <Link to="/ai" onClick={closeMenus} className="hover:text-primary">
-AI Tutor
+{t("menu.aiTutor")}
 </Link>
 
 </nav>
 
 </div>
 
-{/* RIGHT SIDE */}
+{/* RIGHT */}
 
 <div className="flex items-center gap-4">
 
@@ -228,29 +215,35 @@ AI Tutor
 <div className="relative">
 
 <button
-onClick={()=>setLanguageOpen(!languageOpen)}
+onClick={() => setLanguageOpen(!languageOpen)}
 className="flex items-center gap-1 border px-3 py-1.5 rounded-lg text-sm"
 >
-{language}
+{getLanguage().toUpperCase()}
 <ChevronDown size={16}/>
 </button>
 
 {languageOpen && (
 
-<div className="absolute right-0 top-10 w-32 bg-white shadow-lg border rounded-xl py-2">
+<div className="absolute right-0 top-10 w-36 bg-white shadow-lg border rounded-xl py-2">
 
 <button
-onClick={()=>{setLanguage("EN");setLanguageOpen(false)}}
+onClick={()=>{
+setLanguage("en")
+setLanguageOpen(false)
+}}
 className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
 >
-EN – English
+EN – {t("language.english")}
 </button>
 
 <button
-onClick={()=>{setLanguage("UR");setLanguageOpen(false)}}
+onClick={()=>{
+setLanguage("ur")
+setLanguageOpen(false)
+}}
 className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
 >
-UR – Urdu
+UR – {t("language.urdu")}
 </button>
 
 </div>
@@ -268,7 +261,7 @@ className="p-2 rounded-full bg-slate-100"
 {isDark ? <Sun size={18}/> : <Moon size={18}/>}
 </button>
 
-{/* AUTH STATE */}
+{/* AUTH */}
 
 {msisdn ? (
 
@@ -282,7 +275,7 @@ className="p-2 rounded-full bg-slate-100"
 onClick={logout}
 className="border px-4 py-2 rounded-full"
 >
-Logout
+{t("auth.logout")}
 </button>
 
 </>
@@ -295,21 +288,21 @@ Logout
 onClick={handleLogin}
 className="border border-primary text-primary px-5 py-2 rounded-full"
 >
-Login
+{t("auth.login")}
 </button>
 
 <button
 onClick={handleSubscribe}
 className="bg-primary text-white px-5 py-2 rounded-full"
 >
-Subscribe
+{t("auth.subscribe")}
 </button>
 
 </>
 
 )}
 
-{/* MOBILE TOGGLE */}
+{/* MOBILE */}
 
 <button
 className="lg:hidden"
@@ -322,13 +315,9 @@ onClick={()=>setMenuOpen(!menuOpen)}
 
 </div>
 
-{/* MOBILE MENU */}
-
 <MobileMenu open={menuOpen}/>
 
 </header>
-
-{/* MODALS */}
 
 {showModal && (
 <SubscribeModal onClose={()=>setShowModal(false)}/>

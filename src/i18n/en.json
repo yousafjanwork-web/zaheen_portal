@@ -1,0 +1,189 @@
+{
+  "menu": {
+    "home": "Home",
+    "courses": "Courses",
+    "learningHub": "Learning Hub",
+    "aiTutor": "AI Tutor"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "subscribe": "Subscribe"
+  },
+  "boards": {
+    "federal": "Federal Board",
+    "punjab": "Punjab Board",
+    "sindh": "Sindh Board",
+    "kpk": "KPK Board",
+    "balochistan": "Balochistan Board"
+  },
+  "language": {
+    "english": "English",
+    "urdu": "Urdu"
+  },
+  "courses": {
+  "k12": "K-12 Curriculum",
+  "kg": "KG Foundation",
+  "grade1to5": "Grade 1-5",
+  "grade6to8": "Grade 6-8",
+  "grade9to12": "Grade 9-12",
+  "professional": "Professional Skills",
+  "digitalMarketing": "Digital Marketing",
+  "trading": "Trading & Finance",
+  "webDevelopment": "Web Development",
+  "ai": "AI & Automation"
+},
+"learning": {
+  "practice": "Practice Corner",
+  "studyMaterial": "Study Material",
+  "boardResults": "Board Results"
+},
+"footer": {
+  "description": "Empowering learners with world-class education and professional training.",
+  "quickLinks": "Quick Links",
+  "about": "About Us",
+  "courses": "Courses",
+  "pricing": "Pricing",
+  "testimonials": "Testimonials",
+  "support": "Support",
+  "privacy": "Privacy Policy",
+  "terms": "Terms of Service",
+  "unsubscribe": "Unsubscribe",
+  "contact": "Contact",
+  "country": "Pakistan",
+  "unsubscribeSuccess": "Unsubscribed successfully",
+  "unsubscribeFail": "Unsubscribe failed",
+  "copyright": "© 2024 Zaheen Educational Portal"
+},
+"hero": {
+  "slide1": {
+    "title": "Unlock Your Potential from KG to Grade 12",
+    "highlight": "Potential",
+    "description": "Personalized learning paths for every student with video lectures, assignments, and quizzes.",
+    "button": "Explore K-12 Curriculum"
+  },
+  "slide2": {
+    "title": "Master High-Demand Skills",
+    "highlight": "High-Demand",
+    "description": "Advance your career with industry-recognized certifications in Digital Marketing, Web Development, and more.",
+    "button": "Browse Professional Courses"
+  }
+},
+"browseGrade": {
+  "title": "Browse by Grade",
+  "subtitle": "Explore courses by grade level",
+  "viewAll": "View All Grades",
+
+  "kgTitle": "KG Grade",
+  "kgSubtitle": "Foundation Years",
+  "kgBadge": "Games Included",
+
+  "g1Title": "Grade 1-5",
+  "g1Subtitle": "Primary Level",
+
+  "g6Title": "Grade 6-8",
+  "g6Subtitle": "Middle School",
+
+  "g9Title": "Grade 9-12",
+  "g9Subtitle": "High School"
+},
+"professionalCourses": {
+  "title": "Professional Courses",
+  "subtitle": "Professional Courses",
+
+  "marketing": "Marketing",
+  "finance": "Finance",
+  "development": "Development",
+
+  "course1": "Advanced Digital Marketing Strategy",
+  "course2": "Mastering Day Trading & Crypto",
+  "course3": "Full-Stack Web Development Bootcamp",
+
+  "students": "Students"
+},
+"pricing": {
+  "title": "Simple, Transparent Pricing",
+  "subtitle": "One subscription, unlimited opportunities",
+  "description": "One single subscription unlocks everything. No individual course fees, no hidden costs. Just pure learning for the whole family.",
+
+  "plan": "All-Access Pass",
+  "perDay": "/ Day",
+  "subscribe": "Subscribe Now",
+
+  "feature1": "Full access to all K-12 curriculum (Grades KG-12)",
+  "feature2": "Unlimited entry to Professional Course libraries",
+  "feature3": "Interactive games and foundation materials",
+  "feature4": "Progress tracking and certifications",
+  "feature5": "24/7 Priority Support",
+
+  "familyTitle": "Perfect for Families",
+  "familyDesc": "A single subscription that grows with your children from school to career.",
+
+  "commitmentTitle": "No Commitment",
+  "commitmentDesc": "Cancel or pause anytime with no hidden fees or penalties.",
+
+  "updateTitle": "Always Updated",
+  "updateDesc": "New professional courses and updated K-12 content regularly."
+},
+"cta": {
+  "title": "Start Learning with Zaheen Today",
+  "description": "Access K-12 education and professional courses with a simple subscription plan.",
+  "daily": "Daily",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "button": "Subscribe Now"
+},
+
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "Thank you for visiting Zaheen.com.pk. At Zaheen, we are committed to protecting your privacy and safeguarding your personal information.",
+    "infoCollect": "Information We Collect",
+    "personalInfo": "Personal Information",
+    "personalInfoText": "When you visit our website we may collect personal information such as your name, email address, and phone number.",
+    "usageInfo": "Usage Information",
+    "usageInfoText": "We may collect non-personal information such as IP address, browser type and operating system.",
+    "cookies": "Cookies",
+    "cookiesText": "We use cookies to enhance your browsing experience and understand website usage.",
+    "useInfo": "How We Use Your Information",
+    "provideServices": "To Provide Services",
+    "provideServicesText": "We use your information to deliver services and features on the platform.",
+    "communication": "To Communicate",
+    "communicationText": "We may contact you about updates, services or offers.",
+    "improveSite": "To Improve Our Website",
+    "improveSiteText": "We analyze usage data to improve our platform.",
+    "marketing": "For Marketing Purposes",
+    "marketingText": "With your consent we may send promotional offers.",
+    "sharing": "Information Sharing",
+    "sharingText": "We do not sell your data but may share with trusted partners for service delivery.",
+    "security": "Data Security",
+    "securityText": "We take reasonable measures to protect your personal information.",
+    "thirdParty": "Third-Party Links",
+    "thirdPartyText": "We are not responsible for privacy practices of third-party sites.",
+    "changes": "Changes to This Privacy Policy",
+    "changesText": "We may update this policy from time to time.",
+    "contact": "Contact Us",
+    "contactText": "If you have questions about this policy please contact us:"
+  },
+  
+  "terms": {
+    "title": "Terms of Service",
+    "intro": "Thank you for using Zaheen.com.pk. These Terms of Service govern your use of the website. By accessing or using the website you agree to comply with these terms.",
+    "useWebsite": "Use of the Website",
+    "ageRequirement": "You must be at least 18 years old to use this website.",
+    "lawfulUse": "You agree to use the website only for lawful purposes and not to violate the rights of others.",
+    "userAccounts": "User Accounts",
+    "accountInfo": "You may be required to create an account and provide accurate information.",
+    "accountSecurity": "You are responsible for maintaining the confidentiality of your account.",
+    "intellectualProperty": "Intellectual Property",
+    "ipText": "All content on this website is the property of Zaheen and protected by copyright laws.",
+    "liability": "Limitation of Liability",
+    "liabilityText": "Zaheen shall not be liable for any damages arising from use of the website.",
+    "changes": "Changes to Terms",
+    "changesText": "We reserve the right to update these terms at any time.",
+    "law": "Governing Law",
+    "lawText": "These terms are governed by the laws of Pakistan.",
+    "contact": "Contact Us",
+    "contactText": "If you have questions regarding these terms please contact us:"
+  }
+
+}
