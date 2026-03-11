@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { LayoutDashboard, BookOpen, FileText, FolderOpen, Settings } from "lucide-react";
 import { motion } from "motion/react";
 import { useParams } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 /* ---------- WELCOME TITLES ---------- */
 
 const welcomeTitles = {
@@ -12,148 +12,80 @@ const welcomeTitles = {
   "9-12": { en: "Grades 9-12", ur: "گریڈ ۹-۱۲" }
 };
 
-/* ---------- SUBJECTS ---------- */
-
-const subjectsByType = {
-  kg: [
-    "English Speaking",
-    "English Learning",
-    "English Writing",
-    "Math Speaking",
-    "Math Learning",
-    "Math Writing",
-    "Urdu"
-  ],
-
-  "1-5": [
-    "English",
-    "Urdu",
-    "Math",
-    "General Science"
-  ],
-
-  "6-8": [
-    "English",
-    "Urdu",
-    "Math",
-    "General Science"
-  ],
-
-  "9-12": [
-    "English",
-    "Urdu",
-    "Math",
-    "Computer",
-    "Biology",
-    "Chemistry",
-    "Physics",
-    "Islamiat"
-  ]
-};
-
-/* ---------- DATA ---------- */
-
-const gradeData = {
-
-  kg: [
-    {
-      title: "KG | کے جی",
-      lessons: "30 Lessons | ۳۰ اسباق",
-      description: "Early childhood learning and foundational skills.",
-      image: "https://images.unsplash.com/photo-1588072432836-e10032774350"
-    }
-  ],
-
-  "1-5": [
-    {
-      title: "Grade 1 | گریڈ ۱",
-      lessons: "45 Lessons | ۴۵ اسباق",
-      description: "Foundation level learning for young explorers.",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCqNFAJMqAKPAge-4O46yg__cNiFdcTxiO9QIUUj3Hd3VZyO6Ev7Jlvg0kBIdv3RY8n_wC-uwwHBaGkRhrCt5Ozv47W_5TCE-keBp91bAQH4AUJXzzKgZiARaEhKPve5FivsxCrqdtApmrS758lpIeavkj6SWqcZ6xblRvxZjU2pYhFHCXBr3mu1EbS4lHT718bo23-60sxTIYUqmXZKvbymhZFXqXBPmQQb0VqM7JOTMTlkhOoqkU8tV_YIMQLUU27eAkHhDIo0R4c"
-    },
-    {
-      title: "Grade 2 | گریڈ ۲",
-      lessons: "50 Lessons | ۵۰ اسباق",
-      description: "Developing essential skills in literacy and numeracy.",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDPpd0wU5UhrRX7Y5busOkB-H3lICUrRhcHzvHZ6AUHJXJWc4DSYysSoINtwINjs5fITwAMdz3-KxsGLO5kzbG7w8fc3w4jIr3AU2FMCOIKP8nBPJOxu1Isl5dFylCUedIQD__RfzktGNRYETQG-oCXwxuj9lOgT9twIPAWtO5FjQxaPfeyjquQfVeJv0o08OrjhhYcAef2WjaaWhcE-f-diTxJuZwLo2IP-QTbm8EFcgi-9W9YWSyv10VM3WL7Q4y4bhJuzzfOgqQQ"
-    },
-    {
-      title: "Grade 3 | گریڈ ۳",
-      lessons: "48 Lessons | ۴۸ اسباق",
-      description: "Expanding horizons with science and creative urdu.",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOe4dNkqkF6qLvS80TPLVynJvlAholFrD4sGDHz48yYDf7d1_HOw0ommd2oBDvkPJ1U2OJmJFKxm9I_dFh0AcLcE1y7jw79h3pFb3Bco4v-r97H_GJP5tjHd15ZxkILSWygZK8rMTNPU-6hLmieQMvrU3XL8kn4B4J2FrdAXZRiyoMxp4hCIK_eu-3dFR-4594TcrmA3mlqUVFNy3PK_LIZFxrq8nS_6OOm9w5G40y2KPEG1Lve1f0p35ItpbBNn7HFsMVMa11HRjO"
-    },
-    {
-      title: "Grade 4 | گریڈ ۴",
-      lessons: "52 Lessons | ۵۲ اسباق",
-      description: "Building complex problem-solving abilities.",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuD20gZz8UFz6oAMp8txbpfgx5KPA0ARD8yPv3GDuFu41T8SaxGuT0O1x53Lm8cdEn318PfaAtczoVzE8qqTzT0VfCxRjU5cdF5YZcm4325fFLcxJ64yBQP8SyQYmVxkVWrogp84exv5H8VVceKLWppSDwaILpiHoNcGCc47cOT9uHGHtTbvsGLKDd2U9bx98lvM-XEAfyGYfbTsy3XtFYMDIeYrDacj1i-fi1T0DDfZ17OAvLMY50XbdkLZM3yLebSf9OKEvaAHhPbY"
-    },
-    {
-      title: "Grade 5 | گریڈ ۵",
-      lessons: "55 Lessons | ۵۵ اسباق",
-      description: "Preparing for the transition to middle school.",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDxoZSMyV-Yw5z6BGzpkU71vsbY9dIC9YX0HMbxLQHcgGT66w43v9MHJPhrjQaDvJhkWz0gXsRCu72eUiE7mRUav5KYDfHgUPaaX27LTur5XtMuQHZIRyUw6SFl8n7yx9wmejsElGjOgq74c3BpkCcMKk8yfhIH5S2gl8JcsNPOz6Xo-t9TtOkJgtark04oaObqaj0Z9O5OHG5NjkRYR4BQ0DSZTrKEiVfARpf8CQknouQgJnTelI-L8tOP5MOLTjxv33cmcXPHlALM"
-    }
-  ],
-
-  "6-8": [
-    {
-      title: "Grade 6 | گریڈ ۶",
-      lessons: "60 Lessons | ۶۰ اسباق",
-      description: "Advancing knowledge across core subjects.",
-      image: "https://images.unsplash.com/photo-1509062522246-3755977927d7"
-    },
-    {
-      title: "Grade 7 | گریڈ ۷",
-      lessons: "62 Lessons | ۶۲ اسباق",
-      description: "Strengthening analytical and problem-solving skills.",
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b"
-    },
-    {
-      title: "Grade 8 | گریڈ ۸",
-      lessons: "65 Lessons | ۶۵ اسباق",
-      description: "Preparing for advanced secondary education.",
-      image: "https://images.unsplash.com/photo-1588072432836-e10032774350"
-    }
-  ],
-
-  "9-12": [
-    {
-      title: "Grade 9 | گریڈ ۹",
-      lessons: "70 Lessons | ۷۰ اسباق",
-      description: "Secondary level learning foundations.",
-      image: "https://images.unsplash.com/photo-1513258496099-48168024aec0"
-    },
-    {
-      title: "Grade 10 | گریڈ ۱۰",
-      lessons: "72 Lessons | ۷۲ اسباق",
-      description: "Preparation for board examinations.",
-      image: "https://images.unsplash.com/photo-1509062522246-3755977927d7"
-    },
-    {
-      title: "Grade 11 | گریڈ ۱۱",
-      lessons: "75 Lessons | ۷۵ اسباق",
-      description: "Specialized streams and advanced concepts.",
-      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644"
-    },
-    {
-      title: "Grade 12 | گریڈ ۱۲",
-      lessons: "80 Lessons | ۸۰ اسباق",
-      description: "Final preparation for higher education.",
-      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644"
-    }
-  ]
-
-};
-
 const GradesView = () => {
 
   const { type } = useParams();
+  const [grades, setGrades] = useState([]);
+  const navigate = useNavigate();
 
-  const grades = gradeData[type] || [];
   const title = welcomeTitles[type] || welcomeTitles["1-5"];
-  const subjects = subjectsByType[type] || [];
+
+  useEffect(() => {
+
+    const fetchGrades = async () => {
+      try {
+
+        const res = await fetch("https://api.zaheen.com.pk/api/board/1/classes");
+        const data = await res.json();
+
+        let filtered = [];
+
+        if (type === "kg") filtered = data.filter(g => g.id === 1);
+        if (type === "1-5") filtered = data.filter(g => g.id >= 2 && g.id <= 6);
+        if (type === "6-8") filtered = data.filter(g => g.id >= 7 && g.id <= 9);
+        if (type === "9-12") filtered = data.filter(g => g.id >= 10 && g.id <= 13);
+
+        const gradesWithSubjects = await Promise.all(
+
+          filtered.map(async (g) => {
+
+            try {
+
+              const subjectRes = await fetch(
+                `https://api.zaheen.com.pk/api/class/${g.id}/subjects`
+              );
+
+              const subjectData = await subjectRes.json();
+
+              const subjectNames = subjectData.map(s => s.name);
+
+              return {
+                id: g.id,
+                title: `${g.name} | ${g.urdu_name}`,
+                lessons: `${subjectNames.length} Subjects`,
+                description: "High-quality educational content designed for students.",
+                image: g.thumbnailUrl,
+                subjects: subjectNames
+              };
+
+            } catch (err) {
+
+              console.error("Subject API Error:", err);
+
+              return {
+                title: `${g.name} | ${g.urdu_name}`,
+                lessons: "0 Subjects",
+                description: "High-quality educational content designed for students.",
+                image: g.thumbnailUrl,
+                subjects: []
+              };
+
+            }
+
+          })
+
+        );
+
+        setGrades(gradesWithSubjects);
+
+      } catch (error) {
+        console.error("Grades API Error:", error);
+      }
+    };
+
+    fetchGrades();
+
+  }, [type]);
 
   return (
     <section className="py-20 bg-slate-50">
@@ -188,33 +120,41 @@ const GradesView = () => {
 
           {/* Sidebar */}
 
-          <aside className="w-full lg:w-64 flex flex-col gap-3">
-
-            <div className="p-3 rounded-xl bg-primary text-white flex items-center gap-3">
+          {/* Sidebar */}
+          <aside
+            className={`
+    w-full lg:w-64
+    flex gap-3
+    overflow-x-auto lg:overflow-y-auto
+    flex-row lg:flex-col
+    p-2
+    scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent
+  `}
+          >
+            <div className="p-3 rounded-xl bg-primary text-white flex items-center gap-3 flex-shrink-0">
               <LayoutDashboard size={18} />
               Dashboard | ڈیش بورڈ
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer">
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
               <BookOpen size={18} />
               My Courses | میرے کورسز
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer">
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
               <FileText size={18} />
               Assessments | امتحانات
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer">
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
               <FolderOpen size={18} />
               Resources | وسائل
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer">
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
               <Settings size={18} />
               Settings | ترتیبات
             </div>
-
           </aside>
 
           {/* Grades Grid */}
@@ -233,6 +173,7 @@ const GradesView = () => {
                   key={index}
                   whileHover={{ y: -8 }}
                   transition={{ duration: 0.25 }}
+                  onClick={() => navigate(`/class/${grade.id}`)}
                   className="bg-white rounded-3xl p-5 border hover:border-primary/50 shadow-sm hover:shadow-xl cursor-pointer"
                 >
 
@@ -241,7 +182,7 @@ const GradesView = () => {
                     <img
                       src={grade.image}
                       alt={grade.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain bg-slate-50 p-2"
                     />
 
                     <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">
@@ -260,7 +201,7 @@ const GradesView = () => {
 
                   <div className="flex flex-wrap gap-2 text-xs">
 
-                    {subjects.map((subject, i) => (
+                    {grade.subjects.map((subject, i) => (
                       <span key={i} className="px-3 py-1 bg-slate-100 rounded-lg">
                         {subject}
                       </span>
