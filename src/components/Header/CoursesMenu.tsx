@@ -24,32 +24,38 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
 
           <ul className="space-y-3 text-sm text-slate-600">
 
+
+            <li
+
+
+              className="flex items-center gap-3 hover:text-primary cursor-pointer"
+            >
+
+
+              <BookOpen size={18} />  <a href={'/grade-view/kg'}>KG Foundation
+              </a>
+            </li>
+
+
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> KG Foundation
+              <BookOpen size={18} />  <a href={'/grade-view/1-5'}>Grade 1-5</a>
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> Grade 1-5
+              <BookOpen size={18} /> <a href={'/grade-view/6-8'}> Grade 6-8</a>
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BookOpen size={18}/> Grade 6-8
-            </li>
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <BookOpen size={18}/> Grade 9-12
+              <BookOpen size={18} />  <a href={'/grade-view/9-12'}>Grade 9-12</a>
             </li>
 
           </ul>
@@ -69,28 +75,28 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BarChart3 size={18}/> Digital Marketing
+              <BarChart3 size={18} /> Digital Marketing
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <BarChart3 size={18}/> Trading & Finance
+              <BarChart3 size={18} /> Trading & Finance
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <Code size={18}/> Web Development
+              <Code size={18} /> Web Development
             </li>
 
             <li
               onClick={onClose}
               className="flex items-center gap-3 hover:text-primary cursor-pointer"
             >
-              <Brain size={18}/> AI & Automation
+              <Brain size={18} /> AI & Automation
             </li>
 
           </ul>
