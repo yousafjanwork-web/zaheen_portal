@@ -89,12 +89,12 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition ${
-          isScrolled
-            ? "bg-white/90 backdrop-blur-md border-b border-slate-200"
-            : "bg-white"
-        }`}
-      >
+  className={`hidden lg:block sticky top-0 z-50 transition ${
+    isScrolled
+      ? "bg-white/90 backdrop-blur-md border-b border-slate-200"
+      : "bg-white"
+  }`}
+>
 
         <div
           ref={dropdownRef}

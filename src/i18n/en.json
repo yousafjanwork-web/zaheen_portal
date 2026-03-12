@@ -184,6 +184,29 @@
     "lawText": "These terms are governed by the laws of Pakistan.",
     "contact": "Contact Us",
     "contactText": "If you have questions regarding these terms please contact us:"
+  },
+  "hero": {
+    "mobileTitle": "Build in-demand skills",
+    "mobileSubtitle": "Get access to all courses with one subscription.",
+    "subscribe": "Subscribe Now",
+  "slide1": {
+    "title": "Learn from Pakistan's",
+    "highlight": "Best Teachers",
+    "description": "KG to Grade 12 learning with video lectures and quizzes.",
+    "button": "Start Learning"
+  },
+  "slide2": {
+    "title": "Master",
+    "highlight": "AI & Digital Skills",
+    "description": "Future-ready skills for students and professionals.",
+    "button": "Explore Courses"
+  },
+  "slide3": {
+    "title": "Unlimited Learning",
+    "highlight": "Rs 5 / Day",
+    "description": "Access all courses with one subscription.",
+    "button": "Subscribe Now"
   }
+}
 
 }
