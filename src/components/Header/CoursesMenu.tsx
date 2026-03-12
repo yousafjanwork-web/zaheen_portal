@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BookOpen, Code, BarChart3, Brain } from "lucide-react";
 
 interface CoursesMenuProps {
@@ -6,7 +6,38 @@ interface CoursesMenuProps {
   onClose: () => void;
 }
 
+// Mapping some subjects to icons (fall back to BarChart3)
+const iconMap: { [key: string]: JSX.Element } = {
+  "Website Development": <Code size={18} />,
+  "Auto Cad 2D": <BarChart3 size={18} />,
+  "Microsoft Excel": <BarChart3 size={18} />,
+  "Video Editing": <BarChart3 size={18} />,
+  "Beautify Yourself": <Brain size={18} />
+};
+
+interface ProfessionalSubject {
+  id: number;
+  name: string;
+  urdu_name: string;
+  thumbnailUrl: string;
+}
+
 const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
+  const [professionalSkills, setProfessionalSkills] = useState<ProfessionalSubject[]>([]);
+
+  useEffect(() => {
+    const fetchProfessionalSkills = async () => {
+      try {
+        const res = await fetch("https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3");
+        const data = await res.json();
+        setProfessionalSkills(data);
+      } catch (err) {
+        console.error("Failed to fetch professional skills:", err);
+      }
+    };
+
+    fetchProfessionalSkills();
+  }, []);
 
   if (!open) return null;
 
@@ -17,90 +48,41 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
 
         {/* K12 Curriculum */}
         <div>
-
-          <h4 className="font-semibold text-slate-900 mb-4">
-            K-12 Curriculum
-          </h4>
-
+          <h4 className="font-semibold text-slate-900 mb-4">K-12 Curriculum</h4>
           <ul className="space-y-3 text-sm text-slate-600">
-
-
-            <li
-
-
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-
-
-              <BookOpen size={18} />  <a href={'/grade-view/kg'}>KG Foundation
-              </a>
+            <li className="flex items-center gap-3 hover:text-primary cursor-pointer">
+              <BookOpen size={18} /> <a href={'/grade-view/kg'}>KG Foundation</a>
             </li>
-
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <BookOpen size={18} />  <a href={'/grade-view/1-5'}>Grade 1-5</a>
+            <li className="flex items-center gap-3 hover:text-primary cursor-pointer" onClick={onClose}>
+              <BookOpen size={18} /> <a href={'/grade-view/1-5'}>Grade 1-5</a>
             </li>
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <BookOpen size={18} /> <a href={'/grade-view/6-8'}> Grade 6-8</a>
+            <li className="flex items-center gap-3 hover:text-primary cursor-pointer" onClick={onClose}>
+              <BookOpen size={18} /> <a href={'/grade-view/6-8'}>Grade 6-8</a>
             </li>
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <BookOpen size={18} />  <a href={'/grade-view/9-12'}>Grade 9-12</a>
+            <li className="flex items-center gap-3 hover:text-primary cursor-pointer" onClick={onClose}>
+              <BookOpen size={18} /> <a href={'/grade-view/9-12'}>Grade 9-12</a>
             </li>
-
           </ul>
-
         </div>
 
-        {/* Professional Courses */}
+        {/* Professional Skills */}
         <div>
-
-          <h4 className="font-semibold text-slate-900 mb-4">
-            Professional Skills
-          </h4>
-
+          <h4 className="font-semibold text-slate-900 mb-4">Professional Skills</h4>
           <ul className="space-y-3 text-sm text-slate-600">
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <BarChart3 size={18} /> Digital Marketing
-            </li>
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <BarChart3 size={18} /> Trading & Finance
-            </li>
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <Code size={18} /> Web Development
-            </li>
-
-            <li
-              onClick={onClose}
-              className="flex items-center gap-3 hover:text-primary cursor-pointer"
-            >
-              <Brain size={18} /> AI & Automation
-            </li>
-
+            {professionalSkills.length > 0 ? (
+              professionalSkills.map(skill => (
+                <li
+                  key={skill.id}
+                  onClick={onClose}
+                  className="flex items-center gap-3 hover:text-primary cursor-pointer"
+                >
+                  {iconMap[skill.name] || <BarChart3 size={18} />} {skill.name}
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-400">Loading skills...</li>
+            )}
           </ul>
-
         </div>
 
       </div>
