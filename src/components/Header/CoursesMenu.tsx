@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { BookOpen, Code, BarChart3, Brain } from "lucide-react";
+import { t } from "@/i18n";
 
 interface CoursesMenuProps {
   open: boolean;

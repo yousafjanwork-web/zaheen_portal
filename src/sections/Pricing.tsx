@@ -1,6 +1,7 @@
 import React from "react";
 import { CheckCircle2, Users, ShieldCheck, RefreshCw } from "lucide-react";
 import logo from "@/assets/images/ZaheenLogo.png";
+import { t } from "@/i18n";
 
 import SubscribeModal from "@/components/SubscribeModal";
 import { useSubscribe } from "@/hooks/useSubscribe";
@@ -9,26 +10,33 @@ const Pricing = () => {
 
   const { handleSubscribe, showModal, setShowModal } = useSubscribe();
 
+  const features = [
+    t("pricing.feature1"),
+    t("pricing.feature2"),
+    t("pricing.feature3"),
+    t("pricing.feature4"),
+    t("pricing.feature5")
+  ];
+
   return (
     <>
       <section className="py-24 bg-slate-50" id="pricing">
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4">
 
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-20">
 
             <h2 className="text-4xl font-bold mb-4 text-slate-900">
-              Simple, Transparent Pricing
+              {t("pricing.title")}
             </h2>
 
-            <p className="arabic-text text-xl text-secondary mb-4">
-              ایک سبسکرپشن، لامحدود مواقع
+            <p className="text-xl text-secondary mb-4">
+              {t("pricing.subtitle")}
             </p>
 
             <p className="text-slate-600">
-              One single subscription unlocks everything. No individual course
-              fees, no hidden costs. Just pure learning for the whole family.
+              {t("pricing.description")}
             </p>
 
           </div>
@@ -50,7 +58,7 @@ const Pricing = () => {
                   />
 
                   <h3 className="text-2xl font-bold text-primary">
-                    All-Access Pass
+                    {t("pricing.plan")}
                   </h3>
 
                 </div>
@@ -58,13 +66,7 @@ const Pricing = () => {
                 {/* Features */}
                 <ul className="space-y-4 mb-10">
 
-                  {[
-                    "Full access to all K-12 curriculum (Grades KG-12)",
-                    "Unlimited entry to Professional Course libraries",
-                    "Interactive games and foundation materials",
-                    "Progress tracking and certifications",
-                    "24/7 Priority Support"
-                  ].map((feature, i) => (
+                  {features.map((feature, i) => (
 
                     <li key={i} className="flex items-center text-slate-700">
 
@@ -89,7 +91,7 @@ const Pricing = () => {
                   </span>
 
                   <span className="text-slate-500">
-                    / Day
+                    {t("pricing.perDay")}
                   </span>
 
                 </div>
@@ -99,7 +101,7 @@ const Pricing = () => {
                   onClick={handleSubscribe}
                   className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-md hover:shadow-xl transition"
                 >
-                  Subscribe Now
+                  {t("pricing.subscribe")}
                 </button>
 
               </div>
@@ -109,6 +111,7 @@ const Pricing = () => {
             {/* Right Info Section */}
             <div className="space-y-10">
 
+              {/* Item 1 */}
               <div className="flex gap-5">
 
                 <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center text-primary">
@@ -117,17 +120,17 @@ const Pricing = () => {
 
                 <div>
                   <h4 className="text-xl font-bold mb-1 text-slate-900">
-                    Perfect for Families
+                    {t("pricing.familyTitle")}
                   </h4>
 
                   <p className="text-slate-600">
-                    A single subscription that grows with your children,
-                    from their first school day to their professional career.
+                    {t("pricing.familyDesc")}
                   </p>
                 </div>
 
               </div>
 
+              {/* Item 2 */}
               <div className="flex gap-5">
 
                 <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center text-green-600">
@@ -136,16 +139,17 @@ const Pricing = () => {
 
                 <div>
                   <h4 className="text-xl font-bold mb-1 text-slate-900">
-                    No Commitment
+                    {t("pricing.commitmentTitle")}
                   </h4>
 
                   <p className="text-slate-600">
-                    Cancel or pause anytime with no hidden fees or penalties.
+                    {t("pricing.commitmentDesc")}
                   </p>
                 </div>
 
               </div>
 
+              {/* Item 3 */}
               <div className="flex gap-5">
 
                 <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-500">
@@ -154,12 +158,11 @@ const Pricing = () => {
 
                 <div>
                   <h4 className="text-xl font-bold mb-1 text-slate-900">
-                    Always Updated
+                    {t("pricing.updateTitle")}
                   </h4>
 
                   <p className="text-slate-600">
-                    New professional courses and updated K-12 content regularly
-                    at no additional cost.
+                    {t("pricing.updateDesc")}
                   </p>
                 </div>
 
@@ -173,7 +176,6 @@ const Pricing = () => {
 
       </section>
 
-      {/* Subscription Modal */}
       {showModal && (
         <SubscribeModal onClose={() => setShowModal(false)} />
       )}
