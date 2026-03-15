@@ -1,5 +1,6 @@
 import MobileMarketingBanner from "@/components/MobileMarketingBanner";
 import MobileHeader from "@/components/MobileHeader";
+import PromoSlider from "@/sections/PromoSlider";
 
 
 import HeroMobile from "@/sections/HeroMobile";
@@ -16,7 +17,7 @@ const HomeMobile = () => {
       <MobileHeader />
 
       <HeroMobile />
-
+      <PromoSlider />
       <BrowseByGrade />
 
       <ProfessionalCourses />

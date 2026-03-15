@@ -73,14 +73,20 @@ const { login } = useAuth();
       const verify = await verifyPin(msisdn, pin);
 
       if (verify.status === "SUCCESS") {
+      const subRes = await subscribeUser(msisdn);
+         // CHECK SUBSCRIPTION RESPONSE
+      if (subRes.status === "1") {
 
-        await subscribeUser(msisdn);
-
-
+        // subscription success
         login(msisdn);
-
-
         setStep("SUCCESS");
+
+      } else {
+
+        // subscription failed
+        setError(subRes.desc || "Subscription failed");
+
+      }
       }
 
       setLoading(false);
