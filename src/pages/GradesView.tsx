@@ -1,0 +1,227 @@
+import React, { useEffect, useState } from "react";
+import { LayoutDashboard, BookOpen, FileText, FolderOpen, Settings } from "lucide-react";
+import { motion } from "motion/react";
+import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+/* ---------- WELCOME TITLES ---------- */
+
+const welcomeTitles = {
+  kg: { en: "KG", ur: "کے جی" },
+  "1-5": { en: "Grades 1-5", ur: "گریڈ ۱-۵" },
+  "6-8": { en: "Grades 6-8", ur: "گریڈ ۶-۸" },
+  "9-12": { en: "Grades 9-12", ur: "گریڈ ۹-۱۲" }
+};
+
+const GradesView = () => {
+
+  const { type } = useParams();
+  const [grades, setGrades] = useState([]);
+  const navigate = useNavigate();
+
+  const title = welcomeTitles[type] || welcomeTitles["1-5"];
+
+  useEffect(() => {
+
+    const fetchGrades = async () => {
+      try {
+
+        const res = await fetch("https://api.zaheen.com.pk/api/board/1/classes");
+        const data = await res.json();
+
+        let filtered = [];
+
+        if (type === "kg") filtered = data.filter(g => g.id === 1);
+        if (type === "1-5") filtered = data.filter(g => g.id >= 2 && g.id <= 6);
+        if (type === "6-8") filtered = data.filter(g => g.id >= 7 && g.id <= 9);
+        if (type === "9-12") filtered = data.filter(g => g.id >= 10 && g.id <= 13);
+
+        const gradesWithSubjects = await Promise.all(
+
+          filtered.map(async (g) => {
+
+            try {
+
+              const subjectRes = await fetch(
+                `https://api.zaheen.com.pk/api/class/${g.id}/subjects`
+              );
+
+              const subjectData = await subjectRes.json();
+
+              const subjectNames = subjectData.map(s => s.name);
+
+              return {
+                id: g.id,
+                title: `${g.name} | ${g.urdu_name}`,
+                lessons: `${subjectNames.length} Subjects`,
+                description: "High-quality educational content designed for students.",
+                image: g.thumbnailUrl,
+                subjects: subjectNames
+              };
+
+            } catch (err) {
+
+              console.error("Subject API Error:", err);
+
+              return {
+                title: `${g.name} | ${g.urdu_name}`,
+                lessons: "0 Subjects",
+                description: "High-quality educational content designed for students.",
+                image: g.thumbnailUrl,
+                subjects: []
+              };
+
+            }
+
+          })
+
+        );
+
+        setGrades(gradesWithSubjects);
+
+      } catch (error) {
+        console.error("Grades API Error:", error);
+      }
+    };
+
+    fetchGrades();
+
+  }, [type]);
+
+  return (
+    <section className="py-20 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Welcome Section */}
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 p-8 rounded-3xl bg-primary/5 border border-primary/10">
+
+          <div className="text-center md:text-left">
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900">
+              {title.en} | <span className="text-primary">{title.ur}</span>
+            </h1>
+
+            <p className="text-lg text-slate-600 mt-2 max-w-2xl">
+              Select your grade to start learning in English and Urdu.
+              High-quality educational content designed for primary school students.
+            </p>
+
+            <p className="text-sm text-slate-500 mt-1">
+              انگریزی اور اردو میں سیکھنا شروع کرنے کے لیے اپنے گریڈ کا انتخاب کریں۔
+            </p>
+          </div>
+
+          <button className="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition">
+            Explore All Courses
+          </button>
+
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-10">
+
+          {/* Sidebar */}
+
+          {/* Sidebar */}
+          <aside
+            className={`
+    w-full lg:w-64
+    flex gap-3
+    overflow-x-auto lg:overflow-y-auto
+    flex-row lg:flex-col
+    p-2
+    scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent
+  `}
+          >
+            <div className="p-3 rounded-xl bg-primary text-white flex items-center gap-3 flex-shrink-0">
+              <LayoutDashboard size={18} />
+              Dashboard | ڈیش بورڈ
+            </div>
+
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+              <BookOpen size={18} />
+              My Courses | میرے کورسز
+            </div>
+
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+              <FileText size={18} />
+              Assessments | امتحانات
+            </div>
+
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+              <FolderOpen size={18} />
+              Resources | وسائل
+            </div>
+
+            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+              <Settings size={18} />
+              Settings | ترتیبات
+            </div>
+          </aside>
+
+          {/* Grades Grid */}
+
+          <div className="flex-1">
+
+            <h2 className="text-2xl font-bold mb-8">
+              Select Your Grade | اپنے گریڈ کا انتخاب کریں
+            </h2>
+
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+              {grades.map((grade, index) => (
+
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  onClick={() => navigate(`/class/${grade.id}`)}
+                  className="bg-white rounded-3xl p-5 border hover:border-primary/50 shadow-sm hover:shadow-xl cursor-pointer"
+                >
+
+                  <div className="aspect-video rounded-2xl overflow-hidden mb-4 relative">
+
+                    <img
+                      src={grade.image}
+                      alt={grade.title}
+                      className="w-full h-full object-contain bg-slate-50 p-2"
+                    />
+
+                    <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">
+                      {grade.lessons}
+                    </div>
+
+                  </div>
+
+                  <h3 className="text-xl font-bold text-slate-900 mb-1">
+                    {grade.title}
+                  </h3>
+
+                  <p className="text-sm text-slate-500 mb-4">
+                    {grade.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 text-xs">
+
+                    {grade.subjects.map((subject, i) => (
+                      <span key={i} className="px-3 py-1 bg-slate-100 rounded-lg">
+                        {subject}
+                      </span>
+                    ))}
+
+                  </div>
+
+                </motion.div>
+
+              ))}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  );
+};
+
+export default GradesView;

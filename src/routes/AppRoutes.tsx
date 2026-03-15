@@ -4,19 +4,17 @@ import Home from "../pages/Home/Home";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ScrollToTop from "@/components/ScrollToTop";
-import Assessment from "@/pages/Assessment";
 
 const AppRoutes = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <MainLayout>
-       
+
         <Routes>
           <Route path="/" element={<Home />} />
            <Route path="/terms" element={<TermsOfService />} />
            <Route path="/privacy" element={<PrivacyPolicy />} />
-           <Route path="/assessment/:chapterId" element={<Assessment />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>

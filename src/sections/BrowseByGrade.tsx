@@ -1,17 +1,20 @@
-import React from "react";
-import { Baby, BookOpen, FlaskConical, GraduationCap, ArrowRight } from "lucide-react";
-import { motion } from "motion/react";
-import { t } from "@/i18n";
+import React from 'react';
+import { Baby, BookOpen, FlaskConical, GraduationCap, ArrowRight } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Link } from "react-router-dom";
+import { t } from '@/i18n';
 
 const grades = [
   {
     title: t("browseGrade.kgTitle"),
     subtitle: t("browseGrade.kgSubtitle"),
-    badgeText: t("browseGrade.kgBadge"),
+    //badgeText: t("browseGrade.kgBadge"),
     icon: <Baby size={34} />,
     cardBg: "bg-[#F4EFE2]",
     iconBg: "bg-[#F8E7B0]",
-    iconColor: "text-orange-500"
+    iconColor: "text-orange-500",
+    badgeText: "Games Included",
+    link: "/grade-view/kg"
   },
   {
     title: t("browseGrade.g1Title"),
@@ -19,7 +22,8 @@ const grades = [
     icon: <BookOpen size={34} />,
     cardBg: "bg-[#E7EEF7]",
     iconBg: "bg-[#D4E1F3]",
-    iconColor: "text-blue-600"
+    iconColor: "text-blue-600",
+    link: "/grade-view/1-5"
   },
   {
     title: t("browseGrade.g6Title"),
@@ -27,7 +31,8 @@ const grades = [
     icon: <FlaskConical size={34} />,
     cardBg: "bg-[#E8F3EC]",
     iconBg: "bg-[#CFE7D8]",
-    iconColor: "text-green-600"
+    iconColor: "text-green-600",
+    link: "/grade-view/6-8"
   },
   {
     title: t("browseGrade.g9Title"),
@@ -35,7 +40,8 @@ const grades = [
     icon: <GraduationCap size={34} />,
     cardBg: "bg-[#F1EAF8]",
     iconBg: "bg-[#E2D6F4]",
-    iconColor: "text-purple-600"
+    iconColor: "text-purple-600",
+    link: "/grade-view/9-12"
   }
 ];
 
@@ -74,38 +80,45 @@ const BrowseByGrade = () => {
 
           {grades.map((grade, index) => (
 
-            <motion.div
-              key={index}
-              whileHover={{ y: -8 }}
-              transition={{ duration: 0.25 }}
-              className="group cursor-pointer"
-            >
+            <Link to={grade.link} key={index}>
 
-              <div className={`relative rounded-3xl p-10 text-center transition shadow-sm hover:shadow-lg ${grade.cardBg}`}>
+              <motion.div
+                whileHover={{ y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="group cursor-pointer"
+              >
 
-                {grade.badgeText && (
-                  <span className="absolute top-4 right-4 bg-lime-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    {grade.badgeText}
-                  </span>
-                )}
+                <div className={`relative rounded-3xl p-10 text-center transition shadow-sm hover:shadow-lg ${grade.cardBg}`}>
 
-                <div
-                  className={`w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-2xl ${grade.iconBg} ${grade.iconColor}`}
-                >
-                  {grade.icon}
+                  {/* Badge */}
+                  {grade.badgeText && (
+                    <span className="absolute top-4 right-4 bg-lime-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      {grade.badgeText}
+                    </span>
+                  )}
+
+                  {/* Icon */}
+                  <div
+                    className={`w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-2xl ${grade.iconBg} ${grade.iconColor}`}
+                  >
+                    {grade.icon}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-slate-900 mb-1">
+                    {grade.title}
+                  </h3>
+
+                  {/* Subtitle */}
+                  <p className="text-slate-500 text-sm">
+                    {grade.subtitle}
+                  </p>
+
                 </div>
 
-                <h3 className="text-xl font-bold text-slate-900 mb-1">
-                  {grade.title}
-                </h3>
+              </motion.div>
 
-                <p className="text-slate-500 text-sm">
-                  {grade.subtitle}
-                </p>
-
-              </div>
-
-            </motion.div>
+            </Link>
 
           ))}
 
