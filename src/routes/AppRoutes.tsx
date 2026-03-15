@@ -4,6 +4,10 @@ import Home from "../pages/Home/Home";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ScrollToTop from "@/components/ScrollToTop";
+import GradesView from "@/pages/GradesView";
+import ClassSubjectsView from "@/pages/ClassSubjectsView";
+import LecturesPage from "@/pages/LecturesPage";
+import Assessment from '@/pages/Assessment';
 
 const AppRoutes = () => {
   return (
@@ -13,8 +17,15 @@ const AppRoutes = () => {
 
         <Routes>
           <Route path="/" element={<Home />} />
-           <Route path="/terms" element={<TermsOfService />} />
-           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/grade-view/:type" element={<GradesView />} />
+          <Route path="/class/:classId" element={<ClassSubjectsView />} />
+          <Route path="/assessment/:chapterId" element={<Assessment />} />
+          <Route
+            path="/lectures/:className/:chapterId/:chapterName"
+            element={<LecturesPage />}
+          />
         </Routes>
       </MainLayout>
     </BrowserRouter>
