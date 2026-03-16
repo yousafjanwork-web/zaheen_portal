@@ -12,6 +12,16 @@ const welcomeTitles = {
   "9-12": { en: "Grades 9-12", ur: "گریڈ ۹-۱۲" }
 };
 
+const gradeImages = {
+  7: "https://images.unsplash.com/photo-1588072432836-e10032774350",
+  8: "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
+  9: "https://images.unsplash.com/photo-1513258496099-48168024aec0",
+  10: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+  11: "https://images.unsplash.com/photo-1571260899304-425eee4c7efc",
+  12: "https://images.unsplash.com/photo-1509062522246-3755977927d7",
+  13: "https://images.unsplash.com/photo-1523580494863-6f3031224c94"
+};
+
 const GradesView = () => {
 
   const { type } = useParams();
@@ -54,7 +64,7 @@ const GradesView = () => {
                 title: `${g.name} | ${g.urdu_name}`,
                 lessons: `${subjectNames.length} Subjects`,
                 description: "High-quality educational content designed for students.",
-                image: g.thumbnailUrl,
+                image: gradeImages[g.id] || g.thumbnailUrl,
                 subjects: subjectNames
               };
 
@@ -123,13 +133,13 @@ const GradesView = () => {
           {/* Sidebar */}
           <aside
             className={`
-    w-full lg:w-64
-    flex gap-3
-    overflow-x-auto lg:overflow-y-auto
-    flex-row lg:flex-col
-    p-2
-    scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent
-  `}
+                      w-full lg:w-64
+                      flex gap-3
+                      overflow-x-auto lg:overflow-y-auto
+                      flex-row lg:flex-col
+                      p-2
+                      scrollbar-thin scrollbar-thumb-primary/40 scrollbar-track-transparent
+                    `}
           >
             <div className="p-3 rounded-xl bg-primary text-white flex items-center gap-3 flex-shrink-0">
               <LayoutDashboard size={18} />
@@ -177,12 +187,13 @@ const GradesView = () => {
                   className="bg-white rounded-3xl p-5 border hover:border-primary/50 shadow-sm hover:shadow-xl cursor-pointer"
                 >
 
-                  <div className="aspect-video rounded-2xl overflow-hidden mb-4 relative">
+                  <div className="h-30 rounded-2xl overflow-hidden mb-4 relative">
 
                     <img
                       src={grade.image}
                       alt={grade.title}
-                      className="w-full h-full object-contain bg-slate-50 p-2"
+                      className={`w-full h-full ${grade.id <= 6 ? "object-contain bg-slate-50 p-2" : "object-cover"
+                        }`}
                     />
 
                     <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">

@@ -23,3 +23,22 @@
 .hero-gradient {
   background: linear-gradient(135deg, rgba(50, 115, 220, 0.1) 0%, rgba(146, 208, 42, 0.1) 100%);
 }
+
+@keyframes slowSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes floatBubble {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-slow-spin {
+  animation: slowSpin 25s linear infinite;
+}
+
+.animate-float {
+  animation: floatBubble 6s ease-in-out infinite;
+}
