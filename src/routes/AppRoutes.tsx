@@ -7,6 +7,11 @@ import ScrollToTop from "@/components/ScrollToTop";
 import GradesView from "@/pages/GradesView";
 import ClassSubjectsView from "@/pages/ClassSubjectsView";
 import LecturesPage from "@/pages/LecturesPage";
+import SkillsChaptersPage from "@/pages/SkillsChaptersPage";
+import PracticeCornerPage from "@/pages/PracticeCornerPage";
+import WorksheetsPage from "@/pages/WorksheetPage";
+import BoardResultsPage from "@/pages/BoardResultsPage";
+import Chatbot from "@/pages/Chatbot";
 
 const AppRoutes = () => {
   return (
@@ -24,6 +29,12 @@ const AppRoutes = () => {
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}
           />
+          <Route path="/skills/:classId" element={<SkillsChaptersPage />} />
+          <Route path="/practice" element={<PracticeCornerPage />} />
+          <Route path="/worksheets/:subjectId" element={<WorksheetsPage />} />
+          <Route path="/results" element={<BoardResultsPage />} />
+          <Route path="/ai" element={<Chatbot />} />
+
         </Routes>
       </MainLayout>
     </BrowserRouter>

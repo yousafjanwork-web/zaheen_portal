@@ -1,6 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { BookOpen, Code, BarChart3, Brain } from "lucide-react";
 import { t } from "@/i18n";
+import { useNavigate } from "react-router-dom";
 
 interface CoursesMenuProps {
   open: boolean;
@@ -21,11 +22,12 @@ interface ProfessionalSubject {
   name: string;
   urdu_name: string;
   thumbnailUrl: string;
+  class_id: number;
 }
 
 const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
   const [professionalSkills, setProfessionalSkills] = useState<ProfessionalSubject[]>([]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchProfessionalSkills = async () => {
       try {
@@ -74,10 +76,12 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
               professionalSkills.map(skill => (
                 <li
                   key={skill.id}
-                  onClick={onClose}
+                  onClick={()=>navigate(`skills/${skill.class_id}`)}
                   className="flex items-center gap-3 hover:text-primary cursor-pointer"
                 >
+                  {/* <a href={`class/${skill.id}`}> */}
                   {iconMap[skill.name] || <BarChart3 size={18} />} {skill.name}
+                  {/* </a> */}
                 </li>
               ))
             ) : (
