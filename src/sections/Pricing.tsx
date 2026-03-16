@@ -5,11 +5,12 @@ import { t } from "@/i18n";
 
 import SubscribeModal from "@/components/SubscribeModal";
 import { useSubscribe } from "@/hooks/useSubscribe";
+import { useAuth } from "@/context/AuthContext";
 
 const Pricing = () => {
 
   const { handleSubscribe, showModal, setShowModal } = useSubscribe();
-
+const { isLoggedIn } = useAuth();
   const features = [
     t("pricing.feature1"),
     t("pricing.feature2"),
@@ -97,12 +98,17 @@ const Pricing = () => {
                 </div>
 
                 {/* Subscribe Button */}
+                 {!isLoggedIn && (
                 <button
-                  onClick={handleSubscribe}
+                 onClick={() =>
+  window.location.href =
+    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+}
                   className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-md hover:shadow-xl transition"
                 >
                   {t("pricing.subscribe")}
                 </button>
+                 )}
 
               </div>
 

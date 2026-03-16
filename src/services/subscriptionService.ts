@@ -3,7 +3,7 @@ import axios from "axios";
 const SERVICE_ID = "205";
 
 export const getHE = async () => {
-  const res = await axios.get("http://he.zaheen.com.pk/gethe");
+  const res = await axios.get("https://z.zaheen.com.pk/he/gethe");
   return res.data;
 };
 

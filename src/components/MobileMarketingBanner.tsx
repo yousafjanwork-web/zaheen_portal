@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { useSubscribe } from "@/hooks/useSubscribe";
+import { t } from "@/i18n";
+
+import { useAuth } from "@/context/AuthContext";
 
 const MobileMarketingBanner = () => {
 
-  const { handleSubscribe } = useSubscribe();
+  const { isLoggedIn } = useAuth();
+
   const [visible, setVisible] = useState(true);
 
   if (!visible) return null;
@@ -13,17 +16,24 @@ const MobileMarketingBanner = () => {
     <div className="bg-gradient-to-r from-blue-500 via-teal-500 to-lime-500 text-white px-4 py-2 flex items-center justify-between text-sm">
 
       <span className="font-medium">
-        Learn Skills from Rs 5/day
+        {t("mob.heading1")}
       </span>
 
       <div className="flex items-center gap-3">
 
-        <button
-          onClick={handleSubscribe}
-          className="bg-white text-primary px-3 py-1 rounded-lg font-semibold"
-        >
-          Subscribe
-        </button>
+        {!isLoggedIn && (
+
+          <button
+            onClick={() =>
+              window.location.href =
+                "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+            }
+            className="bg-primary text-white px-4 py-1.5 rounded-full"
+          >
+            {t("auth.subscribe")}
+          </button>
+
+        )}
 
         <button onClick={() => setVisible(false)}>
           <X size={16}/>

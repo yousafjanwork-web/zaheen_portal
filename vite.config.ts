@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 3000,
-      allowedHosts: ['demo.zaheen.com.pk'],
+      allowedHosts: ['z.zaheen.com.pk'],
       hmr: process.env.DISABLE_HMR !== 'true',
     },
   }

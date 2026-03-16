@@ -3,10 +3,12 @@ import { t } from "@/i18n";
 
 import SubscribeModal from "@/components/SubscribeModal";
 import { useSubscribe } from "@/hooks/useSubscribe";
+import { useAuth } from "@/context/AuthContext";
 
 export const CTASection = () => {
 
   const { handleSubscribe, showModal, setShowModal } = useSubscribe();
+  const { isLoggedIn } = useAuth();
 
   return (
     <>
@@ -49,13 +51,17 @@ export const CTASection = () => {
           </div>
 
           {/* Button */}
+           {!isLoggedIn && (
           <button
-            onClick={handleSubscribe}
+            onClick={() =>
+       window.location.href =
+    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+      }
             className="relative z-10 bg-white text-primary px-10 py-5 rounded-2xl font-bold text-xl hover:bg-blue-50 transition-all hover:scale-105 shadow-lg whitespace-nowrap"
           >
             {t("cta.button")}
           </button>
-
+        )}
         </div>
 
       </section>

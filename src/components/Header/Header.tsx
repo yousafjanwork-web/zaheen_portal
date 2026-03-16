@@ -9,10 +9,9 @@ import CoursesMenu from "@/components/Header/CoursesMenu";
 import LearningMenu from "@/components/Header/LearningMenu";
 import MobileMenu from "@/components/Header/MobileMenu";
 
-import SubscribeModal from "@/components/SubscribeModal";
-import LoginModal from "@/components/LoginModal";
 
-import { useSubscribe } from "@/hooks/useSubscribe";
+
+
 import { useAuth } from "@/context/AuthContext";
 import { useLogin } from "@/hooks/useLogin";
 
@@ -36,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { handleLogin } = useLogin(() => setShowLoginModal(true));
 
-  const { handleSubscribe, showModal, setShowModal } = useSubscribe();
+
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [coursesOpen, setCoursesOpen] = useState(false);
@@ -285,14 +284,24 @@ className="border px-4 py-2 rounded-full"
 <>
 
 <button
-onClick={handleLogin}
+onClick={() => {
+  const redirect = encodeURIComponent(
+    "https://z.zaheen.com.pk/login"
+  );
+
+  window.location.href =
+    `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
+}}
 className="border border-primary text-primary px-5 py-2 rounded-full"
 >
 {t("auth.login")}
 </button>
 
 <button
-onClick={handleSubscribe}
+onClick={() =>
+  window.location.href =
+    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+}
 className="bg-primary text-white px-5 py-2 rounded-full"
 >
 {t("auth.subscribe")}
@@ -318,14 +327,6 @@ onClick={()=>setMenuOpen(!menuOpen)}
 <MobileMenu open={menuOpen}/>
 
 </header>
-
-{showModal && (
-<SubscribeModal onClose={()=>setShowModal(false)}/>
-)}
-
-{showLoginModal && (
-<LoginModal onClose={()=>setShowLoginModal(false)}/>
-)}
 
 </>
 );

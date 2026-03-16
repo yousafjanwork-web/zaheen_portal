@@ -185,7 +185,7 @@
     "contact": "Contact Us",
     "contactText": "If you have questions regarding these terms please contact us:"
   },
-  "hero": {
+  
     "mobileTitle": "Build in-demand skills",
     "mobileSubtitle": "Get access to all courses with one subscription.",
     "subscribe": "Subscribe Now",
@@ -207,6 +207,9 @@
     "description": "Access all courses with one subscription.",
     "button": "Subscribe Now"
   }
-}
+  ,
+  "mob":{
+    "heading1":"Learn Skills from Rs 5/day"
+  }
 
 }

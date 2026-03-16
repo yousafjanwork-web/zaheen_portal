@@ -12,7 +12,10 @@ import SkillsChaptersPage from "@/pages/SkillsChaptersPage";
 import PracticeCornerPage from "@/pages/PracticeCornerPage";
 import WorksheetsPage from "@/pages/WorksheetPage";
 import BoardResultsPage from "@/pages/BoardResultsPage";
+import SubscribePage  from "@/pages/SubscribePage";
+import LoginPage from "@/pages/LoginPage";
 import Chatbot from "@/pages/Chatbot";
+import MzaPage from "@/pages/MzaPage";
 
 const AppRoutes = () => {
   return (
@@ -36,6 +39,9 @@ const AppRoutes = () => {
           <Route path="/worksheets/:subjectId" element={<WorksheetsPage />} />
           <Route path="/results" element={<BoardResultsPage />} />
           <Route path="/ai" element={<Chatbot />} />
+          <Route path="/subscribe" element={<SubscribePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/mza" element={<MzaPage />} />
 
         </Routes>
       </MainLayout>
