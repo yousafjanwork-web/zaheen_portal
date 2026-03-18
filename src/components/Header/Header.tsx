@@ -88,248 +88,247 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   return (
     <>
       <header
-  className={`hidden lg:block sticky top-0 z-50 transition ${
-    isScrolled
-      ? "bg-white/90 backdrop-blur-md border-b border-slate-200"
-      : "bg-white"
-  }`}
->
+        className={`hidden lg:block sticky top-0 z-50 transition ${isScrolled
+            ? "bg-white/90 backdrop-blur-md border-b border-slate-200"
+            : "bg-white"
+          }`}
+      >
 
         <div
           ref={dropdownRef}
           className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16"
         >
 
-{/* LEFT */}
+          {/* LEFT */}
 
-<div className="flex items-center gap-6">
+          <div className="flex items-center gap-6">
 
-<Link to="/" onClick={closeMenus}>
-<img src={logo} alt="Zaheen" className="h-10 cursor-pointer"/>
-</Link>
+            <Link to="/" onClick={closeMenus}>
+              <img src={logo} alt="Zaheen" className="h-10 cursor-pointer" />
+            </Link>
 
-{/* BOARD */}
+            {/* BOARD */}
 
-<div className="relative hidden lg:block">
+            <div className="relative hidden lg:block">
 
-<button
-onClick={() => setBoardOpen(!boardOpen)}
-className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-sm font-medium"
->
-{t(selectedBoard)}
-<ChevronDown size={16}/>
-</button>
+              <button
+                onClick={() => setBoardOpen(!boardOpen)}
+                className="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-sm font-medium"
+              >
+                {t(selectedBoard)}
+                <ChevronDown size={16} />
+              </button>
 
-{boardOpen && (
+              {boardOpen && (
 
-<div className="absolute top-12 left-0 w-56 bg-white shadow-lg rounded-xl border p-2">
+                <div className="absolute top-12 left-0 w-56 bg-white shadow-lg rounded-xl border p-2">
 
-{boards.map((b) => (
+                  {boards.map((b) => (
 
-<button
-key={b.key}
-onClick={()=>{
-setSelectedBoard(b.key)
-setBoardOpen(false)
-}}
-className="block w-full text-left px-3 py-2 rounded-md hover:bg-slate-100"
->
-{t(b.key)}
-</button>
+                    <button
+                      key={b.key}
+                      onClick={() => {
+                        setSelectedBoard(b.key)
+                        setBoardOpen(false)
+                      }}
+                      className="block w-full text-left px-3 py-2 rounded-md hover:bg-slate-100"
+                    >
+                      {t(b.key)}
+                    </button>
 
-))}
+                  ))}
 
-</div>
+                </div>
 
-)}
+              )}
 
-</div>
+            </div>
 
-{/* NAV */}
+            {/* NAV */}
 
-<nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
+            <nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
 
-<Link to="/" onClick={closeMenus} className="hover:text-primary">
-{t("menu.home")}
-</Link>
+              <Link to="/" onClick={closeMenus} className="hover:text-primary">
+                {t("menu.home")}
+              </Link>
 
-{/* COURSES */}
+              {/* COURSES */}
 
-<div className="relative">
+              <div className="relative">
 
-<button
-onClick={()=>{
-setCoursesOpen(!coursesOpen)
-setLearningOpen(false)
-}}
-className="flex items-center gap-1 hover:text-primary"
->
-{t("menu.courses")}
-<ChevronDown size={16}/>
-</button>
+                <button
+                  onClick={() => {
+                    setCoursesOpen(!coursesOpen)
+                    setLearningOpen(false)
+                  }}
+                  className="flex items-center gap-1 hover:text-primary"
+                >
+                  {t("menu.courses")}
+                  <ChevronDown size={16} />
+                </button>
 
-<CoursesMenu
-open={coursesOpen}
-onClose={() => setCoursesOpen(false)}
-/>
+                <CoursesMenu
+                  open={coursesOpen}
+                  onClose={() => setCoursesOpen(false)}
+                />
 
-</div>
+              </div>
 
-{/* LEARNING */}
+              {/* LEARNING */}
 
-<div className="relative">
+              <div className="relative">
 
-<button
-onClick={()=>{
-setLearningOpen(!learningOpen)
-setCoursesOpen(false)
-}}
-className="flex items-center gap-1 hover:text-primary"
->
-{t("menu.learningHub")}
-<ChevronDown size={16}/>
-</button>
+                <button
+                  onClick={() => {
+                    setLearningOpen(!learningOpen)
+                    setCoursesOpen(false)
+                  }}
+                  className="flex items-center gap-1 hover:text-primary"
+                >
+                  {t("menu.learningHub")}
+                  <ChevronDown size={16} />
+                </button>
 
-<LearningMenu
-open={learningOpen}
-onClose={() => setLearningOpen(false)}
-/>
+                <LearningMenu
+                  open={learningOpen}
+                  onClose={() => setLearningOpen(false)}
+                />
 
-</div>
+              </div>
 
-<Link to="/ai" onClick={closeMenus} className="hover:text-primary">
-{t("menu.aiTutor")}
-</Link>
+              <Link to="/ai" onClick={closeMenus} className="hover:text-primary">
+                {t("menu.aiTutor")}
+              </Link>
 
-</nav>
+            </nav>
 
-</div>
+          </div>
 
-{/* RIGHT */}
+          {/* RIGHT */}
 
-<div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
 
-{/* LANGUAGE */}
+            {/* LANGUAGE */}
 
-<div className="relative">
+            <div className="relative">
 
-<button
-onClick={() => setLanguageOpen(!languageOpen)}
-className="flex items-center gap-1 border px-3 py-1.5 rounded-lg text-sm"
->
-{getLanguage().toUpperCase()}
-<ChevronDown size={16}/>
-</button>
+              <button
+                onClick={() => setLanguageOpen(!languageOpen)}
+                className="flex items-center gap-1 border px-3 py-1.5 rounded-lg text-sm"
+              >
+                {getLanguage().toUpperCase()}
+                <ChevronDown size={16} />
+              </button>
 
-{languageOpen && (
+              {languageOpen && (
 
-<div className="absolute right-0 top-10 w-36 bg-white shadow-lg border rounded-xl py-2">
+                <div className="absolute right-0 top-10 w-36 bg-white shadow-lg border rounded-xl py-2">
 
-<button
-onClick={()=>{
-setLanguage("en")
-setLanguageOpen(false)
-}}
-className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
->
-EN – {t("language.english")}
-</button>
+                  <button
+                    onClick={() => {
+                      setLanguage("en")
+                      setLanguageOpen(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
+                  >
+                    EN – {t("language.english")}
+                  </button>
 
-<button
-onClick={()=>{
-setLanguage("ur")
-setLanguageOpen(false)
-}}
-className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
->
-UR – {t("language.urdu")}
-</button>
+                  <button
+                    onClick={() => {
+                      setLanguage("ur")
+                      setLanguageOpen(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
+                  >
+                    UR – {t("language.urdu")}
+                  </button>
 
-</div>
+                </div>
 
-)}
+              )}
 
-</div>
+            </div>
 
-{/* THEME */}
+            {/* THEME */}
 
-<button
-onClick={toggleTheme}
-className="p-2 rounded-full bg-slate-100"
->
-{isDark ? <Sun size={18}/> : <Moon size={18}/>}
-</button>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full bg-slate-100"
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
-{/* AUTH */}
+            {/* AUTH */}
 
-{msisdn ? (
+            {msisdn ? (
 
-<>
+              <>
 
-<span className="text-sm font-medium">
-{msisdn}
-</span>
+                <span className="text-sm font-medium">
+                  {msisdn}
+                </span>
 
-<button
-onClick={logout}
-className="border px-4 py-2 rounded-full"
->
-{t("auth.logout")}
-</button>
+                <button
+                  onClick={logout}
+                  className="border px-4 py-2 rounded-full"
+                >
+                  {t("auth.logout")}
+                </button>
 
-</>
+              </>
 
-) : (
+            ) : (
 
-<>
+              <>
 
-<button
-onClick={() => {
-  const redirect = encodeURIComponent(
-    "https://z.zaheen.com.pk/login"
+                <button
+                  onClick={() => {
+                    const redirect = encodeURIComponent(
+                      "https://z.zaheen.com.pk/login"
+                    );
+
+                    window.location.href =
+                      `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
+                  }}
+                  className="border border-primary text-primary px-5 py-2 rounded-full"
+                >
+                  {t("auth.login")}
+                </button>
+
+                <button
+                  onClick={() =>
+                    window.location.href =
+                    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+                  }
+                  className="bg-primary text-white px-5 py-2 rounded-full"
+                >
+                  {t("auth.subscribe")}
+                </button>
+
+              </>
+
+            )}
+
+            {/* MOBILE */}
+
+            <button
+              className="lg:hidden"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+
+          </div>
+
+        </div>
+
+        <MobileMenu open={menuOpen} />
+
+      </header>
+
+    </>
   );
-
-  window.location.href =
-    `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
-}}
-className="border border-primary text-primary px-5 py-2 rounded-full"
->
-{t("auth.login")}
-</button>
-
-<button
-onClick={() =>
-  window.location.href =
-    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
-}
-className="bg-primary text-white px-5 py-2 rounded-full"
->
-{t("auth.subscribe")}
-</button>
-
-</>
-
-)}
-
-{/* MOBILE */}
-
-<button
-className="lg:hidden"
-onClick={()=>setMenuOpen(!menuOpen)}
->
-{menuOpen ? <X size={22}/> : <Menu size={22}/>}
-</button>
-
-</div>
-
-</div>
-
-<MobileMenu open={menuOpen}/>
-
-</header>
-
-</>
-);
 
 };
 
