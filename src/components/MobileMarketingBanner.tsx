@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { t } from "@/i18n";
 
+import { handleSubscribe } from "@/services/subscriptionService";
 import { useAuth } from "@/context/AuthContext";
 
 const MobileMarketingBanner = () => {
 
-  const { isLoggedIn } = useAuth();
+const { msisdn, login, isLoggedIn } = useAuth();
 
   const [visible, setVisible] = useState(true);
 
@@ -21,13 +22,10 @@ const MobileMarketingBanner = () => {
 
       <div className="flex items-center gap-3">
 
-        {!isLoggedIn && (
+    {!isLoggedIn && (
 
           <button
-            onClick={() =>
-              window.location.href =
-                "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
-            }
+            onClick={() => handleSubscribe(msisdn, login)}
             className="bg-primary text-white px-4 py-1.5 rounded-full"
           >
             {t("auth.subscribe")}

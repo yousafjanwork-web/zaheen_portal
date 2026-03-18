@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { handleSubscribe } from "@/services/subscriptionService";
+import { useAuth } from "@/context/AuthContext";
 import { t } from "@/i18n";
 
 import banner1 from "@/assets/images/banner1.jpeg";
@@ -15,6 +17,7 @@ const slides = [
 const HeroMobile = () => {
 
   const [current, setCurrent] = useState(0);
+  const { msisdn, login, isLoggedIn } = useAuth();
 
   const next = () =>
     setCurrent((prev) => (prev + 1) % slides.length);
@@ -68,22 +71,9 @@ const HeroMobile = () => {
             </p>
 
             {/* BUTTON */}
-
+ {!isLoggedIn && (
             <button
-            onClick={() => {
-
-  if (slides[current].key === "slide3") {
-
-    const redirect = encodeURIComponent(
-      "https://z.zaheen.com.pk/subscribe"
-    );
-
-    window.location.href =
-      `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
-
-  }
-
-}}
+            onClick={() => handleSubscribe(msisdn, login)}
               className="w-full py-4 rounded-xl text-white font-semibold text-lg
               bg-gradient-to-r from-purple-600 to-blue-500 shadow-md"
             >
@@ -91,7 +81,7 @@ const HeroMobile = () => {
               {t(`${slides[current].key}.button`)}
 
             </button>
-
+)}
           </div>
 
         </motion.div>

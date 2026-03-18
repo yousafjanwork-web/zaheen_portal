@@ -5,11 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 import HomeMobile from "@/pages/Home/HomeMobile";
 
 import { logMzaRequest } from "@/services/mzaService";
+import { checkSubscriberStatus } from "@/services/subscriptionService";
 
 const MzaPage = () => {
 
   const [searchParams] = useSearchParams();
-
   const { login } = useAuth();
 
   useEffect(() => {
@@ -24,22 +24,55 @@ const MzaPage = () => {
     if (!data) {
 
       console.warn("No MSISDN found in request");
-
       return;
 
     }
 
-    const msisdn = data;
+    let msisdn = data;
 
-    /* CALL LOG SERVICE */
+    /* NORMALIZE MSISDN */
+
+    if (!msisdn.startsWith("92")) {
+
+      msisdn = "92" + msisdn;
+
+    }
+
+    console.log("Normalized MSISDN:", msisdn);
+
+    /* LOG REQUEST */
 
     logMzaRequest(msisdn, signature);
 
-    /* LOGIN USER */
+    /* CHECK SUBSCRIPTION */
 
-    login(msisdn);
+    checkSubscriberStatus(msisdn)
+      .then((res) => {
 
-    console.log("User logged in via MZA:", msisdn);
+        console.log("Subscriber status:", res);
+
+        if (res.status === "ACTIVE") {
+
+          console.log("User already subscribed → login");
+
+          login(msisdn);
+
+        } else {
+
+          console.log("User not subscribed → store session");
+
+          login(msisdn); // still store session
+
+        }
+
+      })
+      .catch((err) => {
+
+        console.error("Status check failed:", err);
+
+        login(msisdn); // fallback
+
+      });
 
   }, []);
 

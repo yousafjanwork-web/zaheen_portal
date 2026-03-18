@@ -47,7 +47,7 @@ const SubscribePage = () => {
 
     try {
 
-      const res = await sendPin(number);
+      const res = await sendPin(number,login);
 
       if (res.status === "PIN_SENT") {
 
@@ -73,7 +73,7 @@ const SubscribePage = () => {
       setLoading(true);
       setError("");
 
-      const res = await sendPin(msisdn);
+      const res = await sendPin(msisdn,login);
 
       if (res.status === "PIN_SENT") {
 
@@ -159,7 +159,7 @@ const SubscribePage = () => {
 
     try {
 
-      await sendPin(msisdn);
+      await sendPin(msisdn,login);
 
     } catch {
 
