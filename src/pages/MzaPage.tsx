@@ -5,7 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import HomeMobile from "@/pages/Home/HomeMobile";
 
 import { logMzaRequest } from "@/services/mzaService";
-import { checkSubscriberStatus } from "@/services/subscriptionService";
 
 const MzaPage = () => {
 
@@ -21,21 +20,14 @@ const MzaPage = () => {
     console.log("MSISDN:", data);
     console.log("Signature:", signature);
 
-    if (!data) {
-
-      console.warn("No MSISDN found in request");
-      return;
-
-    }
+    if (!data) return;
 
     let msisdn = data;
 
-    /* NORMALIZE MSISDN */
+    /* NORMALIZE */
 
     if (!msisdn.startsWith("92")) {
-
       msisdn = "92" + msisdn;
-
     }
 
     console.log("Normalized MSISDN:", msisdn);
@@ -44,35 +36,9 @@ const MzaPage = () => {
 
     logMzaRequest(msisdn, signature);
 
-    /* CHECK SUBSCRIPTION */
+    /* STORE MZA MSISDN */
 
-    checkSubscriberStatus(msisdn)
-      .then((res) => {
-
-        console.log("Subscriber status:", res);
-
-        if (res.status === "ACTIVE") {
-
-          console.log("User already subscribed → login");
-
-          login(msisdn);
-
-        } else {
-
-          console.log("User not subscribed → store session");
-
-          login(msisdn); // still store session
-
-        }
-
-      })
-      .catch((err) => {
-
-        console.error("Status check failed:", err);
-
-        login(msisdn); // fallback
-
-      });
+    sessionStorage.setItem("mzaMsisdn", msisdn);
 
   }, []);
 

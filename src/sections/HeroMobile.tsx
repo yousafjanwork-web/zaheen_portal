@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { handleSubscribe } from "@/services/subscriptionService";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { t } from "@/i18n";
+import { useSubscribe } from "@/hooks/useSubscribe";
 
 import banner1 from "@/assets/images/banner1.jpeg";
 import banner2 from "@/assets/images/banner2.jpeg";
 import banner3 from "@/assets/images/banner3.jpeg";
 
 const slides = [
-  { key: "slide1", image: banner1 },
-  { key: "slide2", image: banner2 },
-  { key: "slide3", image: banner3 }
+  { key: "slide1", image: banner1, plan: "205" },
+  { key: "slide2", image: banner2, plan: "206" },
+  { key: "slide3", image: banner3, plan: "207" }
 ];
 
 const HeroMobile = () => {
 
   const [current, setCurrent] = useState(0);
-  const { msisdn, login, isLoggedIn } = useAuth();
+    const { handleSubscribe } = useSubscribe();
+  const { isLoggedIn } = useAuth();
+ 
 
   const next = () =>
     setCurrent((prev) => (prev + 1) % slides.length);
@@ -28,6 +31,8 @@ const HeroMobile = () => {
     return () => clearInterval(timer);
 
   }, []);
+
+ 
 
   return (
 
@@ -71,17 +76,21 @@ const HeroMobile = () => {
             </p>
 
             {/* BUTTON */}
- {!isLoggedIn && (
-            <button
-            onClick={() => handleSubscribe(msisdn, login)}
-              className="w-full py-4 rounded-xl text-white font-semibold text-lg
-              bg-gradient-to-r from-purple-600 to-blue-500 shadow-md"
-            >
 
-              {t(`${slides[current].key}.button`)}
+            {!isLoggedIn && (
 
-            </button>
-)}
+              <button
+                onClick={handleSubscribe}
+                className="w-full py-4 rounded-xl text-white font-semibold text-lg
+                bg-gradient-to-r from-purple-600 to-blue-500 shadow-md"
+              >
+
+                {t(`${slides[current].key}.button`)}
+
+              </button>
+
+            )}
+
           </div>
 
         </motion.div>

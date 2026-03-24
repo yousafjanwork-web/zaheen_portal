@@ -1,49 +1,38 @@
-import { useState } from "react";
-import {
-  getHE,
-  checkSubscriberStatus,
-  subscribeUser
-} from "@/services/subscriptionService";
+import { useNavigate } from "react-router-dom";
 
 export const useSubscribe = () => {
 
-  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = () => {
 
-    try {
+    /* Check if user came from MZA */
 
-      const he = await getHE();
+    const mzaMsisdn = sessionStorage.getItem("mzaMsisdn");
 
-      const msisdn = he.msisdn;
+    if (mzaMsisdn) {
 
-      if (!msisdn) {
-        setShowModal(true);
-        return;
-      }
+      console.log("MZA user detected:", mzaMsisdn);
 
-      const status = await checkSubscriberStatus(msisdn);
+      navigate(`/subscribe?msisdn=${mzaMsisdn}`);
 
-      if (status.status === "ACTIVE") {
+      return;
 
-        alert("User already subscribed. Login.");
-
-      } else {
-
-        await subscribeUser(msisdn);
-
-        alert("Subscription successful");
-
-      }
-
-    } catch (err) {
-      console.error(err);
     }
+
+    /* Otherwise redirect to HE */
+
+    console.log("Redirecting to HE");
+
+    const redirect = encodeURIComponent(
+      "https://z.zaheen.com.pk/subscribe"
+    );
+
+    window.location.href =
+      `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
+
   };
 
-  return {
-    handleSubscribe,
-    showModal,
-    setShowModal
-  };
+  return { handleSubscribe };
+
 };

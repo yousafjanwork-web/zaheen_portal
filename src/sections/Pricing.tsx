@@ -2,15 +2,16 @@ import React from "react";
 import { CheckCircle2, Users, ShieldCheck, RefreshCw } from "lucide-react";
 import logo from "@/assets/images/ZaheenLogo.png";
 import { t } from "@/i18n";
+import { useNavigate } from "react-router-dom";
 
-import SubscribeModal from "@/components/SubscribeModal";
-import { useSubscribe } from "@/hooks/useSubscribe";
+import { handleSubscribe } from "@/services/subscriptionService";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscribe } from "@/hooks/useSubscribe";
 
 const Pricing = () => {
 
-  const { handleSubscribe, showModal, setShowModal } = useSubscribe();
-const { isLoggedIn } = useAuth();
+const { msisdn, login, isLoggedIn } = useAuth();
+   const { handleSubscribe } = useSubscribe();
   const features = [
     t("pricing.feature1"),
     t("pricing.feature2"),
@@ -100,10 +101,7 @@ const { isLoggedIn } = useAuth();
                 {/* Subscribe Button */}
                  {!isLoggedIn && (
                 <button
-                 onClick={() =>
-  window.location.href =
-    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
-}
+                 onClick={handleSubscribe}
                   className="w-full py-4 bg-primary text-white font-bold rounded-2xl shadow-md hover:shadow-xl transition"
                 >
                   {t("pricing.subscribe")}
@@ -182,9 +180,7 @@ const { isLoggedIn } = useAuth();
 
       </section>
 
-      {showModal && (
-        <SubscribeModal onClose={() => setShowModal(false)} />
-      )}
+    
 
     </>
   );

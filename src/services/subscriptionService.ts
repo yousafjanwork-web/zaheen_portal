@@ -1,172 +1,179 @@
 import axios from "axios";
 
-const SERVICE_ID = "205";
+/* HE SERVICE */
 
 export const getHE = async () => {
   const res = await axios.get("https://z.zaheen.com.pk/he/gethe");
   return res.data;
 };
 
-export const checkSubscriberStatus = async (msisdn: string) => {
+/* CHECK SUBSCRIBER STATUS */
+
+export const checkSubscriberStatus = async (
+  msisdn: string,
+  serviceId: string
+) => {
+ console.log("Subscriber status  msisdn:"+ msisdn +" serviceid "+ serviceId);
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/subscriber/status",
     {
       params: {
         msisdn,
-        serviceId: SERVICE_ID,
-      },
+        serviceId
+      }
     }
   );
 
   return res.data;
 };
 
-export const subscribeUser = async (msisdn: string) => {
-  const res = await axios.get(
-    "https://subgateway.fitsworld.com.pk/zongcharging/api/subscribe",
-    {
-      params: {
-        msisdn,
-        serviceId: SERVICE_ID,
-        subMethod: "WEB",
-        transactionId: Date.now(),
-      },
-    }
-  );
-
-  return res.data;
-};
+/* SEND PIN */
 
 export const sendPin = async (
   msisdn: string,
-  login: (msisdn: string) => void
+  serviceId: string
 ) => {
 
-  try {
-
-    /* CHECK SUBSCRIBER STATUS FIRST */
-
-    const statusRes = await checkSubscriberStatus(msisdn);
-
-    console.log("Subscriber status:", statusRes);
-
-    if (statusRes.status === "ACTIVE") {
-
-      console.log("User already subscribed");
-
-      alert("You are already subscribed");
-
-      login(msisdn);
-
-      window.location.href = "/";
-
-      return {
-        status: "ALREADY_SUBSCRIBED"
-      };
-
-    }
-
-    /* NOT ACTIVE → SEND PIN */
-
-    const res = await axios.get(
-      "https://subgateway.fitsworld.com.pk/zongcharging/api/send-pin",
-      {
-        params: {
-          msisdn,
-          serviceId: SERVICE_ID,
-        },
+  const res = await axios.get(
+    "https://subgateway.fitsworld.com.pk/zongcharging/api/send-pin",
+    {
+      params: {
+        msisdn,
+        serviceId
       }
-    );
+    }
+  );
 
-    return res.data;
-
-  } catch (error) {
-
-    console.error("Send PIN failed:", error);
-
-    return {
-      status: "ERROR"
-    };
-
-  }
+  return res.data;
 
 };
 
+/* VERIFY PIN */
 
-export const verifyPin = async (msisdn: string, pin: string) => {
+export const verifyPin = async (
+  msisdn: string,
+  pin: string,
+  serviceId: string
+) => {
+
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/verify-pin",
     {
       params: {
         msisdn,
-        serviceId: SERVICE_ID,
-        pin,
-      },
+        serviceId,
+        pin
+      }
     }
   );
 
   return res.data;
+
 };
+
+/* SUBSCRIBE USER */
+
+export const subscribeUser = async (
+  msisdn: string,
+  serviceId: string
+) => {
+
+  const res = await axios.get(
+    "https://subgateway.fitsworld.com.pk/zongcharging/api/subscribe",
+    {
+      params: {
+        msisdn,
+        serviceId,
+        subMethod: "WEB",
+        transactionId: Date.now()
+      }
+    }
+  );
+
+  return res.data;
+
+};
+
+
+/* HANDLE SUBSCRIBE ENTRY */
 
 export const handleSubscribe = async (
   msisdn: string | null,
-  login: (msisdn: string) => void
+  login: (msisdn: string) => void,
+  serviceId: string
 ) => {
 
   try {
 
-    if (msisdn) {
+    /* STORE PLAN BEFORE REDIRECT */
 
-      console.log("Session MSISDN:", msisdn);
+    localStorage.setItem("pendingServiceId", serviceId);
 
-      /* CHECK SUBSCRIBER STATUS */
+    let finalMsisdn = msisdn;
 
-      const statusRes = await checkSubscriberStatus(msisdn);
+    if (!finalMsisdn) {
 
-      console.log("Subscriber status:", statusRes);
+      finalMsisdn =
+        localStorage.getItem("msisdn") ||
+        sessionStorage.getItem("mzaMsisdn");
 
-      if (statusRes.status === "ACTIVE") {
+    }
 
-        console.log("Already subscribed → login");
+    if (!finalMsisdn) {
 
-        login(msisdn);
+      /* REDIRECT TO HE */
 
-        window.location.href = "/";
+      const redirect = encodeURIComponent(
+        `https://z.zaheen.com.pk/subscribe`
+      );
 
-        return;
-
-      }
-
-      /* NOT ACTIVE → SUBSCRIBE */
-
-      const subRes = await subscribeUser(msisdn);
-
-      console.log("Subscribe response:", subRes);
-
-      if (subRes.status === "1") {
-
-        login(msisdn);
-
-        window.location.href = "/";
-
-        return;
-
-      }
-
-      alert(subRes.desc || "Subscription failed");
+      window.location.href =
+        `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
 
       return;
 
     }
 
-    /* NO SESSION → HE REDIRECT */
+    console.log("Using MSISDN:", finalMsisdn);
 
-    const redirect = encodeURIComponent(
-      "https://z.zaheen.com.pk/subscribe"
-    );
+    /* CHECK SUBSCRIBER */
 
-    window.location.href =
-      `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
+    const statusRes = await checkSubscriberStatus(finalMsisdn, serviceId);
+
+    console.log("Subscriber status:", statusRes);
+
+    if (statusRes.status === "ACTIVE") {
+
+      login(finalMsisdn);
+
+      sessionStorage.removeItem("mzaMsisdn");
+
+      window.location.href = "/";
+
+      return;
+
+    }
+
+    /* SUBSCRIBE */
+
+    const subRes = await subscribeUser(finalMsisdn, serviceId);
+
+    console.log("Subscribe response:", subRes);
+
+    if (subRes.status === "1") {
+
+      login(finalMsisdn);
+
+      localStorage.setItem("activeServiceId", serviceId);
+      sessionStorage.removeItem("mzaMsisdn");
+
+      window.location.href = "/";
+
+      return;
+
+    }
+
+    alert(subRes.desc || "Subscription failed");
 
   } catch (error) {
 

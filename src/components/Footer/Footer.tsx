@@ -12,6 +12,9 @@ const Footer: React.FC = () => {
 
   const handleUnsubscribe = async () => {
 
+ const serviceId =
+    localStorage.getItem("activeServiceId") || "205";
+
     if (!msisdn) return;
 
     try {
@@ -21,7 +24,7 @@ const Footer: React.FC = () => {
         {
           params: {
             msisdn,
-            serviceId: 205,
+            serviceId,
             unsubMethod: "CRM"
           }
         }

@@ -1,126 +1,199 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Star, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import { useNavigate } from "react-router-dom";
 import { t } from "@/i18n";
+
 const lang = localStorage.getItem("lang") || "en";
 
-const courses = [
-  {
-    title: t("professionalCourses.course1"),
-    category: t("professionalCourses.marketing"),
-    rating: 4.9,
-    students: "2.4k",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDJkX_TXxwHq6MZdhOUTBlpd5tp-qkeAjVCE-o59dhmRMnAXnnsB1-DQImobEKS2z2Yn1ZCKU9uk8uFGpf6vlubCJIIsEh5FikJ67JFEEEzvM7FqHctvvZHSNWJIZC4USg2gWsilDW2OLavFD39IMPU-NJR_ZtmIBPHR3Os197CIl-C79vydqJUbF_sbbfmcj6CwlxRTlZpmrxely56vqrhWBPZ5bS0gy306ElzO4xoOsrg9ek33MYfI_HO81kuAQwdvHZp2j5rEaVn",
-    color: "bg-blue-500"
-  },
-  {
-    title: t("professionalCourses.course2"),
-    category: t("professionalCourses.finance"),
-    rating: 4.7,
-    students: "1.8k",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCYs3SQgxFgjS8u4qG6h7dPOjQh3_lZv3_dVbctjI7_qykNpwvOxQceNjSPI5xyVtJQfr9B3vovKI_S0HZDp690u4cuUyr2YUEzgUzXV9rOQoWb9axJNb1teoSNlCKDL5E9DhM1KnOWmM5hp_JRbzsCo2Q_yAKtBr2dKDbWYi1uFYHqYoL6ZPg-LnjVgoytz9IeBKa08WnBc4L6y4V_tUXN3XGpNw1PXSg6wBFpngWRG-zSkQ67nErXqKzYZetMadGbsE5i_wtRk01B",
-    color: "bg-green-500"
-  },
-  {
-    title: t("professionalCourses.course3"),
-    category: t("professionalCourses.development"),
-    rating: 5.0,
-    students: "3.2k",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBiyEF6B4PIAtfDJYQ4n3gSsGQYM4pt71ui3LrryXFc1IfqTLAvNIyvpF5rcJsvYobto4-XNeG2FbGxQ98V9AH_DTwN5pxHXtHUHwC5_6L9NJx13tO3ut467KPhPQGp36q4il_q70bWH00u0UcYVEW3BfE_uLix3sWuE9aFmg1_aUoN4Wh9kbPBPhR189fli2iNe8n0_0IqFH-GHWaGVQKDLBvg7TiBs9MGti2iqKlClY6ugaUuQs2cPeFKu3YanDz8eGmSb_FBtlbU",
-    color: "bg-purple-500"
-  }
-  
-];
-
 const ProfessionalCourses = () => {
+
+  const navigate = useNavigate();
+
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      loop: true,
+      align: "start",
+      dragFree: true
+    },
+    [Autoplay({ delay: 3500, stopOnInteraction: true })]
+  );
+
+  useEffect(() => {
+
+    const fetchCourses = async () => {
+
+      try {
+
+        const response = await fetch(
+          "https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3"
+        );
+
+        const data = await response.json();
+
+        setCourses(data);
+
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      } finally {
+        setLoading(false);
+      }
+
+    };
+
+    fetchCourses();
+
+  }, []);
+
+  const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
+  const scrollNext = () => emblaApi && emblaApi.scrollNext();
+
+  const openCourse = (course) => {
+    navigate(`/skills/${course.class_id}`);
+  };
+
   return (
-    <section className="py-24 bg-slate-50" id="professional-courses">
+    <section className="py-24 bg-slate-50 relative">
 
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-14">
+
+        <div className="flex justify-between items-center mb-12">
 
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               {t("professionalCourses.title")}
             </h2>
 
-            <p className="text-slate-500">
+            <p className="text-slate-500 mt-2">
               {t("professionalCourses.subtitle")}
             </p>
+
           </div>
 
           <div className="flex gap-3">
 
-  <button className="p-3 rounded-full border border-slate-200 hover:bg-white shadow-sm">
-    {lang === "ur" ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-  </button>
+            <button
+              onClick={scrollPrev}
+              className="p-3 rounded-full bg-white shadow hover:scale-105 transition"
+            >
+              {lang === "ur"
+                ? <ChevronRight size={20} />
+                : <ChevronLeft size={20} />}
+            </button>
 
-  <button className="p-3 rounded-full border border-slate-200 hover:bg-white shadow-sm">
-    {lang === "ur" ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-  </button>
+            <button
+              onClick={scrollNext}
+              className="p-3 rounded-full bg-white shadow hover:scale-105 transition"
+            >
+              {lang === "ur"
+                ? <ChevronLeft size={20} />
+                : <ChevronRight size={20} />}
+            </button>
 
-</div>
+          </div>
 
         </div>
 
-        {/* Courses */}
-        <div className="grid md:grid-cols-3 gap-8">
+        {/* Carousel */}
 
-          {courses.map((course, index) => (
+        <div className="relative">
 
-            <motion.div
-              key={index}
-              whileHover={{ y: -8 }}
-              transition={{ duration: 0.25 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition"
-            >
+          {/* Gradient edges */}
 
-              <div className="relative">
+          <div className="absolute left-0 top-0 w-24 h-full bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
 
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="w-full h-52 object-cover"
-                />
+          <div className="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
 
-                <span
-                  className={`absolute top-4 left-4 ${course.color} text-white text-xs font-semibold px-3 py-1 rounded-full`}
-                >
-                  {course.category}
-                </span>
+          <div className="overflow-hidden" ref={emblaRef}>
 
-              </div>
+            <div className="flex gap-6">
 
-              <div className="p-6">
+              {loading
+                ? [...Array(5)].map((_, i) => (
 
-                <h3 className="text-lg font-bold text-slate-900 mb-4 line-clamp-2">
-                  {course.title}
-                </h3>
+                    <div
+                      key={i}
+                      className="min-w-[260px] md:min-w-[300px] bg-white rounded-2xl shadow animate-pulse"
+                    >
+                      <div className="h-44 bg-slate-200 rounded-t-2xl"></div>
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 bg-slate-200 rounded"></div>
+                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
 
-                <div className="flex items-center gap-5 text-sm text-slate-500">
+                  ))
+                : courses.map((course) => (
 
-                  <div className="flex items-center text-amber-500">
-                    <Star size={16} fill="currentColor" className="mr-1" />
-                    {course.rating}
-                  </div>
+                    <motion.div
+                      key={course.id}
+                      whileHover={{ scale: 1.06 }}
+                      transition={{ duration: 0.3 }}
+                      onClick={() => openCourse(course)}
+                      className="min-w-[260px] md:min-w-[300px] bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer group"
+                    >
 
-                  <div className="flex items-center">
-                    <Users size={16} className="mr-1" />
-                    {course.students} {t("professionalCourses.students")}
-                  </div>
+                      {/* Image */}
 
-                </div>
+                      <div className="relative overflow-hidden">
 
-              </div>
+                        <img
+                          src={course.thumbnailUrl}
+                          alt={course.name}
+                          className="w-full h-44 object-cover group-hover:scale-110 transition duration-500"
+                        />
 
-            </motion.div>
+                        <div className="absolute top-3 left-3 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
+                          Professional
+                        </div>
 
-          ))}
+                      </div>
+
+                      {/* Content */}
+
+                      <div className="p-5">
+
+                        <h3 className="font-bold text-slate-900 line-clamp-2 mb-3">
+                          {lang === "ur"
+                            ? course.urdu_name
+                            : course.name}
+                        </h3>
+
+                        <div className="flex items-center justify-between text-sm text-slate-500">
+
+                          <div className="flex items-center text-amber-500">
+                            <Star
+                              size={15}
+                              fill="currentColor"
+                              className="mr-1"
+                            />
+                            5.0
+                          </div>
+
+                          <div className="flex items-center">
+                            <Users size={15} className="mr-1" />
+                            {course.chapterCount} {t("professionalCourses.students")}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </motion.div>
+
+                  ))}
+
+            </div>
+
+          </div>
 
         </div>
 
