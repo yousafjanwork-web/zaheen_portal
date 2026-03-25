@@ -154,7 +154,16 @@ const GradesView = () => {
               {isUrdu ? "امتحانات" : "Assessments"}
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+            <div
+              onClick={() => {
+                if (type === "9-12") {
+                  navigate("/resources?type=9-12");
+                } else {
+                  navigate(`/practice?section=${type}`);
+                }
+              }}
+              className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
+            >
               <FolderOpen size={18} />
               {isUrdu ? "وسائل" : "Resources"}
             </div>
@@ -187,11 +196,10 @@ const GradesView = () => {
                     <img
                       src={grade.image}
                       alt={grade.title}
-                      className={`w-full h-full ${
-                        grade.id <= 6
-                          ? "object-contain bg-slate-50 p-2"
-                          : "object-cover"
-                      }`}
+                      className={`w-full h-full ${grade.id <= 6
+                        ? "object-contain bg-slate-50 p-2"
+                        : "object-cover"
+                        }`}
                     />
 
                     <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">

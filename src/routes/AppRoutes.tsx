@@ -12,10 +12,12 @@ import SkillsChaptersPage from "@/modules/courses/pages/SkillsChaptersPage";
 import PracticeCornerPage from "@/modules/practice/pages/PracticeCornerPage";
 import WorksheetsPage from "@/modules/worksheets/pages/WorksheetPage";
 import BoardResultsPage from "@/modules/results/pages/BoardResultsPage";
-import SubscribePage  from "@/modules/auth/pages/SubscribePage";
+import SubscribePage from "@/modules/auth/pages/SubscribePage";
 import LoginPage from "@/modules/auth/pages/LoginPage";
 import Chatbot from "@/modules/aiTutor/pages/Chatbot";
 import MzaPage from "@/pages/MzaPage";
+import ResourcesPage from "@/modules/courses/pages/ResourcesPage";
+import ResourcePlayer from "@/modules/courses/pages/ResourcesPlayer";
 
 const AppRoutes = () => {
   return (
@@ -42,6 +44,8 @@ const AppRoutes = () => {
           <Route path="/subscribe" element={<SubscribePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/mza" element={<MzaPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/resource-player" element={<ResourcePlayer />} />
 
         </Routes>
       </MainLayout>

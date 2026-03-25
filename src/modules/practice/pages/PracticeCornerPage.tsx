@@ -2,14 +2,20 @@ import React, { useEffect, useState } from "react";
 import { BookOpen, Brain, Pencil, Shapes, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
+import { useSearchParams } from "react-router-dom";
 
 const PracticeCornerPage = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+  const section = searchParams.get("section");
+
   const lang = getLanguage();
   const isUrdu = lang === "ur";
+
+
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -19,11 +25,28 @@ const PracticeCornerPage = () => {
       const data = await res.json();
 
       setClasses(data);
-      setSelectedClass(data[0]);
+
+      // 🔥 Mapping logic
+      let targetId = null;
+
+      if (section === "kg") targetId = 1;
+      else if (section === "1-5") targetId = 2;
+      else if (section === "6-8") targetId = 7;
+      else if (section === "9-12") targetId = 10;
+
+      // ✅ Find matching class
+      const foundClass =
+        data.find((c: any) => c.class_id === targetId) || data[0];
+
+      setSelectedClass(foundClass);
     };
 
     fetchClasses();
-  }, []);
+  }, [section]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [section]);
 
   const subjectIcons = [BookOpen, Brain, Pencil, Shapes, Sparkles];
 
@@ -99,11 +122,10 @@ const PracticeCornerPage = () => {
                     key={cls.class_id}
                     onClick={() => setSelectedClass(cls)}
                     className={`text-left px-4 py-3 rounded-xl transition font-semibold
-                    ${
-                      selectedClass?.class_id === cls.class_id
+                    ${selectedClass?.class_id === cls.class_id
                         ? "bg-indigo-600 text-white shadow"
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                    }`}
+                      }`}
                   >
                     {isUrdu
                       ? cls.class_urdu_name || cls.class_name
