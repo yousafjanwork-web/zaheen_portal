@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { useAuth } from "@/context/AuthContext";
-import HomeMobile from "@/pages/Home/HomeMobile";
+import { useAuth } from "@/modules/shared/context/AuthContext";
+import HomeMobile from "@/modules/home/pages/HomeMobile";
 
-import { logMzaRequest } from "@/services/mzaService";
+import { logMzaRequest } from "@/modules/shared/services/mzaService";
 
 const MzaPage = () => {
 

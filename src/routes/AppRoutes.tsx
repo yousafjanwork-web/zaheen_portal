@@ -1,20 +1,20 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Home from "../pages/Home/Home";
+import Home from "../modules/home/pages/Home";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import ScrollToTop from "@/components/ScrollToTop";
-import GradesView from "@/pages/GradesView";
-import ClassSubjectsView from "@/pages/ClassSubjectsView";
-import LecturesPage from "@/pages/LecturesPage";
-import Assessment from '@/pages/Assessment';
-import SkillsChaptersPage from "@/pages/SkillsChaptersPage";
-import PracticeCornerPage from "@/pages/PracticeCornerPage";
-import WorksheetsPage from "@/pages/WorksheetPage";
-import BoardResultsPage from "@/pages/BoardResultsPage";
-import SubscribePage  from "@/pages/SubscribePage";
-import LoginPage from "@/pages/LoginPage";
-import Chatbot from "@/pages/Chatbot";
+import ScrollToTop from "@/modules/shared/components/ScrollToTop";
+import GradesView from "@/modules/courses/pages/GradesView";
+import ClassSubjectsView from "@/modules/courses/pages/ClassSubjectsView";
+import LecturesPage from "@/modules/lectures/pages/LecturesPage";
+import Assessment from '@/modules/assessments/pages/Assessment';
+import SkillsChaptersPage from "@/modules/courses/pages/SkillsChaptersPage";
+import PracticeCornerPage from "@/modules/practice/pages/PracticeCornerPage";
+import WorksheetsPage from "@/modules/worksheets/pages/WorksheetPage";
+import BoardResultsPage from "@/modules/results/pages/BoardResultsPage";
+import SubscribePage  from "@/modules/auth/pages/SubscribePage";
+import LoginPage from "@/modules/auth/pages/LoginPage";
+import Chatbot from "@/modules/aiTutor/pages/Chatbot";
 import MzaPage from "@/pages/MzaPage";
 
 const AppRoutes = () => {
