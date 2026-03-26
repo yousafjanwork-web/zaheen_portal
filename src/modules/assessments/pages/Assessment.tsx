@@ -1,166 +1,63 @@
 import React, { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
+import { getAllSkills } from "../../shared/services/adaptiveService"
+import { Skill } from "../../shared/types/adaptive"
 
-import ScoreCard from "@/modules/assessments/components/ScoreCard"
-import TimerCard from "@/modules/assessments/components/TimerCard"
-import QuestionCard from "@/modules/assessments/components/QuestionCard"
-import ProgressBar from "@/modules/assessments/components/ProgressBar"
+const AssessmentPage = () => {
 
-import { getNextQuestion, submitAnswer } from "@/modules/shared/services/adaptiveService"
-
-import { Question, Option } from "@/modules/shared/types/adaptive"
-
-const Assessment: React.FC = () => {
-
-  const { chapterId } = useParams<{ chapterId: string }>()
-
-  const studentId =
-    Number(sessionStorage.getItem("studentId")) || 2
-
-  const [question, setQuestion] = useState<Question | null>(null)
-
-  const [selectedOption, setSelectedOption] =
-    useState<number | null>(null)
-
-  const [correctOption, setCorrectOption] =
-    useState<number | null>(null)
-
-  const [locked, setLocked] = useState(false)
-
-  const [score, setScore] = useState(0)
-
-  const [progress, setProgress] = useState(0)
-
-  const [startTime, setStartTime] =
-    useState<number>(Date.now())
-
-  const loadQuestion = async () => {
-
-    const res = await getNextQuestion(
-      studentId,
-      Number(chapterId)
-    )
-
-    setQuestion(res)
-
-    setSelectedOption(null)
-
-    setCorrectOption(null)
-
-    setLocked(false)
-
-    setProgress(prev => prev + 5)
-
-    setStartTime(Date.now())
-
-  }
+  const [skills, setSkills] = useState<Skill[]>([])
+  const navigate = useNavigate()
 
   useEffect(() => {
+    loadSkills()
+  }, [])
 
-    if (chapterId) {
-      loadQuestion()
-    }
-
-  }, [chapterId])
-
-  const handleSelect = (option: Option) => {
-
-    if (locked) return
-
-    setSelectedOption(option.id)
-
+  const loadSkills = async () => {
+    const data = await getAllSkills()
+    setSkills(data)
   }
 
-  const handleSubmit = async () => {
-
-    if (!selectedOption || !question) return
-
-    setLocked(true)
-
-    const timeTaken =
-      Math.floor((Date.now() - startTime) / 1000)
-
-    const res = await submitAnswer({
-
-      studentId,
-      questionId: question.id,
-      selectedOptionId: selectedOption,
-      timeTaken
-
-    })
-
-    if (res.correct) {
-
-      setScore(prev => prev + 10)
-
-      setCorrectOption(selectedOption)
-
-    } else {
-
-      setCorrectOption(null)
-
-    }
-
-    setTimeout(() => {
-
-      loadQuestion()
-
-    }, 1500)
-
-  }
-
-  if (!question) {
-
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        Loading assessment...
-      </div>
-    )
-
+  const startQuiz = (skill: Skill) => {
+    navigate(`/assessment/${skill.id}`)
   }
 
   return (
+    <div className="container mx-auto p-6">
 
-    <div className="max-w-4xl mx-auto py-10 px-6 space-y-6">
+      <h1 className="text-3xl font-bold mb-6">
+        Available Assessments
+      </h1>
 
-      <div className="flex justify-between">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <TimerCard seconds={30} />
+        {skills.map((skill) => (
 
-        <ScoreCard score={score} />
+          <div
+            key={skill.id}
+            className="bg-white shadow-lg rounded-xl p-6 cursor-pointer hover:shadow-xl transition"
+            onClick={() => startQuiz(skill)}
+          >
 
-      </div>
+            <h2 className="text-xl font-semibold mb-2">
+              {skill.name}
+            </h2>
 
-      <ProgressBar progress={progress} />
+            <p className="text-gray-600">
+              {skill.description}
+            </p>
 
-      <QuestionCard
-        question={question.prompt}
-        options={question.options}
-        selectedOption={selectedOption}
-        correctOption={correctOption}
-        onSelect={handleSelect}
-        locked={locked}
-      />
+            <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg">
+              Start Assessment
+            </button>
 
-      <div className="flex justify-center">
+          </div>
 
-        <button
-          disabled={!selectedOption || locked}
-          onClick={handleSubmit}
-          className={`px-6 py-3 rounded-lg text-white font-medium
-          ${selectedOption
-            ? "bg-blue-600 hover:bg-blue-700"
-            : "bg-gray-300 cursor-not-allowed"}`}
-        >
-          Submit Answer
-        </button>
+        ))}
 
       </div>
 
     </div>
-
   )
-
 }
 
-export default Assessment
+export default AssessmentPage

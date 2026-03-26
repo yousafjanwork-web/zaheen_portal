@@ -8,6 +8,7 @@ import GradesView from "@/modules/courses/pages/GradesView";
 import ClassSubjectsView from "@/modules/courses/pages/ClassSubjectsView";
 import LecturesPage from "@/modules/lectures/pages/LecturesPage";
 import Assessment from '@/modules/assessments/pages/Assessment';
+import AssessmentQuiz from '@/modules/assessments/pages/AssessmentQuiz';
 import SkillsChaptersPage from "@/modules/courses/pages/SkillsChaptersPage";
 import PracticeCornerPage from "@/modules/practice/pages/PracticeCornerPage";
 import WorksheetsPage from "@/modules/worksheets/pages/WorksheetPage";
@@ -31,7 +32,8 @@ const AppRoutes = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/grade-view/:type" element={<GradesView />} />
           <Route path="/class/:classId" element={<ClassSubjectsView />} />
-          <Route path="/assessment/:chapterId" element={<Assessment />} />
+          <Route path="/assessment/" element={<Assessment />} />
+          <Route path="/assessment/:skillId" element={<AssessmentQuiz />} />
           <Route
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}

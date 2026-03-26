@@ -1,63 +1,32 @@
-import React from "react"
-import { Option } from "@/modules/shared/types/adaptive"
+import { Option } from "../../shared/types/adaptive"
+import OptionButton from "./OptionButton"
 
-interface Props {
-  question: string
-  options: Option[]
-  selectedOption: number | null
-  correctOption: number | null
-  onSelect: (option: Option) => void
-  locked: boolean
+interface Props{
+  prompt:string
+  options:Option[]
+  onSelect:(id:number)=>void
 }
 
-const QuestionCard: React.FC<Props> = ({
-  question,
-  options,
-  selectedOption,
-  correctOption,
-  onSelect,
-  locked
-}) => {
+const QuestionCard = ({prompt, options, onSelect}:Props)=>{
 
-  const getStyle = (optionId: number) => {
+  return(
 
-    if (!locked) {
-      return selectedOption === optionId
-        ? "border-blue-500 bg-blue-50"
-        : "hover:bg-gray-50"
-    }
+    <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-xl">
 
-    if (optionId === correctOption)
-      return "border-green-500 bg-green-100"
+      <h2 className="text-2xl font-semibold mb-6 text-center">
 
-    if (optionId === selectedOption)
-      return "border-red-500 bg-red-100"
+        {prompt}
 
-    return ""
-  }
-
-  return (
-
-    <div className="bg-white rounded-xl shadow-md p-6">
-
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
-        {question}
       </h2>
 
-      <div className="grid gap-3">
+      <div className="space-y-4">
 
-        {options.map((opt) => (
-
-          <button
+        {options.map((opt)=>(
+          <OptionButton
             key={opt.id}
-            disabled={locked}
-            onClick={() => onSelect(opt)}
-            className={`border rounded-lg p-3 text-left transition
-            ${getStyle(opt.id)}`}
-          >
-            {opt.option_text}
-          </button>
-
+            text={opt.option_text}
+            onClick={()=>onSelect(opt.id)}
+          />
         ))}
 
       </div>
@@ -65,7 +34,6 @@ const QuestionCard: React.FC<Props> = ({
     </div>
 
   )
-
 }
 
 export default QuestionCard

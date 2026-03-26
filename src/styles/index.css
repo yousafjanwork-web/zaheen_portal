@@ -42,3 +42,26 @@
 .animate-float {
   animation: floatBubble 6s ease-in-out infinite;
 }
+@keyframes slideUp {
+
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+
+}
+
+.animate-slideUp{
+  animation: slideUp 0.4s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slideUp{
+  animation: slideUp 0.4s ease;
+}

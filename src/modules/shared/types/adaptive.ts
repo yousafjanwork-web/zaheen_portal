@@ -9,6 +9,21 @@ export interface Question {
   options: Option[]
 }
 
+
+export interface SubmitPayload {
+  studentId: number
+  questionId: number
+  selectedOptionId: number
+  timeTaken: number
+}
+
 export interface SubmitResponse {
   correct: boolean
+}
+
+export interface Skill {
+  id: number
+  name: string
+  description: string
+  created_at: string
 }
