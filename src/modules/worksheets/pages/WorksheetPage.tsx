@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Sparkles, FileText } from "lucide-react";
+import { Sparkles, FileText, Download } from "lucide-react";
 import { useParams, useLocation } from "react-router-dom";
+import { getLanguage } from "@/modules/shared/i18n";
 
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
@@ -21,8 +22,11 @@ const WorksheetsPage = () => {
   const location = useLocation();
   const subject = location.state?.subject;
 
-  const [worksheets, setWorksheets] = useState([]);
-  const [selectedWorksheet, setSelectedWorksheet] = useState(null);
+  const [worksheets, setWorksheets] = useState<any[]>([]);
+  const [selectedWorksheet, setSelectedWorksheet] = useState<any>(null);
+
+  // ✅ NEW: Blob URL state
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
 
   const zoomPluginInstance = zoomPlugin();
   const fullScreenPluginInstance = fullScreenPlugin();
@@ -30,12 +34,14 @@ const WorksheetsPage = () => {
   const { ZoomInButton, ZoomOutButton } = zoomPluginInstance;
   const { EnterFullScreenButton } = fullScreenPluginInstance;
 
+  const lang = getLanguage();
+  const isUrdu = lang === "ur";
+
+  /* ---------------- FETCH WORKSHEETS ---------------- */
+
   useEffect(() => {
-
     const fetchWorksheets = async () => {
-
       try {
-
         const res = await fetch(
           `https://api.zaheen.com.pk/api/chapter/${subjectId}/worksheets`
         );
@@ -43,148 +49,178 @@ const WorksheetsPage = () => {
         const data = await res.json();
 
         setWorksheets(data);
-        setSelectedWorksheet(data[0]);
+
+        if (data.length > 0) {
+          setSelectedWorksheet(data[0]);
+        }
 
       } catch (err) {
         console.error("Worksheet API error", err);
       }
-
     };
 
     fetchWorksheets();
-
   }, [subjectId]);
 
-  const pdfUrl = selectedWorksheet
-    ? `https://api.zaheen.com.pk/api/getpdf/${selectedWorksheet.id}`
-    : null;
+  /* ---------------- LOAD PDF AS BLOB (ONLY ONCE PER FILE) ---------------- */
+
+  useEffect(() => {
+    const loadPdf = async () => {
+      if (!selectedWorksheet) return;
+
+      try {
+        const res = await fetch(
+          `https://api.zaheen.com.pk/api/getpdf/${selectedWorksheet.id}`
+        );
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        setPdfBlobUrl(url);
+      } catch (err) {
+        console.error("PDF load error:", err);
+      }
+    };
+
+    loadPdf();
+
+    // ✅ CLEANUP (IMPORTANT)
+    return () => {
+      if (pdfBlobUrl) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+
+  }, [selectedWorksheet]);
+
+  /* ---------------- DOWNLOAD FROM BLOB ---------------- */
+
+  const handleDownload = () => {
+    if (!pdfBlobUrl) return;
+
+    const link = document.createElement("a");
+    link.href = pdfBlobUrl;
+    link.download =
+      selectedWorksheet?.name?.replace(/\s+/g, "_") + ".pdf" ||
+      "worksheet.pdf";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <section className="bg-slate-50 min-h-screen py-16">
+    <section className="bg-slate-50 min-h-screen py-10 md:py-16">
 
       <div className="max-w-7xl mx-auto px-4">
 
-        {/* WELCOME */}
+        {/* HEADER */}
+        <div className="mb-10 p-6 md:p-8 rounded-3xl bg-primary/5 border border-primary/10">
 
-        <div className="mb-12 p-8 rounded-3xl bg-primary/5 border border-primary/10">
-
-          <h1 className="text-4xl font-black text-slate-900 flex items-center gap-3">
-            <Sparkles size={32} />
-            {subject?.name} | {subject?.urdu_name}
+          <h1 className="text-2xl md:text-4xl font-black text-slate-900 flex items-center gap-3">
+            <Sparkles size={28} />
+            {isUrdu
+              ? subject?.urdu_name || subject?.name
+              : subject?.name}
           </h1>
 
-          <p className="text-slate-600 mt-2">
-            Practice worksheets for better understanding and learning.
-          </p>
-
-          <p className="text-sm text-slate-500">
-            مختلف مشقیں حل کریں اور اپنی مہارت کو بہتر بنائیں۔
+          <p className="text-slate-600 mt-3">
+            {isUrdu
+              ? "مشقوں کے ذریعے اپنی سمجھ اور سیکھنے کی صلاحیت کو بہتر بنائیں۔"
+              : "Practice worksheets for better understanding and learning."}
           </p>
 
         </div>
 
-        {/* MAIN LAYOUT */}
-
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-6">
 
           {/* SIDEBAR */}
-
-          <aside
-            className="
-            w-full lg:w-72
-            flex gap-3
-            overflow-x-auto lg:overflow-y-auto
-            flex-row lg:flex-col
-            p-2
-            scrollbar-thin scrollbar-thumb-primary/40
-          "
-          >
+          <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row lg:flex-col p-2">
 
             {worksheets.map((ws) => (
-
               <div
                 key={ws.id}
                 onClick={() => setSelectedWorksheet(ws)}
-                className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer flex-shrink-0
+                className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer flex-shrink-0 transition
                 ${selectedWorksheet?.id === ws.id
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-white shadow"
                     : "bg-white hover:bg-slate-100"
                   }`}
               >
-
                 <FileText size={18} />
-
                 <div>
-                  <p className="font-semibold text-sm">{ws.name}</p>
-                  <p className="text-xs opacity-70">{ws.urdu_name}</p>
+                  <p className="font-semibold text-sm">
+                    {isUrdu ? ws.urdu_name || ws.name : ws.name}
+                  </p>
                 </div>
-
               </div>
-
             ))}
 
           </aside>
 
           {/* PDF VIEWER */}
-
           <div className="flex-1">
 
             {selectedWorksheet && (
+              <div className="bg-white rounded-3xl shadow-lg p-4 md:p-5">
 
-              <div className="bg-white rounded-3xl shadow-lg p-4">
-
-                <h2 className="text-xl font-bold mb-4">
-                  {selectedWorksheet.name}
+                <h2 className="text-lg md:text-xl font-bold mb-4">
+                  {isUrdu
+                    ? selectedWorksheet.urdu_name || selectedWorksheet.name
+                    : selectedWorksheet.name}
                 </h2>
 
                 {/* TOOLBAR */}
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
 
-                <div className="flex items-center gap-3 mb-4">
-
-                  <div className="bg-slate-100 p-2 rounded-lg">
+                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition">
                     <ZoomOutButton />
                   </div>
 
-                  <div className="bg-slate-100 p-2 rounded-lg">
+                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition">
                     <ZoomInButton />
                   </div>
 
-                  <div className="bg-slate-100 p-2 rounded-lg">
+                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition">
                     <EnterFullScreenButton />
                   </div>
+
+                  {/* ✅ DOWNLOAD BUTTON */}
+                  <button
+                    onClick={handleDownload}
+                    className="flex items-center gap-2 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 transition text-sm font-semibold"
+                  >
+                    <Download size={16} />
+                    {isUrdu ? "ڈاؤن لوڈ" : "Download"}
+                  </button>
+
 
                 </div>
 
                 {/* PDF VIEWER */}
-
                 <Worker workerUrl={workerSrc}>
 
-                  <div style={{ height: "750px", width: "100%" }}>
+                  <div style={{ height: "70vh", width: "100%" }}>
 
-                    <Viewer
-                      fileUrl={pdfUrl}
-                      plugins={[
-                        zoomPluginInstance,
-                        fullScreenPluginInstance
-                      ]}
-                      renderError={() => (
-
-                        <div className="p-6 rounded-2xl bg-yellow-100 border-dashed border-2 border-yellow-400 text-yellow-800 text-center font-semibold min-w-[180px]">
-
-                          🎬 Coming Soon! <br />
-                          Lectures will be added shortly.
-
-                        </div>
-
-                      )}
-                    />
+                    {pdfBlobUrl ? (
+                      <Viewer
+                        fileUrl={pdfBlobUrl}
+                        plugins={[
+                          zoomPluginInstance,
+                          fullScreenPluginInstance
+                        ]}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-slate-500">
+                        {isUrdu ? "لوڈ ہو رہا ہے..." : "Loading..."}
+                      </div>
+                    )}
 
                   </div>
 
                 </Worker>
 
               </div>
-
             )}
 
           </div>
