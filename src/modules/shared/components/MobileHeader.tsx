@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-<<<<<<< HEAD
-import { Menu, X, ChevronDown } from "lucide-react";
-import { useAuth } from "@/modules/shared/context/AuthContext";
-=======
 import { Menu, X, ChevronDown, LogOut, XCircle } from "lucide-react";
->>>>>>> c5c1755422c5bac3d99b99de0eb82002e7b9ec1c
 
 import logo from "@/assets/images/ZaheenLogo.png";
 import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
@@ -15,12 +10,9 @@ import { useSubscribe } from "@/modules/shared/hooks/useSubscribe";
 const MobileHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
-<<<<<<< HEAD
   const { msisdn, isLoggedIn, logout } = useAuth();
-=======
   const navigate = useNavigate();
 
-  const { isLoggedIn, logout } = useAuth();
   const { handleSubscribe } = useSubscribe();
 
   const handleLogout = () => {
@@ -33,7 +25,6 @@ const MobileHeader = () => {
     handleSubscribe(); // your unsubscribe logic
     setMenuOpen(false);
   };
->>>>>>> c5c1755422c5bac3d99b99de0eb82002e7b9ec1c
 
   return (
     <header className="bg-white border-b px-4 py-3 lg:hidden">
