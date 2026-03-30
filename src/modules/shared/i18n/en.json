@@ -3,7 +3,12 @@
     "home": "Home",
     "courses": "Courses",
     "learningHub": "Learning Hub",
-    "aiTutor": "AI Tutor"
+    "aiTutor": "AI Tutor",
+    "practiceCorner": "Practice Corner",
+    "boardResults": "Board Results",
+    "login": "Login",
+    "logout": "Logout",
+    "unsubscribe": "Unsubscribe"
   },
   "auth": {
     "login": "Login",
