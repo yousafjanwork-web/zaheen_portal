@@ -22,118 +22,111 @@
     "urdu": "Urdu"
   },
   "courses": {
-  "k12": "K-12 Curriculum",
-  "kg": "KG Foundation",
-  "grade1to5": "Grade 1-5",
-  "grade6to8": "Grade 6-8",
-  "grade9to12": "Grade 9-12",
-  "professional": "Professional Skills",
-  "digitalMarketing": "Digital Marketing",
-  "trading": "Trading & Finance",
-  "webDevelopment": "Web Development",
-  "ai": "AI & Automation"
-},
-"learning": {
-  "practice": "Practice Corner",
-  "studyMaterial": "Study Material",
-  "boardResults": "Board Results"
-},
-"footer": {
-  "description": "Empowering learners with world-class education and professional training.",
-  "quickLinks": "Quick Links",
-  "about": "About Us",
-  "courses": "Courses",
-  "pricing": "Pricing",
-  "testimonials": "Testimonials",
-  "support": "Support",
-  "privacy": "Privacy Policy",
-  "terms": "Terms of Service",
-  "unsubscribe": "Unsubscribe",
-  "contact": "Contact",
-  "country": "Pakistan",
-  "unsubscribeSuccess": "Unsubscribed successfully",
-  "unsubscribeFail": "Unsubscribe failed",
-  "copyright": "© 2024 Zaheen Educational Portal"
-},
-"hero": {
-  "slide1": {
-    "title": "Unlock Your Potential from KG to Grade 12",
-    "highlight": "Potential",
-    "description": "Personalized learning paths for every student with video lectures, assignments, and quizzes.",
-    "button": "Explore K-12 Curriculum"
+    "k12": "K-12 Curriculum",
+    "kg": "KG Foundation",
+    "grade1to5": "Grade 1-5",
+    "grade6to8": "Grade 6-8",
+    "grade9to12": "Grade 9-12",
+    "professional": "Professional Skills",
+    "digitalMarketing": "Digital Marketing",
+    "trading": "Trading & Finance",
+    "webDevelopment": "Web Development",
+    "ai": "AI & Automation"
   },
-  "slide2": {
-    "title": "Master High-Demand Skills",
-    "highlight": "High-Demand",
-    "description": "Advance your career with industry-recognized certifications in Digital Marketing, Web Development, and more.",
-    "button": "Browse Professional Courses"
-  }
-},
-"browseGrade": {
-  "title": "Browse by Grade",
-  "subtitle": "Explore courses by grade level",
-  "viewAll": "View All Grades",
-
-  "kgTitle": "KG Grade",
-  "kgSubtitle": "Foundation Years",
-  "kgBadge": "Games Included",
-
-  "g1Title": "Grade 1-5",
-  "g1Subtitle": "Primary Level",
-
-  "g6Title": "Grade 6-8",
-  "g6Subtitle": "Middle School",
-
-  "g9Title": "Grade 9-12",
-  "g9Subtitle": "High School"
-},
-"professionalCourses": {
-  "title": "Professional Courses",
-  "subtitle": "Professional Courses",
-
-  "marketing": "Marketing",
-  "finance": "Finance",
-  "development": "Development",
-
-  "course1": "Advanced Digital Marketing Strategy",
-  "course2": "Mastering Day Trading & Crypto",
-  "course3": "Full-Stack Web Development Bootcamp",
-
-  "students": "Students"
-},
-"pricing": {
-  "title": "Simple, Transparent Pricing",
-  "subtitle": "One subscription, unlimited opportunities",
-  "description": "One single subscription unlocks everything. No individual course fees, no hidden costs. Just pure learning for the whole family.",
-
-  "plan": "All-Access Pass",
-  "perDay": "/ Day",
-  "subscribe": "Subscribe Now",
-
-  "feature1": "Full access to all K-12 curriculum (Grades KG-12)",
-  "feature2": "Unlimited entry to Professional Course libraries",
-  "feature3": "Interactive games and foundation materials",
-  "feature4": "Progress tracking and certifications",
-  "feature5": "24/7 Priority Support",
-
-  "familyTitle": "Perfect for Families",
-  "familyDesc": "A single subscription that grows with your children from school to career.",
-
-  "commitmentTitle": "No Commitment",
-  "commitmentDesc": "Cancel or pause anytime with no hidden fees or penalties.",
-
-  "updateTitle": "Always Updated",
-  "updateDesc": "New professional courses and updated K-12 content regularly."
-},
-"cta": {
-  "title": "Start Learning with Zaheen Today",
-  "description": "Access K-12 education and professional courses with a simple subscription plan.",
-  "daily": "Daily",
-  "weekly": "Weekly",
-  "monthly": "Monthly",
-  "button": "Subscribe Now"
-},
-
+  "learning": {
+    "practice": "Practice Corner",
+    "studyMaterial": "Study Material",
+    "boardResults": "Board Results"
+  },
+  "footer": {
+    "description": "Empowering learners with world-class education and professional training.",
+    "quickLinks": "Quick Links",
+    "about": "About Us",
+    "courses": "Courses",
+    "pricing": "Pricing",
+    "testimonials": "Testimonials",
+    "support": "Support",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "unsubscribe": "Unsubscribe",
+    "contact": "Contact",
+    "country": "Pakistan",
+    "unsubscribeSuccess": "Unsubscribed successfully",
+    "unsubscribeFail": "Unsubscribe failed",
+    "copyright": "© 2024 Zaheen Educational Portal"
+  },
+  "hero": {
+    "slide1": {
+      "title": "Unlock Your Potential from KG to Grade 12",
+      "highlight": "Potential",
+      "description": "Personalized learning paths for every student with video lectures, assignments, and quizzes.",
+      "button": "Explore K-12 Curriculum"
+    },
+    "slide2": {
+      "title": "Master High-Demand Skills",
+      "highlight": "High-Demand",
+      "description": "Advance your career with industry-recognized certifications in Digital Marketing, Web Development, and more.",
+      "button": "Browse Professional Courses",
+      "link": "/skills/300"
+    }
+  },
+  "browseGrade": {
+    "title": "Browse by Grade",
+    "subtitle": "Explore courses by grade level",
+    "viewAll": "View All Grades",
+    "link": "/skills/300",
+    "kgTitle": "KG Grade",
+    "kgSubtitle": "Foundation Years",
+    "kgBadge": "Games Included",
+    "kglink": "/grade-view/kg",
+    "g1Title": "Grade 1-5",
+    "g1Subtitle": "Primary Level",
+    "g1Link": "/grade-view/1-5",
+    "g6Title": "Grade 6-8",
+    "g6Subtitle": "Middle School",
+    "g6Link": "/grade-view/6-8",
+    "g9Title": "Grade 9-12",
+    "g9Subtitle": "High School",
+    "g9Link": "/grade-view/9-12"
+  },
+  "professionalCourses": {
+    "title": "Professional Courses",
+    "subtitle": "Professional Courses",
+    "marketing": "Marketing",
+    "finance": "Finance",
+    "development": "Development",
+    "course1": "Advanced Digital Marketing Strategy",
+    "course2": "Mastering Day Trading & Crypto",
+    "course3": "Full-Stack Web Development Bootcamp",
+    "students": "Students"
+  },
+  "pricing": {
+    "title": "Simple, Transparent Pricing",
+    "subtitle": "One subscription, unlimited opportunities",
+    "description": "One single subscription unlocks everything. No individual course fees, no hidden costs. Just pure learning for the whole family.",
+    "plan": "All-Access Pass",
+    "perDay": "/ Day",
+    "subscribe": "Subscribe Now",
+    "feature1": "Full access to all K-12 curriculum (Grades KG-12)",
+    "feature2": "Unlimited entry to Professional Course libraries",
+    "feature3": "Interactive games and foundation materials",
+    "feature4": "Progress tracking and certifications",
+    "feature5": "24/7 Priority Support",
+    "familyTitle": "Perfect for Families",
+    "familyDesc": "A single subscription that grows with your children from school to career.",
+    "commitmentTitle": "No Commitment",
+    "commitmentDesc": "Cancel or pause anytime with no hidden fees or penalties.",
+    "updateTitle": "Always Updated",
+    "updateDesc": "New professional courses and updated K-12 content regularly."
+  },
+  "cta": {
+    "title": "Start Learning with Zaheen Today",
+    "description": "Access K-12 education and professional courses with a simple subscription plan.",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "button": "Subscribe Now"
+  },
   "privacy": {
     "title": "Privacy Policy",
     "intro": "Thank you for visiting Zaheen.com.pk. At Zaheen, we are committed to protecting your privacy and safeguarding your personal information.",
@@ -164,7 +157,6 @@
     "contact": "Contact Us",
     "contactText": "If you have questions about this policy please contact us:"
   },
-  
   "terms": {
     "title": "Terms of Service",
     "intro": "Thank you for using Zaheen.com.pk. These Terms of Service govern your use of the website. By accessing or using the website you agree to comply with these terms.",
@@ -185,10 +177,9 @@
     "contact": "Contact Us",
     "contactText": "If you have questions regarding these terms please contact us:"
   },
-  
-    "mobileTitle": "Build in-demand skills",
-    "mobileSubtitle": "Get access to all courses with one subscription.",
-    "subscribe": "Subscribe Now",
+  "mobileTitle": "Build in-demand skills",
+  "mobileSubtitle": "Get access to all courses with one subscription.",
+  "subscribe": "Subscribe Now",
   "slide1": {
     "title": "Learn from Pakistan's",
     "highlight": "Best Teachers",
@@ -206,10 +197,8 @@
     "highlight": "Rs 5 / Day",
     "description": "Access all courses with one subscription.",
     "button": "Subscribe Now"
+  },
+  "mob": {
+    "heading1": "Learn Skills from Rs 5/day"
   }
-  ,
-  "mob":{
-    "heading1":"Learn Skills from Rs 5/day"
-  }
-
 }
