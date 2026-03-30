@@ -12,9 +12,9 @@ import CTASection from "@/modules/home/sections/CTASection";
 const HomeMobile = () => {
   return (
     <>
-      <MobileMarketingBanner />
+      {/* <MobileMarketingBanner /> */}
 
-      <MobileHeader />
+      {/* <MobileHeader /> */}
 
       <HeroMobile />
       <PromoSlider />

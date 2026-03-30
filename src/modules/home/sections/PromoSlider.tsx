@@ -53,10 +53,10 @@ const PromoSlider = () => {
               bg-gradient-to-r ${card.color}
             `}
           >
-
-            <h3 className="text-lg font-bold mb-2">
-              {card.title}
-            </h3>
+            <a href="/grade-view/kg">
+              <h3 className="text-lg font-bold mb-2">
+                {card.title}
+              </h3></a>
 
             <p className="text-sm opacity-90">
               {card.desc}
