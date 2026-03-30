@@ -80,7 +80,7 @@ const MobileHeader = () => {
           <a href="/" className="block">
             {t("menu.home")}
           </a>
-          <a href="/courses" className="block">
+          <a href="/grade-view/k-12" className="block">
             {t("menu.courses")}
           </a>
           <a href="/practice" className="block">

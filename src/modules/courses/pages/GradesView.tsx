@@ -17,8 +17,8 @@ const welcomeTitles = {
   "1-5": { en: "Grades 1-5", ur: "گریڈ ۱-۵" },
   "6-8": { en: "Grades 6-8", ur: "گریڈ ۶-۸" },
   "9-12": { en: "Grades 9-12", ur: "گریڈ ۹-۱۲" },
+  "k-12": { en: "K-12 Curriculum", ur: "کے-۱۲ نصاب" }
 };
-
 const gradeImages: any = {
   7: "https://images.unsplash.com/photo-1588072432836-e10032774350",
   8: "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
@@ -52,15 +52,16 @@ const GradesView = () => {
         );
         const data = await res.json();
 
+        // Replace this section in your useEffect
         let filtered: any[] = [];
 
         if (type === "kg") filtered = data.filter((g: any) => g.id === 1);
-        if (type === "1-5")
-          filtered = data.filter((g: any) => g.id >= 2 && g.id <= 6);
-        if (type === "6-8")
-          filtered = data.filter((g: any) => g.id >= 7 && g.id <= 9);
-        if (type === "9-12")
-          filtered = data.filter((g: any) => g.id >= 10 && g.id <= 13);
+        else if (type === "1-5") filtered = data.filter((g: any) => g.id >= 2 && g.id <= 6);
+        else if (type === "6-8") filtered = data.filter((g: any) => g.id >= 7 && g.id <= 9);
+        else if (type === "9-12") filtered = data.filter((g: any) => g.id >= 10 && g.id <= 13);
+        else if (type === "k-12") filtered = data; // <-- show all grades
+        else filtered = data.filter((g: any) => g.id >= 2 && g.id <= 6); // default fallback
+
 
         const gradesWithSubjects = await Promise.all(
           filtered.map(async (g: any) => {

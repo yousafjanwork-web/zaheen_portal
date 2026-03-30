@@ -66,7 +66,7 @@ const BrowseByGrade = () => {
           </div>
 
           <a
-            href="#"
+            href="/grade-view/k-12"
             className="text-primary font-semibold flex items-center hover:underline mt-4 md:mt-0 group"
           >
             {t("browseGrade.viewAll")}
@@ -77,19 +77,16 @@ const BrowseByGrade = () => {
 
         {/* Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-
           {grades.map((grade, index) => (
-
             <Link to={grade.link} key={index}>
-
               <motion.div
                 whileHover={{ y: -8 }}
                 transition={{ duration: 0.25 }}
                 className="group cursor-pointer"
               >
-
-                <div className={`relative rounded-3xl p-10 text-center transition shadow-sm hover:shadow-lg ${grade.cardBg}`}>
-
+                <div
+                  className={`relative rounded-3xl p-6 sm:p-10 text-center transition shadow-sm hover:shadow-lg ${grade.cardBg} flex flex-col justify-between h-64 sm:h-auto`}
+                >
                   {/* Badge */}
                   {grade.badgeText && (
                     <span className="absolute top-4 right-4 bg-lime-500 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -99,7 +96,7 @@ const BrowseByGrade = () => {
 
                   {/* Icon */}
                   <div
-                    className={`w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-2xl ${grade.iconBg} ${grade.iconColor}`}
+                    className={`w-20 h-20 mx-auto mb-4 sm:mb-6 flex items-center justify-center rounded-2xl ${grade.iconBg} ${grade.iconColor}`}
                   >
                     {grade.icon}
                   </div>
@@ -113,15 +110,10 @@ const BrowseByGrade = () => {
                   <p className="text-slate-500 text-sm">
                     {grade.subtitle}
                   </p>
-
                 </div>
-
               </motion.div>
-
             </Link>
-
           ))}
-
         </div>
 
       </div>
