@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 
 import logo from "@/assets/images/ZaheenLogo.png";
 
@@ -9,6 +10,7 @@ const MobileHeader = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const { msisdn, isLoggedIn, logout } = useAuth();
 
   return (
 
@@ -84,21 +86,69 @@ const MobileHeader = () => {
             {t("menu.home")}
           </a>
 
-          <a href="/courses" className="block">
-            {t("menu.courses")}
-          </a>
+        
 
           <a href="/practice" className="block">
-            {t("menu.practiceCorner")}
+            {t("learning.practice")}
           </a>
 
           <a href="/results" className="block">
-            {t("menu.boardResults")}
+            {t("learning.boardResults")}
           </a>
 
           <a href="/ai" className="block">
             {t("menu.aiTutor")}
           </a>
+           {/* 🔹 AUTH SECTION */}
+
+    <div className="border-t pt-4 space-y-3">
+
+      {isLoggedIn ? (
+
+        <>
+          <div className="text-gray-500 text-xs">
+            {t("auth.loggedInAs")}
+          </div>
+
+          <div className="font-semibold">
+            {msisdn}
+          </div>
+
+          <button
+            onClick={logout}
+            className="w-full border border-red-500 text-red-500 py-2 rounded-lg"
+          >
+            {t("auth.logout")}
+          </button>
+        </>
+
+      ) : (
+
+        <>
+          <button
+            onClick={() =>
+              window.location.href =
+                "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/login"
+            }
+            className="w-full border border-primary text-primary py-2 rounded-lg"
+          >
+            {t("auth.login")}
+          </button>
+
+          <button
+            onClick={() =>
+              window.location.href =
+                "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+            }
+            className="w-full bg-primary text-white py-2 rounded-lg"
+          >
+            {t("auth.subscribe")}
+          </button>
+        </>
+
+      )}
+
+    </div>
 
         </div>
 

@@ -23,7 +23,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
       </Link>
 
       <Link to="/practice" className="block hover:text-primary">
-        {t("learning.practice")}
+        {t("menu.courses1")}
       </Link>
 
       <a
@@ -32,7 +32,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
         rel="noopener noreferrer"
         className="block hover:text-primary"
       >
-        {t("learning.studyMaterial")}
+        {t("menu.learningHub")}
       </a>
 
       <Link to="/results" className="block hover:text-primary">

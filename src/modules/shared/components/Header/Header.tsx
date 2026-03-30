@@ -7,7 +7,7 @@ import logo from "@/assets/images/ZaheenLogo.png";
 
 import CoursesMenu from "@/modules/shared/components/Header/CoursesMenu";
 import LearningMenu from "@/modules/shared/components/Header/LearningMenu";
-import MobileMenu from "@/modules/shared/components/Header/MobileMenu";
+import MobileMenu from "@/modules/shared/components/MobileHeader";
 
 
 
