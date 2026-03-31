@@ -9,7 +9,8 @@ import {
 import { motion } from "motion/react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
-
+import { useAuth } from "@/modules/shared/context/AuthContext";
+import { Link, useLocation } from "react-router-dom";
 /* ---------- WELCOME TITLES ---------- */
 
 const welcomeTitles = {
@@ -29,9 +30,12 @@ const gradeImages: any = {
   13: "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
 };
 
+
 const GradesView = () => {
   const { type }: any = useParams();
   const navigate = useNavigate();
+
+  const { msisdn, login, isLoggedIn } = useAuth();
 
   const [grades, setGrades] = useState<any[]>([]);
 
@@ -41,6 +45,17 @@ const GradesView = () => {
   const isUrdu = lang === "ur";
 
   const title = welcomeTitles[type] || welcomeTitles["1-5"];
+
+
+  const breadcrumbMap = {
+    kg: isUrdu ? "کے جی" : "KG",
+    "1-5": isUrdu ? "گریڈ ۱-۵" : "Grades 1-5",
+    "6-8": isUrdu ? "گریڈ ۶-۸" : "Grades 6-8",
+    "9-12": isUrdu ? "گریڈ ۹-۱۲" : "Grades 9-12",
+    "k-12": isUrdu ? "کے-۱۲ نصاب" : "K-12 Curriculum",
+  };
+
+
 
   /* ---------- API ---------- */
 
@@ -115,7 +130,24 @@ const GradesView = () => {
 
   return (
     <section className="py-20 bg-slate-50">
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ================== BREADCRUMBS ================== */}
+
+
+        <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
+          <Link to="/" className="hover:text-primary">
+            {isUrdu ? "ہوم" : "Home"}
+          </Link>
+
+          <span>/</span>
+
+          <span className="text-slate-700 font-medium">
+            {breadcrumbMap[type] || "Grades"}
+          </span>
+        </div>
+
+
         {/* ---------- WELCOME ---------- */}
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12 p-8 rounded-3xl bg-primary/5 border border-primary/10">
@@ -145,10 +177,13 @@ const GradesView = () => {
               {isUrdu ? "ڈیش بورڈ" : "Dashboard"}
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
-              <BookOpen size={18} />
-              {isUrdu ? "میرے کورسز" : "My Courses"}
-            </div>
+
+            {isLoggedIn && (
+              <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+                <BookOpen size={18} />
+                {isUrdu ? "میرے کورسز" : "My Courses"}
+              </div>
+            )}
 
             <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
               <FileText size={18} />
@@ -169,10 +204,12 @@ const GradesView = () => {
               {isUrdu ? "وسائل" : "Resources"}
             </div>
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
-              <Settings size={18} />
-              {isUrdu ? "ترتیبات" : "Settings"}
-            </div>
+            {isLoggedIn && (
+              <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+                <Settings size={18} />
+                {isUrdu ? "ترتیبات" : "Settings"}
+              </div>
+            )}
           </aside>
 
           {/* ---------- GRADES ---------- */}

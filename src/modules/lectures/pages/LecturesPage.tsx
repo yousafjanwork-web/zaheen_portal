@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { PlayCircle } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
+import { Link } from "react-router-dom";
 
 const LecturesPage = () => {
 
@@ -101,6 +102,34 @@ const LecturesPage = () => {
     <section className="bg-slate-100 min-h-screen py-10">
 
       <div className="max-w-7xl mx-auto px-4">
+
+        <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
+          <Link to="/" className="hover:text-primary">
+            {isUrdu ? "ہوم" : "Home"}
+          </Link>
+
+          <span>/</span>
+
+          <Link
+            to={`/grades/${location.state?.gradeType || "1-5"}`}
+            className="hover:text-primary"
+          >
+            {isUrdu ? "گریڈ" : "Grade"}
+          </Link>
+
+          <span>/</span>
+
+          <Link
+            to={`/class/${location.state?.classId || ""}`}
+            className="hover:text-primary"
+          >
+            {classTitle}
+          </Link>
+
+          <span>/</span>
+
+          <span className="text-slate-700 font-medium">{chapterName}</span>
+        </div>
 
         {/* HEADER */}
 
@@ -212,20 +241,18 @@ const LecturesPage = () => {
                   key={video.id}
                   onClick={() => changeVideo(video)}
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
-                  ${
-                    selectedVideo?.id === video.id
+                  ${selectedVideo?.id === video.id
                       ? "bg-indigo-50"
                       : ""
-                  }`}
+                    }`}
                 >
 
                   <PlayCircle
                     size={18}
-                    className={`${
-                      selectedVideo?.id === video.id
-                        ? "text-indigo-600"
-                        : "text-slate-400"
-                    }`}
+                    className={`${selectedVideo?.id === video.id
+                      ? "text-indigo-600"
+                      : "text-slate-400"
+                      }`}
                   />
 
                   <div className="flex flex-col">
