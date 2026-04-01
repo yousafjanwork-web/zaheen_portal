@@ -227,8 +227,13 @@ const GradesView = () => {
                   key={index}
                   whileHover={{ y: -8 }}
                   transition={{ duration: 0.25 }}
-                  onClick={() => navigate(`/class/${grade.id}`)}
-                  className="bg-white rounded-3xl p-5 border hover:border-primary/50 shadow-sm hover:shadow-xl cursor-pointer"
+                  onClick={() =>
+                    navigate(`/class/${grade.id}`, {
+                      state: {
+                        gradeType: type,   // 🔥 critical
+                      },
+                    })
+                  } className="bg-white rounded-3xl p-5 border hover:border-primary/50 shadow-sm hover:shadow-xl cursor-pointer"
                 >
                   <div className="h-30 rounded-2xl overflow-hidden mb-4 relative">
                     <img

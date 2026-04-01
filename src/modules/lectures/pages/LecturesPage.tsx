@@ -32,12 +32,14 @@ const LecturesPage = () => {
 
       const data = await res.json();
 
+      console.log(data);
+
       setVideos(data);
 
       if (data.length > 0) {
         setSelectedVideo(data[0]);
         setVideoUrl(
-          `https://api.zaheen.com.pk/api/playvideo/${data[0].id}`
+          `https://cdn.zaheen.com.pk/videos/${data[0].path}`
         );
       }
 
@@ -54,7 +56,7 @@ const LecturesPage = () => {
     setSelectedVideo(video);
 
     setVideoUrl(
-      `https://api.zaheen.com.pk/api/playvideo/${video.id}`
+      `https://cdn.zaheen.com.pk/videos/${video.path}`
     );
 
   };
@@ -111,176 +113,180 @@ const LecturesPage = () => {
           <span>/</span>
 
           <Link
-            to={`/grades/${location.state?.gradeType || "1-5"}`}
+            to={`/grade-view/${location.state?.gradeType}`}
             className="hover:text-primary"
           >
-            {isUrdu ? "گریڈ" : "Grade"}
+            {isUrdu ? "گریڈ" : "Grade"} {location.state?.gradeType}
           </Link>
 
           <span>/</span>
 
           <Link
-            to={`/class/${location.state?.classId || ""}`}
+            to={`/class/${location.state?.classId}`}
+            state={{
+              gradeType: location.state?.gradeType,
+              selectedSubjectId: location.state?.selectedSubjectId, // ✅ preserve
+            }}
             className="hover:text-primary"
           >
-            {classTitle}
-          </Link>
+          {classTitle} - Chapters
+        </Link>
 
-          <span>/</span>
+        <span>/</span>
 
-          <span className="text-slate-700 font-medium">{chapterName}</span>
-        </div>
+        <span className="text-slate-700 font-medium">{chapterName}</span>
+      </div>
 
-        {/* HEADER */}
+      {/* HEADER */}
 
-        <div className="mb-6">
+      <div className="mb-6">
 
-          <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-3xl font-bold text-slate-900">
 
-            {classTitle} | {chapterName}
+          {classTitle} | {chapterName}
 
-          </h1>
+        </h1>
 
-          <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500">
 
-            {isUrdu
-              ? "لیکچرز دیکھیں اور سیکھنا جاری رکھیں"
-              : "Watch lectures and continue learning"}
+          {isUrdu
+            ? "لیکچرز دیکھیں اور سیکھنا جاری رکھیں"
+            : "Watch lectures and continue learning"}
 
-          </p>
-
-        </div>
-
-
-        <div className="flex flex-col lg:flex-row gap-6">
-
-          {/* VIDEO PLAYER */}
-
-          <div className="flex-1">
-
-            <div className="bg-black rounded-2xl overflow-hidden shadow-lg">
-
-              <div className="aspect-video">
-
-                {videoUrl ? (
-
-                  <video
-                    ref={videoRef}
-                    key={videoUrl}
-                    controls
-                    autoPlay
-                    onEnded={handleEnded}
-                    className="w-full h-full"
-                    src={videoUrl}
-                  />
-
-                ) : (
-
-                  <div className="flex items-center justify-center h-full text-white">
-
-                    {isUrdu ? "ویڈیو لوڈ ہو رہی ہے..." : "Loading video..."}
-
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
-
-            {/* VIDEO INFO */}
-
-            {selectedVideo && (
-
-              <div className="mt-4 bg-white rounded-2xl p-5 border">
-
-                <h2 className="text-xl font-bold">
-
-                  {isUrdu
-                    ? selectedVideo.urdu_name || selectedVideo.name
-                    : selectedVideo.name}
-
-                </h2>
-
-                <p className="text-sm text-slate-500 mt-1">
-
-                  {isUrdu
-                    ? selectedVideo.urdu_desc || selectedVideo.desc
-                    : selectedVideo.desc}
-
-                </p>
-
-                <div className="mt-3 text-xs text-slate-400">
-
-                  {currentIndex + 1} / {videos.length}
-
-                </div>
-
-              </div>
-
-            )}
-
-          </div>
-
-
-          {/* PLAYLIST */}
-
-          <aside className="w-full lg:w-80 bg-white rounded-2xl border overflow-hidden">
-
-            <div className="p-4 border-b font-semibold">
-
-              {isUrdu ? "لیکچرز" : "Lectures"} ({videos.length})
-
-            </div>
-
-            <div className="max-h-[70vh] overflow-y-auto">
-
-              {videos.map((video, index) => (
-
-                <div
-                  key={video.id}
-                  onClick={() => changeVideo(video)}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
-                  ${selectedVideo?.id === video.id
-                      ? "bg-indigo-50"
-                      : ""
-                    }`}
-                >
-
-                  <PlayCircle
-                    size={18}
-                    className={`${selectedVideo?.id === video.id
-                      ? "text-indigo-600"
-                      : "text-slate-400"
-                      }`}
-                  />
-
-                  <div className="flex flex-col">
-
-                    <span className="text-sm font-medium">
-
-                      {index + 1}.{" "}
-                      {isUrdu
-                        ? video.urdu_name || video.name
-                        : video.name}
-
-                    </span>
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          </aside>
-
-        </div>
+        </p>
 
       </div>
 
-    </section>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+
+        {/* VIDEO PLAYER */}
+
+        <div className="flex-1">
+
+          <div className="bg-black rounded-2xl overflow-hidden shadow-lg">
+
+            <div className="aspect-video">
+
+              {videoUrl ? (
+
+                <video
+                  ref={videoRef}
+                  key={videoUrl}
+                  controls
+                  autoPlay
+                  onEnded={handleEnded}
+                  className="w-full h-full"
+                  src={videoUrl}
+                />
+
+              ) : (
+
+                <div className="flex items-center justify-center h-full text-white">
+
+                  {isUrdu ? "ویڈیو لوڈ ہو رہی ہے..." : "Loading video..."}
+
+                </div>
+
+              )}
+
+            </div>
+
+          </div>
+
+          {/* VIDEO INFO */}
+
+          {selectedVideo && (
+
+            <div className="mt-4 bg-white rounded-2xl p-5 border">
+
+              <h2 className="text-xl font-bold">
+
+                {isUrdu
+                  ? selectedVideo.urdu_name || selectedVideo.name
+                  : selectedVideo.name}
+
+              </h2>
+
+              <p className="text-sm text-slate-500 mt-1">
+
+                {isUrdu
+                  ? selectedVideo.urdu_desc || selectedVideo.desc
+                  : selectedVideo.desc}
+
+              </p>
+
+              <div className="mt-3 text-xs text-slate-400">
+
+                {currentIndex + 1} / {videos.length}
+
+              </div>
+
+            </div>
+
+          )}
+
+        </div>
+
+
+        {/* PLAYLIST */}
+
+        <aside className="w-full lg:w-80 bg-white rounded-2xl border overflow-hidden">
+
+          <div className="p-4 border-b font-semibold">
+
+            {isUrdu ? "لیکچرز" : "Lectures"} ({videos.length})
+
+          </div>
+
+          <div className="max-h-[70vh] overflow-y-auto">
+
+            {videos.map((video, index) => (
+
+              <div
+                key={video.id}
+                onClick={() => changeVideo(video)}
+                className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
+                  ${selectedVideo?.id === video.id
+                    ? "bg-indigo-50"
+                    : ""
+                  }`}
+              >
+
+                <PlayCircle
+                  size={18}
+                  className={`${selectedVideo?.id === video.id
+                    ? "text-indigo-600"
+                    : "text-slate-400"
+                    }`}
+                />
+
+                <div className="flex flex-col">
+
+                  <span className="text-sm font-medium">
+
+                    {index + 1}.{" "}
+                    {isUrdu
+                      ? video.urdu_name || video.name
+                      : video.name}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </aside>
+
+      </div>
+
+    </div>
+
+    </section >
 
   );
 

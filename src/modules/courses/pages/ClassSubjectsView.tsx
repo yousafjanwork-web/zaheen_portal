@@ -19,8 +19,9 @@ const ClassSubjectsView = () => {
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
   const [chapters, setChapters] = useState<any[]>([]);
   const [classInfo, setClassInfo] = useState<any>(null);
-  const gradeType = location.state?.gradeType || classInfo?.type;
-
+  const gradeType = location.state?.gradeType;
+  console.log(gradeType, location.state?.gradeType, location.state);
+  const [chapterVideos, setChapterVideos] = useState<Record<number, any[]>>({});
   /* ---------- LANGUAGE ---------- */
 
   const lang = getLanguage();
@@ -35,7 +36,7 @@ const ClassSubjectsView = () => {
       );
       const data = await res.json();
       const cls = data.find((c: any) => c.id === Number(classId));
-      if (cls) cls.type = data.some((g: any) => g.id === cls.id)?.type || "1-5"; // map to your grade type
+      // if (cls) cls.type = data.some((g: any) => g.id === cls.id)?.type || "1-5"; // map to your grade type
       setClassInfo(cls);
     };
     fetchClass();
@@ -50,6 +51,19 @@ const ClassSubjectsView = () => {
       );
       const data = await res.json();
       setSubjects(data);
+      setSubjects(data);
+
+      const prevSelectedId = location.state?.selectedSubjectId;
+
+      if (prevSelectedId) {
+        const found = data.find((s: any) => s.id === prevSelectedId);
+        if (found) {
+          setSelectedSubject(found);
+          return;
+        }
+      }
+
+      // fallback
       if (data.length > 0) setSelectedSubject(data[0]);
     };
     fetchSubjects();
@@ -66,10 +80,42 @@ const ClassSubjectsView = () => {
       );
       const data = await res.json();
       setChapters(data);
+
+      // 🔥 fetch videos for each chapter
+      const videoResults = await Promise.all(
+        data.map(async (chapter: any) => {
+          try {
+            const res = await fetch(
+              `https://api.zaheen.com.pk/api/chapter/${chapter.id}/videos`
+            );
+            const videos = await res.json();
+
+            return {
+              chapterId: chapter.id,
+              videos,
+            };
+          } catch (err) {
+            console.error("Video fetch error", err);
+            return {
+              chapterId: chapter.id,
+              videos: [],
+            };
+          }
+        })
+      );
+
+      // convert to map
+      const videoMap: Record<number, any[]> = {};
+      videoResults.forEach((item) => {
+        videoMap[item.chapterId] = item.videos;
+      });
+
+      setChapterVideos(videoMap);
     };
 
     fetchChapters();
   }, [selectedSubject]);
+
 
   return (
     <section className="py-16 bg-slate-50">
@@ -83,7 +129,7 @@ const ClassSubjectsView = () => {
 
           <span>/</span>
 
-          <Link to={`/grades/${gradeType}`} className="hover:text-primary">
+          <Link to={`/grade-view/${gradeType}`} className="hover:text-primary">
             {isUrdu
               ? classInfo?.urdu_name || "گریڈ"
               : classInfo?.name || "Grade"}
@@ -168,7 +214,7 @@ const ClassSubjectsView = () => {
 
             {chapters.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {chapters.map((chapter) => (
+                {chapters.map((chapter, index) => (
                   <div
                     key={chapter.id}
                     className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
@@ -185,6 +231,8 @@ const ClassSubjectsView = () => {
                               ? classInfo?.urdu_name
                               : classInfo?.name,
                             gradeType: gradeType,
+                            classId: classId,          // ✅ ADD THIS
+                            selectedSubjectId: selectedSubject?.id, // ✅
 
                           },
                         }
@@ -195,17 +243,47 @@ const ClassSubjectsView = () => {
                       📘
                     </div>
 
-                    <div className="flex flex-col justify-center">
+                    <div className="flex flex-col justify-center w-full">
                       <h4 className="font-bold text-slate-900">
+                        Chapter {index + 1}:{" "}
                         {isUrdu
                           ? chapter.urdu_name || chapter.name
                           : chapter.name}
                       </h4>
 
-                      <p className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer">
-                        {isUrdu
-                          ? "لیکچرز دیکھیں →"
-                          : "View Lectures →"}
+                      {/* 🔥 VIDEOS LIST */}
+                      <div className="mt-2 ml-1 space-y-1">
+                        {chapterVideos[chapter.id]?.map((video: any, i: number) => (
+                          <div
+                            key={video.id}
+                            className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent chapter click
+                              navigate(
+                                `/lectures/${classInfo?.name}/${chapter.id}/${chapter.name}`,
+                                {
+                                  state: {
+                                    classTitle: isUrdu
+                                      ? classInfo?.urdu_name
+                                      : classInfo?.name,
+                                    gradeType,
+                                    classId,
+                                    selectedSubjectId: selectedSubject?.id,
+                                    videoId: video.id, // optional if needed later
+                                  },
+                                }
+                              );
+                            }}
+                          >
+                            • {isUrdu
+                              ? video.urdu_name || video.name
+                              : video.name}
+                          </div>
+                        ))}
+                      </div>
+
+                      <p className="text-xs text-blue-600 font-semibold mt-2">
+                        {isUrdu ? "لیکچرز دیکھیں →" : "View Lectures →"}
                       </p>
                     </div>
                   </div>
