@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { PlayCircle } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
+import { Link } from "react-router-dom";
 
 const LecturesPage = () => {
 
@@ -31,12 +32,16 @@ const LecturesPage = () => {
 
       const data = await res.json();
 
+      console.log(data);
+
       setVideos(data);
 
       if (data.length > 0) {
         setSelectedVideo(data[0]);
         setVideoUrl(
+          // `https://cdn.zaheen.com.pk/videos/${data[0].path}`
           `https://api.zaheen.com.pk/api/playvideo/${data[0].id}`
+
         );
       }
 
@@ -53,7 +58,9 @@ const LecturesPage = () => {
     setSelectedVideo(video);
 
     setVideoUrl(
+      // `https://cdn.zaheen.com.pk/videos/${video.path}`
       `https://api.zaheen.com.pk/api/playvideo/${video.id}`
+
     );
 
   };
@@ -101,6 +108,38 @@ const LecturesPage = () => {
     <section className="bg-slate-100 min-h-screen py-10">
 
       <div className="max-w-7xl mx-auto px-4">
+
+        <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
+          <Link to="/" className="hover:text-primary">
+            {isUrdu ? "ہوم" : "Home"}
+          </Link>
+
+          <span>/</span>
+
+          <Link
+            to={`/grade-view/${location.state?.gradeType}`}
+            className="hover:text-primary"
+          >
+            {isUrdu ? "گریڈ" : "Grade"} {location.state?.gradeType}
+          </Link>
+
+          <span>/</span>
+
+          <Link
+            to={`/class/${location.state?.classId}`}
+            state={{
+              gradeType: location.state?.gradeType,
+              selectedSubjectId: location.state?.selectedSubjectId, // ✅ preserve
+            }}
+            className="hover:text-primary"
+          >
+            {classTitle} - Chapters
+          </Link>
+
+          <span>/</span>
+
+          <span className="text-slate-700 font-medium">{chapterName}</span>
+        </div>
 
         {/* HEADER */}
 
@@ -212,20 +251,18 @@ const LecturesPage = () => {
                   key={video.id}
                   onClick={() => changeVideo(video)}
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
-                  ${
-                    selectedVideo?.id === video.id
+                  ${selectedVideo?.id === video.id
                       ? "bg-indigo-50"
                       : ""
-                  }`}
+                    }`}
                 >
 
                   <PlayCircle
                     size={18}
-                    className={`${
-                      selectedVideo?.id === video.id
-                        ? "text-indigo-600"
-                        : "text-slate-400"
-                    }`}
+                    className={`${selectedVideo?.id === video.id
+                      ? "text-indigo-600"
+                      : "text-slate-400"
+                      }`}
                   />
 
                   <div className="flex flex-col">
@@ -253,7 +290,7 @@ const LecturesPage = () => {
 
       </div>
 
-    </section>
+    </section >
 
   );
 

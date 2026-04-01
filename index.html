@@ -1,13 +1,40 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zaheen | Home</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/app/main.tsx"></script>
-  </body>
-</html>
 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Zaheen App for learning" />
+  <meta name="google-site-verification" content="C6krfhEyU2fShshr5ZCYaoqWRZANNppWRrbLiewJiT4" />
+
+  <!-- Favicon & Apple touch icon -->
+  <link rel="icon" href="/Zaheen.png" />
+  <link rel="apple-touch-icon" href="/Zaheen.png" />
+
+  <!-- Web app manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="/css/style.css" />
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FE6MHVWM7F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-FE6MHVWM7F');
+  </script>
+
+  <title>Zaheen | Home</title>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <!-- Vite main entry -->
+  <script type="module" src="/src/app/main.tsx"></script>
+</body>
+
+</html>
