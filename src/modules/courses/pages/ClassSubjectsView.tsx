@@ -8,16 +8,20 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
+import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const ClassSubjectsView = () => {
   const { classId }: any = useParams();
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [subjects, setSubjects] = useState<any[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
   const [chapters, setChapters] = useState<any[]>([]);
   const [classInfo, setClassInfo] = useState<any>(null);
-
+  const gradeType = location.state?.gradeType;
+  console.log(gradeType, location.state?.gradeType, location.state);
+  const [chapterVideos, setChapterVideos] = useState<Record<number, any[]>>({});
   /* ---------- LANGUAGE ---------- */
 
   const lang = getLanguage();
@@ -32,6 +36,7 @@ const ClassSubjectsView = () => {
       );
       const data = await res.json();
       const cls = data.find((c: any) => c.id === Number(classId));
+      // if (cls) cls.type = data.some((g: any) => g.id === cls.id)?.type || "1-5"; // map to your grade type
       setClassInfo(cls);
     };
     fetchClass();
@@ -46,6 +51,19 @@ const ClassSubjectsView = () => {
       );
       const data = await res.json();
       setSubjects(data);
+      setSubjects(data);
+
+      const prevSelectedId = location.state?.selectedSubjectId;
+
+      if (prevSelectedId) {
+        const found = data.find((s: any) => s.id === prevSelectedId);
+        if (found) {
+          setSelectedSubject(found);
+          return;
+        }
+      }
+
+      // fallback
       if (data.length > 0) setSelectedSubject(data[0]);
     };
     fetchSubjects();
@@ -62,14 +80,70 @@ const ClassSubjectsView = () => {
       );
       const data = await res.json();
       setChapters(data);
+
+      // 🔥 fetch videos for each chapter
+      const videoResults = await Promise.all(
+        data.map(async (chapter: any) => {
+          try {
+            const res = await fetch(
+              `https://api.zaheen.com.pk/api/chapter/${chapter.id}/videos`
+            );
+            const videos = await res.json();
+
+            return {
+              chapterId: chapter.id,
+              videos,
+            };
+          } catch (err) {
+            console.error("Video fetch error", err);
+            return {
+              chapterId: chapter.id,
+              videos: [],
+            };
+          }
+        })
+      );
+
+      // convert to map
+      const videoMap: Record<number, any[]> = {};
+      videoResults.forEach((item) => {
+        videoMap[item.chapterId] = item.videos;
+      });
+
+      setChapterVideos(videoMap);
     };
 
     fetchChapters();
   }, [selectedSubject]);
 
+
   return (
     <section className="py-16 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ---------- BREADCRUMBS ---------- */}
+        <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
+          <Link to="/" className="hover:text-primary">
+            {isUrdu ? "ہوم" : "Home"}
+          </Link>
+
+          <span>/</span>
+
+          <Link to={`/grade-view/${gradeType}`} className="hover:text-primary">
+            {isUrdu
+              ? classInfo?.urdu_name || "گریڈ"
+              : classInfo?.name || "Grade"}
+          </Link>
+
+          <span>/</span>
+
+          <span className="text-slate-700 font-medium">
+            {isUrdu ? classInfo?.urdu_name : classInfo?.name}
+          </span>
+        </div>
+
+
+
         {/* ---------- WELCOME ---------- */}
 
         <div className="mb-12 p-8 md:p-10 rounded-3xl bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -107,19 +181,17 @@ const ClassSubjectsView = () => {
                 key={subject.id}
                 onClick={() => setSelectedSubject(subject)}
                 className={`flex items-center gap-2 px-4 py-3 rounded-xl cursor-pointer
-                ${
-                  selectedSubject?.id === subject.id
+                ${selectedSubject?.id === subject.id
                     ? "bg-blue-600 text-white shadow-md"
                     : "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                }
+                  }
                 min-w-[120px] lg:min-w-full`}
               >
                 <span
-                  className={`text-lg ${
-                    selectedSubject?.id === subject.id
-                      ? "text-white"
-                      : "text-blue-600"
-                  }`}
+                  className={`text-lg ${selectedSubject?.id === subject.id
+                    ? "text-white"
+                    : "text-blue-600"
+                    }`}
                 >
                   📑
                 </span>
@@ -142,24 +214,26 @@ const ClassSubjectsView = () => {
 
             {chapters.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {chapters.map((chapter) => (
+                {chapters.map((chapter, index) => (
                   <div
                     key={chapter.id}
                     className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() =>
                       navigate(
-                        `/lectures/${
-                          isUrdu ? classInfo?.urdu_name : classInfo?.name
-                        }/${chapter.id}/${
-                          isUrdu
-                            ? chapter.urdu_name || chapter.name
-                            : chapter.name
+                        `/lectures/${isUrdu ? classInfo?.urdu_name : classInfo?.name
+                        }/${chapter.id}/${isUrdu
+                          ? chapter.urdu_name || chapter.name
+                          : chapter.name
                         }`,
                         {
                           state: {
                             classTitle: isUrdu
                               ? classInfo?.urdu_name
                               : classInfo?.name,
+                            gradeType: gradeType,
+                            classId: classId,          // ✅ ADD THIS
+                            selectedSubjectId: selectedSubject?.id, // ✅
+
                           },
                         }
                       )
@@ -169,17 +243,47 @@ const ClassSubjectsView = () => {
                       📘
                     </div>
 
-                    <div className="flex flex-col justify-center">
+                    <div className="flex flex-col justify-center w-full">
                       <h4 className="font-bold text-slate-900">
+                        Chapter {index + 1}:{" "}
                         {isUrdu
                           ? chapter.urdu_name || chapter.name
                           : chapter.name}
                       </h4>
 
-                      <p className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer">
-                        {isUrdu
-                          ? "لیکچرز دیکھیں →"
-                          : "View Lectures →"}
+                      {/* 🔥 VIDEOS LIST */}
+                      <div className="mt-2 ml-1 space-y-1">
+                        {chapterVideos[chapter.id]?.map((video: any, i: number) => (
+                          <div
+                            key={video.id}
+                            className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent chapter click
+                              navigate(
+                                `/lectures/${classInfo?.name}/${chapter.id}/${chapter.name}`,
+                                {
+                                  state: {
+                                    classTitle: isUrdu
+                                      ? classInfo?.urdu_name
+                                      : classInfo?.name,
+                                    gradeType,
+                                    classId,
+                                    selectedSubjectId: selectedSubject?.id,
+                                    videoId: video.id, // optional if needed later
+                                  },
+                                }
+                              );
+                            }}
+                          >
+                            • {isUrdu
+                              ? video.urdu_name || video.name
+                              : video.name}
+                          </div>
+                        ))}
+                      </div>
+
+                      <p className="text-xs text-blue-600 font-semibold mt-2">
+                        {isUrdu ? "لیکچرز دیکھیں →" : "View Lectures →"}
                       </p>
                     </div>
                   </div>

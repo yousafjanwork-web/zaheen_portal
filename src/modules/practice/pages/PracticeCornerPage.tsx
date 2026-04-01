@@ -3,6 +3,7 @@ import { BookOpen, Brain, Pencil, Shapes, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useSearchParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const PracticeCornerPage = () => {
   const [classes, setClasses] = useState<any[]>([]);
@@ -14,6 +15,13 @@ const PracticeCornerPage = () => {
 
   const lang = getLanguage();
   const isUrdu = lang === "ur";
+
+  const sectionMap = {
+    kg: isUrdu ? "کے جی" : "KG",
+    "1-5": isUrdu ? "گریڈ ۱-۵" : "Grades 1-5",
+    "6-8": isUrdu ? "گریڈ ۶-۸" : "Grades 6-8",
+    "9-12": isUrdu ? "گریڈ ۹-۱۲" : "Grades 9-12",
+  };
 
 
 
@@ -52,59 +60,74 @@ const PracticeCornerPage = () => {
 
   return (
     <section className="bg-slate-50 min-h-screen py-16">
+
+
       <div className="max-w-7xl mx-auto px-4 sm:px-2">
+        {/* ================== BREADCRUMBS ================== */}
+
+        <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
+          <Link to="/" className="hover:text-primary">
+            {isUrdu ? "ہوم" : "Home"}
+          </Link>
+
+          <span>/</span>
+
+          <Link
+            to={`/grades/${section}`}
+            className="hover:text-primary"
+          >
+            {sectionMap[section] || (isUrdu ? "گریڈز" : "Grades")}
+          </Link>
+
+          <span>/</span>
+
+          <span className="text-slate-700 font-medium">
+            {isUrdu ? "پریکٹس کارنر" : "Practice Corner"}
+          </span>
+        </div>
         {/* ================== HERO ================== */}
 
-        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-12">
-          {/* MAIN TILE */}
-          <div className="col-span-2 row-span-2 p-3 rounded-3xl text-white 
-          bg-gradient-to-br from-orange-600 to-blue-400 shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 mb-12 
+                            p-3 sm:p-4 md:p-6 lg:p-8 
+                            rounded-3xl bg-primary/5 border border-primary/10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-12 w-full">
+            {/* MAIN TILE */}
+            <div className="col-span-2 lg:col-span-2 row-span-2 p-5 md:p-6 rounded-3xl text-black bg-gradient-to-br from-slate-300 to-blue-200 shadow-2xl flex flex-col justify-center">
 
-            <div className="absolute -right-20 -top-16 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-spin-slow"></div>
-            <div className="absolute -left-16 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl animate-pulse"></div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black flex items-center gap-3">
+                <Sparkles size={28} />
+                {isUrdu ? "پریکٹس کارنر" : "Practice Corner"}
+              </h1>
 
-            <h1 className="text-3xl sm:text-xl font-black flex items-center gap-3">
-              <Sparkles size={30} />
-              {isUrdu ? "پریکٹس کارنر" : "Practice Corner"}
-            </h1>
+              <p className="mt-2 text-sm md:text-base text-center leading-relaxed">
+                {isUrdu
+                  ? "یہاں مختلف مضامین کی پریکٹس کریں اور اپنی صلاحیتیں بہتر بنائیں۔"
+                  : "Sharpen your skills with fun practice exercises and quizzes for every class."}
+              </p>
 
-            <p className="mt-3 text-sm text-center">
-              {isUrdu
-                ? "یہاں مختلف مضامین کی پریکٹس کریں اور اپنی صلاحیتیں بہتر بنائیں۔"
-                : "Sharpen your skills with fun practice exercises and quizzes for every class."}
-            </p>
-          </div>
+            </div>
 
-          {/* CARD 1 */}
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-600 text-white shadow-lg flex flex-col justify-between">
-            <Brain size={28} />
-            <h3 className="font-bold text-sm">
-              {isUrdu ? "سمارٹ پریکٹس" : "Smart Practice"}
-            </h3>
-          </div>
+            {/* CARD TEMPLATE */}
+            {[
+              { icon: Brain, textEn: "Smart Practice", textUr: "سمارٹ پریکٹس" },
+              { icon: Pencil, textEn: "Interactive Exercises", textUr: "انٹرایکٹو مشقیں" },
+              { icon: Shapes, textEn: "Fun Learning", textUr: "مزیدار سیکھنا" },
+              { icon: BookOpen, textEn: "Subject Practice", textUr: "مضامین کی پریکٹس" },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={i}
+                  className="h-full p-4 md:p-5 rounded-2xl bg-gradient-to-br from-slate-300 to-blue-200 text-black shadow-lg flex flex-col justify-center gap-3"
+                >
+                  <Icon className="w-6 h-6 md:w-7 md:h-7" />
+                  <h3 className="font-bold text-sm md:text-base leading-snug break-words">
+                    {isUrdu ? item.textUr : item.textEn}
+                  </h3>
+                </div>
+              );
+            })}
 
-          {/* CARD 2 */}
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-400 to-green-300 text-white shadow-lg flex flex-col justify-between">
-            <Pencil size={28} />
-            <h3 className="font-bold text-sm">
-              {isUrdu ? "انٹرایکٹو مشقیں" : "Interactive Exercises"}
-            </h3>
-          </div>
-
-          {/* CARD 3 */}
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-green-600 to-green-200 text-white shadow-lg flex flex-col justify-between">
-            <Shapes size={28} />
-            <h3 className="font-bold text-sm">
-              {isUrdu ? "مزیدار سیکھنا" : "Fun Learning"}
-            </h3>
-          </div>
-
-          {/* CARD 4 */}
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-red-400 to-purple-400 text-white shadow-lg flex flex-col justify-between">
-            <BookOpen size={28} />
-            <h3 className="font-bold text-sm">
-              {isUrdu ? "مضامین کی پریکٹس" : "Subject Practice"}
-            </h3>
           </div>
         </div>
 
@@ -114,19 +137,20 @@ const PracticeCornerPage = () => {
           {/* ================== SIDEBAR ================== */}
 
           <aside className="w-40 sm:w-64 flex flex-col gap-3">
-            <div className="bg-white rounded-2xl p-5 shadow border">
-              <div className="flex flex-col gap-2 max-h-[420px] overflow-y-auto">
+            <div className="bg-white rounded-2xl p-5">
+              <div className="flex flex-col gap-2 overflow-y-auto">
 
                 {classes.map((cls) => (
                   <button
                     key={cls.class_id}
                     onClick={() => setSelectedClass(cls)}
-                    className={`text-left px-4 py-3 rounded-xl transition font-semibold
+                    className={`p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0
                     ${selectedClass?.class_id === cls.class_id
-                        ? "bg-indigo-600 text-white shadow"
+                        ? "bg-primary text-white"
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                       }`}
                   >
+                    <BookOpen size={18} />
                     {isUrdu
                       ? cls.class_urdu_name || cls.class_name
                       : cls.class_name}
@@ -139,7 +163,7 @@ const PracticeCornerPage = () => {
           {/* ================== SUBJECTS ================== */}
 
           <div className="flex-1">
-            <h2 className="text-2xl font-extrabold mb-6 text-indigo-800 flex items-center gap-2">
+            <h2 className="text-2xl font-extrabold mb-6 text-grey-800 flex items-center gap-2">
               <Sparkles size={22} />
               {isUrdu
                 ? `${selectedClass?.class_urdu_name || selectedClass?.class_name} پریکٹس`
@@ -164,7 +188,7 @@ const PracticeCornerPage = () => {
                       bg-white/50 backdrop-blur-sm shadow-md hover:shadow-xl 
                       transition cursor-pointer border border-white/30"
                     >
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-300 via-purple-200 to-pink-200 flex items-center justify-center text-white shadow-lg">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-300 to-blue-200 flex items-center justify-center text-white shadow-lg">
                         <Icon size={26} />
                       </div>
 
