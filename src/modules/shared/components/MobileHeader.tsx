@@ -144,7 +144,7 @@ const MobileHeader = () => {
 
     </div>
 
-          {isLoggedIn ? (
+          {/* {isLoggedIn ? (
             <>
               <button
                 onClick={handleLogout}
@@ -172,7 +172,7 @@ const MobileHeader = () => {
             >
               {t("menu.login")}
             </button>
-          )}
+          )} */}
         </div>
       )}
     </header>

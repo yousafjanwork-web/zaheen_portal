@@ -39,8 +39,8 @@ const LecturesPage = () => {
       if (data.length > 0) {
         setSelectedVideo(data[0]);
         setVideoUrl(
-          // `https://cdn.zaheen.com.pk/videos/${data[0].path}`
-          `https://api.zaheen.com.pk/api/playvideo/${data[0].id}`
+          `https://cdn.zaheen.com.pk/videos/${data[0].path}`
+          // `https://api.zaheen.com.pk/api/playvideo/${data[0].id}`
 
         );
       }
@@ -58,8 +58,8 @@ const LecturesPage = () => {
     setSelectedVideo(video);
 
     setVideoUrl(
-      // `https://cdn.zaheen.com.pk/videos/${video.path}`
-      `https://api.zaheen.com.pk/api/playvideo/${video.id}`
+      `https://cdn.zaheen.com.pk/videos/${video.path}`
+      // `https://api.zaheen.com.pk/api/playvideo/${video.id}`
 
     );
 

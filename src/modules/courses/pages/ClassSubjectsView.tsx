@@ -252,34 +252,55 @@ const ClassSubjectsView = () => {
                       </h4>
 
                       {/* 🔥 VIDEOS LIST */}
+                      {/* 🔥 VIDEOS LIST */}
                       <div className="mt-2 ml-1 space-y-1">
-                        {chapterVideos[chapter.id]?.map((video: any, i: number) => (
-                          <div
-                            key={video.id}
-                            className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation(); // prevent chapter click
-                              navigate(
-                                `/lectures/${classInfo?.name}/${chapter.id}/${chapter.name}`,
-                                {
-                                  state: {
-                                    classTitle: isUrdu
-                                      ? classInfo?.urdu_name
-                                      : classInfo?.name,
-                                    gradeType,
-                                    classId,
-                                    selectedSubjectId: selectedSubject?.id,
-                                    videoId: video.id, // optional if needed later
-                                  },
-                                }
-                              );
-                            }}
-                          >
-                            • {isUrdu
-                              ? video.urdu_name || video.name
-                              : video.name}
+
+                        {/* ✅ COUNT */}
+                        {chapterVideos[chapter.id]?.length > 0 && (
+                          <div className="text-[11px] text-blue-600 font-semibold mb-1">
+                            {isUrdu
+                              ? `${chapterVideos[chapter.id].length} لیکچرز`
+                              : `${chapterVideos[chapter.id].length} Lectures`}
                           </div>
-                        ))}
+                        )}
+
+                        {/* ✅ SHOW ONLY FIRST 5 */}
+                        {chapterVideos[chapter.id]
+                          ?.slice(0, 5)
+                          .map((video: any) => (
+                            <div
+                              key={video.id}
+                              className="text-xs text-slate-600 hover:text-blue-600 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(
+                                  `/lectures/${classInfo?.name}/${chapter.id}/${chapter.name}`,
+                                  {
+                                    state: {
+                                      classTitle: isUrdu
+                                        ? classInfo?.urdu_name
+                                        : classInfo?.name,
+                                      gradeType,
+                                      classId,
+                                      selectedSubjectId: selectedSubject?.id,
+                                      videoId: video.id,
+                                    },
+                                  }
+                                );
+                              }}
+                            >
+                              • {isUrdu
+                                ? video.urdu_name || video.name
+                                : video.name}
+                            </div>
+                          ))}
+
+                        {/* ✅ SHOW ... IF MORE */}
+                        {chapterVideos[chapter.id]?.length > 5 && (
+                          <div className="text-xs text-slate-400 font-semibold">
+                            ...
+                          </div>
+                        )}
                       </div>
 
                       <p className="text-xs text-blue-600 font-semibold mt-2">
