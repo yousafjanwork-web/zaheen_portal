@@ -12,6 +12,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
 
   const { msisdn, isLoggedIn, logout } = useAuth();
 
+  console.log("mobile", msisdn);
+
   if (!open) return null;
 
   return (

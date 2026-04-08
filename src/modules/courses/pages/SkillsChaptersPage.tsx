@@ -12,7 +12,7 @@ import {
 import { getLanguage } from "@/modules/shared/i18n";
 
 const SkillsChaptersPage = () => {
- useEffect(() => {
+  useEffect(() => {
     window.scrollTo({
       top: 0,
       behavior: "auto"
@@ -44,9 +44,9 @@ const SkillsChaptersPage = () => {
     const fetchClass = async () => {
 
       const res = await fetch(
-        "https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3"
+        `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?ts=${Date.now()}`
       );
-
+      
       const data = await res.json();
 
       const cls = data.find((c) => c.class_id === Number(classId));
@@ -173,11 +173,10 @@ const SkillsChaptersPage = () => {
                   onClick={() => setSelectedSubject(subject)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition
                   
-                  ${
-                    selectedSubject?.id === subject.id
+                  ${selectedSubject?.id === subject.id
                       ? "bg-indigo-600 text-white shadow"
                       : "bg-white border border-slate-200 hover:bg-indigo-50"
-                  }
+                    }
                   
                   `}
                 >
@@ -234,14 +233,12 @@ const SkillsChaptersPage = () => {
                       key={chapter.id}
                       onClick={() =>
                         navigate(
-                          `/lectures/${
-                            isUrdu
-                              ? classInfo?.urdu_name
-                              : classInfo?.name
-                          }/${chapter.id}/${
-                            isUrdu
-                              ? chapter.urdu_name || chapter.name
-                              : chapter.name
+                          `/lectures/${isUrdu
+                            ? classInfo?.urdu_name
+                            : classInfo?.name
+                          }/${chapter.id}/${isUrdu
+                            ? chapter.urdu_name || chapter.name
+                            : chapter.name
                           }`,
                           {
                             state: {

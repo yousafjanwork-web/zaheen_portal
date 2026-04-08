@@ -3,8 +3,9 @@ import Header from "../modules/shared/components/Header/Header";
 import MobileHeader from "@/modules/shared/components/MobileHeader";
 import Footer from "../modules/shared/components/Footer/Footer";
 import MobileMarketingBanner from "@/modules/home/sections/MobileMarketingBanner";
+import { Outlet } from "react-router-dom";
 
-const MainLayout = ({ children }: any) => {
+const MainLayout = () => {
   const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => setIsDark(!isDark);
@@ -18,11 +19,16 @@ const MainLayout = ({ children }: any) => {
 
       {/* Mobile header */}
       <div className="lg:hidden">
-        <MobileMarketingBanner/>
+        <MobileMarketingBanner />
         <MobileHeader />
       </div>
 
-      <main>{children}</main>
+      {/* ✅ Page Content */}
+      <main>
+        <Outlet />
+      </main>
+
+      {/* ✅ Footer stays at bottom */}
       <Footer />
     </>
   );

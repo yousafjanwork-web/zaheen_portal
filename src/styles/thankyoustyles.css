@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+
+  --color-primary: #105caa;
+  --color-primary-container: #3775c4;
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #486800;
+  --color-secondary-container: #c1f366;
+  --color-on-secondary-container: #4d6e00;
+  --color-secondary-fixed: #c1f366;
+  --color-on-secondary-fixed: #131f00;
+  
+  --color-tertiary: #006766;
+  --color-tertiary-fixed: #90f3f1;
+  
+  --color-surface: #f7f9fb;
+  --color-surface-container: #eceef0;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #424751;
+  
+  --color-outline-variant: #c2c6d3;
+
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}
+
+@layer utilities {
+  .bg-signature-gradient {
+    background: linear-gradient(135deg, #105caa 0%, #3775c4 100%);
+  }
+  .text-shadow-glow {
+    text-shadow: 0 0 20px rgba(167, 200, 255, 0.4);
+  }
+  .glass-morphism {
+    @apply bg-white/85 backdrop-blur-xl;
+  }
+}
+
+body {
+  @apply bg-surface font-body text-on-surface selection:bg-secondary-container selection:text-on-secondary-container;
+}
