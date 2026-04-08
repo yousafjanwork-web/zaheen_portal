@@ -19,14 +19,19 @@ import Chatbot from "@/modules/aiTutor/pages/Chatbot";
 import MzaPage from "@/pages/MzaPage";
 import ResourcesPage from "@/modules/courses/pages/ResourcesPage";
 import ResourcePlayer from "@/modules/courses/pages/ResourcesPlayer";
+import { EnrollmentLandingPage } from "@/modules/auth/enrollnow/EnrollNowPage";
+import SubEnrollNow from "@/modules/auth/enrollnow/pages/SubEnrollNow";
+import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
 
 const AppRoutes = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <MainLayout>
 
-        <Routes>
+      <Routes>
+
+        {/* Routes WITH MainLayout */}
+        <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -48,9 +53,14 @@ const AppRoutes = () => {
           <Route path="/mza" element={<MzaPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/resource-player" element={<ResourcePlayer />} />
+        </Route>
 
-        </Routes>
-      </MainLayout>
+        {/* Routes WITHOUT MainLayout */}
+        <Route path="/enrollnow" element={<EnrollmentLandingPage />} />
+        <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
+
+        <Route path="thanks-for-subscribing" element={<SuccessScreen />}/>
+      </Routes>
     </BrowserRouter>
   );
 };

@@ -30,8 +30,8 @@ const ProfessionalCourses = () => {
 
       try {
 
-        const response = await fetch(
-          "https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3"
+         const response = await fetch(
+          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?ts=${Date.now()}`
         );
 
         const data = await response.json();

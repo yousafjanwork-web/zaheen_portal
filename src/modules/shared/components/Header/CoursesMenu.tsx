@@ -31,8 +31,12 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
   useEffect(() => {
     const fetchProfessionalSkills = async () => {
       try {
-        const res = await fetch("https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3");
+        const res = await fetch(
+          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?ts=${Date.now()}`
+        );
+
         const data = await res.json();
+        console.log(data);
         setProfessionalSkills(data);
       } catch (err) {
         console.error("Failed to fetch professional skills:", err);
@@ -76,7 +80,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
               professionalSkills.map(skill => (
                 <li
                   key={skill.id}
-                  onClick={()=>navigate(`skills/${skill.class_id}`)}
+                  onClick={() => navigate(`skills/${skill.class_id}`)}
                   className="flex items-center gap-3 hover:text-primary cursor-pointer"
                 >
                   {/* <a href={`class/${skill.id}`}> */}

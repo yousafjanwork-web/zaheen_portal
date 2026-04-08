@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Manrope:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #105caa;
+  --color-primary-container: #3775c4;
+  --color-on-primary: #ffffff;
+  --color-secondary: #486800;
+  --color-secondary-container: #c1f366;
+  --color-on-secondary-container: #4d6e00;
+  --color-surface: #f7f9fb;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #424751;
+  --color-outline-variant: #c2c6d3;
+  --color-primary-fixed: #d5e3ff;
+
+  --radius-xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    /* Soft multi-color gradient matching the uploaded images (Blue -> White -> Yellow) */
+    background: linear-gradient(135deg, #e1effe 0%, #ffffff 50%, #fefce8 100%);
+    background-attachment: fixed;
+    @apply font-body text-on-surface antialiased;
+  }
+}
+
+@layer utilities {
+  .academic-gradient {
+    background: linear-gradient(135deg, #105caa 0%, #3775c4 100%);
+  }
+  
+  .btn-gradient {
+    background: linear-gradient(to right, #4076da, #73bb46);
+  }
+
+  .vitality-glow {
+    box-shadow: 0 0 20px rgba(193, 243, 102, 0.2);
+  }
+
+  .glass-card {
+    @apply bg-surface-container-lowest/85 backdrop-blur-xl border border-outline-variant/15;
+  }
+}
+
