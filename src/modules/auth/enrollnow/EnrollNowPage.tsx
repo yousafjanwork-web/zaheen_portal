@@ -2,14 +2,43 @@ import { motion } from 'motion/react';
 import { CheckCircle, Lightbulb, ShieldCheck } from 'lucide-react';
 import image from '@/assets/images/landingPageBanner.png';
 import '@/styles/landingpage.css';
-
+import { useEffect } from 'react';
 export function EnrollmentLandingPage() {
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    const txid = params.get("txid");
+    const afflid = params.get("affid");
+    const pubid = params.get("pubid");
+
+    // ✅ Save or update every time page loads
+    if (txid) {
+      localStorage.setItem("transaction_id", txid);
+    }
+
+    if (afflid) {
+      localStorage.setItem("afflid", afflid);
+    }
+
+    if (pubid) {
+      localStorage.setItem("pubid", pubid);
+    }
+  }, []);
+
   const handleEnroll = () => {
-    const transactionId = Date.now();
+    const transactionId =
+      localStorage.getItem("transaction_id") || Date.now();
+
+    const afflid = localStorage.getItem("afflid") || "";
+    const pubid = localStorage.getItem("pubid") || "";
 
     window.location.href =
-      `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/sub_enrollnow&transaction_id=${transactionId}&page_name=enrollnow&service_id=205`;
+      `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/sub_enrollnow` +
+      `&transaction_id=${transactionId}` +
+      `&affid=${afflid}` +
+      `&pubid=${pubid}` +
+      `&page_name=enrollnow&service_id=205`;
   };
 
   return (
