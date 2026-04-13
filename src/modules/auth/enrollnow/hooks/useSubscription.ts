@@ -127,8 +127,9 @@ export const useSubscription = () => {
     try {
       setLoading(true);
       const formatted = normalizeMsisdn(msisdn);
+      console.log(txid);
 
-      const res = await verifyPin(formatted, fullPin, serviceId);
+      const res = await verifyPin(formatted, fullPin, serviceId, txid);
 
       if (res.status === "SUCCESS") {
         setAlert({ type: "success", message: "Subscription successful" });

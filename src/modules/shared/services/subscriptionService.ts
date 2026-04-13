@@ -13,7 +13,7 @@ export const checkSubscriberStatus = async (
   msisdn: string,
   serviceId: string
 ) => {
- console.log("Subscriber status  msisdn:"+ msisdn +" serviceid "+ serviceId);
+  console.log("Subscriber status  msisdn:" + msisdn + " serviceid " + serviceId);
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/subscriber/status",
     {
@@ -53,16 +53,18 @@ export const sendPin = async (
 export const verifyPin = async (
   msisdn: string,
   pin: string,
-  serviceId: string
+  serviceId: string,
+  transactionId:string
 ) => {
 
   const res = await axios.get(
-    "https://subgateway.fitsworld.com.pk/zongcharging/api/verify-pin",
+    "https://subgateway.fitsworld.com.pk/zongcharging/api/verify-subscribe",
     {
       params: {
         msisdn,
         serviceId,
-        pin
+        pin,
+        transactionId
       }
     }
   );
@@ -78,13 +80,42 @@ export const subscribeUser = async (
   serviceId: string
 ) => {
 
+
+  const getSubMethod = () => {
+    const params = new URLSearchParams(window.location.search);
+
+    // ✅ 1. Check if request is from MyZongApp
+    if (
+      params.get("mza") ||
+      params.get("source")?.toLocaleLowerCase() === "mza" ||
+      params.get("channel")?.toLowerCase() === "mza" ||
+      sessionStorage.getItem("mzaMsisdn")
+    ) {
+      return "MZA";
+    }
+
+    // ✅ 2. Detect Mobile vs Web (basic UA check)
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      return "MOBILE";
+    }
+
+    // ✅ 3. Default
+    return "WEB";
+  };
+
+  const subMethod = getSubMethod();
+
+  console.log(subMethod, "onsubmethod");
+
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/subscribe",
     {
       params: {
         msisdn,
         serviceId,
-        subMethod: "WEB",
+        subMethod,
         transactionId: Date.now()
       }
     }
