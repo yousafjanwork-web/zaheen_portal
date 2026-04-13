@@ -3,6 +3,7 @@ import HeroSection from "../components/HeroSection";
 import ActionButtons from "../components/ActionButtons";
 import NextSteps from "../components/NextSteps";
 import SupportInfo from "../components/SupportInfo";
+import '@/styles/thankyoustyles.css';
 
 export default function SuccessScreen() {
   return (
