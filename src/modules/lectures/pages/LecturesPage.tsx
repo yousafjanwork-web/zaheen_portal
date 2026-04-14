@@ -20,6 +20,48 @@ const LecturesPage = () => {
   const lang = getLanguage();
   const isUrdu = lang === "ur";
 
+  /* ---------------- TRACKING FUNCTION ---------------- */
+
+  const trackEvent = (eventName, extra = {}) => {
+    if (!window.gtag || !selectedVideo) return;
+
+    window.gtag("event", eventName, {
+      video_id: selectedVideo.id,
+      video_name: selectedVideo.name,
+      chapter_id: chapterId,
+      page_path: window.location.pathname,
+      ...extra
+    });
+  };
+
+  /* ---------------- VIDEO EVENTS ---------------- */
+
+  const handlePlay = () => {
+    trackEvent("video_start");
+  };
+
+  const handleEnded = () => {
+    trackEvent("video_complete");
+
+    const index = videos.findIndex(v => v.id === selectedVideo.id);
+
+    if (index < videos.length - 1) {
+      changeVideo(videos[index + 1]);
+    }
+  };
+
+  const handleTimeUpdate = (e) => {
+    const video = e.target;
+    if (!video.duration) return;
+
+    const percent = (video.currentTime / video.duration) * 100;
+
+    if (percent > 50 && !video._tracked50) {
+      video._tracked50 = true;
+      trackEvent("video_50_percent");
+    }
+  };
+
   /* ---------------- FETCH VIDEOS ---------------- */
 
   useEffect(() => {
@@ -32,16 +74,12 @@ const LecturesPage = () => {
 
       const data = await res.json();
 
-      console.log(data);
-
       setVideos(data);
 
       if (data.length > 0) {
         setSelectedVideo(data[0]);
         setVideoUrl(
           `https://cdn.zaheen.com.pk/videos/${data[0].path}`
-          // `https://api.zaheen.com.pk/api/playvideo/${data[0].id}`
-
         );
       }
 
@@ -57,23 +95,13 @@ const LecturesPage = () => {
 
     setSelectedVideo(video);
 
+    if (videoRef.current) {
+      videoRef.current._tracked50 = false; // reset progress tracking
+    }
+
     setVideoUrl(
       `https://cdn.zaheen.com.pk/videos/${video.path}`
-      // `https://api.zaheen.com.pk/api/playvideo/${video.id}`
-
     );
-
-  };
-
-  /* ---------------- AUTO PLAY NEXT ---------------- */
-
-  const handleEnded = () => {
-
-    const index = videos.findIndex(v => v.id === selectedVideo.id);
-
-    if (index < videos.length - 1) {
-      changeVideo(videos[index + 1]);
-    }
 
   };
 
@@ -129,7 +157,7 @@ const LecturesPage = () => {
             to={`/class/${location.state?.classId}`}
             state={{
               gradeType: location.state?.gradeType,
-              selectedSubjectId: location.state?.selectedSubjectId, // ✅ preserve
+              selectedSubjectId: location.state?.selectedSubjectId,
             }}
             className="hover:text-primary"
           >
@@ -146,21 +174,16 @@ const LecturesPage = () => {
         <div className="mb-6">
 
           <h1 className="text-3xl font-bold text-slate-900">
-
             {classTitle} | {chapterName}
-
           </h1>
 
           <p className="text-sm text-slate-500">
-
             {isUrdu
               ? "لیکچرز دیکھیں اور سیکھنا جاری رکھیں"
               : "Watch lectures and continue learning"}
-
           </p>
 
         </div>
-
 
         <div className="flex flex-col lg:flex-row gap-6">
 
@@ -179,7 +202,9 @@ const LecturesPage = () => {
                     key={videoUrl}
                     controls
                     autoPlay
+                    onPlay={handlePlay}
                     onEnded={handleEnded}
+                    onTimeUpdate={handleTimeUpdate}
                     className="w-full h-full"
                     src={videoUrl}
                   />
@@ -187,9 +212,7 @@ const LecturesPage = () => {
                 ) : (
 
                   <div className="flex items-center justify-center h-full text-white">
-
                     {isUrdu ? "ویڈیو لوڈ ہو رہی ہے..." : "Loading video..."}
-
                   </div>
 
                 )}
@@ -205,25 +228,19 @@ const LecturesPage = () => {
               <div className="mt-4 bg-white rounded-2xl p-5 border">
 
                 <h2 className="text-xl font-bold">
-
                   {isUrdu
                     ? selectedVideo.urdu_name || selectedVideo.name
                     : selectedVideo.name}
-
                 </h2>
 
                 <p className="text-sm text-slate-500 mt-1">
-
                   {isUrdu
                     ? selectedVideo.urdu_desc || selectedVideo.desc
                     : selectedVideo.desc}
-
                 </p>
 
                 <div className="mt-3 text-xs text-slate-400">
-
                   {currentIndex + 1} / {videos.length}
-
                 </div>
 
               </div>
@@ -232,15 +249,12 @@ const LecturesPage = () => {
 
           </div>
 
-
           {/* PLAYLIST */}
 
           <aside className="w-full lg:w-80 bg-white rounded-2xl border overflow-hidden">
 
             <div className="p-4 border-b font-semibold">
-
               {isUrdu ? "لیکچرز" : "Lectures"} ({videos.length})
-
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto">
@@ -251,29 +265,23 @@ const LecturesPage = () => {
                   key={video.id}
                   onClick={() => changeVideo(video)}
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
-                  ${selectedVideo?.id === video.id
-                      ? "bg-indigo-50"
-                      : ""
-                    }`}
+                  ${selectedVideo?.id === video.id ? "bg-indigo-50" : ""}`}
                 >
 
                   <PlayCircle
                     size={18}
                     className={`${selectedVideo?.id === video.id
                       ? "text-indigo-600"
-                      : "text-slate-400"
-                      }`}
+                      : "text-slate-400"}`}
                   />
 
                   <div className="flex flex-col">
 
                     <span className="text-sm font-medium">
-
                       {index + 1}.{" "}
                       {isUrdu
                         ? video.urdu_name || video.name
                         : video.name}
-
                     </span>
 
                   </div>
@@ -290,7 +298,7 @@ const LecturesPage = () => {
 
       </div>
 
-    </section >
+    </section>
 
   );
 
