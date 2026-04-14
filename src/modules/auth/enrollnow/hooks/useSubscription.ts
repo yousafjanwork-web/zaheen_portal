@@ -33,6 +33,29 @@ export const useSubscription = () => {
     return digits;
   };
 
+
+  const getSubMethod = (msisdnFromParams: string | null) => {
+    const params = new URLSearchParams(window.location.search);
+
+    // MZA
+    if (
+      params.get("mza") ||
+      params.get("source")?.toLowerCase() === "mza" ||
+      params.get("channel")?.toLowerCase() === "mza" ||
+      sessionStorage.getItem("mzaMsisdn")
+    ) {
+      return "MZA";
+    }
+
+    // Campaign (auto msisdn)
+    if (msisdnFromParams && msisdnFromParams.trim() !== "") {
+      return "CAMPAIGN";
+    }
+
+    // Default
+    return "WEB";
+  };
+
   const resetForm = () => {
     setMsisdn("");
     setPin(["", "", "", ""]);
@@ -127,18 +150,25 @@ export const useSubscription = () => {
     try {
       setLoading(true);
       const formatted = normalizeMsisdn(msisdn);
-      console.log(txid);
 
-      const res = await verifyPin(formatted, fullPin, serviceId, txid);
+      const urlMsisdn = params.get("msisdn");
+      const subMethod = getSubMethod(urlMsisdn);
+
+      console.log("VERIFY SUBMETHOD:", subMethod); // ✅ testing log
+
+      const res = await verifyPin(
+        formatted,
+        fullPin,
+        serviceId,
+        txid,
+        subMethod // ✅ pass this
+      );
 
       if (res.status === "SUCCESS") {
         setAlert({ type: "success", message: "Subscription successful" });
 
         resetForm();
-
-        setTimeout(() => {
-          window.location.href = "/thanks-for-subscribing";
-        }, 1500);
+        window.location.href = "/thanks-for-subscribing";
       } else {
         setAlert({ type: "error", message: "Invalid PIN" });
       }
