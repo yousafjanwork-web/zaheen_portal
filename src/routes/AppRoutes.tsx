@@ -22,6 +22,7 @@ import ResourcePlayer from "@/modules/courses/pages/ResourcesPlayer";
 import { EnrollmentLandingPage } from "@/modules/auth/enrollnow/EnrollNowPage";
 import SubEnrollNow from "@/modules/auth/enrollnow/pages/SubEnrollNow";
 import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
   return (
@@ -36,7 +37,13 @@ const AppRoutes = () => {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/grade-view/:type" element={<GradesView />} />
-          <Route path="/class/:classId" element={<ClassSubjectsView />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route path="/class/:classId" element={<ClassSubjectsView />} />
+            {/* add other protected pages here */}
+          </Route>
+
+
           <Route path="/assessment/" element={<Assessment />} />
           <Route path="/assessment/:skillId" element={<AssessmentQuiz />} />
           <Route
@@ -59,7 +66,7 @@ const AppRoutes = () => {
         <Route path="/enrollnow" element={<EnrollmentLandingPage />} />
         <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
 
-        <Route path="thanks-for-subscribing" element={<SuccessScreen />}/>
+        <Route path="thanks-for-subscribing" element={<SuccessScreen />} />
       </Routes>
     </BrowserRouter>
   );

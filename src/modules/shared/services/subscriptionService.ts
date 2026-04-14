@@ -54,7 +54,8 @@ export const verifyPin = async (
   msisdn: string,
   pin: string,
   serviceId: string,
-  transactionId:string
+  transactionId: string,
+  subMethod: string // ✅ add this
 ) => {
 
   const res = await axios.get(
@@ -64,7 +65,8 @@ export const verifyPin = async (
         msisdn,
         serviceId,
         pin,
-        transactionId
+        transactionId,
+        subMethod
       }
     }
   );
