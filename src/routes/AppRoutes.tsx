@@ -38,10 +38,12 @@ const AppRoutes = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/grade-view/:type" element={<GradesView />} />
 
-          <Route element={<ProtectedRoute />}>
+          {/* <Route element={<ProtectedRoute />}>
             <Route path="/class/:classId" element={<ClassSubjectsView />} />
-            {/* add other protected pages here */}
-          </Route>
+
+          </Route> */}
+
+          <Route path="/class/:classId" element={<ClassSubjectsView />} />
 
 
           <Route path="/assessment/" element={<Assessment />} />
