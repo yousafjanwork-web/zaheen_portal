@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 import {
-  sendPin,
-  verifyPin,
   checkSubscriberStatus
 } from "@/modules/shared/services/subscriptionService";
+
+import { loginPin, verifyLoginPin } from "@/modules/shared/services/loginService";
 
 import { useAuth } from "@/modules/shared/context/AuthContext";
 
@@ -42,92 +42,75 @@ const LoginPage = () => {
   /* AUTO SEND PIN */
 
   const autoSendPin = async (number: string) => {
-
     try {
+      const res = await loginPin(number);
 
-      const res = await sendPin(number);
+      console.log("LOGIN PIN RESPONSE:", res);
 
-      if (res.status === "PIN_SENT") {
+      if (res.pin) {
+        // ✅ PIN actually sent
         setStep("OTP");
+      } else {
+        // ❌ Not subscribed
+        setError("You are currently inactive. Please subscribe first.");
+        setMsisdn("");
       }
 
     } catch {
-
       setError("Failed to send PIN");
-
     }
-
   };
 
   /* MANUAL SEND PIN */
 
   const handleSendPin = async () => {
-
     try {
-
       setLoading(true);
       setError("");
 
-      const res = await sendPin(msisdn);
+      const res = await loginPin(msisdn);
 
-      if (res.status === "PIN_SENT") {
+      console.log("LOGIN PIN RESPONSE:", res);
+
+      if (res.pin) {
         setStep("OTP");
+      } else {
+        setError("You are currently inactive. Please subscribe first.");
+        setMsisdn("");
       }
 
-      setLoading(false);
-
     } catch {
-
-      setLoading(false);
       setError("Failed to send PIN");
-
+    } finally {
+      setLoading(false);
     }
-
   };
 
   /* VERIFY PIN */
 
   const handleVerifyPin = async () => {
-
     try {
-
       setLoading(true);
       setError("");
 
-      const verify = await verifyPin(msisdn, pin);
+      const verify = await verifyLoginPin(msisdn, pin);
 
-      if (verify.status !== "SUCCESS") {
+      console.log("VERIFY LOGIN RESPONSE:", verify);
 
-        setError("Invalid PIN");
+      if (verify.status !== "ACTIVE") {
+        setError("Invalid PIN or not subscribed");
         setLoading(false);
         return;
-
       }
 
-      /* CHECK SUBSCRIBER STATUS */
-
-      const status = await checkSubscriberStatus(msisdn);
-
-      if (status.status === "ACTIVE") {
-
-        login(msisdn);
-        navigate("/");
-
-      } else {
-
-        setError("You are not subscribed. Please subscribe first.");
-
-      }
-
-      setLoading(false);
+      /* LOGIN SUCCESS */
+      login(msisdn);
+      navigate("/");
 
     } catch {
-
       setLoading(false);
       setError("Login failed");
-
     }
-
   };
 
   return (
@@ -147,7 +130,7 @@ const LoginPage = () => {
               type="text"
               placeholder="923XXXXXXXXX"
               value={msisdn}
-              onChange={(e)=>setMsisdn(e.target.value)}
+              onChange={(e) => setMsisdn(e.target.value)}
               className="border w-full p-3 rounded-lg mb-4"
             />
 
@@ -182,14 +165,16 @@ const LoginPage = () => {
             <input
               type="text"
               value={pin}
-              onChange={(e)=>setPin(e.target.value)}
+              onChange={(e) => setPin(e.target.value)}
               className="border w-full p-3 text-center text-xl mb-4"
             />
 
             {error && (
-              <p className="text-red-500 text-sm mb-3">
-                {error}
-              </p>
+              <div className="mb-4">
+                <p className="text-red-500 text-sm mb-2">
+                  {error}
+                </p>
+              </div>
             )}
 
             <button
