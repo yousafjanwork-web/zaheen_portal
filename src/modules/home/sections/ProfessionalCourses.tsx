@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Star, Users, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion } from "motion/react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +8,6 @@ import { t } from "@/modules/shared/i18n";
 const lang = localStorage.getItem("lang") || "en";
 
 const ProfessionalCourses = () => {
-
   const navigate = useNavigate();
 
   const [courses, setCourses] = useState([]);
@@ -19,36 +17,55 @@ const ProfessionalCourses = () => {
     {
       loop: true,
       align: "start",
-      dragFree: true
+      dragFree: false,
+      skipSnaps: false,
     },
     [Autoplay({ delay: 3500, stopOnInteraction: true })]
   );
 
+  /* ---------------- FETCH COURSES ---------------- */
+
   useEffect(() => {
-
     const fetchCourses = async () => {
-
       try {
-
-         const response = await fetch(
-          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?ts=${Date.now()}`
+        const response = await fetch(
+          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3`
         );
 
         const data = await response.json();
-
         setCourses(data);
-
       } catch (error) {
         console.error("Error fetching courses:", error);
       } finally {
         setLoading(false);
       }
-
     };
 
     fetchCourses();
-
   }, []);
+
+  /* ---------------- AUTOPLAY PAUSE ON HOVER ---------------- */
+
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const autoplay = emblaApi.plugins()?.autoplay;
+
+    const onMouseEnter = () => autoplay && autoplay.stop();
+    const onMouseLeave = () => autoplay && autoplay.play();
+
+    const container = emblaApi.rootNode();
+
+    container.addEventListener("mouseenter", onMouseEnter);
+    container.addEventListener("mouseleave", onMouseLeave);
+
+    return () => {
+      container.removeEventListener("mouseenter", onMouseEnter);
+      container.removeEventListener("mouseleave", onMouseLeave);
+    };
+  }, [emblaApi]);
+
+  /* ---------------- NAVIGATION ---------------- */
 
   const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
   const scrollNext = () => emblaApi && emblaApi.scrollNext();
@@ -59,47 +76,43 @@ const ProfessionalCourses = () => {
 
   return (
     <section className="py-24 bg-slate-50 relative">
-
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Header */}
 
         <div className="flex justify-between items-center mb-12">
-
           <div>
-
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
               {t("professionalCourses.title")}
             </h2>
-
             <p className="text-slate-500 mt-2">
               {t("professionalCourses.subtitle")}
             </p>
-
           </div>
 
           <div className="flex gap-3">
-
             <button
               onClick={scrollPrev}
               className="p-3 rounded-full bg-white shadow hover:scale-105 transition"
             >
-              {lang === "ur"
-                ? <ChevronRight size={20} />
-                : <ChevronLeft size={20} />}
+              {lang === "ur" ? (
+                <ChevronRight size={20} />
+              ) : (
+                <ChevronLeft size={20} />
+              )}
             </button>
 
             <button
               onClick={scrollNext}
               className="p-3 rounded-full bg-white shadow hover:scale-105 transition"
             >
-              {lang === "ur"
-                ? <ChevronLeft size={20} />
-                : <ChevronRight size={20} />}
+              {lang === "ur" ? (
+                <ChevronLeft size={20} />
+              ) : (
+                <ChevronRight size={20} />
+              )}
             </button>
-
           </div>
-
         </div>
 
         {/* Carousel */}
@@ -109,19 +122,16 @@ const ProfessionalCourses = () => {
           {/* Gradient edges */}
 
           <div className="absolute left-0 top-0 w-24 h-full bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
-
           <div className="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
 
           <div className="overflow-hidden" ref={emblaRef}>
-
-            <div className="flex gap-6">
+            <div className="flex px-1 -mr-6"> {/* ✅ margin-based spacing */}
 
               {loading
                 ? [...Array(5)].map((_, i) => (
-
                     <div
                       key={i}
-                      className="min-w-[260px] md:min-w-[300px] bg-white rounded-2xl shadow animate-pulse"
+                      className="min-w-[260px] md:min-w-[300px] mr-6 bg-white rounded-2xl shadow animate-pulse"
                     >
                       <div className="h-44 bg-slate-200 rounded-t-2xl"></div>
                       <div className="p-4 space-y-3">
@@ -129,38 +139,30 @@ const ProfessionalCourses = () => {
                         <div className="h-3 bg-slate-200 rounded w-1/2"></div>
                       </div>
                     </div>
-
                   ))
                 : courses.map((course) => (
-
-                    <motion.div
+                    <div
                       key={course.id}
-                      whileHover={{ scale: 1.06 }}
-                      transition={{ duration: 0.3 }}
                       onClick={() => openCourse(course)}
-                      className="min-w-[260px] md:min-w-[300px] bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer group"
+                      className="min-w-[260px] md:min-w-[300px] mr-6 bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer group transition duration-300 hover:-translate-y-1"
                     >
-
                       {/* Image */}
 
                       <div className="relative overflow-hidden">
-
                         <img
                           src={course.thumbnailUrl}
                           alt={course.name}
-                          className="w-full h-44 object-cover group-hover:scale-110 transition duration-500"
+                          className="w-full h-44 object-cover transition-transform duration-500 group-hover:scale-110"
                         />
 
                         <div className="absolute top-3 left-3 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
                           Professional
                         </div>
-
                       </div>
 
                       {/* Content */}
 
                       <div className="p-5">
-
                         <h3 className="font-bold text-slate-900 line-clamp-2 mb-3">
                           {lang === "ur"
                             ? course.urdu_name
@@ -168,7 +170,6 @@ const ProfessionalCourses = () => {
                         </h3>
 
                         <div className="flex items-center justify-between text-sm text-slate-500">
-
                           <div className="flex items-center text-amber-500">
                             <Star
                               size={15}
@@ -180,25 +181,18 @@ const ProfessionalCourses = () => {
 
                           <div className="flex items-center">
                             <Users size={15} className="mr-1" />
-                            {course.chapterCount} {t("professionalCourses.students")}
+                            {course.chapterCount}{" "}
+                            {t("professionalCourses.students")}
                           </div>
-
                         </div>
-
                       </div>
-
-                    </motion.div>
-
+                    </div>
                   ))}
 
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </section>
   );
 };

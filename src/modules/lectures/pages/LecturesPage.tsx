@@ -1,49 +1,28 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { PlayCircle } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-
-/* ---------------- TYPES ---------------- */
-
-type VideoType = {
-  id: number;
-  name: string;
-  urdu_name?: string;
-  desc?: string;
-  urdu_desc?: string;
-  path: string;
-};
-
-/* ---------------- GTAG TYPE ---------------- */
-
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-  }
-}
+import { Link } from "react-router-dom";
 
 const LecturesPage = () => {
-  const { chapterId, chapterName } = useParams<{
-    chapterId: string;
-    chapterName: string;
-  }>();
 
+  const { chapterId, chapterName } = useParams();
   const location = useLocation();
 
   const classTitle = location.state?.classTitle || "Course";
 
-  const [videos, setVideos] = useState<VideoType[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<VideoType | null>(null);
+  const [videos, setVideos] = useState([]);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [videoUrl, setVideoUrl] = useState("");
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef(null);
 
   const lang = getLanguage();
   const isUrdu = lang === "ur";
 
   /* ---------------- TRACKING FUNCTION ---------------- */
 
-  const trackEvent = (eventName: string, extra: any = {}) => {
+  const trackEvent = (eventName, extra = {}) => {
     if (!window.gtag || !selectedVideo) return;
 
     window.gtag("event", eventName, {
@@ -51,34 +30,47 @@ const LecturesPage = () => {
       video_name: selectedVideo.name,
       chapter_id: chapterId,
       page_path: window.location.pathname,
-      ...extra,
+      ...extra
     });
   };
 
   /* ---------------- VIDEO EVENTS ---------------- */
 
-  const handlePlay = () => {
+  const handleLoaded = () => {
+    if (!videoRef.current || videoRef.current._started) return;
+
+    videoRef.current._started = true;
+
+    console.log("VIDEO START FIRED");
     trackEvent("video_start");
+  };
+
+  const handlePlay = () => {
+    // fallback if user manually plays
+    if (!videoRef.current?._started) {
+      videoRef.current._started = true;
+      trackEvent("video_start");
+    }
   };
 
   const handleEnded = () => {
     trackEvent("video_complete");
 
-    const index = videos.findIndex((v) => v.id === selectedVideo?.id);
+    const index = videos.findIndex(v => v.id === selectedVideo.id);
 
     if (index < videos.length - 1) {
       changeVideo(videos[index + 1]);
     }
   };
 
-  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const video = e.currentTarget;
+  const handleTimeUpdate = (e) => {
+    const video = e.target;
     if (!video.duration) return;
 
     const percent = (video.currentTime / video.duration) * 100;
 
-    if (percent > 50 && !(video as any)._tracked50) {
-      (video as any)._tracked50 = true;
+    if (percent > 50 && !video._tracked50) {
+      video._tracked50 = true;
       trackEvent("video_50_percent");
     }
   };
@@ -86,47 +78,54 @@ const LecturesPage = () => {
   /* ---------------- FETCH VIDEOS ---------------- */
 
   useEffect(() => {
+
     const fetchVideos = async () => {
-      try {
-        const res = await fetch(
-          `https://api.zaheen.com.pk/api/chapter/${chapterId}/videos`
+
+      const res = await fetch(
+        `https://api.zaheen.com.pk/api/chapter/${chapterId}/videos`
+      );
+
+      const data = await res.json();
+
+      setVideos(data);
+
+      if (data.length > 0) {
+        setSelectedVideo(data[0]);
+        setVideoUrl(
+          `https://cdn.zaheen.com.pk/videos/${data[0].path}`
         );
-
-        const data: VideoType[] = await res.json();
-
-        setVideos(data);
-
-        if (data.length > 0) {
-          setSelectedVideo(data[0]);
-          setVideoUrl(`https://cdn.zaheen.com.pk/videos/${data[0].path}`);
-        }
-      } catch (err) {
-        console.error("Error fetching videos", err);
       }
+
     };
 
-    if (chapterId) {
-      fetchVideos();
-    }
+    fetchVideos();
+
   }, [chapterId]);
 
   /* ---------------- CHANGE VIDEO ---------------- */
 
-  const changeVideo = (video: VideoType) => {
+  const changeVideo = (video) => {
+
     setSelectedVideo(video);
 
     if (videoRef.current) {
-      (videoRef.current as any)._tracked50 = false;
+      videoRef.current._tracked50 = false;
+      videoRef.current._started = false; // reset start tracking
     }
 
-    setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
+    setVideoUrl(
+      `https://cdn.zaheen.com.pk/videos/${video.path}`
+    );
+
   };
 
   /* ---------------- KEYBOARD NAVIGATION ---------------- */
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      const index = videos.findIndex((v) => v.id === selectedVideo?.id);
+
+    const handleKey = (e) => {
+
+      const index = videos.findIndex(v => v.id === selectedVideo?.id);
 
       if (e.key === "ArrowRight" && index < videos.length - 1) {
         changeVideo(videos[index + 1]);
@@ -135,20 +134,22 @@ const LecturesPage = () => {
       if (e.key === "ArrowLeft" && index > 0) {
         changeVideo(videos[index - 1]);
       }
+
     };
 
     window.addEventListener("keydown", handleKey);
+
     return () => window.removeEventListener("keydown", handleKey);
+
   }, [selectedVideo, videos]);
 
-  const currentIndex = videos.findIndex(
-    (v) => v.id === selectedVideo?.id
-  );
+  const currentIndex = videos.findIndex(v => v.id === selectedVideo?.id);
 
   return (
+
     <section className="bg-slate-100 min-h-screen py-10">
+
       <div className="max-w-7xl mx-auto px-4">
-        {/* BREADCRUMB */}
 
         <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
           <Link to="/" className="hover:text-primary">
@@ -179,14 +180,13 @@ const LecturesPage = () => {
 
           <span>/</span>
 
-          <span className="text-slate-700 font-medium">
-            {chapterName}
-          </span>
+          <span className="text-slate-700 font-medium">{chapterName}</span>
         </div>
 
         {/* HEADER */}
 
         <div className="mb-6">
+
           <h1 className="text-3xl font-bold text-slate-900">
             {classTitle} | {chapterName}
           </h1>
@@ -196,40 +196,52 @@ const LecturesPage = () => {
               ? "لیکچرز دیکھیں اور سیکھنا جاری رکھیں"
               : "Watch lectures and continue learning"}
           </p>
+
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
+
           {/* VIDEO PLAYER */}
 
           <div className="flex-1">
+
             <div className="bg-black rounded-2xl overflow-hidden shadow-lg">
+
               <div className="aspect-video">
+
                 {videoUrl ? (
+
                   <video
                     ref={videoRef}
                     key={videoUrl}
                     controls
                     autoPlay
+                    onLoadedData={handleLoaded}   // ✅ FIXED
                     onPlay={handlePlay}
                     onEnded={handleEnded}
                     onTimeUpdate={handleTimeUpdate}
                     className="w-full h-full"
                     src={videoUrl}
                   />
+
                 ) : (
+
                   <div className="flex items-center justify-center h-full text-white">
-                    {isUrdu
-                      ? "ویڈیو لوڈ ہو رہی ہے..."
-                      : "Loading video..."}
+                    {isUrdu ? "ویڈیو لوڈ ہو رہی ہے..." : "Loading video..."}
                   </div>
+
                 )}
+
               </div>
+
             </div>
 
             {/* VIDEO INFO */}
 
             {selectedVideo && (
+
               <div className="mt-4 bg-white rounded-2xl p-5 border">
+
                 <h2 className="text-xl font-bold">
                   {isUrdu
                     ? selectedVideo.urdu_name || selectedVideo.name
@@ -245,54 +257,66 @@ const LecturesPage = () => {
                 <div className="mt-3 text-xs text-slate-400">
                   {currentIndex + 1} / {videos.length}
                 </div>
+
               </div>
+
             )}
+
           </div>
 
           {/* PLAYLIST */}
 
           <aside className="w-full lg:w-80 bg-white rounded-2xl border overflow-hidden">
+
             <div className="p-4 border-b font-semibold">
               {isUrdu ? "لیکچرز" : "Lectures"} ({videos.length})
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto">
+
               {videos.map((video, index) => (
+
                 <div
                   key={video.id}
                   onClick={() => changeVideo(video)}
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
-                  ${
-                    selectedVideo?.id === video.id
-                      ? "bg-indigo-50"
-                      : ""
-                  }`}
+                  ${selectedVideo?.id === video.id ? "bg-indigo-50" : ""}`}
                 >
+
                   <PlayCircle
                     size={18}
-                    className={`${
-                      selectedVideo?.id === video.id
-                        ? "text-indigo-600"
-                        : "text-slate-400"
-                    }`}
+                    className={`${selectedVideo?.id === video.id
+                      ? "text-indigo-600"
+                      : "text-slate-400"}`}
                   />
 
                   <div className="flex flex-col">
+
                     <span className="text-sm font-medium">
                       {index + 1}.{" "}
                       {isUrdu
                         ? video.urdu_name || video.name
                         : video.name}
                     </span>
+
                   </div>
+
                 </div>
+
               ))}
+
             </div>
+
           </aside>
+
         </div>
+
       </div>
+
     </section>
+
   );
+
 };
 
 export default LecturesPage;

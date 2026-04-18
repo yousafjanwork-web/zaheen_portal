@@ -137,31 +137,45 @@ const WorksheetsPage = () => {
           {/* SIDEBAR */}
           <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row lg:flex-col p-2">
 
-            {worksheets.map((ws) => (
-              <div
-                key={ws.id}
-                onClick={() => setSelectedWorksheet(ws)}
-                className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer flex-shrink-0 transition
-                ${selectedWorksheet?.id === ws.id
-                    ? "bg-primary text-white shadow"
-                    : "bg-white hover:bg-slate-100"
-                  }`}
-              >
-                <FileText size={18} />
-                <div>
+            {worksheets.length === 0 ? (
+              <div className="w-full flex items-center justify-center p-6 text-center">
+                <div className="bg-white rounded-xl p-6 shadow text-slate-500 w-full">
                   <p className="font-semibold text-sm">
-                    {isUrdu ? ws.urdu_name || ws.name : ws.name}
+                    {isUrdu ? "جلد آرہا ہے" : "Coming Soon"}
                   </p>
                 </div>
               </div>
-            ))}
+            ) : (
+              worksheets.map((ws) => (
+                <div
+                  key={ws.id}
+                  onClick={() => setSelectedWorksheet(ws)}
+                  className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer flex-shrink-0 transition
+        ${selectedWorksheet?.id === ws.id
+                      ? "bg-primary text-white shadow"
+                      : "bg-white hover:bg-slate-100"
+                    }`}
+                >
+                  <FileText size={18} />
+                  <div>
+                    <p className="font-semibold text-sm">
+                      {isUrdu ? ws.urdu_name || ws.name : ws.name}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
 
           </aside>
 
           {/* PDF VIEWER */}
           <div className="flex-1">
 
-            {selectedWorksheet && (
+            {worksheets.length === 0 ? (
+              <div className="bg-white rounded-3xl shadow-lg p-10 text-center text-slate-500">
+                {isUrdu ? "مواد جلد دستیاب ہوگا" : "Content will be available soon"}
+              </div>
+            ) : selectedWorksheet && (
               <div className="bg-white rounded-3xl shadow-lg p-4 md:p-5">
 
                 <h2 className="text-lg md:text-xl font-bold mb-4">
