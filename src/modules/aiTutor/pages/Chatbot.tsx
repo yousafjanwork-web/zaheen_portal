@@ -52,20 +52,15 @@ const Chatbot = () => {
                     headers: {
                         "Content-Type": "application/json",
                     },
-
                     body: JSON.stringify({
                         topic,
                         language,
-
-                        systemPrompt: `You are an AI tutor helping Pakistani students learn ${topic}. 
-Explain concepts step-by-step in simple ${language}. 
-Give examples suitable for school students.`,
-
-                        history: historyToSend,
+                        history: historyToSend
+                            .filter(m => m.role !== "loading")
+                            .slice(-10),
                     }),
                 }
             );
-
             const data = await response.json();
 
             setMessages((prev) =>

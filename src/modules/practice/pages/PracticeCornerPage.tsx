@@ -28,7 +28,7 @@ const PracticeCornerPage = () => {
   useEffect(() => {
     const fetchClasses = async () => {
       const res = await fetch(
-        "https://api.zaheen.com.pk/api//fetch-all-subjects/1"
+        "https://api.zaheen.com.pk/api/fetch-all-subjects/1"
       );
       const data = await res.json();
 
