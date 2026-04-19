@@ -1,185 +1,215 @@
-// src/components/Chatbot.js
-
 import React, { useState, useRef, useEffect } from "react";
 import "../../../styles/chatbot_fullpage.css";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = "https://zai.zaheen.com.pk/api/chat";
+
 const Chatbot = () => {
-    const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState("");
-    const [topic, setTopic] = useState("Mathematics");
-    const [language, setLanguage] = useState("English");
+  const navigate = useNavigate();
 
-    const chatEndRef = useRef(null);
-    const navigate = useNavigate();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [topic, setTopic] = useState("Maths");
+  const [language, setLanguage] = useState("English");
+  const [loading, setLoading] = useState(false);
 
-    /* ---------------- TEXT TO SPEECH ---------------- */
+  const chatRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const memoryRef = useRef("");
 
-    const speakText = (text, lang) => {
-        const utterance = new SpeechSynthesisUtterance(text);
+  /* ---------------- AUTO SCROLL ---------------- */
+  useEffect(() => {
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages]);
 
-        utterance.lang =
-            lang === "Urdu"
-                ? "ur-PK"
-                : lang === "Arabic"
-                    ? "ar-SA"
-                    : "en-US";
+  /* ---------------- ADD MESSAGE ---------------- */
+  const addMessage = (text, type) => {
+    setMessages((prev) => [...prev, { text, type }]);
+  };
 
-        utterance.rate = 0.95;
-        speechSynthesis.speak(utterance);
+  /* ---------------- SEND MESSAGE ---------------- */
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
+
+    const text = input.trim();
+    setInput("");
+    setLoading(true);
+
+    addMessage(text, "user");
+
+    const historyToSend = [
+      ...messages.map((m) => ({
+        role: m.type === "user" ? "user" : "model",
+        text: m.text,
+      })),
+      { role: "user", text },
+    ];
+
+    // show typing
+    addMessage("Typing...", "bot");
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          topic,
+          language,
+          history: historyToSend.slice(-10),
+          memory: memoryRef.current,
+        }),
+      });
+
+      clearTimeout(timeout);
+
+      // remove typing
+      setMessages((prev) => prev.filter((m) => m.text !== "Typing..."));
+
+      if (!res.ok) throw new Error("Server error");
+
+      const data = await res.json();
+
+      if (!data.reply) throw new Error("Empty response");
+
+      addMessage(data.reply, "bot");
+
+      if (data.memory) {
+        memoryRef.current = data.memory;
+      }
+    } catch (err) {
+      // remove typing
+      setMessages((prev) => prev.filter((m) => m.text !== "Typing..."));
+
+      let message = "⏳ AI is taking too long. Try again.";
+
+      if (err.name === "AbortError") {
+        message = "⏳ Request timed out. Try again.";
+      } else if (err.message.includes("Failed")) {
+        message = "🌐 Unable to connect to server.";
+      } else if (err.message.includes("Server")) {
+        message = "⚠️ Server error occurred.";
+      } else if (err.message.includes("Empty")) {
+        message = "🤖 Empty response. Ask differently.";
+      }
+
+      addMessage(message, "bot");
+      console.error("Chat error:", err);
+    }
+
+    setLoading(false);
+  };
+
+  /* ---------------- ENTER KEY ---------------- */
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") sendMessage();
+  };
+
+  /* ---------------- VOICE INPUT ---------------- */
+  const startListening = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      addMessage("🎤 Voice not supported in this browser.", "bot");
+      return;
+    }
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    recognition.lang = language === "Urdu" ? "ur-PK" : "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.start();
+
+    addMessage("🎤 Listening...", "bot");
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+
+      setInput(transcript);
+      addMessage("🗣️ " + transcript, "user");
+
+      sendMessage();
     };
 
-    /* ---------------- SEND MESSAGE ---------------- */
+    recognition.onerror = (event) => {
+      let msg = "🎤 Voice error occurred.";
 
-    const sendMessage = async () => {
-        if (!input.trim()) return;
+      if (event.error === "not-allowed") {
+        msg = "🚫 Microphone permission denied.";
+      } else if (event.error === "no-speech") {
+        msg = "🤷 No speech detected.";
+      }
 
-        const userMessage = input;
-        setInput("");
-
-        let historyToSend = [];
-
-        setMessages((prev) => {
-            historyToSend = [...prev, { role: "user", text: userMessage }];
-            return [...historyToSend, { role: "loading", text: "Thinking..." }];
-        });
-
-        try {
-            const response = await fetch(
-                "https://api.zaheen.com.pk/api/chat",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        topic,
-                        language,
-                        history: historyToSend
-                            .filter(m => m.role !== "loading")
-                            .slice(-10),
-                    }),
-                }
-            );
-            const data = await response.json();
-
-            setMessages((prev) =>
-                prev
-                    .filter((m) => m.role !== "loading")
-                    .concat({
-                        role: "model",
-                        text: data.reply || "Sorry, I couldn't generate a response.",
-                    })
-            );
-        } catch (error) {
-            setMessages((prev) =>
-                prev
-                    .filter((m) => m.role !== "loading")
-                    .concat({
-                        role: "model",
-                        text: "⚠️ Unable to reach tutor service.",
-                    })
-            );
-        }
+      addMessage(msg, "bot");
     };
+  };
 
-    /* ---------------- ENTER KEY ---------------- */
+  /* ---------------- UI ---------------- */
+  return (
+    <div className="chatbot-container">
 
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter") sendMessage();
-    };
+      {/* HEADER */}
+      <div className="chatbot-header">
+        📘 Zaheen AI Tutor
+        <button onClick={() => navigate("/")}>✖</button>
+      </div>
 
-    /* ---------------- AUTO SCROLL ---------------- */
+      {/* CONTROLS */}
+      <div className="controls">
+        <select value={topic} onChange={(e) => setTopic(e.target.value)}>
+          <option>Maths</option>
+          <option>English</option>
+          <option>Urdu</option>
+          <option>Chemistry</option>
+          <option>Physics</option>
+          <option>Science</option>
+          <option>Computer</option>
+        </select>
 
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+          <option value="English">English</option>
+          <option value="Urdu">Urdu</option>
+        </select>
+      </div>
 
-    /* ---------------- UI ---------------- */
+      {/* CHAT */}
+      <div className="chat-area" ref={chatRef}>
+        {messages.map((msg, i) => (
+          <div key={i} className={`msg ${msg.type}`}>
+            {msg.text}
+          </div>
+        ))}
+      </div>
 
-    return (
-        <div className="chatbot-container">
+      {/* INPUT */}
+      <div className="input-box">
+        <input
+          value={input}
+          placeholder="Ask your question..."
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
 
-            {/* Header */}
+        <button onClick={startListening}>🎤</button>
 
-            <div className="chatbot-header">
-                <h3>Zaheen AI Tutor</h3>
-                <button onClick={() => navigate("/")}>✖</button>
-            </div>
-
-            {/* Settings */}
-
-            <div className="chatbot-settings">
-
-                <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-                    <option>Mathematics</option>
-                    <option>Physics</option>
-                    <option>Biology</option>
-                    <option>Chemistry</option>
-                    <option>Computer Science</option>
-                </select>
-
-                <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-                    <option>English</option>
-                    <option>Urdu</option>
-                    <option>Arabic</option>
-                </select>
-
-            </div>
-
-            {/* Messages */}
-
-            <div className="chatbot-messages">
-
-                {messages.map((msg, i) => (
-                    <div key={i} className={`message ${msg.role}`}>
-
-                        <img
-                            className="avatar"
-                            src={
-                                msg.role === "user"
-                                    ? "https://cdn-icons-png.flaticon.com/512/219/219970.png"
-                                    : "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
-                            }
-                            alt="avatar"
-                        />
-
-                        <span>{msg.text}</span>
-
-                        {msg.role === "model" && (
-                            <button
-                                className="play-button"
-                                onClick={() => speakText(msg.text, language)}
-                            >
-                                🔊
-                            </button>
-                        )}
-
-                    </div>
-                ))}
-
-                <div ref={chatEndRef} />
-
-            </div>
-
-            {/* Input */}
-
-            <div className="chatbot-input">
-
-                <input
-                    type="text"
-                    value={input}
-                    placeholder="Ask your tutor anything..."
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                />
-
-                <button onClick={sendMessage}>Send</button>
-
-            </div>
-
-        </div>
-    );
+        <button onClick={sendMessage} disabled={loading}>
+          {loading ? "..." : "Send"}
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default Chatbot;

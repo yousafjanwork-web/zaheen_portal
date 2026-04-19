@@ -56,7 +56,6 @@ const AppRoutes = () => {
           <Route path="/practice" element={<PracticeCornerPage />} />
           <Route path="/worksheets/:subjectId" element={<WorksheetsPage />} />
           <Route path="/results" element={<BoardResultsPage />} />
-          <Route path="/ai" element={<Chatbot />} />
           <Route path="/subscribe" element={<SubscribePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/mza" element={<MzaPage />} />
@@ -69,6 +68,8 @@ const AppRoutes = () => {
         <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
 
         <Route path="thanks-for-subscribing" element={<SuccessScreen />} />
+        <Route path="/ai" element={<Chatbot />} />
+
       </Routes>
     </BrowserRouter>
   );

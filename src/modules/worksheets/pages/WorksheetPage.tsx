@@ -22,11 +22,10 @@ const WorksheetsPage = () => {
   const location = useLocation();
   const subject = location.state?.subject;
 
-  const [worksheets, setWorksheets] = useState<any[]>([]);
-  const [selectedWorksheet, setSelectedWorksheet] = useState<any>(null);
-
-  // ✅ NEW: Blob URL state
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [worksheets, setWorksheets] = useState([]);
+  const [selectedWorksheet, setSelectedWorksheet] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+  const [pdfError, setPdfError] = useState(false);
 
   const zoomPluginInstance = zoomPlugin();
   const fullScreenPluginInstance = fullScreenPlugin();
@@ -46,54 +45,77 @@ const WorksheetsPage = () => {
           `https://api.zaheen.com.pk/api/chapter/${subjectId}/worksheets`
         );
 
-        const data = await res.json();
+        let data = null;
 
-        setWorksheets(data);
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
 
-        if (data.length > 0) {
-          setSelectedWorksheet(data[0]);
+        // ✅ IMPORTANT FIX
+        if (res.ok && Array.isArray(data)) {
+          setWorksheets(data);
+
+          if (data.length > 0) {
+            setSelectedWorksheet(data[0]);
+          }
+        } else {
+          setWorksheets([]); // 👈 forces "Coming Soon"
         }
 
       } catch (err) {
         console.error("Worksheet API error", err);
+        setWorksheets([]); // 👈 fallback
       }
     };
 
     fetchWorksheets();
   }, [subjectId]);
 
-  /* ---------------- LOAD PDF AS BLOB (ONLY ONCE PER FILE) ---------------- */
+  /* ---------------- LOAD PDF ---------------- */
 
   useEffect(() => {
+    let currentUrl = null;
+
     const loadPdf = async () => {
       if (!selectedWorksheet) return;
 
       try {
+        setPdfError(false);
+
         const res = await fetch(
           `https://api.zaheen.com.pk/api/getpdf/${selectedWorksheet.id}`
         );
 
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+        if (!res.ok) throw new Error("PDF not found");
 
-        setPdfBlobUrl(url);
+        const blob = await res.blob();
+
+        if (blob.type !== "application/pdf" || blob.size < 1000) {
+          throw new Error("Invalid PDF");
+        }
+
+        currentUrl = URL.createObjectURL(blob);
+        setPdfBlobUrl(currentUrl);
+
       } catch (err) {
         console.error("PDF load error:", err);
+        setPdfBlobUrl(null);
+        setPdfError(true);
       }
     };
 
     loadPdf();
 
-    // ✅ CLEANUP (IMPORTANT)
     return () => {
-      if (pdfBlobUrl) {
-        URL.revokeObjectURL(pdfBlobUrl);
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl); // ✅ correct cleanup
       }
     };
 
   }, [selectedWorksheet]);
-
-  /* ---------------- DOWNLOAD FROM BLOB ---------------- */
+  /* ---------------- DOWNLOAD ---------------- */
 
   const handleDownload = () => {
     if (!pdfBlobUrl) return;
@@ -111,12 +133,10 @@ const WorksheetsPage = () => {
 
   return (
     <section className="bg-slate-50 min-h-screen py-10 md:py-16">
-
       <div className="max-w-7xl mx-auto px-4">
 
         {/* HEADER */}
         <div className="mb-10 p-6 md:p-8 rounded-3xl bg-primary/5 border border-primary/10">
-
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 flex items-center gap-3">
             <Sparkles size={28} />
             {isUrdu
@@ -129,15 +149,15 @@ const WorksheetsPage = () => {
               ? "مشقوں کے ذریعے اپنی سمجھ اور سیکھنے کی صلاحیت کو بہتر بنائیں۔"
               : "Practice worksheets for better understanding and learning."}
           </p>
-
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
 
           {/* SIDEBAR */}
-          <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row lg:flex-col p-2">
-
-            {worksheets.length === 0 ? (
+          <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row 
+          lg:flex-col p-2 lg:max-h-[100vh] lg:pr-2">
+            {/* ✅ FIXED CONDITION */}
+            {!Array.isArray(worksheets) || worksheets.length === 0 ? (
               <div className="w-full flex items-center justify-center p-6 text-center">
                 <div className="bg-white rounded-xl p-6 shadow text-slate-500 w-full">
                   <p className="font-semibold text-sm">
@@ -151,7 +171,7 @@ const WorksheetsPage = () => {
                   key={ws.id}
                   onClick={() => setSelectedWorksheet(ws)}
                   className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer flex-shrink-0 transition
-        ${selectedWorksheet?.id === ws.id
+                  ${selectedWorksheet?.id === ws.id
                       ? "bg-primary text-white shadow"
                       : "bg-white hover:bg-slate-100"
                     }`}
@@ -171,7 +191,7 @@ const WorksheetsPage = () => {
           {/* PDF VIEWER */}
           <div className="flex-1">
 
-            {worksheets.length === 0 ? (
+            {!Array.isArray(worksheets) || worksheets.length === 0 ? (
               <div className="bg-white rounded-3xl shadow-lg p-10 text-center text-slate-500">
                 {isUrdu ? "مواد جلد دستیاب ہوگا" : "Content will be available soon"}
               </div>
@@ -187,51 +207,56 @@ const WorksheetsPage = () => {
                 {/* TOOLBAR */}
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
 
-                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition">
+                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200">
                     <ZoomOutButton />
                   </div>
 
-                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition">
+                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200">
                     <ZoomInButton />
                   </div>
 
-                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition">
+                  <div className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200">
                     <EnterFullScreenButton />
                   </div>
 
-                  {/* ✅ DOWNLOAD BUTTON */}
                   <button
                     onClick={handleDownload}
-                    className="flex items-center gap-2 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 transition text-sm font-semibold"
+                    className="flex items-center gap-2 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-sm font-semibold"
                   >
                     <Download size={16} />
                     {isUrdu ? "ڈاؤن لوڈ" : "Download"}
                   </button>
 
-
                 </div>
 
-                {/* PDF VIEWER */}
+                {/* PDF */}
                 <Worker workerUrl={workerSrc}>
-
                   <div style={{ height: "70vh", width: "100%" }}>
 
-                    {pdfBlobUrl ? (
+                    {pdfError ? (
+                      // ❌ INVALID PDF fallback
+                      <div className="flex items-center justify-center h-full text-slate-500 text-center">
+                        {isUrdu
+                          ? "یہ مواد ابھی دستیاب نہیں ہے"
+                          : "Content coming soon"}
+                      </div>
+
+                    ) : pdfBlobUrl ? (
+                      // ✅ VALID PDF
                       <Viewer
                         fileUrl={pdfBlobUrl}
-                        plugins={[
-                          zoomPluginInstance,
-                          fullScreenPluginInstance
-                        ]}
+                        plugins={[zoomPluginInstance, fullScreenPluginInstance]}
+                        onDocumentLoadFail={() => setPdfError(true)} // 👈 VERY IMPORTANT
                       />
+
                     ) : (
+                      // ⏳ LOADING
                       <div className="flex items-center justify-center h-full text-slate-500">
                         {isUrdu ? "لوڈ ہو رہا ہے..." : "Loading..."}
                       </div>
                     )}
 
                   </div>
-
                 </Worker>
 
               </div>
@@ -240,9 +265,7 @@ const WorksheetsPage = () => {
           </div>
 
         </div>
-
       </div>
-
     </section>
   );
 };
