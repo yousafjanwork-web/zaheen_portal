@@ -16,7 +16,11 @@ const Sidebar = ({ isLoggedIn, isUrdu, type, navigate }: any) => {
               </div>
             )}
 
-            <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+            <div 
+            onClick={() => {
+            navigate(`/assessment?type=${type}`);
+              }}
+            className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
               <FileText size={18} />
               {isUrdu ? "امتحانات" : "Assessments"}
             </div>
@@ -35,9 +39,9 @@ const Sidebar = ({ isLoggedIn, isUrdu, type, navigate }: any) => {
               {isUrdu ? "وسائل" : "Resources"}
             </div>
            <div
-  onClick={() => {
-    navigate(`/games?type=${type}`);
-  }}
+        onClick={() => {
+          navigate(`/games?type=${type}`);
+          }}
   className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
 >
   <Gamepad2 size={18} />
