@@ -50,6 +50,10 @@
     "courses": "Courses",
     "pricing": "Pricing",
     "testimonials": "Testimonials",
+    "k12": "K-12 Curriculum",
+    "prof": "Professional Skills",
+    "worksheet": "Worksheets",
+    "ai": "AI Tutor",
     "support": "Support",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
@@ -65,7 +69,9 @@
       "title": "Unlock Your Potential from KG to Grade 12",
       "highlight": "Potential",
       "description": "Personalized learning paths for every student with video lectures, assignments, and quizzes.",
-      "button": "Explore K-12 Curriculum"
+      "button": "Explore K-12 Curriculum",
+      "link":"/grade-view/k-12"
+
     },
     "slide2": {
       "title": "Master High-Demand Skills",

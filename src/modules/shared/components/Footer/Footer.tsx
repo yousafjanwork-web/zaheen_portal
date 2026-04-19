@@ -103,10 +103,10 @@ const Footer: React.FC = () => {
 
             <ul className="space-y-2 text-sm">
 
-              <li>{t("footer.about")}</li>
-              <li>{t("footer.courses")}</li>
-              <li>{t("footer.pricing")}</li>
-              <li>{t("footer.testimonials")}</li>
+              <li><a href="/grade-view/k-12">{t("footer.k12")}</a></li>
+              <li><a href="/skills/300">{t("footer.prof")}</a></li>
+              <li><a href="/practice-corner">{t("footer.worksheet")}</a></li>
+              <li><a href="/ai">{t("footer.ai")}</a></li>
 
             </ul>
 
