@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { t } from "@/modules/shared/i18n";
-
+import { useNavigate } from "react-router-dom";
 const slides = [
   {
     id: 1,
@@ -22,6 +22,7 @@ const slides = [
 
 const HeroSlider = () => {
   const [current, setCurrent] = useState(0);
+  const navigate = useNavigate();
 
   const next = () => setCurrent((prev) => (prev + 1) % slides.length);
   const prev = () =>
@@ -73,6 +74,7 @@ const HeroSlider = () => {
 
                 <button
                   className={`px-8 py-4 ${slides[current].bgColor} rounded-xl font-bold shadow-xl hover:scale-105 transition`}
+                  onClick={() => navigate(t(`${slideKey}.link`))}
                 >
                   {t(`${slideKey}.button`)}
                 </button>
@@ -115,9 +117,8 @@ const HeroSlider = () => {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`w-3 h-3 rounded-full ${
-              current === i ? "bg-primary w-8" : "bg-white/40"
-            }`}
+            className={`w-3 h-3 rounded-full ${current === i ? "bg-primary w-8" : "bg-white/40"
+              }`}
           />
         ))}
       </div>
