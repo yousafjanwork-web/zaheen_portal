@@ -65,6 +65,7 @@ const AppRoutes = () => {
           <Route path="/resource-player" element={<ResourcePlayer />} />
           <Route path="/games" element={<GamesPage />} />
           <Route path="/games/play" element={<PlayGamePage />} />
+          <Route path="/ai" element={<Chatbot />} />
         </Route>
 
         {/* Routes WITHOUT MainLayout */}
@@ -72,7 +73,7 @@ const AppRoutes = () => {
         <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
 
         <Route path="thanks-for-subscribing" element={<SuccessScreen />} />
-        <Route path="/ai" element={<Chatbot />} />
+        
 
       </Routes>
     </BrowserRouter>

@@ -4,9 +4,12 @@
   background: #f4f6f9;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+
+  /* ✅ IMPORTANT FIX */
+  min-height: calc(100vh - 120px); /* adjust based on header+footer */
 }
 
+/* HEADER (chat header, not global header) */
 .chatbot-header {
   background: #4f46e5;
   color: white;
@@ -16,17 +19,7 @@
   position: relative;
 }
 
-.chatbot-header button {
-  position: absolute;
-  right: 10px;
-  top: 8px;
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-}
-
+/* CONTROLS */
 .controls {
   display: flex;
   gap: 10px;
@@ -40,12 +33,14 @@
   border-radius: 6px;
 }
 
+/* CHAT AREA */
 .chat-area {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
 }
 
+/* MESSAGE */
 .msg {
   margin: 8px 0;
   max-width: 80%;
@@ -64,11 +59,13 @@
   background: #e5e7eb;
 }
 
+/* INPUT */
 .input-box {
   display: flex;
   padding: 10px;
   background: white;
   gap: 10px;
+  border-top: 1px solid #eee;
 }
 
 .input-box input {
@@ -84,9 +81,34 @@
   color: white;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
 }
 
-.input-box button:disabled {
-  opacity: 0.6;
+/* =========================
+   📱 MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+  .chatbot-header {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  .msg {
+    max-width: 90%;
+    font-size: 14px;
+  }
+
+  .input-box input {
+    font-size: 14px;
+  }
+
+  .input-box button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
 }

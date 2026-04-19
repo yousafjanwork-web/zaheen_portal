@@ -163,7 +163,7 @@ const Chatbot = () => {
       {/* HEADER */}
       <div className="chatbot-header">
         📘 Zaheen AI Tutor
-        <button onClick={() => navigate("/")}>✖</button>
+       
       </div>
 
       {/* CONTROLS */}
