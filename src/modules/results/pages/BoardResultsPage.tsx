@@ -5,17 +5,17 @@ import { getLanguage } from "@/modules/shared/i18n";
 /* ================= DATA ================= */
 
 const regionData = [
-  {
-    region: "Federal",
-    urdu_region: "وفاقی",
-    boards: [
-      {
-        name: "Federal Board (FBISE), Islamabad",
-        urdu_name: "فیڈرل بورڈ (ایف بی آئی ایس ای)، اسلام آباد",
-        url: "https://portal.fbise.edu.pk/fbise-conduct/result/",
-      },
-    ],
-  },
+  // {
+  //   region: "Federal",
+  //   urdu_region: "وفاقی",
+  //   boards: [
+  //     {
+  //       name: "Federal Board (FBISE), Islamabad",
+  //       urdu_name: "فیڈرل بورڈ (ایف بی آئی ایس ای)، اسلام آباد",
+  //       url: "https://portal.fbise.edu.pk/fbise-conduct/result/",
+  //     },
+  //   ],
+  // },
   {
     region: "Punjab",
     urdu_region: "پنجاب",
@@ -37,10 +37,10 @@ const regionData = [
     boards: [
       { name: "BISE Karachi (Intermediate)", urdu_name: "کراچی بورڈ (انٹر)", url: "https://www.biek.com.pk/online-result/" },
       { name: "BISE Karachi (Secondary)", urdu_name: "کراچی بورڈ (میٹرک)", url: "https://www.bsek.com.pk/online-result/" },
-      { name: "BISE Hyderabad", urdu_name: "حیدرآباد بورڈ", url: "https://www.biseh.edu.pk/examination-results.html" },
-      { name: "BISE Sukkur", urdu_name: "سکھر بورڈ", url: "http://bisesukkur.org.pk/results/?i=1" },
-      { name: "BISE Larkana", urdu_name: "لاڑکانہ بورڈ", url: "https://www.biselrk.edu.pk/ResultsSSC.aspx" },
-      { name: "Aga Khan Board", urdu_name: "آغا خان بورڈ", url: "https://examinationboard.aku.edu/services/Pages/online-results.aspx" },
+      // { name: "BISE Hyderabad", urdu_name: "حیدرآباد بورڈ", url: "https://www.biseh.edu.pk/examination-results.html" },
+      // { name: "BISE Sukkur", urdu_name: "سکھر بورڈ", url: "http://bisesukkur.org.pk/results/?i=1" },
+      // { name: "BISE Larkana", urdu_name: "لاڑکانہ بورڈ", url: "https://www.biselrk.edu.pk/ResultsSSC.aspx" },
+      // { name: "Aga Khan Board", urdu_name: "آغا خان بورڈ", url: "https://examinationboard.aku.edu/services/Pages/online-results.aspx" },
     ],
   },
   {
@@ -49,7 +49,7 @@ const regionData = [
     boards: [
       { name: "BISE Peshawar", urdu_name: "پشاور بورڈ", url: "https://cloud.bisep.edu.pk/" },
       { name: "BISE Abbottabad", urdu_name: "ایبٹ آباد بورڈ", url: "https://www.biseatd.edu.pk/all_results.php" },
-      { name: "BISE Mardan", urdu_name: "مردان بورڈ", url: "https://result.bisemdn.edu.pk/" },
+      // { name: "BISE Mardan", urdu_name: "مردان بورڈ", url: "https://result.bisemdn.edu.pk/" },
       { name: "BISE Swat", urdu_name: "سوات بورڈ", url: "https://www.bisess.edu.pk/site/home/results-section" },
       { name: "BISE Kohat", urdu_name: "کوہاٹ بورڈ", url: "https://www.bisekt.edu.pk/results" },
       { name: "BISE Bannu", urdu_name: "بنوں بورڈ", url: "https://www.biseb.edu.pk/results.php" },
@@ -57,13 +57,13 @@ const regionData = [
       { name: "BISE D.I Khan", urdu_name: "ڈی آئی خان بورڈ", url: "https://www.bisedik.edu.pk/results" },
     ],
   },
-  {
-    region: "Balochistan",
-    urdu_region: "بلوچستان",
-    boards: [
-      { name: "BISE Quetta", urdu_name: "کوئٹہ بورڈ", url: "https://result.bbiseqta.edu.pk/" },
-    ],
-  },
+  // {
+  //   region: "Balochistan",
+  //   urdu_region: "بلوچستان",
+  //   boards: [
+  //     { name: "BISE Quetta", urdu_name: "کوئٹہ بورڈ", url: "https://result.bbiseqta.edu.pk/" },
+  //   ],
+  // },
   {
     region: "AJK",
     urdu_region: "آزاد کشمیر",
