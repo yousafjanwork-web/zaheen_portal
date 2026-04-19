@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookOpen, FileText, FolderOpen, Settings } from "lucide-react";
+import { LayoutDashboard, BookOpen, FileText, FolderOpen, Settings, Gamepad2 } from "lucide-react";
 
 const Sidebar = ({ isLoggedIn, isUrdu, type, navigate }: any) => {
   return (
@@ -34,7 +34,15 @@ const Sidebar = ({ isLoggedIn, isUrdu, type, navigate }: any) => {
               <FolderOpen size={18} />
               {isUrdu ? "وسائل" : "Resources"}
             </div>
-
+           <div
+  onClick={() => {
+    navigate(`/games?type=${type}`);
+  }}
+  className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
+>
+  <Gamepad2 size={18} />
+  {isUrdu ? "گیمز" : "Games"}
+</div>
             {isLoggedIn && (
               <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
                 <Settings size={18} />

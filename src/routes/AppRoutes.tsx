@@ -23,6 +23,8 @@ import { EnrollmentLandingPage } from "@/modules/auth/enrollnow/EnrollNowPage";
 import SubEnrollNow from "@/modules/auth/enrollnow/pages/SubEnrollNow";
 import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
 import ProtectedRoute from "./ProtectedRoute";
+import GamesPage from "@/modules/games/pages/GamesPage";
+import PlayGamePage from "@/modules/games/pages/PlayGamePage";
 
 const AppRoutes = () => {
   return (
@@ -62,6 +64,8 @@ const AppRoutes = () => {
           <Route path="/mza" element={<MzaPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/resource-player" element={<ResourcePlayer />} />
+          <Route path="/games" element={<GamesPage />} />
+          <Route path="/games/play" element={<PlayGamePage />} />
         </Route>
 
         {/* Routes WITHOUT MainLayout */}
