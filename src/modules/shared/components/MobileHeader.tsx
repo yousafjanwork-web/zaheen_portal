@@ -36,27 +36,37 @@ const MobileHeader = () => {
 
         {/* CENTER LOGO */}
         <a href="/">
-          <img src={logo} alt="Zaheen" className="h-8"/>
+          <img src={logo} alt="Zaheen" className="h-8" />
         </a>
         {/* LANGUAGE */}
         <div className="relative">
           <button
             onClick={() => setLanguageOpen(!languageOpen)}
-            className="flex items-center gap-1 border px-3 py-1 rounded-lg text-sm"
-          >
+            className={`
+                  flex items-center gap-1 border px-3 py-1 rounded-lg text-sm
+                  ${getLanguage() === "ur" ? "flex-row-reverse" : ""}
+                `}          >
             {getLanguage().toUpperCase()}
             <ChevronDown size={16} />
           </button>
 
           {languageOpen && (
-            <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg border rounded-lg">
+            // <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg border rounded-lg">
+            <div
+              className={`
+                absolute mt-2 w-36 bg-white shadow-lg border rounded-lg
+                ${getLanguage() === "ur" ? "left-0" : "right-0"}
+              `}
+            >
               <button
                 onClick={() => {
                   setLanguage("en");
                   setLanguageOpen(false);
                 }}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
-              >
+                className={`
+                  block w-full px-4 py-2 text-sm hover:bg-slate-100
+                  ${getLanguage() === "ur" ? "text-right" : "text-left"}
+                `}              >
                 {t("language.english")}
               </button>
 
@@ -65,8 +75,10 @@ const MobileHeader = () => {
                   setLanguage("ur");
                   setLanguageOpen(false);
                 }}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
-              >
+                className={`
+                  block w-full px-4 py-2 text-sm hover:bg-slate-100
+                  ${getLanguage() === "ur" ? "text-right" : "text-left"}
+                `}              >
                 {t("language.urdu")}
               </button>
             </div>
@@ -80,7 +92,7 @@ const MobileHeader = () => {
           <a href="/" className="block">
             {t("menu.home")}
           </a>
-  <a href="/grade-view/k-12" className="block">
+          <a href="/grade-view/k-12" className="block">
             {t("menu.courses")}
           </a>
 
@@ -93,56 +105,56 @@ const MobileHeader = () => {
           <a href="/ai" className="block">
             {t("menu.aiTutor")}
           </a>
-           {/* 🔹 AUTH SECTION */}
+          {/* 🔹 AUTH SECTION */}
 
-    <div className="border-t pt-4 space-y-3">
+          <div className="border-t pt-4 space-y-3">
 
-      {isLoggedIn ? (
+            {isLoggedIn ? (
 
-        <>
-          <div className="text-gray-500 text-xs">
-            {t("auth.loggedInAs")}
+              <>
+                <div className="text-gray-500 text-xs">
+                  {t("auth.loggedInAs")}
+                </div>
+
+                <div className="font-semibold">
+                  {msisdn}
+                </div>
+
+                <button
+                  onClick={logout}
+                  className="w-full border border-red-500 text-red-500 py-2 rounded-lg"
+                >
+                  {t("auth.logout")}
+                </button>
+              </>
+
+            ) : (
+
+              <>
+                <button
+                  onClick={() =>
+                    window.location.href =
+                    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/login"
+                  }
+                  className="w-full border border-primary text-primary py-2 rounded-lg"
+                >
+                  {t("auth.login")}
+                </button>
+
+                <button
+                  onClick={() =>
+                    window.location.href =
+                    "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
+                  }
+                  className="w-full bg-primary text-white py-2 rounded-lg"
+                >
+                  {t("auth.subscribe")}
+                </button>
+              </>
+
+            )}
+
           </div>
-
-          <div className="font-semibold">
-            {msisdn}
-          </div>
-
-          <button
-            onClick={logout}
-            className="w-full border border-red-500 text-red-500 py-2 rounded-lg"
-          >
-            {t("auth.logout")}
-          </button>
-        </>
-
-      ) : (
-
-        <>
-          <button
-            onClick={() =>
-              window.location.href =
-                "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/login"
-            }
-            className="w-full border border-primary text-primary py-2 rounded-lg"
-          >
-            {t("auth.login")}
-          </button>
-
-          <button
-            onClick={() =>
-              window.location.href =
-                "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe"
-            }
-            className="w-full bg-primary text-white py-2 rounded-lg"
-          >
-            {t("auth.subscribe")}
-          </button>
-        </>
-
-      )}
-
-    </div>
 
           {/* {isLoggedIn ? (
             <>

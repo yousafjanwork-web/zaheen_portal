@@ -105,7 +105,7 @@ const Footer: React.FC = () => {
 
               <li><a href="/grade-view/k-12">{t("footer.k12")}</a></li>
               <li><a href="/skills/300">{t("footer.prof")}</a></li>
-              <li><a href="/practice-corner">{t("footer.worksheet")}</a></li>
+              <li><a href="/practice">{t("footer.worksheet")}</a></li>
               <li><a href="/ai">{t("footer.ai")}</a></li>
 
             </ul>
