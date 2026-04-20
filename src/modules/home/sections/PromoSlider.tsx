@@ -63,22 +63,25 @@ const PromoSlider = () => {
           >
             <div
               className={`
-                min-w-[220px]
-                rounded-2xl
-                p-6
-                text-white
-                shadow-lg
-                bg-gradient-to-r ${card.color}
-              `}
+                  min-w-[220px]
+                  h-[160px]
+                  rounded-2xl
+                  p-6
+                  text-white
+                  shadow-lg
+                  bg-gradient-to-r ${card.color}
+                  flex flex-col
+                `}
             >
               <h3 className="text-lg font-bold mb-2">
                 {card.title}
               </h3>
 
-              <p className="text-sm opacity-90">
-                {card.desc}
-              </p>
-
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm opacity-90">
+                  {card.desc}
+                </p>
+              </div>
             </div>
           </a>
         ))}

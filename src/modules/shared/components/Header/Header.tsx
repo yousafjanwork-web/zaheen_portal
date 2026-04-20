@@ -22,10 +22,10 @@ interface HeaderProps {
 
 const boards = [
   { key: "boards.federal" },
-  { key: "boards.punjab" },
-  { key: "boards.sindh" },
-  { key: "boards.kpk" },
-  { key: "boards.balochistan" }
+  // { key: "boards.punjab" },
+  // { key: "boards.sindh" },
+  // { key: "boards.kpk" },
+  // { key: "boards.balochistan" }
 ];
 
 const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {

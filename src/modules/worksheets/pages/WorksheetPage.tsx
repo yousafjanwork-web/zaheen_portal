@@ -26,6 +26,7 @@ const WorksheetsPage = () => {
   const [selectedWorksheet, setSelectedWorksheet] = useState(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [pdfError, setPdfError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const zoomPluginInstance = zoomPlugin();
   const fullScreenPluginInstance = fullScreenPlugin();
@@ -40,6 +41,8 @@ const WorksheetsPage = () => {
 
   useEffect(() => {
     const fetchWorksheets = async () => {
+      setLoading(true); // ✅ start loading
+
       try {
         const res = await fetch(
           `https://api.zaheen.com.pk/api/chapter/${subjectId}/worksheets`
@@ -53,7 +56,6 @@ const WorksheetsPage = () => {
           data = null;
         }
 
-        // ✅ IMPORTANT FIX
         if (res.ok && Array.isArray(data)) {
           setWorksheets(data);
 
@@ -61,12 +63,14 @@ const WorksheetsPage = () => {
             setSelectedWorksheet(data[0]);
           }
         } else {
-          setWorksheets([]); // 👈 forces "Coming Soon"
+          setWorksheets([]);
         }
 
       } catch (err) {
         console.error("Worksheet API error", err);
-        setWorksheets([]); // 👈 fallback
+        setWorksheets([]);
+      } finally {
+        setLoading(false); // ✅ stop loading
       }
     };
 
@@ -157,7 +161,18 @@ const WorksheetsPage = () => {
           <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row 
           lg:flex-col p-2 lg:max-h-[100vh] lg:pr-2">
             {/* ✅ FIXED CONDITION */}
-            {!Array.isArray(worksheets) || worksheets.length === 0 ? (
+            {loading ? (
+              // 🔄 LOADING UI (Skeleton)
+              <div className="w-full space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-12 bg-slate-200 animate-pulse rounded-xl"
+                  />
+                ))}
+              </div>
+            ) : worksheets.length === 0 ? (
+              // ❌ NO DATA
               <div className="w-full flex items-center justify-center p-6 text-center">
                 <div className="bg-white rounded-xl p-6 shadow text-slate-500 w-full">
                   <p className="font-semibold text-sm">
@@ -166,22 +181,21 @@ const WorksheetsPage = () => {
                 </div>
               </div>
             ) : (
+              // ✅ DATA
               worksheets.map((ws) => (
                 <div
                   key={ws.id}
                   onClick={() => setSelectedWorksheet(ws)}
                   className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer flex-shrink-0 transition
-                  ${selectedWorksheet?.id === ws.id
+      ${selectedWorksheet?.id === ws.id
                       ? "bg-primary text-white shadow"
                       : "bg-white hover:bg-slate-100"
                     }`}
                 >
                   <FileText size={18} />
-                  <div>
-                    <p className="font-semibold text-sm">
-                      {isUrdu ? ws.urdu_name || ws.name : ws.name}
-                    </p>
-                  </div>
+                  <p className="font-semibold text-sm">
+                    {isUrdu ? ws.urdu_name || ws.name : ws.name}
+                  </p>
                 </div>
               ))
             )}
@@ -191,11 +205,19 @@ const WorksheetsPage = () => {
           {/* PDF VIEWER */}
           <div className="flex-1">
 
-            {!Array.isArray(worksheets) || worksheets.length === 0 ? (
+            {loading ? (
+              // 🔄 LOADING CARD
+              <div className="bg-white rounded-3xl shadow-lg p-10 text-center">
+                <div className="h-6 w-40 mx-auto mb-4 bg-slate-200 animate-pulse rounded" />
+                <div className="h-[400px] bg-slate-200 animate-pulse rounded-xl" />
+              </div>
+            ) : worksheets.length === 0 ? (
+              // ❌ NO DATA
               <div className="bg-white rounded-3xl shadow-lg p-10 text-center text-slate-500">
                 {isUrdu ? "مواد جلد دستیاب ہوگا" : "Content will be available soon"}
               </div>
             ) : selectedWorksheet && (
+              // ✅ EXISTING PDF VIEWER CODE
               <div className="bg-white rounded-3xl shadow-lg p-4 md:p-5">
 
                 <h2 className="text-lg md:text-xl font-bold mb-4">

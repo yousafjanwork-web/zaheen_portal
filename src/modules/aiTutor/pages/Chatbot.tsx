@@ -74,11 +74,11 @@ const Chatbot = () => {
       // remove typing
       setMessages((prev) => prev.filter((m) => m.text !== "Typing..."));
 
-      if (!res.ok) throw new Error("Server error");
+      if (!res.ok) throw new Error();
 
       const data = await res.json();
 
-      if (!data.reply) throw new Error("Empty response");
+      if (!data.reply) throw new Error();
 
       addMessage(data.reply, "bot");
 
@@ -89,19 +89,11 @@ const Chatbot = () => {
       // remove typing
       setMessages((prev) => prev.filter((m) => m.text !== "Typing..."));
 
-      let message = "⏳ AI is taking too long. Try again.";
+      addMessage(
+        "🤖 The tutor is currently helping many students at the same time.\n\nPlease wait a few seconds and try again — we’ll be back shortly! 🚀",
+        "bot"
+      );
 
-      if (err.name === "AbortError") {
-        message = "⏳ Request timed out. Try again.";
-      } else if (err.message.includes("Failed")) {
-        message = "🌐 Unable to connect to server.";
-      } else if (err.message.includes("Server")) {
-        message = "⚠️ Server error occurred.";
-      } else if (err.message.includes("Empty")) {
-        message = "🤖 Empty response. Ask differently.";
-      }
-
-      addMessage(message, "bot");
       console.error("Chat error:", err);
     }
 
@@ -163,7 +155,7 @@ const Chatbot = () => {
       {/* HEADER */}
       <div className="chatbot-header">
         📘 Zaheen AI Tutor
-       
+
       </div>
 
       {/* CONTROLS */}
