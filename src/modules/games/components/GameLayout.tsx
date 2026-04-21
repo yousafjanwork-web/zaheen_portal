@@ -20,7 +20,6 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
 
   return (
     <div className="min-h-screen overflow-hidden relative bg-gradient-to-b from-blue-300 via-pink-200 to-yellow-200">
-
       {/* ✨ Floating Stars */}
       {stars.map((s) => (
         <div
@@ -57,13 +56,21 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
 
       {/* 🧸 Mascot */}
       {/* 🧸 Mascot (Desktop Only) */}
-<div className="hidden md:block fixed bottom-0 left-[-10px] w-40 md:w-52 z-20 pointer-events-none">
-  <img
-    src={mascot}
-    alt="mascot"
-    className="w-full animate-bounce drop-shadow-2xl"
-  />
-</div>
+      <div className="hidden md:block fixed bottom-0 left-[-10px] w-40 md:w-52 z-20 pointer-events-none">
+        <img
+          src={mascot}
+          alt="mascot"
+          className="w-full animate-bounce drop-shadow-2xl"
+        />
+      </div>
+      {/* 🧸 Mascot (Mobile Only - Centered at bottom) */}
+      <div className="md:hidden flex justify-center pb-6 relative z-20">
+        <img
+          src={mascot}
+          alt="mascot"
+          className="w-28 h-28 object-contain animate-bounce duration-[4000ms] drop-shadow-xl"
+        />
+      </div>
 
       {/* 🎮 GAME CONTENT */}
       <div className="relative z-10 p-4">{children}</div>
