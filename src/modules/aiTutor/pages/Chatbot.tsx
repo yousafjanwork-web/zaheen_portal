@@ -1,213 +1,173 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, FormEvent } from "react";
 import "../../../styles/chatbot_fullpage.css";
-import { useNavigate } from "react-router-dom";
+
+interface Message {
+  text: string;
+  type: "user" | "bot";
+}
+
+interface ChatHistory {
+  role: "user" | "model";
+  text: string;
+}
 
 const API_URL = "https://zai.zaheen.com.pk/api/chat";
 
-const Chatbot = () => {
-  const navigate = useNavigate();
+const Chatbot: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>("");
+  const [topic, setTopic] = useState<string>("Maths");
+  const [language, setLanguage] = useState<string>("English");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [topic, setTopic] = useState("Maths");
-  const [language, setLanguage] = useState("English");
-  const [loading, setLoading] = useState(false);
+  const chatRef = useRef<HTMLDivElement | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const memoryRef = useRef<string>("");
+  const isListening = useRef<boolean>(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const historyRef = useRef<ChatHistory[]>([]);
 
-  const chatRef = useRef(null);
-  const recognitionRef = useRef(null);
-  const memoryRef = useRef("");
-
-  /* ---------------- AUTO SCROLL ---------------- */
   useEffect(() => {
     chatRef.current?.scrollTo({
       top: chatRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, loading]);
 
-  /* ---------------- ADD MESSAGE ---------------- */
-  const addMessage = (text, type) => {
-    setMessages((prev) => [...prev, { text, type }]);
+  const addMessage = (text: string, type: "user" | "bot") => {
+    const newMessage: Message = { text, type };
+    setMessages((prev) => [...prev, newMessage]);
+    
+    if (text !== "") {
+      historyRef.current.push({
+        role: type === "user" ? "user" : "model",
+        text: text,
+      });
+      if (historyRef.current.length > 10) historyRef.current.shift();
+    }
   };
 
-  /* ---------------- SEND MESSAGE ---------------- */
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+  const typeMessage = (text: string) => {
+    let i = 0;
+    let temp = "";
+    setMessages((prev) => [...prev, { text: "", type: "bot" }]);
 
-    const text = input.trim();
-    setInput("");
+    const interval = setInterval(() => {
+      temp += text.charAt(i);
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { text: temp, type: "bot" };
+        return updated;
+      });
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        historyRef.current.push({ role: "model", text: text });
+      }
+    }, 8);
+  };
+
+  const sendMessage = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    const textToSend = input.trim();
+    if (!textToSend || loading) return;
+
+    setInput(""); 
     setLoading(true);
-
-    addMessage(text, "user");
-
-    const historyToSend = [
-      ...messages.map((m) => ({
-        role: m.type === "user" ? "user" : "model",
-        text: m.text,
-      })),
-      { role: "user", text },
-    ];
-
-    // show typing
-    addMessage("Typing...", "bot");
+    setMessages((prev) => [...prev, { text: textToSend, type: "user" }]);
+    historyRef.current.push({ role: "user", text: textToSend });
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           topic,
           language,
-          history: historyToSend.slice(-10),
+          history: historyRef.current.slice(-10),
           memory: memoryRef.current,
         }),
       });
 
-      clearTimeout(timeout);
-
-      // remove typing
-      setMessages((prev) => prev.filter((m) => m.text !== "Typing..."));
-
-      if (!res.ok) throw new Error("Server error");
-
       const data = await res.json();
-
-      if (!data.reply) throw new Error("Empty response");
-
-      addMessage(data.reply, "bot");
-
-      if (data.memory) {
-        memoryRef.current = data.memory;
-      }
+      if (data.reply) typeMessage(data.reply);
+      if (data.memory) memoryRef.current = data.memory;
     } catch (err) {
-      // remove typing
-      setMessages((prev) => prev.filter((m) => m.text !== "Typing..."));
-
-      let message = "⏳ AI is taking too long. Try again.";
-
-      if (err.name === "AbortError") {
-        message = "⏳ Request timed out. Try again.";
-      } else if (err.message.includes("Failed")) {
-        message = "🌐 Unable to connect to server.";
-      } else if (err.message.includes("Server")) {
-        message = "⚠️ Server error occurred.";
-      } else if (err.message.includes("Empty")) {
-        message = "🤖 Empty response. Ask differently.";
-      }
-
-      addMessage(message, "bot");
-      console.error("Chat error:", err);
+      addMessage("⚠️ Server error. Try again.", "bot");
+    } finally {
+      setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
-
-    setLoading(false);
   };
 
-  /* ---------------- ENTER KEY ---------------- */
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") sendMessage();
-  };
-
-  /* ---------------- VOICE INPUT ---------------- */
   const startListening = () => {
-    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-      addMessage("🎤 Voice not supported in this browser.", "bot");
-      return;
-    }
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (isListening.current) return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-
     recognition.lang = language === "Urdu" ? "ur-PK" : "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
+    isListening.current = true;
     recognition.start();
 
-    addMessage("🎤 Listening...", "bot");
-
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
-
       setInput(transcript);
-      addMessage("🗣️ " + transcript, "user");
-
-      sendMessage();
     };
 
-    recognition.onerror = (event) => {
-      let msg = "🎤 Voice error occurred.";
-
-      if (event.error === "not-allowed") {
-        msg = "🚫 Microphone permission denied.";
-      } else if (event.error === "no-speech") {
-        msg = "🤷 No speech detected.";
-      }
-
-      addMessage(msg, "bot");
+    recognition.onend = () => {
+      isListening.current = false;
+      inputRef.current?.focus();
     };
   };
 
-  /* ---------------- UI ---------------- */
+  const isUrdu = (text: string) => /[\u0600-\u06FF]/.test(text);
+
   return (
     <div className="chatbot-container">
-
-      {/* HEADER */}
-      <div className="chatbot-header">
-        📘 Zaheen AI Tutor
-       
-      </div>
-
-      {/* CONTROLS */}
+      <div className="chatbot-header">📘 Zaheen AI Tutor</div>
+      
       <div className="controls">
         <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-          <option>Maths</option>
-          <option>English</option>
-          <option>Urdu</option>
-          <option>Chemistry</option>
-          <option>Physics</option>
-          <option>Science</option>
+          <option>Maths</option><option>English</option><option>Urdu</option>
+          <option>Chemistry</option><option>Physics</option><option>Science</option>
           <option>Computer</option>
         </select>
-
         <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-          <option value="English">English</option>
-          <option value="Urdu">Urdu</option>
+          <option value="English">English</option><option value="Urdu">Urdu</option>
         </select>
       </div>
 
-      {/* CHAT */}
       <div className="chat-area" ref={chatRef}>
         {messages.map((msg, i) => (
-          <div key={i} className={`msg ${msg.type}`}>
-            {msg.text}
+          <div key={i} className={`msg ${msg.type} ${isUrdu(msg.text) ? "urdu" : ""}`}>
+            <div className="bubble">{msg.text}</div>
           </div>
         ))}
+        
+        {/* Yahan fix kiya hai: Jab Urdu select ho to loading bhi Urdu style mein aye */}
+        {loading && (
+          <div className={`msg bot ${language === "Urdu" ? "urdu" : ""}`}>
+            <div className="bubble thinking">
+              {language === "Urdu" ? "🤖 AI soch raha hai..." : "🤖 AI is thinking..."}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* INPUT */}
-      <div className="input-box">
+      <form className="input-box" onSubmit={sendMessage}>
         <input
+          ref={inputRef}
           value={input}
-          placeholder="Ask your question..."
+          placeholder={language === "Urdu" ? "اپنا سوال پوچھیں..." : "Ask your question..."}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
+          autoFocus
+          className={language === "Urdu" ? "urdu-input" : ""}
         />
-
-        <button onClick={startListening}>🎤</button>
-
-        <button onClick={sendMessage} disabled={loading}>
-          {loading ? "..." : "Send"}
-        </button>
-      </div>
+        <button type="button" onClick={startListening}>🎤</button>
+        <button type="submit" disabled={loading}>Send</button>
+      </form>
     </div>
   );
 };
