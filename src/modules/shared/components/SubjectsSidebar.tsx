@@ -39,7 +39,43 @@ const SubjectsSidebar = ({
 
 export default SubjectsSidebar;
 
+// const SubjectsSidebar = () => {
+//   return (
+//     <div className="flex flex-col gap-4">
 
+//       {/* Profile */}
+//       <div className="flex items-center gap-3 mb-6">
+//         <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+//           👤
+//         </div>
+//         <div>
+//           <p className="font-bold text-sm">Student</p>
+//           <p className="text-xs text-slate-500">Learner</p>
+//         </div>
+//       </div>
+
+//       {/* Menu */}
+//       <div className="flex flex-col gap-1 text-sm">
+//         <div className="px-4 py-3 rounded-xl hover:bg-slate-100 cursor-pointer">
+//           📊 Dashboard
+//         </div>
+
+//         <div className="px-4 py-3 rounded-xl bg-blue-100 text-blue-700 font-bold">
+//           📚 Library
+//         </div>
+
+//         <div className="px-4 py-3 rounded-xl hover:bg-slate-100 cursor-pointer">
+//           👥 Community
+//         </div>
+
+//         <div className="px-4 py-3 rounded-xl hover:bg-slate-100 cursor-pointer">
+//           ⚙️ Settings
+//         </div>
+//       </div>
+
+//     </div>
+//   );
+// };
 
 
 

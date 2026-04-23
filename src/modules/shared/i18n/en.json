@@ -66,18 +66,31 @@
   },
   "hero": {
     "slide1": {
-      "title": "Unlock Your Potential from KG to Grade 12",
-      "highlight": "Potential",
-      "description": "Personalized learning paths for every student with video lectures, assignments, and quizzes.",
-      "button": "Explore K-12 Curriculum",
-      "link":"/grade-view/k-12"
-
+      "title": "Kindergarten",
+      "highlight": "Learn with Fun and Lead Tomorrow.",
+      "description": "Zaheen turns KG kids’ curiosity into lifelong success.",
+      "button": "Start the Journey",
+      "link": "/grade-view/kg"
     },
     "slide2": {
-      "title": "Master High-Demand Skills",
-      "highlight": "High-Demand",
-      "description": "Advance your career with industry-recognized certifications in Digital Marketing, Web Development, and more.",
-      "button": "Browse Professional Courses",
+      "title": "Grade 1 to 5",
+      "highlight": "Smart Start for Bright Hearts.",
+      "description": "Interactive, engaging, and built to help your child grow beyond the books.",
+      "button": "Start Your Growth",
+      "link": "/grade-view/1-5"
+    },
+    "slide3": {
+      "title": "Become A ",
+      "highlight": "Professional Trader",
+      "description": "Master the Financial Markets, Trade Smart, Earn Consistently.",
+      "button": "Start Learning",
+      "link": "/skills/305"
+    },
+    "slide4": {
+      "title": "Web Development Course",
+      "highlight": "Code Your Dreams into Reality.",
+      "description": "Zaheen helps you grow from a student into a digital architect.",
+      "button": "Secure Your Future",
       "link": "/skills/300"
     }
   },

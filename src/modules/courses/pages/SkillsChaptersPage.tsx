@@ -12,12 +12,6 @@ import {
 import { getLanguage } from "@/modules/shared/i18n";
 
 const SkillsChaptersPage = () => {
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "auto"
-    });
-  }, []);
   const { classId } = useParams();
   const navigate = useNavigate();
 
@@ -25,6 +19,18 @@ const SkillsChaptersPage = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [classInfo, setClassInfo] = useState(null);
+
+  // ✅ loading states
+  const [loadingClass, setLoadingClass] = useState(true);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [loadingChapters, setLoadingChapters] = useState(true);
+  const [chapterMap, setChapterMap] = useState({});
+
+
+  const [lectures, setLectures] = useState([]);
+
+  const gradeType = "Skills";
+
 
   const subjectIcons = [
     BookOpen,
@@ -37,303 +43,308 @@ const SkillsChaptersPage = () => {
   const lang = getLanguage();
   const isUrdu = lang === "ur";
 
-  /* ---------------- FETCH CLASS ---------------- */
-
+  // scroll top
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, []);
 
+  /* ---------------- FETCH CLASS ---------------- */
+  useEffect(() => {
     const fetchClass = async () => {
+      setLoadingClass(true);
 
-      const res = await fetch(
-        `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?ts=${Date.now()}`
-      );
-      
-      const data = await res.json();
+      try {
+        const res = await fetch(
+          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?t=${Date.now()}`,
+          {
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+              Expires: "0",
+            },
+          }
+        );
 
-      const cls = data.find((c) => c.class_id === Number(classId));
+        const data = await res.json();
+        console.log(data)
+        const cls = data.find((c) => c.class_id === Number(classId));
+        setClassInfo(cls);
+      } catch (err) {
+        console.error(err);
+      }
 
-      setClassInfo(cls);
-
+      setLoadingClass(false);
     };
 
     fetchClass();
-
   }, [classId]);
 
   /* ---------------- FETCH SUBJECTS ---------------- */
-
   useEffect(() => {
-
     const fetchSubjects = async () => {
+      setLoadingSubjects(true);
 
-      const res = await fetch(
-        `https://api.zaheen.com.pk/api/class/${classId}/subjects`
-      );
+      try {
+        const res = await fetch(
+          `https://api.zaheen.com.pk/api/class/${classId}/subjects?ts=${Date.now()}`,
+          {
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+              Expires: "0",
+            },
+          }
+        );
 
-      const data = await res.json();
+        const data = await res.json();
+        setSubjects(data);
 
-      setSubjects(data);
+        if (data.length > 0) setSelectedSubject(data[0]);
+      } catch (err) {
+        console.error(err);
+      }
 
-      if (data.length > 0) setSelectedSubject(data[0]);
-
+      setLoadingSubjects(false);
     };
 
     fetchSubjects();
-
   }, [classId]);
 
   /* ---------------- FETCH CHAPTERS ---------------- */
-
   useEffect(() => {
-
     if (!selectedSubject) return;
 
-    const fetchChapters = async () => {
+    const fetchLectures = async () => {
+      setLoadingChapters(true);
 
-      const res = await fetch(
-        `https://api.zaheen.com.pk/api/subject/${selectedSubject.id}/chapters`
-      );
+      try {
+        // 1️⃣ Get chapters
+        const res = await fetch(
+          `https://api.zaheen.com.pk/api/subject/${selectedSubject.id}/chapters?ts=${Date.now()}`
+        );
 
-      const data = await res.json();
+        const chaptersData = await res.json();
 
-      setChapters(data);
+        // 🧠 Create map: { chapterId: chapterObject }
+        const map = {};
+        chaptersData.forEach((c) => {
+          map[c.id] = c;
+        });
+        setChapterMap(map);
 
+        // 2️⃣ Extract IDs only
+        const chapterIds = chaptersData.map((c) => c.id);
+
+        // 3️⃣ Fetch lectures for each chapter
+        const lecturesPromises = chapterIds.map((id) =>
+          fetch(
+            `https://api.zaheen.com.pk/api/chapter/${id}/videos?ts=${Date.now()}`
+          ).then((res) => res.json())
+        );
+
+        const lecturesArrays = await Promise.all(lecturesPromises);
+
+        // 4️⃣ Flatten all lectures
+        const allLectures = lecturesArrays.flat();
+
+        console.log("Lectures:", allLectures);
+
+        setLectures(allLectures);
+      } catch (err) {
+        console.error(err);
+      }
+
+      setLoadingChapters(false);
     };
 
-    fetchChapters();
-
+    fetchLectures();
   }, [selectedSubject]);
 
+
   return (
-
     <section className="py-14 bg-slate-100">
-
       <div className="max-w-7xl mx-auto px-4">
 
         {/* ---------------- COURSE HEADER ---------------- */}
-
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 mb-10">
 
-          <div className="flex flex-col md:flex-row gap-8">
-
-            <img
-              src={classInfo?.thumbnailUrl || "https://placehold.co/400x250"}
-              className="w-full md:w-96 h-56 object-cover rounded-2xl"
-            />
-
-            <div className="flex flex-col justify-center">
-
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <GraduationCap className="text-indigo-600" />
-                {isUrdu ? classInfo?.urdu_name : classInfo?.name}
-              </h1>
-
-              <p className="text-slate-600 mb-5 max-w-xl">
-
-                {isUrdu
-                  ? "یہ کورس آپ کو جدید مہارتیں سکھانے کے لیے تیار کیا گیا ہے۔ مرحلہ وار لیکچرز کے ذریعے آسان سیکھنے کا تجربہ حاصل کریں۔"
-                  : "This course is designed to teach you modern professional skills through step-by-step lectures."}
-
-              </p>
-
-              <div className="flex items-center gap-6 text-sm text-slate-500">
-
-                <span className="flex items-center gap-1">
-                  <BookOpen size={16} />
-                  {chapters.length} {isUrdu ? "لیکچرز" : "Lectures"}
-                </span>
-
-                <span className="flex items-center gap-1">
-                  <GraduationCap size={16} />
-                  {isUrdu ? "ابتدائی سطح" : "Beginner"}
-                </span>
-
+          {loadingClass ? (
+            <div className="animate-pulse flex gap-8">
+              <div className="w-96 h-56 bg-slate-200 rounded-2xl" />
+              <div className="flex-1 space-y-4">
+                <div className="h-6 bg-slate-200 rounded w-1/2" />
+                <div className="h-4 bg-slate-200 rounded w-3/4" />
+                <div className="h-4 bg-slate-200 rounded w-1/3" />
               </div>
-
             </div>
+          ) : (
+            <div className="flex flex-col md:flex-row gap-8">
+              <img
+                src={classInfo?.thumbnailUrl || "https://placehold.co/400x250"}
+                className="w-full md:w-96 h-56 object-cover rounded-2xl"
+              />
 
-          </div>
+              <div className="flex flex-col justify-center">
+                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <GraduationCap className="text-indigo-600" />
+                  {isUrdu ? classInfo?.urdu_name : classInfo?.name}
+                </h1>
 
+                <p className="text-slate-600 mb-5 max-w-xl">
+                  {isUrdu
+                    ? "یہ کورس آپ کو جدید مہارتیں سکھانے کے لیے تیار کیا گیا ہے۔"
+                    : "This course is designed to teach modern skills."}
+                </p>
+
+                <div className="flex items-center gap-6 text-sm text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <BookOpen size={16} />
+                    {lectures.length}{" "}
+                    {isUrdu
+                      ? lectures.length === 1
+                        ? "باب"
+                        : "ابواب"
+                      : lectures.length === 1
+                        ? "Lecture"
+                        : "Lectures"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-
 
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* ---------------- SUBJECT SIDEBAR ---------------- */}
+          {/* ---------------- SUBJECTS ---------------- */}
+          {/* <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:flex-col">
 
-          <aside className="w-full lg:w-72 flex gap-3 overflow-x-auto lg:flex-col">
-
-            {subjects.map((subject, index) => {
-
-              const Icon = subjectIcons[index % subjectIcons.length];
-
-              return (
-
+            {loadingSubjects
+              ? [...Array(5)].map((_, i) => (
                 <div
-                  key={subject.id}
-                  onClick={() => setSelectedSubject(subject)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition
-                  
-                  ${selectedSubject?.id === subject.id
-                      ? "bg-indigo-600 text-white shadow"
-                      : "bg-white border border-slate-200 hover:bg-indigo-50"
-                    }
-                  
-                  `}
-                >
+                  key={i}
+                  className="h-12 w-40 bg-slate-200 rounded-xl animate-pulse"
+                />
+              ))
+              : subjects.map((subject, index) => {
+                const Icon = subjectIcons[index % subjectIcons.length];
 
-                  <Icon size={18} />
+                return (
+                  <div
+                    key={subject.id}
+                    onClick={() => setSelectedSubject(subject)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition
+                      ${selectedSubject?.id === subject.id
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white border hover:bg-indigo-50"
+                      }`}
+                  >
+                    <Icon size={18} />
+                    <span className="text-sm font-semibold">
+                      {isUrdu
+                        ? subject.urdu_name || subject.name
+                        : subject.name}
+                    </span>
+                  </div>
+                );
+              })}
+          </aside> */}
 
-                  <span className="text-sm font-semibold">
-
-                    {isUrdu
-                      ? subject.urdu_name || subject.name
-                      : subject.name}
-
-                  </span>
-
-                </div>
-
-              );
-
-            })}
-
-          </aside>
-
-
-          {/* ---------------- LECTURE LIST ---------------- */}
-
+          {/* ---------------- CHAPTERS ---------------- */}
           <div className="flex-1">
-
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
 
-              <div className="p-6 border-b border-slate-200 flex justify-between">
-
-                <h2 className="text-xl font-bold text-slate-900">
-
+              <div className="p-6 border border-slate-200 flex justify-between">
+                <h2 className="text-xl font-bold">
                   {isUrdu ? "کورس مواد" : "Course Content"}
-
                 </h2>
-
-                <span className="text-sm text-slate-500">
-
+                {/* <span className="text-sm text-slate-500">
                   {chapters.length} {isUrdu ? "لیکچرز" : "lectures"}
-
-                </span>
-
+                </span> */}
               </div>
 
-
               <div>
-
-                {chapters.length > 0 ? (
-
-                  chapters.map((chapter, index) => (
-
+                {loadingChapters ? (
+                  <div className="space-y-4 p-6">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="animate-pulse flex justify-between p-4 border border-slate-200 rounded-xl"
+                      >
+                        <div className="flex gap-4">
+                          <div className="w-10 h-10 bg-slate-200 rounded-full" />
+                          <div>
+                            <div className="h-4 w-40 bg-slate-200 mb-2 rounded" />
+                            <div className="h-3 w-24 bg-slate-200 rounded" />
+                          </div>
+                        </div>
+                        <div className="h-4 w-16 bg-slate-200 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : lectures.length > 0 ? (
+                  lectures.map((lecture, index) => (
                     <div
-                      key={chapter.id}
+                      key={lecture.id}
                       onClick={() =>
                         navigate(
-                          `/lectures/${isUrdu
-                            ? classInfo?.urdu_name
-                            : classInfo?.name
-                          }/${chapter.id}/${isUrdu
-                            ? chapter.urdu_name || chapter.name
-                            : chapter.name
-                          }`,
+                          `/lectures/${classInfo?.name}/${lecture.chapter_id}/${chapterMap[lecture.chapter_id]?.name || "chapter"}`,
                           {
                             state: {
                               classTitle: isUrdu
                                 ? classInfo?.urdu_name
                                 : classInfo?.name,
+                              gradeType,
+                              classId,
+                              selectedSubjectId: selectedSubject?.id,
+
+                              // ✅ IMPORTANT
+                              videoId: lecture.id,
+                              chapterId: lecture.chapter_id,
+                              chapterName: chapterMap[lecture.chapter_id]?.name,
+                              lectureName: lecture.name,
                             },
                           }
                         )
                       }
-
-                      className="flex items-center justify-between px-6 py-5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition"
+                      className="flex justify-between px-6 py-5 border border-slate-200 hover:bg-slate-50 cursor-pointer"
                     >
-
-                      <div className="flex items-center gap-4">
-
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-
+                      <div className="flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold">
                           {index + 1}
-
                         </div>
-
                         <div>
-
-                          <p className="font-semibold text-slate-900">
-
-                            {isUrdu
-                              ? chapter.urdu_name || chapter.name
-                              : chapter.name}
-
+                          <p className="font-semibold">
+                            {lecture.name}
                           </p>
-
                           <p className="text-xs text-slate-500">
-
-                            {isUrdu
-                              ? "ویڈیو لیکچر"
-                              : "Video Lecture"}
-
+                            Contains Video Lectures
                           </p>
-
                         </div>
-
                       </div>
-
 
                       <div className="flex items-center gap-2 text-indigo-600 font-semibold">
-
                         <PlayCircle size={18} />
-
-                        {isUrdu ? "دیکھیں" : "Watch"}
-
+                        Watch
                       </div>
-
                     </div>
-
                   ))
-
                 ) : (
-
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
-
+                  <div className="flex flex-col items-center py-20">
                     <GraduationCap size={50} className="text-indigo-500 mb-4" />
-
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">
-
-                      {isUrdu
-                        ? "اسباق جلد آرہے ہیں"
-                        : "Lessons Coming Soon"}
-
+                    <h3 className="text-xl font-bold">
+                      {isUrdu ? "اسباق جلد آرہے ہیں" : "Lessons Coming Soon"}
                     </h3>
-
-                    <p className="text-slate-500 max-w-md">
-
-                      {isUrdu
-                        ? "ہم اس مضمون کے لیے اسباق تیار کر رہے ہیں۔"
-                        : "We are preparing lessons for this course."}
-
-                    </p>
-
                   </div>
-
                 )}
-
               </div>
 
             </div>
-
           </div>
 
         </div>
-
       </div>
-
     </section>
-
   );
 };
 
