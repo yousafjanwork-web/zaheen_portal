@@ -86,9 +86,14 @@ const LecturesPage = () => {
 
         setVideos(data);
 
-        if (data.length > 0) {
-          setSelectedVideo(data[0]);
-          setVideoUrl(`https://cdn.zaheen.com.pk/videos/${data[0].path}`);
+        const initialVideoId = location.state?.autoPlayVideoId || location.state?.videoId;
+
+        const initialVideo =
+          data.find(v => v.id === initialVideoId) || data[0];
+
+        if (initialVideo) {
+          setSelectedVideo(initialVideo);
+          setVideoUrl(`https://cdn.zaheen.com.pk/videos/${initialVideo.path}`);
         }
       } catch (err) {
         console.error(err);
@@ -232,23 +237,42 @@ const LecturesPage = () => {
 
                   if (!fullText) return null;
 
-                  const parts = fullText.split("|").map(p => p.trim()).filter(Boolean);
+                  const parts = fullText
+                    .split("|")
+                    .map(p => p.trim())
+                    .filter(Boolean);
+
+                  const firstPart = parts[0];
+                  const rest = parts.slice(1);
 
                   return (
                     <>
-                      {/* ✅ First part → normal text */}
+                      {/* ✅ FIRST → normal text */}
                       <p className="text-base text-slate-600 mt-2">
-                        {parts[0]}
+                        <b>{firstPart}</b>
                       </p>
 
-                      {/* ✅ Remaining parts → bullets */}
-                      {parts.length > 1 && (
-                        <ul className="text-base text-slate-600 mt-2 space-y-1 list-disc pl-5">
-                          {parts.slice(1).map((line, i) => (
-                            <li key={i}>{line}</li>
-                          ))}
-                        </ul>
-                      )}
+                      {/* ✅ Remaining */}
+                      {rest.map((line, i) => {
+                        const isNormalLine = line.startsWith("-");
+
+                        if (isNormalLine) {
+                          return (
+                            <p key={i} className="text-base font-semibold text-slate-700 mt-2">
+                              {line.replace("-", "").trim()}
+                            </p>
+                          );
+                        }
+
+                        return (
+                          <ul
+                            key={i}
+                            className="text-base text-slate-600 mt-2 space-y-1 list-disc pl-5"
+                          >
+                            <li>{line}</li>
+                          </ul>
+                        );
+                      })}
                     </>
                   );
                 })()}
