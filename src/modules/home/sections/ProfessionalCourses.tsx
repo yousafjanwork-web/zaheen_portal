@@ -29,7 +29,15 @@ const ProfessionalCourses = () => {
     const fetchCourses = async () => {
       try {
         const response = await fetch(
-          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3`
+          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?ts=${Date.now()}`,
+          {
+            method: "GET",
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+              Expires: "0",
+            },
+          }
         );
 
         const data = await response.json();
@@ -129,65 +137,65 @@ const ProfessionalCourses = () => {
 
               {loading
                 ? [...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="min-w-[260px] md:min-w-[300px] mr-6 bg-white rounded-2xl shadow animate-pulse"
-                    >
-                      <div className="h-44 bg-slate-200 rounded-t-2xl"></div>
-                      <div className="p-4 space-y-3">
-                        <div className="h-4 bg-slate-200 rounded"></div>
-                        <div className="h-3 bg-slate-200 rounded w-1/2"></div>
-                      </div>
+                  <div
+                    key={i}
+                    className="min-w-[260px] md:min-w-[300px] mr-6 bg-white rounded-2xl shadow animate-pulse"
+                  >
+                    <div className="h-44 bg-slate-200 rounded-t-2xl"></div>
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-slate-200 rounded"></div>
+                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
                     </div>
-                  ))
+                  </div>
+                ))
                 : courses.map((course) => (
-                    <div
-                      key={course.id}
-                      onClick={() => openCourse(course)}
-                      className="min-w-[260px] md:min-w-[300px] mr-6 bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer group transition duration-300 hover:-translate-y-1"
-                    >
-                      {/* Image */}
+                  <div
+                    key={course.id}
+                    onClick={() => openCourse(course)}
+                    className="min-w-[260px] md:min-w-[300px] mr-6 bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl cursor-pointer group transition duration-300 hover:-translate-y-1"
+                  >
+                    {/* Image */}
 
-                      <div className="relative overflow-hidden">
-                        <img
-                          src={course.thumbnailUrl}
-                          alt={course.name}
-                          className="w-full h-44 object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={course.thumbnailUrl}
+                        alt={course.name}
+                        className="w-full h-44 object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
 
-                        <div className="absolute top-3 left-3 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
-                          Professional
-                        </div>
-                      </div>
-
-                      {/* Content */}
-
-                      <div className="p-5">
-                        <h3 className="font-bold text-slate-900 line-clamp-2 mb-3">
-                          {lang === "ur"
-                            ? course.urdu_name
-                            : course.name}
-                        </h3>
-
-                        <div className="flex items-center justify-between text-sm text-slate-500">
-                          <div className="flex items-center text-amber-500">
-                            <Star
-                              size={15}
-                              fill="currentColor"
-                              className="mr-1"
-                            />
-                            5.0
-                          </div>
-
-                          <div className="flex items-center">
-                            <Users size={15} className="mr-1" />
-                            {course.chapterCount}{" "}
-                            {t("professionalCourses.students")}
-                          </div>
-                        </div>
+                      <div className="absolute top-3 left-3 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">
+                        Professional
                       </div>
                     </div>
-                  ))}
+
+                    {/* Content */}
+
+                    <div className="p-5">
+                      <h3 className="font-bold text-slate-900 line-clamp-2 mb-3">
+                        {lang === "ur"
+                          ? course.urdu_name
+                          : course.name}
+                      </h3>
+
+                      <div className="flex items-center justify-between text-sm text-slate-500">
+                        <div className="flex items-center text-amber-500">
+                          <Star
+                            size={15}
+                            fill="currentColor"
+                            className="mr-1"
+                          />
+                          5.0
+                        </div>
+
+                        {/* <div className="flex items-center">
+                          <Users size={15} className="mr-1" />
+                          {course.chapterCount}{" "}
+                          {t("professionalCourses.students")}
+                        </div> */}
+                      </div>
+                    </div>
+                  </div>
+                ))}
 
             </div>
           </div>

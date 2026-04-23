@@ -5,6 +5,7 @@ import { useAuth } from "@/modules/shared/context/AuthContext";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
+import { FaTiktok } from "react-icons/fa";
 
 const Footer: React.FC = () => {
 
@@ -12,8 +13,8 @@ const Footer: React.FC = () => {
 
   const handleUnsubscribe = async () => {
 
- const serviceId =
-    localStorage.getItem("activeServiceId") || "205";
+    const serviceId =
+      localStorage.getItem("activeServiceId") || "205";
 
     if (!msisdn) return;
 
@@ -64,7 +65,7 @@ const Footer: React.FC = () => {
             <div className="flex space-x-4 text-slate-400">
 
               <a
-                href="https://www.facebook.com/zaheenpk87"
+                href="https://www.facebook.com/zaheendigital"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white transition"
@@ -73,7 +74,7 @@ const Footer: React.FC = () => {
               </a>
 
               <a
-                href="https://www.instagram.com/zaheenpk3/"
+                href="https://www.instagram.com/zaheendigital"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white transition"
@@ -82,12 +83,21 @@ const Footer: React.FC = () => {
               </a>
 
               <a
-                href="https://www.youtube.com/@zaheen-pk"
+                href="https://www.youtube.com/@zaheendigital"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white transition"
               >
                 <Youtube size={20} />
+              </a>
+
+              <a
+                href="https://www.tiktok.com/@zaheen_digital" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <FaTiktok size={18} />
               </a>
 
             </div>
