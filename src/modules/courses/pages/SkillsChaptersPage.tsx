@@ -291,18 +291,17 @@ const SkillsChaptersPage = () => {
                           `/lectures/${classInfo?.name}/${lecture.chapter_id}/${chapterMap[lecture.chapter_id]?.name || "chapter"}`,
                           {
                             state: {
-                              classTitle: isUrdu
-                                ? classInfo?.urdu_name
-                                : classInfo?.name,
-                              gradeType,
+                              classTitle: isUrdu ? classInfo?.urdu_name : classInfo?.name,
+                              gradeType: "Skills",
                               classId,
                               selectedSubjectId: selectedSubject?.id,
 
-                              // ✅ IMPORTANT
                               videoId: lecture.id,
                               chapterId: lecture.chapter_id,
                               chapterName: chapterMap[lecture.chapter_id]?.name,
-                              lectureName: lecture.name,
+
+                              // ✅ ADD THIS (important fallback + stability)
+                              autoPlayVideoId: lecture.id,
                             },
                           }
                         )
