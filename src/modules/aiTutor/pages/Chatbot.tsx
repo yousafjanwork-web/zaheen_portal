@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, FormEvent } from "react";
+import React, { useState, useRef, useEffect, useCallback, FormEvent } from "react";
 import "../../../styles/chatbot_fullpage.css";
 
 interface Message {
   text: string;
   type: "user" | "bot";
+  isHtml?: boolean;
 }
 
 interface ChatHistory {
@@ -12,6 +13,18 @@ interface ChatHistory {
 }
 
 const API_URL = "https://zai.zaheen.com.pk/api/chat";
+
+function formatBotResponse(text: string): string {
+  let html = text
+    .replace(/^## (.+)$/gm, '<h2 class="bot-heading">$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3 class="bot-subheading">$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="bot-bold">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul class="bot-list">${match}</ul>`)
+    .replace(/\n(?!<)/g, '<br/>');
+  return html;
+}
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -26,6 +39,32 @@ const Chatbot: React.FC = () => {
   const isListening = useRef<boolean>(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const historyRef = useRef<ChatHistory[]>([]);
+  const languageRef = useRef<string>("English");
+  const queueRef = useRef<string[]>([]);
+  const isProcessingRef = useRef<boolean>(false);
+
+  // ROOT CAUSE FIX for "AI keeps replying in old language":
+  // The conversation history (historyRef) contained all the previous Urdu messages.
+  // When a new question was sent, that Urdu history was included in the API payload.
+  // The AI model uses conversation history as strong context for which language to use,
+  // so it ignored the new language setting and kept replying in Urdu.
+  // Fix: on language change, wipe history + memory so the AI has a clean slate.
+  const handleLanguageChange = (val: string) => {
+    setLanguage(val);
+    languageRef.current = val;
+
+    // Clear all state that carries the old language's context
+    historyRef.current = [];
+    memoryRef.current = "";
+    queueRef.current = [];
+
+    // Show a divider so the user knows a new session started
+    const notice =
+      val === "Urdu"
+        ? "🔄 زبان اردو میں تبدیل ہو گئی — نئی گفتگو شروع"
+        : "🔄 Language switched to English — new session started";
+    setMessages((prev) => [...prev, { text: notice, type: "bot", isHtml: false }]);
+  };
 
   useEffect(() => {
     chatRef.current?.scrollTo({
@@ -34,80 +73,112 @@ const Chatbot: React.FC = () => {
     });
   }, [messages, loading]);
 
-  const addMessage = (text: string, type: "user" | "bot") => {
-    const newMessage: Message = { text, type };
-    setMessages((prev) => [...prev, newMessage]);
-    
-    if (text !== "") {
-      historyRef.current.push({
-        role: type === "user" ? "user" : "model",
-        text: text,
-      });
-      if (historyRef.current.length > 10) historyRef.current.shift();
-    }
-  };
-
-  const typeMessage = (text: string) => {
+  const typeMessage = useCallback((text: string, onComplete: () => void) => {
     let i = 0;
     let temp = "";
-    setMessages((prev) => [...prev, { text: "", type: "bot" }]);
+    setMessages((prev) => [...prev, { text: "", type: "bot", isHtml: true }]);
 
     const interval = setInterval(() => {
       temp += text.charAt(i);
+      const partialFormatted = formatBotResponse(temp);
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = { text: temp, type: "bot" };
+        updated[updated.length - 1] = { text: partialFormatted, type: "bot", isHtml: true };
         return updated;
       });
       i++;
       if (i >= text.length) {
         clearInterval(interval);
         historyRef.current.push({ role: "model", text: text });
+        if (historyRef.current.length > 10) historyRef.current.shift();
+        onComplete();
       }
     }, 8);
-  };
+  }, []);
 
-  const sendMessage = async (e?: FormEvent) => {
+  const processMessage = useCallback(
+    async (textToSend: string) => {
+      isProcessingRef.current = true;
+      setLoading(true);
+
+      setMessages((prev) => [...prev, { text: textToSend, type: "user" }]);
+      historyRef.current.push({ role: "user", text: textToSend });
+      if (historyRef.current.length > 10) historyRef.current.shift();
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic,
+            // Read from ref (not state) to avoid stale closure — ensures
+            // language is always current even inside memoized callback
+            language: languageRef.current,
+            history: historyRef.current.slice(-10),
+            memory: memoryRef.current,
+          }),
+        });
+
+        const data = await res.json();
+        setLoading(false);
+
+        if (data.reply) {
+          if (data.memory) memoryRef.current = data.memory;
+          typeMessage(data.reply, () => {
+            isProcessingRef.current = false;
+            if (queueRef.current.length > 0) {
+              const next = queueRef.current.shift()!;
+              processMessage(next);
+            } else {
+              setTimeout(() => inputRef.current?.focus(), 50);
+            }
+          });
+        } else {
+          isProcessingRef.current = false;
+          if (queueRef.current.length > 0) {
+            const next = queueRef.current.shift()!;
+            processMessage(next);
+          }
+        }
+      } catch (err) {
+        setLoading(false);
+        setMessages((prev) => [
+          ...prev,
+          { text: "⚠️ Server error. Try again.", type: "bot" },
+        ]);
+        isProcessingRef.current = false;
+        if (queueRef.current.length > 0) {
+          const next = queueRef.current.shift()!;
+          processMessage(next);
+        } else {
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }
+      }
+    },
+    [topic, typeMessage]
+  );
+
+  const sendMessage = (e?: FormEvent) => {
     if (e) e.preventDefault();
     const textToSend = input.trim();
-    if (!textToSend || loading) return;
-
-    setInput(""); 
-    setLoading(true);
-    setMessages((prev) => [...prev, { text: textToSend, type: "user" }]);
-    historyRef.current.push({ role: "user", text: textToSend });
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          language,
-          history: historyRef.current.slice(-10),
-          memory: memoryRef.current,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.reply) typeMessage(data.reply);
-      if (data.memory) memoryRef.current = data.memory;
-    } catch (err) {
-      addMessage("⚠️ Server error. Try again.", "bot");
-    } finally {
-      setLoading(false);
-      setTimeout(() => inputRef.current?.focus(), 50);
+    if (!textToSend) return;
+    setInput("");
+    if (isProcessingRef.current) {
+      queueRef.current.push(textToSend);
+    } else {
+      processMessage(textToSend);
     }
   };
 
   const startListening = () => {
     if (isListening.current) return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.lang = language === "Urdu" ? "ur-PK" : "en-US";
+    recognition.lang = languageRef.current === "Urdu" ? "ur-PK" : "en-US";
     isListening.current = true;
     recognition.start();
 
@@ -123,50 +194,83 @@ const Chatbot: React.FC = () => {
   };
 
   const isUrdu = (text: string) => /[\u0600-\u06FF]/.test(text);
+  const isUrduLang = language === "Urdu";
 
   return (
-    <div className="chatbot-container">
+    <div
+      className="chatbot-container"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100dvh",
+        overflow: "hidden",
+      }}
+    >
       <div className="chatbot-header">📘 Zaheen AI Tutor</div>
-      
+
       <div className="controls">
         <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-          <option>Maths</option><option>English</option><option>Urdu</option>
-          <option>Chemistry</option><option>Physics</option><option>Science</option>
-          <option>Computer</option>
+          <option value="Maths">Maths</option>
+          <option value="English">English</option>
+          <option value="Urdu">Urdu</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Physics">Physics</option>
+          <option value="Science">Science</option>
+          <option value="Computer">Computer</option>
         </select>
-        <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-          <option value="English">English</option><option value="Urdu">Urdu</option>
+        <select value={language} onChange={(e) => handleLanguageChange(e.target.value)}>
+          <option value="English">English</option>
+          <option value="Urdu">Urdu</option>
         </select>
       </div>
 
-      <div className="chat-area" ref={chatRef}>
+      <div
+        className="chat-area"
+        ref={chatRef}
+        style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}
+      >
         {messages.map((msg, i) => (
-          <div key={i} className={`msg ${msg.type} ${isUrdu(msg.text) ? "urdu" : ""}`}>
-            <div className="bubble">{msg.text}</div>
+          <div
+            key={i}
+            className={`msg ${msg.type} ${isUrdu(msg.text) ? "urdu" : ""}`}
+          >
+            {msg.isHtml && msg.type === "bot" ? (
+              <div
+                className="bubble bot-formatted"
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+              />
+            ) : (
+              <div className="bubble">{msg.text}</div>
+            )}
           </div>
         ))}
-        
-        {/* Yahan fix kiya hai: Jab Urdu select ho to loading bhi Urdu style mein aye */}
+
         {loading && (
-          <div className={`msg bot ${language === "Urdu" ? "urdu" : ""}`}>
+          <div className={`msg bot ${isUrduLang ? "urdu" : ""}`}>
             <div className="bubble thinking">
-              {language === "Urdu" ? "🤖 AI soch raha hai..." : "🤖 AI is thinking..."}
+              {isUrduLang ? "🤖 AI soch raha hai..." : "🤖 AI is thinking..."}
             </div>
           </div>
         )}
       </div>
 
-      <form className="input-box" onSubmit={sendMessage}>
+      {queueRef.current.length > 0 && (
+        <div className="queue-notice">
+          {queueRef.current.length} message(s) waiting...
+        </div>
+      )}
+
+      <form className="input-box" onSubmit={sendMessage} style={{ flexShrink: 0 }}>
         <input
           ref={inputRef}
           value={input}
-          placeholder={language === "Urdu" ? "اپنا سوال پوچھیں..." : "Ask your question..."}
+          placeholder={isUrduLang ? "اپنا سوال پوچھیں..." : "Ask your question..."}
           onChange={(e) => setInput(e.target.value)}
           autoFocus
-          className={language === "Urdu" ? "urdu-input" : ""}
+          className={isUrduLang ? "urdu-input" : ""}
         />
         <button type="button" onClick={startListening}>🎤</button>
-        <button type="submit" disabled={loading}>Send</button>
+        <button type="submit">Send</button>
       </form>
     </div>
   );
