@@ -88,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   return (
     <>
       <header
-        className={`hidden lg:block sticky top-0 z-50 transition ${isScrolled
+        className={`hidden lg:block sticky top-0 z-50 transition dark:bg-black dark:text-white ${isScrolled
             ? "bg-white/90 backdrop-blur-md border-b border-slate-200"
             : "bg-white"
           }`}
@@ -252,12 +252,12 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
             {/* THEME */}
 
-            <button
+            {/* <button
               onClick={toggleTheme}
               className="p-2 rounded-full bg-slate-100"
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+            </button> */}
 
             {/* AUTH */}
 

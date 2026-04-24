@@ -89,7 +89,7 @@ const { msisdn, login, isLoggedIn } = useAuth();
                 <div className="flex items-baseline gap-2 mb-8">
 
                   <span className="text-5xl font-extrabold text-slate-900">
-                    Rs 5
+                    Rs 5+Tax
                   </span>
 
                   <span className="text-slate-500">

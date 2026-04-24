@@ -173,9 +173,9 @@ const SubscribePage = () => {
   };
 
   const packages = [
-    { id: "205", name: "Daily", price: "Rs 5" },
-    { id: "206", name: "Weekly", price: "Rs 15" },
-    { id: "207", name: "Monthly", price: "Rs 50" }
+    { id: "205", name: "Daily", price: "Rs 5+Tax" },
+    { id: "206", name: "Weekly", price: "Rs 15+Tax" },
+    { id: "207", name: "Monthly", price: "Rs 50+Tax" }
   ];
 
   return (

@@ -8,9 +8,9 @@ const CTASection = () => {
   
   const { handleSubscribe } = useSubscribe();
   const packages = [
-    { id: "205", label: "Daily Rs 5" },
-    { id: "206", label: "Weekly Rs 15" },
-    { id: "207", label: "Monthly Rs 50" }
+    { id: "205", label: "Daily Rs 5+Tax" },
+    { id: "206", label: "Weekly Rs 15+Tax" },
+    { id: "207", label: "Monthly Rs 50+Tax" }
   ];
 
  

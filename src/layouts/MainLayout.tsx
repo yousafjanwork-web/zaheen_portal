@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../modules/shared/components/Header/Header";
 import MobileHeader from "@/modules/shared/components/MobileHeader";
 import Footer from "../modules/shared/components/Footer/Footer";
@@ -8,27 +8,33 @@ import { Outlet } from "react-router-dom";
 const MainLayout = () => {
   const [isDark, setIsDark] = useState(false);
 
-  const toggleTheme = () => setIsDark(!isDark);
+  const toggleTheme = () => setIsDark(prev => !prev);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+
+    if (isDark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [isDark]);
 
   return (
     <>
-      {/* Desktop header */}
       <div className="hidden lg:block">
         <Header isDark={isDark} toggleTheme={toggleTheme} />
       </div>
 
-      {/* Mobile header */}
-      <div className="lg:hidden">
+      <div className="lg:hidden dark:bg-black dark:text-white">
         <MobileMarketingBanner />
         <MobileHeader />
       </div>
 
-      {/* ✅ Page Content */}
       <main>
         <Outlet />
       </main>
 
-      {/* ✅ Footer stays at bottom */}
       <Footer />
     </>
   );
