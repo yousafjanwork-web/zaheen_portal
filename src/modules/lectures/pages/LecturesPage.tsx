@@ -2,14 +2,17 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { PlayCircle } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
+import { useSearchParams } from "react-router-dom";
 
 const LecturesPage = () => {
   const { chapterId, chapterName } = useParams();
   const location = useLocation();
 
+  const [searchParams] = useSearchParams();
+  const queryVideoId = searchParams.get("videoId");
+
   const classTitle = location.state?.classTitle || "Course";
   const gradeType = location.state?.gradeType;
-
 
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
@@ -86,11 +89,15 @@ const LecturesPage = () => {
 
         setVideos(data);
 
-        const initialVideoId = location.state?.autoPlayVideoId || location.state?.videoId;
+        const initialVideoId =
+          queryVideoId ||
+          location.state?.autoPlayVideoId ||
+          location.state?.videoId;
+
 
         const initialVideo =
-          data.find(v => v.id === initialVideoId) || data[0];
-
+          data.find(v => String(v.id) === String(initialVideoId))
+          
         if (initialVideo) {
           setSelectedVideo(initialVideo);
           setVideoUrl(`https://cdn.zaheen.com.pk/videos/${initialVideo.path}`);
