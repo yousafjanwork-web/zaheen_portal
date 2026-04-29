@@ -3,9 +3,8 @@ import { Star, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
 
-// Swiper Components aur Styles
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay, Mousewheel, Pagination } from "swiper/modules"; 
+import { Navigation, Autoplay, Mousewheel, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -47,8 +46,8 @@ const ProfessionalCourses = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 md:px-10">
-        
-        {/* HIGHLIGHTED NAVIGATION ARROWS */}
+
+        {/* NAVIGATION ARROWS */}
         <button className="prev-btn absolute left-0 md:-left-0 top-1/2 -translate-y-1/2 z-40 
                            bg-indigo-600 text-white shadow-xl p-3 md:p-2 rounded-full 
                            hover:bg-indigo-700 transition-all duration-300 active:scale-90
@@ -68,10 +67,10 @@ const ProfessionalCourses = () => {
           modules={[Navigation, Autoplay, Mousewheel, Pagination]}
           spaceBetween={25}
           slidesPerView={1.2}
-          slidesPerGroup={1} 
+          slidesPerGroup={1}
           loop={true}
           grabCursor={true}
-          speed={800} 
+          speed={800}
           mousewheel={{
             forceToAxis: true,
             sensitivity: 1,
@@ -86,10 +85,11 @@ const ProfessionalCourses = () => {
             640: { slidesPerView: 2.2 },
             1024: { slidesPerView: 3 },
           }}
+          style={{ height: '100%' }}
           className="pb-12 !px-2"
         >
           {courses.map((course, i) => (
-            <SwiperSlide key={i} className="py-5">
+            <SwiperSlide key={i} className="py-5 !h-auto">
               <div
                 onClick={() => navigate(`/skills/${course.class_id}`)}
                 className="bg-white rounded-2xl overflow-hidden cursor-pointer 
@@ -98,24 +98,21 @@ const ProfessionalCourses = () => {
                            hover:-translate-y-3 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)]"
               >
                 {/* IMAGE */}
-                <div className="relative h-48 md:h-56">
+                <div className="relative h-48 md:h-56 flex-shrink-0">
                   <img
                     src={course.thumbnailUrl}
                     alt={course.name}
                     className="w-full h-full object-cover pointer-events-none"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  {/* <div className="absolute top-4 left-4 bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-md">
-                    Professional
-                  </div> */}
                 </div>
 
                 {/* CONTENT */}
-                <div className="p-5 md:p-6 flex-grow">
-                  <h3 className="font-bold text-slate-900 line-clamp-2 mb-4 text-lg">
+                <div className="p-5 md:p-6 flex flex-col flex-grow justify-between">
+                  <h3 className="font-bold text-slate-900 line-clamp-2 text-lg">
                     {lang === "ur" ? course.urdu_name : course.name}
                   </h3>
-                  <div className="flex justify-between items-center text-sm text-slate-500 mt-auto border-t border-slate-50 pt-4">
+                  <div className="flex justify-between items-center text-sm text-slate-500 border-t border-slate-100 pt-4 mt-4">
                     <div className="flex items-center text-amber-500 font-bold">
                       <Star size={16} fill="currentColor" className="mr-1" />
                       5.0
