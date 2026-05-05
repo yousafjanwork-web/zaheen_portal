@@ -92,6 +92,27 @@
       "description": "Zaheen helps you grow from a student into a digital architect.",
       "button": "Secure Your Future",
       "link": "/skills/300"
+    },
+    "slide5": {
+      "title": "Kindergarten",
+      "highlight": "Give Their Dreams a Colorful Start 🎨",
+      "description": "Every child is born brilliant. We just provide the canvas. Interactive learning designed for joyful hearts.",
+      "button": "Start Learning for Free",
+      "link": "/grade-view/kg"
+    },
+    "slide6": {
+      "title": "Grade 1 to 5",
+      "highlight": "Your Child’s Success, Our Shared Promise 🤝",
+      "description": "We know you want the best for them. Zaheen provides the expert support your child needs, giving you the peace of mind you deserve.",
+      "button": "Join Our Family",
+      "link": "/grade-view/1-5"
+    },
+    "slide7": {
+      "title": "Web Development Course",
+      "highlight": "From Graduate to Professional ✨",
+      "description": "You’ve got the degree; now get the craft. We bridge the gap between `I’ve graduated` and `I’m hired` with industry-ready Web & App mastery.",
+      "button": "Launch Your Career",
+      "link": "/skills/300"
     }
   },
   "browseGrade": {

@@ -1,18 +1,20 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useParams, useLocation, Link, useSearchParams } from "react-router-dom";
 import { PlayCircle } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useSearchParams } from "react-router-dom";
 
 const LecturesPage = () => {
-  const { chapterId, chapterName } = useParams();
+  const { chapterId, chapterName, className } = useParams();
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
   const queryVideoId = searchParams.get("videoId");
 
-  const classTitle = location.state?.classTitle || "Course";
+  const classTitle = location.state?.classTitle;
   const gradeType = location.state?.gradeType;
+  const classId = location.state?.classId;
+
+  const hasCourse = !!classId && !!classTitle;
 
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
@@ -86,7 +88,6 @@ const LecturesPage = () => {
         );
 
         const data = await res.json();
-
         setVideos(data);
 
         const initialVideoId =
@@ -94,14 +95,18 @@ const LecturesPage = () => {
           location.state?.autoPlayVideoId ||
           location.state?.videoId;
 
+        let initialVideo =
+          data.find(v => String(v.id) === String(initialVideoId));
 
-        const initialVideo =
-          data.find(v => String(v.id) === String(initialVideoId))
-          
+        if (!initialVideo && data.length > 0) {
+          initialVideo = data[0];
+        }
+
         if (initialVideo) {
           setSelectedVideo(initialVideo);
           setVideoUrl(`https://cdn.zaheen.com.pk/videos/${initialVideo.path}`);
         }
+
       } catch (err) {
         console.error(err);
       }
@@ -109,11 +114,7 @@ const LecturesPage = () => {
       setLoadingVideos(false);
     };
 
-    console.log(location.state.gradeType, "grade ytpe")
-
     fetchVideos();
-
-
   }, [chapterId]);
 
   /* ---------------- CHANGE VIDEO ---------------- */
@@ -157,19 +158,22 @@ const LecturesPage = () => {
         {/* BREADCRUMB */}
         <div className="mb-6 text-sm text-slate-500 flex items-center gap-2 flex-wrap">
           <Link to="/">{isUrdu ? "ہوم" : "Home"}</Link>
-          <span>/</span>
 
-          {
-            gradeType === "Skills" ?
-              <Link to={`/skills/${location.state?.classId}`}>
-                {classTitle} - Skills
-              </Link>
-              :
-              <Link to={`/class/${location.state?.classId}`}>
-                {classTitle} - Lectures
-              </Link>
-          }
+          {hasCourse && (
+            <>
+              <span>/</span>
 
+              {gradeType === "Skills" ? (
+                <Link to={`/skills/${classId}`}>
+                  {classTitle} - Skills
+                </Link>
+              ) : (
+                <Link to={`/class/${classId}`}>
+                  {classTitle} - Lectures
+                </Link>
+              )}
+            </>
+          )}
 
           <span>/</span>
           <span className="text-slate-700 font-medium">{chapterName}</span>
@@ -178,7 +182,9 @@ const LecturesPage = () => {
         {/* HEADER */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900">
-            {classTitle} | {chapterName}
+            {hasCourse
+              ? `${classTitle} | ${chapterName}`
+              : `${className} | ${chapterName}`}
           </h1>
         </div>
 
@@ -186,7 +192,6 @@ const LecturesPage = () => {
 
           {/* VIDEO PLAYER */}
           <div className="flex-1">
-
             <div className="bg-black rounded-2xl overflow-hidden shadow-lg">
               <div className="aspect-video">
 
@@ -206,11 +211,6 @@ const LecturesPage = () => {
                     onTimeUpdate={handleTimeUpdate}
                     className="w-full h-full"
                     src={videoUrl}
-                    onError={(e) => console.log("VIDEO ERROR", e)}
-                    onLoadedMetadata={(e) => {
-                      const v = e.target;
-                      console.log("Resolution:", v.videoWidth, v.videoHeight);
-                    }}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-white">
@@ -222,12 +222,7 @@ const LecturesPage = () => {
             </div>
 
             {/* VIDEO INFO */}
-            {loadingVideos ? (
-              <div className="mt-4 bg-white rounded-2xl p-5 border animate-pulse">
-                <div className="h-5 w-40 bg-slate-200 rounded mb-2"></div>
-                <div className="h-4 w-60 bg-slate-200 rounded"></div>
-              </div>
-            ) : selectedVideo ? (
+            {selectedVideo && (
               <div className="mt-4 bg-white rounded-2xl p-5 border">
 
                 <h2 className="text-xl font-bold">
@@ -236,7 +231,7 @@ const LecturesPage = () => {
                     : selectedVideo.name}
                 </h2>
 
-                {/* ✅ PIPE FIX HERE */}
+                {/* ✅ RESTORED DESCRIPTION LOGIC */}
                 {(() => {
                   const fullText = isUrdu
                     ? selectedVideo.urdu_desc || selectedVideo.desc
@@ -254,12 +249,10 @@ const LecturesPage = () => {
 
                   return (
                     <>
-                      {/* ✅ FIRST → normal text */}
                       <p className="text-base text-slate-600 mt-2">
                         <b>{firstPart}</b>
                       </p>
 
-                      {/* ✅ Remaining */}
                       {rest.map((line, i) => {
                         const isNormalLine = line.startsWith("-");
 
@@ -289,71 +282,34 @@ const LecturesPage = () => {
                 </div>
 
               </div>
-            ) : (
-              <div className="mt-4 bg-white rounded-2xl p-5 border text-center">
-                {isUrdu ? "جلد آرہا ہے" : "Coming Soon"}
-              </div>
             )}
-
           </div>
 
           {/* PLAYLIST */}
           <aside className="w-full lg:w-80 bg-white rounded-2xl border overflow-hidden">
-
             <div className="p-4 border-b font-semibold">
               {isUrdu ? "لیکچرز" : "Lectures"}{" "}
               {!loadingVideos && `(${videos.length})`}
             </div>
 
             <div className="max-h-[70vh] overflow-y-auto">
-
-              {loadingVideos ? (
-                [...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-4 py-3 border-b animate-pulse"
-                  >
-                    <div className="w-4 h-4 bg-slate-200 rounded" />
-                    <div className="h-3 w-32 bg-slate-200 rounded" />
-                  </div>
-                ))
-              ) : videos.length > 0 ? (
-                videos.map((video, index) => (
-                  <div
-                    key={video.id}
-                    onClick={() => changeVideo(video)}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
-                    ${selectedVideo?.id === video.id ? "bg-indigo-50" : ""}`}
-                  >
-                    <PlayCircle
-                      size={18}
-                      className={
-                        selectedVideo?.id === video.id
-                          ? "text-indigo-600"
-                          : "text-slate-400"
-                      }
-                    />
-
-                    <span className="text-sm font-medium">
-                      {index + 1}.{" "}
-                      {isUrdu
-                        ? video.urdu_name || video.name
-                        : video.name}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 text-center text-slate-500">
-                  {isUrdu ? "لیکچرز دستیاب نہیں" : "No lectures available"}
+              {videos.map((video, index) => (
+                <div
+                  key={video.id}
+                  onClick={() => changeVideo(video)}
+                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer border-b hover:bg-slate-50
+                  ${selectedVideo?.id === video.id ? "bg-indigo-50" : ""}`}
+                >
+                  <PlayCircle size={18} />
+                  <span className="text-sm font-medium">
+                    {index + 1}. {video.name}
+                  </span>
                 </div>
-              )}
-
+              ))}
             </div>
-
           </aside>
 
         </div>
-
       </div>
     </section>
   );

@@ -4,16 +4,24 @@ import { motion, AnimatePresence } from "motion/react";
 import { t } from "@/modules/shared/i18n";
 import { useNavigate } from "react-router-dom";
 
-import tradeBanner from "@/assets/images/trading-banner.jpeg";
-import kgBanner from "@/assets/images/kg-kids-1.jpeg";
-import onetofiveBanner from "@/assets/images/class-1-5.jpeg";
-import webBanner from "@/assets/images/web-development.jpeg";
+import tradeBanner from "@/assets/images/tradin-banner.png";
+import kgBanner from "@/assets/images/kg-banner.png";
+import onetofiveBanner from "@/assets/images/grade-1-5.png";
+import webBanner from "@/assets/images/web-banner.png";
+import kgbanner2 from "@/assets/images/kg-banner-2.png";
+import bannerontofive2 from "@/assets/images/grade-1-5-banner-2.png";
+import webBanner2 from "@/assets/images/web-banner-2.png";
+
 
 const slides = [
   { id: 1, image: kgBanner, accentColor: "text-primary", bgColor: "bg-primary" },
   { id: 2, image: onetofiveBanner, accentColor: "text-secondary", bgColor: "bg-secondary" },
   { id: 3, image: tradeBanner, accentColor: "text-secondary", bgColor: "bg-secondary" },
-  { id: 4, image: webBanner, accentColor: "text-secondary", bgColor: "bg-secondary" }
+  { id: 4, image: webBanner, accentColor: "text-secondary", bgColor: "bg-secondary" },
+  { id: 5, image: kgbanner2, accentColor: "text-primary", bgColor: "bg-primary" },
+  { id: 6, image: bannerontofive2, accentColor: "text-secondary", bgColor: "bg-secondary" },
+  { id: 7, image: webBanner2, accentColor: "text-secondary", bgColor: "bg-secondary" },
+
 ];
 
 const HeroSlider = () => {
@@ -74,7 +82,7 @@ const HeroSlider = () => {
                 transition={{ delay: 0.2 }}
               >
                 <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
-                  {t(`${slideKey}.title`)}{" "}
+                  {t(`${slideKey}.title`)}{" "} <br></br>
                   <span className={slides[current].accentColor}>
                     {t(`${slideKey}.highlight`)}
                   </span>
@@ -101,7 +109,7 @@ const HeroSlider = () => {
               >
                 <img
                   src={slides[current].image}
-                  className="rounded-3xl shadow-2xl border border-white/20 w-full"
+                  className="rounded-3xl w-full"
                 />
               </motion.div>
 
@@ -139,9 +147,8 @@ const HeroSlider = () => {
               setCurrent(i);
               resetAutoSlide();
             }}
-            className={`h-3 rounded-full transition-all duration-300 ${
-              current === i ? "bg-primary w-8" : "bg-white/40 w-3"
-            }`}
+            className={`h-3 rounded-full transition-all duration-300 ${current === i ? "bg-primary w-8" : "bg-white/40 w-3"
+              }`}
           />
         ))}
       </div>
