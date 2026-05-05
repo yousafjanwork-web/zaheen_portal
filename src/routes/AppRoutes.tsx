@@ -25,6 +25,8 @@ import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
 import ProtectedRoute from "./ProtectedRoute";
 import GamesPage from "@/modules/games/pages/GamesPage";
 import PlayGamePage from "@/modules/games/pages/PlayGamePage";
+import SubjectChaptersView from "@/modules/courses/pages/SubjectLecturesView";
+import SubjectLecturesView from "@/modules/courses/pages/SubjectLecturesView";
 
 const AppRoutes = () => {
   return (
@@ -39,13 +41,14 @@ const AppRoutes = () => {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/grade-view/:type" element={<GradesView />} />
-
-          {/* <Route element={<ProtectedRoute />}>
+{/* 
+          <Route element={<ProtectedRoute />}>
             <Route path="/class/:classId" element={<ClassSubjectsView />} />
 
           </Route> */}
 
           <Route path="/class/:classId" element={<ClassSubjectsView />} />
+          <Route path="/class/:classId/subject/:subjectId" element={<SubjectLecturesView />} />
 
 
           <Route path="/assessment/" element={<Assessment />} />
