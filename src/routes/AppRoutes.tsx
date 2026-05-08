@@ -25,8 +25,8 @@ import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
 import ProtectedRoute from "./ProtectedRoute";
 import GamesPage from "@/modules/games/pages/GamesPage";
 import PlayGamePage from "@/modules/games/pages/PlayGamePage";
-import SubjectChaptersView from "@/modules/courses/pages/SubjectLecturesView";
 import SubjectLecturesView from "@/modules/courses/pages/SubjectLecturesView";
+import PastPapersPage from "@/modules/courses/pages/PastPapersPage";
 
 const AppRoutes = () => {
   return (
@@ -57,6 +57,7 @@ const AppRoutes = () => {
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}
           />
+          <Route path="/class/:classId/subject/:subjectId/past-papers" element={<PastPapersPage />} />
           <Route path="/skills/:classId" element={<SkillsChaptersPage />} />
           <Route path="/practice" element={<PracticeCornerPage />} />
           <Route path="/worksheets/:subjectId" element={<WorksheetsPage />} />

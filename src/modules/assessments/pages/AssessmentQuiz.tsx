@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 /* ---------------- TYPES ---------------- */
+
 type Option = { id: number; option_text: string };
 type Question = {
   id: number;
@@ -76,7 +78,7 @@ const S: any = {
     display: "flex", alignItems: "center", gap: 9,
     padding: "9px 11px", borderRadius: 8, cursor: "pointer",
     color: active ? "#2563eb" : "#1e293b",
-    fontSize: 13, fontWeight: 500,
+    fontSize: 15, fontWeight: 500,
     background: active ? "rgba(37,99,235,0.08)" : "transparent",
     border: "none", width: "100%", textAlign: "left" as const,
     marginBottom: 2, transition: "all 0.15s", whiteSpace: "nowrap" as const,
@@ -356,14 +358,11 @@ const Icon = {
 };
 
 const NAV = [
-  { label: "Home", icon: <Icon.Home /> },
-  { label: "Video Lectures", icon: <Icon.Video /> },
-  { label: "Assessments", icon: <Icon.Check />, active: true },
-  null,
-  { label: "Past Papers", icon: <Icon.Doc /> },
-  null,
-  { label: "Settings", icon: <Icon.Settings /> },
-  { label: "Support", icon: <Icon.Help /> },
+  { label: "Home", icon: <Icon.Home />, path: "/" },
+  { label: "Video Lectures", icon: <Icon.Video />, path: "//class/10/subject/27" },
+  { label: "Assessments", icon: <Icon.Check />, path: "/assessment/1" },
+  { label: "Past Papers", icon: <Icon.Doc />, path: "/class/10/subject/27/past-papers" },
+ 
 ];
 
 /* ---- MOBILE TOP WIDGETS ---- */
@@ -822,12 +821,14 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
 
 /* ---- SIDEBAR COMPONENT ---- */
 function SidebarComp({ open, isMobile, onClose }: { open: boolean; isMobile: boolean; onClose: () => void }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+  const navigate = useNavigate();
   return (
     <div style={S.sidebar(open, isMobile)}>
       <div style={S.sidebarBrand}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={S.brandIcon}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#1e293b">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#1e293b">
               <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
             </svg>
           </div>
@@ -843,16 +844,36 @@ function SidebarComp({ open, isMobile, onClose }: { open: boolean; isMobile: boo
         </div>
       </div>
       <div style={S.navSection}>
-        {NAV.map((item, i) =>
-          item === null
-            ? <div key={i} style={S.navDivider} />
-            : (
-              <button key={i} style={S.navItem(!!item.active)} onClick={onClose}>
-                <span style={{ opacity: 0.8, display: "flex" }}>{item.icon}</span>
-                {item.label}
-              </button>
-            )
-        )}
+       {NAV.map((item, i) =>
+  item === null ? (
+    <div key={i} style={S.navDivider} />
+  ) : (
+   <button
+  key={i}
+  onMouseEnter={() => setHovered(i)}
+  onMouseLeave={() => setHovered(null)}
+  style={{
+    ...S.navItem(false),
+    background:
+      hovered === i
+        ? "rgba(37,99,235,0.08)"
+        : S.navItem(false).background,
+    color: hovered === i ? "#2563eb" : S.navItem(false).color,
+    transform: hovered === i ? "translateX(3px)" : "none",
+    transition: "all 0.2s ease",
+  }}
+  onClick={() => {
+    navigate(item.path);
+    onClose?.();
+  }}
+>
+  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    {item.icon}
+    {item.label}
+  </span>
+</button>
+  )
+)}
       </div>
     </div>
   );
