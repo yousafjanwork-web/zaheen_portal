@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Star, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Users, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
 
@@ -37,12 +37,29 @@ const ProfessionalCourses = () => {
     <section className="py-16 md:py-24 bg-slate-50 overflow-hidden">
       {/* HEADER */}
       <div className="max-w-7xl mx-auto px-6 mb-10">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-          {t("professionalCourses.title")}
-        </h2>
-        <p className="text-slate-500 mt-2">
-          {t("professionalCourses.subtitle")}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              {t("professionalCourses.title")}
+            </h2>
+            <p className="text-slate-500 mt-2">
+              {t("professionalCourses.subtitle")}
+            </p>
+          </div>
+
+          {/* View All Courses link */}
+          <button
+            onClick={() => navigate("/all-professional-courses")}
+            className="flex items-center gap-2 text-indigo-600 font-semibold text-sm md:text-base 
+                       hover:text-indigo-800 transition-colors group shrink-0 ml-4"
+          >
+            {lang === "ur" ? "تمام کورسز دیکھیں" : "View All Courses"}
+            <ArrowRight
+              size={18}
+              className="group-hover:translate-x-1 transition-transform"
+            />
+          </button>
+        </div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 md:px-10">
