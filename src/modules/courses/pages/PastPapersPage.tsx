@@ -34,15 +34,25 @@ import physicsBanner from "../../../assets/images/physics.png";
 
 /* ─── API ──────────────────────────────────────────────── */
 const BASE = "https://api.zaheen.com.pk/api";
-const CDN  = "https://cdn.zaheen.com.pk";
+const VIDEO_CDN = "https://cdn.zaheen.com.pk/videos";
 
 /* ─── Build a safe media URL ───────────────────────────── */
 function buildMediaUrl(raw: string): string {
+
   if (!raw) return "";
-  // Already absolute
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  // Relative — join with CDN, avoid double-slash
-  return `${CDN}/${raw.replace(/^\/+/, "")}`;
+
+  // already full URL
+  if (
+    raw.startsWith("http://") ||
+    raw.startsWith("https://")
+  ) {
+    return raw;
+  }
+
+  // remove starting slashes
+  const cleanPath = raw.replace(/^\/+/, "");
+
+  return `${VIDEO_CDN}/${cleanPath}`;
 }
 
 /* ─── Walk an unknown object for the first video URL ───── */
@@ -68,59 +78,64 @@ function extractVideoUrl(obj: any, depth = 0): string | null {
 
 /* ═══ Raw + Normalised types ════════════════════════════ */
 interface PastPaperRaw {
-  id          : number;
-  year        : number | string;
-  file_path  ?: string;
-  title      ?: string;
-  name       ?: string;
-  paper_type ?: string;
-  type       ?: string;
+  id: number;
+  year: number | string;
+  file_path?: string;
+  title?: string;
+  name?: string;
+  paper_type?: string;
+  type?: string;
   description?: string;
   subject_name?: string;
   [key: string]: any;
 }
 
 interface Paper {
-  id          : number;
-  year        : string;
-  title       : string;
-  subjectName : string;
-  paperType   : string;
-  description : string;
-  pdfUrl      : string | null;
+  id: number;
+  year: string;
+  title: string;
+  subjectName: string;
+  paperType: string;
+  description: string;
+  pdfUrl: string | null;
 }
 
 function normalisePaper(raw: PastPaperRaw, fallbackSubject: string): Paper {
-  const year        = String(raw.year ?? "");
+  const year = String(raw.year ?? "");
   const subjectName = raw.subject_name || fallbackSubject;
-  const paperType   = raw.paper_type || raw.type || "Past Paper";
-  const title       = raw.title || raw.name || `${year} ${subjectName} ${paperType}`;
+  const paperType = raw.paper_type || raw.type || "Past Paper";
+  const title = raw.title || raw.name || `${year} ${subjectName} ${paperType}`;
   const description = raw.description || "";
-  const pdfUrl      = raw.file_path ? buildMediaUrl(raw.file_path) : null;
+  const pdfUrl = raw.file_path
+    ? `${VIDEO_CDN}/${raw.file_path.replace(/^\/+/, "")}`
+    : null;
+
+  console.log(pdfUrl);
+
   return { id: raw.id, year, title, subjectName, paperType, description, pdfUrl };
 }
 
 /* ═══ Subject helpers ═══════════════════════════════════ */
 const getSubjectMeta = (name: string) => {
   const n = (name || "").toLowerCase();
-  if (n.includes("physic"))   return { icon: Atom,         color: "text-[#1E3A8A]" };
-  if (n.includes("math"))     return { icon: Sigma,        color: "text-[#1E3A8A]" };
-  if (n.includes("chem"))     return { icon: FlaskConical, color: "text-[#1E3A8A]" };
-  if (n.includes("bio"))      return { icon: Leaf,         color: "text-[#1E3A8A]" };
-  if (n.includes("english"))  return { icon: BookOpen,     color: "text-[#1E3A8A]" };
-  if (n.includes("urdu"))     return { icon: Languages,    color: "text-[#1E3A8A]" };
-  if (n.includes("islamic"))  return { icon: Landmark,     color: "text-[#1E3A8A]" };
-  if (n.includes("pakistan")) return { icon: Globe,        color: "text-[#1E3A8A]" };
+  if (n.includes("physic")) return { icon: Atom, color: "text-[#1E3A8A]" };
+  if (n.includes("math")) return { icon: Sigma, color: "text-[#1E3A8A]" };
+  if (n.includes("chem")) return { icon: FlaskConical, color: "text-[#1E3A8A]" };
+  if (n.includes("bio")) return { icon: Leaf, color: "text-[#1E3A8A]" };
+  if (n.includes("english")) return { icon: BookOpen, color: "text-[#1E3A8A]" };
+  if (n.includes("urdu")) return { icon: Languages, color: "text-[#1E3A8A]" };
+  if (n.includes("islamic")) return { icon: Landmark, color: "text-[#1E3A8A]" };
+  if (n.includes("pakistan")) return { icon: Globe, color: "text-[#1E3A8A]" };
   if (n.includes("computer") || n.includes("cs"))
-                               return { icon: Cpu,         color: "text-[#1E3A8A]" };
-  return                             { icon: Calculator,   color: "text-[#1E3A8A]" };
+    return { icon: Cpu, color: "text-[#1E3A8A]" };
+  return { icon: Calculator, color: "text-[#1E3A8A]" };
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  "Annual Exam":   "bg-blue-100   text-blue-800",
-  "Midterm":       "bg-amber-100  text-amber-800",
-  "Final Exam":    "bg-orange-100 text-orange-800",
-  "Mock Exam":     "bg-slate-100  text-slate-600",
+  "Annual Exam": "bg-blue-100   text-blue-800",
+  "Midterm": "bg-amber-100  text-amber-800",
+  "Final Exam": "bg-orange-100 text-orange-800",
+  "Mock Exam": "bg-slate-100  text-slate-600",
   "Supplementary": "bg-purple-100 text-purple-800",
 };
 const typeColor = (t: string) => TYPE_COLOR[t] ?? "bg-slate-100 text-slate-600";
@@ -131,77 +146,77 @@ const typeColor = (t: string) => TYPE_COLOR[t] ?? "bg-slate-100 text-slate-600";
    "Related" papers shown in a right sidebar
 ═══════════════════════════════════════════════════════ */
 interface VideoPlayerPageProps {
-  paper        : Paper;
-  allPapers    : Paper[];
-  onClose      : () => void;
+  paper: Paper;
+  allPapers: Paper[];
+  onClose: () => void;
   onSelectPaper: (p: Paper) => void;
-  onDownload   : (p: Paper) => void;
+  onDownload: (p: Paper) => void;
 }
 
 const VideoPlayerPage = ({
   paper, allPapers, onClose, onSelectPaper, onDownload,
 }: VideoPlayerPageProps) => {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   /* ── Fetch video URL ── */
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setVideoSrc(null);
+  // useEffect(() => {
+  //   let cancelled = false;
+  //   setLoading(true);
+  //   setError(null);
+  //   setVideoSrc(null);
 
-    (async () => {
-      try {
-        const res = await fetch(`${BASE}/playwsvideo/${paper.id}`, {
-          headers: { Accept: "application/json" },
-        });
+  //   (async () => {
+  //     try {
+  //       const res = await fetch(`${paper.pdfUrl}`, {
+  //         headers: { Accept: "application/json" },
+  //       });
 
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status} ${res.statusText}`);
-        }
+  //       if (!res.ok) {
+  //         throw new Error(`Server returned ${res.status} ${res.statusText}`);
+  //       }
 
-        let data: any;
-        const ct = res.headers.get("content-type") || "";
-        if (ct.includes("application/json")) {
-          data = await res.json();
-        } else {
-          // Some APIs return plain text URL
-          const text = await res.text();
-          if (text.startsWith("http") || text.includes("/")) {
-            data = { url: text.trim() };
-          } else {
-            data = JSON.parse(text);
-          }
-        }
+  //       let data: any;
+  //       const ct = res.headers.get("content-type") || "";
+  //       if (ct.includes("application/json")) {
+  //         data = await res.json();
+  //       } else {
+  //         // Some APIs return plain text URL
+  //         const text = await res.text();
+  //         if (text.startsWith("http") || text.includes("/")) {
+  //           data = { url: text.trim() };
+  //         } else {
+  //           data = JSON.parse(text);
+  //         }
+  //       }
 
-        if (cancelled) return;
+  //       if (cancelled) return;
 
-        // Walk the response object for any video-like URL
-        const raw = extractVideoUrl(data);
+  //       // Walk the response object for any video-like URL
+  //       const raw = extractVideoUrl(data);
 
-        if (raw) {
-          const src = buildMediaUrl(raw);
-          setVideoSrc(src);
-        } else {
-          // Log full response so developer can see what the API actually returns
-          console.error("[PastPapers] Could not find video URL in response:", JSON.stringify(data, null, 2));
-          setError("Video URL not found in server response. Check console for details.");
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          console.error("[PastPapers] Video fetch error:", err);
-          setError(err?.message || "Failed to load video.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+  //       if (raw) {
+  //         const src = buildMediaUrl(raw);
+  //         setVideoSrc(src);
+  //       } else {
+  //         // Log full response so developer can see what the API actually returns
+  //         console.error("[PastPapers] Could not find video URL in response:", JSON.stringify(data, null, 2));
+  //         setError("Video URL not found in server response. Check console for details.");
+  //       }
+  //     } catch (err: any) {
+  //       if (!cancelled) {
+  //         console.error("[PastPapers] Video fetch error:", err);
+  //         setError(err?.message || "Failed to load video.");
+  //       }
+  //     } finally {
+  //       if (!cancelled) setLoading(false);
+  //     }
+  //   })();
 
-    return () => { cancelled = true; };
-  }, [paper.id]);
+  //   return () => { cancelled = true; };
+  // }, [paper.id]);
 
   /* ── Escape key ── */
   useEffect(() => {
@@ -211,8 +226,8 @@ const VideoPlayerPage = ({
   }, [onClose]);
 
   const related = allPapers.filter((p) => p.id !== paper.id);
-  const meta    = getSubjectMeta(paper.subjectName);
-  const Icon    = meta.icon;
+  const meta = getSubjectMeta(paper.subjectName);
+  const Icon = meta.icon;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#0a0f1a] flex flex-col overflow-hidden">
@@ -270,20 +285,26 @@ const VideoPlayerPage = ({
               </div>
             )}
 
-            {videoSrc && !loading && !error && (
+            {paper.pdfUrl && !error && (
               <video
                 ref={videoRef}
-                src={videoSrc}
+                src={paper.pdfUrl}
                 controls
                 autoPlay
                 className="w-full h-full"
+                onLoadedData={() => setLoading(false)}
                 onError={(e) => {
                   const ve = e.target as HTMLVideoElement;
-                  const msg = ve.error
-                    ? `Video error ${ve.error.code}: ${ve.error.message}`
-                    : "Video failed to play.";
-                  console.error("[PastPapers] Video playback error:", msg, "src:", videoSrc);
-                  setError(`${msg}\nURL tried: ${videoSrc}`);
+
+                  console.error(
+                    "[PastPapers] Video playback error:",
+                    ve.error,
+                    "URL:",
+                    paper.pdfUrl
+                  );
+
+                  setError(`Failed to play video: ${paper.pdfUrl}`);
+                  setLoading(false);
                 }}
               />
             )}
@@ -392,10 +413,10 @@ const VideoPlayerPage = ({
    SIDEBAR
 ═══════════════════════════════════════════════════════ */
 const NAV_ITEMS = [
-  { label: "Home",           icon: Home,        path: "/"            },
-  { label: "Video Lectures", icon: MonitorPlay, path: "/class/10/subject/27"    },
-  { label: "Assessments",    icon: Clipboard,   path: "/assessment/1" },
-  { label: "Past Papers",    icon: BookMarked,  path: "/class/10/subject/27/past-papers" },
+  { label: "Home", icon: Home, path: "/" },
+  { label: "Video Lectures", icon: MonitorPlay, path: "/class/10/subject/27" },
+  { label: "Assessments", icon: Clipboard, path: "/assessment/1" },
+  { label: "Past Papers", icon: BookMarked, path: "/class/10/subject/27/past-papers" },
 ];
 
 interface SidebarContentProps {
@@ -429,11 +450,10 @@ const SidebarContent = ({ activePath, onNavClick }: SidebarContentProps) => {
               : activePath === path;
           return (
             <button key={label} onClick={() => nav(path)}
-              className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all duration-150 text-left ${
-                active
-                  ? "bg-[#E8EEF8] text-[#1E3A8A]"
-                  : "text-slate-500 hover:bg-white/60 hover:text-slate-700"
-              }`}
+              className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-semibold transition-all duration-150 text-left ${active
+                ? "bg-[#E8EEF8] text-[#1E3A8A]"
+                : "text-slate-500 hover:bg-white/60 hover:text-slate-700"
+                }`}
             >
               <Icon size={20} strokeWidth={active ? 2 : 1.7}
                 className={active ? "text-[#1E3A8A]" : "text-slate-400"} />
@@ -510,9 +530,9 @@ const MobileNav = ({ activePath }: { activePath: string }) => {
    DROPDOWN
 ═══════════════════════════════════════════════════════ */
 interface DropdownProps {
-  label   : string;
-  value   : string;
-  options : { value: string; label: string }[];
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
   onChange: (v: string) => void;
 }
 
@@ -536,9 +556,8 @@ const Dropdown = ({ label, value, options, onChange }: DropdownProps) => {
       <div className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
-          className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border bg-white text-[14px] font-medium transition-all ${
-            open ? "border-[#1E3A8A] shadow-sm" : "border-slate-200 hover:border-slate-300"
-          } text-slate-800`}
+          className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border bg-white text-[14px] font-medium transition-all ${open ? "border-[#1E3A8A] shadow-sm" : "border-slate-200 hover:border-slate-300"
+            } text-slate-800`}
         >
           <span className="truncate">{selected?.label || "Select"}</span>
           <ChevronDown size={15} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -553,9 +572,8 @@ const Dropdown = ({ label, value, options, onChange }: DropdownProps) => {
             >
               {options.map((opt) => (
                 <button key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-[14px] font-medium transition-colors ${
-                    opt.value === value ? "bg-[#1E3A8A] text-white" : "text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`w-full text-left px-4 py-2.5 text-[14px] font-medium transition-colors ${opt.value === value ? "bg-[#1E3A8A] text-white" : "text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   {opt.label}
                 </button>
@@ -572,15 +590,15 @@ const Dropdown = ({ label, value, options, onChange }: DropdownProps) => {
    FEATURED CARD
 ═══════════════════════════════════════════════════════ */
 interface FeaturedCardProps {
-  paper     : Paper;
-  onWatch   : (p: Paper) => void;
+  paper: Paper;
+  onWatch: (p: Paper) => void;
   onDownload: (p: Paper) => void;
 }
 
 const FeaturedCard = ({ paper, onWatch, onDownload }: FeaturedCardProps) => {
   const meta = getSubjectMeta(paper.subjectName);
   const Icon = meta.icon;
-  const tc   = typeColor(paper.paperType);
+  const tc = typeColor(paper.paperType);
 
   return (
     <motion.div
@@ -645,16 +663,16 @@ const FeaturedCard = ({ paper, onWatch, onDownload }: FeaturedCardProps) => {
    COMPACT CARD
 ═══════════════════════════════════════════════════════ */
 interface CompactCardProps {
-  paper     : Paper;
-  onWatch   : (p: Paper) => void;
+  paper: Paper;
+  onWatch: (p: Paper) => void;
   onDownload: (p: Paper) => void;
-  delay?    : number;
+  delay?: number;
 }
 
 const CompactCard = ({ paper, onWatch, onDownload, delay = 0 }: CompactCardProps) => {
   const meta = getSubjectMeta(paper.subjectName);
   const Icon = meta.icon;
-  const tc   = typeColor(paper.paperType);
+  const tc = typeColor(paper.paperType);
 
   return (
     <motion.div
@@ -735,22 +753,22 @@ const PastPapersPage = () => {
   const { classId, subjectId } = useParams<{ classId: string; subjectId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const lang     = getLanguage();
-  const isUrdu   = lang === "ur";
+  const lang = getLanguage();
+  const isUrdu = lang === "ur";
 
-  const gradeType   = location.state?.gradeType;
-  const classTitle  = location.state?.classTitle  || `Grade ${classId}`;
+  const gradeType = location.state?.gradeType;
+  const classTitle = location.state?.classTitle || `Grade ${classId}`;
   const subjectName = location.state?.subjectName || location.state?.selectedSubject?.name || "Subject";
 
   /* ── Filters ── */
   const [subjectFilter, setSubjectFilter] = useState("all");
-  const [yearFilter,    setYearFilter]    = useState("all");
-  const [typeFilter,    setTypeFilter]    = useState("all");
-  const [applied,       setApplied]       = useState({ subject: "all", year: "all", type: "all" });
+  const [yearFilter, setYearFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [applied, setApplied] = useState({ subject: "all", year: "all", type: "all" });
 
   /* ── Data ── */
-  const [papers,     setPapers]     = useState<Paper[]>([]);
-  const [loading,    setLoading]    = useState(true);
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
 
   /* ── Video player ── */
@@ -773,8 +791,8 @@ const PastPapersPage = () => {
         const rawList: PastPaperRaw[] = Array.isArray(json)
           ? json
           : Array.isArray(json?.data)
-          ? json.data
-          : [];
+            ? json.data
+            : [];
         if (!cancelled) setPapers(rawList.map((r) => normalisePaper(r, subjectName)));
       } catch (err) {
         console.error("PastPapers fetch error:", err);
@@ -806,8 +824,8 @@ const PastPapersPage = () => {
   /* ── Filtered papers ── */
   const filteredPapers = useMemo(() => papers.filter((p) => {
     if (applied.subject !== "all" && p.subjectName !== applied.subject) return false;
-    if (applied.year    !== "all" && p.year        !== applied.year)    return false;
-    if (applied.type    !== "all" && p.paperType   !== applied.type)    return false;
+    if (applied.year !== "all" && p.year !== applied.year) return false;
+    if (applied.type !== "all" && p.paperType !== applied.type) return false;
     return true;
   }), [papers, applied]);
 
@@ -819,7 +837,7 @@ const PastPapersPage = () => {
   const hasActive = applied.subject !== "all" || applied.year !== "all" || applied.type !== "all";
 
   /* ── Handlers ── */
-  const handleWatch    = useCallback((paper: Paper) => { setActiveVideo(paper); }, []);
+  const handleWatch = useCallback((paper: Paper) => { setActiveVideo(paper); }, []);
   const handleDownload = useCallback((paper: Paper) => {
     if (paper.pdfUrl) {
       window.open(paper.pdfUrl, "_blank", "noopener,noreferrer");
@@ -829,7 +847,7 @@ const PastPapersPage = () => {
   }, []);
 
   const featuredPaper = filteredPapers[0] ?? null;
-  const restPapers    = filteredPapers.slice(1);
+  const restPapers = filteredPapers.slice(1);
 
   /* ════════════ RENDER ════════════ */
   return (
@@ -893,9 +911,9 @@ const PastPapersPage = () => {
           {/* Filter bar */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-8 shadow-sm">
             <div className="flex flex-wrap gap-4 items-end">
-              <Dropdown label="Subject Area"  value={subjectFilter} options={subjectOptions} onChange={setSubjectFilter} />
-              <Dropdown label="Academic Year" value={yearFilter}    options={yearOptions}    onChange={setYearFilter}    />
-              <Dropdown label="Paper Type"    value={typeFilter}    options={typeOptions}    onChange={setTypeFilter}    />
+              <Dropdown label="Subject Area" value={subjectFilter} options={subjectOptions} onChange={setSubjectFilter} />
+              <Dropdown label="Academic Year" value={yearFilter} options={yearOptions} onChange={setYearFilter} />
+              <Dropdown label="Paper Type" value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
               <button onClick={applyFilters}
                 className="flex items-center gap-2 bg-[#1E3A8A] hover:bg-[#1e40af] text-white text-[14px] font-bold px-6 py-3 rounded-xl transition-colors shrink-0 self-end">
                 <SlidersHorizontal size={16} />
