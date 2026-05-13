@@ -10,68 +10,85 @@ export const useClassSubjects = (
   classId: number,
   selectedSubjectId?: number
 ) => {
-  const [classInfo, setClassInfo] = useState<any>(null);
-  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classInfo, setClassInfo]       = useState<any>(null);
+  const [subjects, setSubjects]         = useState<any[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
-  const [chapters, setChapters] = useState<any[]>([]);
+  const [chapters, setChapters]         = useState<any[]>([]);
   const [chapterVideos, setChapterVideos] = useState<Record<number, any[]>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]           = useState(true);
 
-  // class + subjects
   useEffect(() => {
+    if (!classId) return;
+    let cancelled = false;
+
     const load = async () => {
       setLoading(true);
       try {
-        const classes = await fetchClasses();
-        const cls = classes.find((c: any) => c.id === Number(classId));
+        // ── 1. classes + subjects ──────────────────────────────
+        const [classes, subs] = await Promise.all([
+          fetchClasses(),
+          fetchSubjects(classId),
+        ]);
+
+        if (cancelled) return;
+
+        const cls      = classes.find((c: any) => c.id === Number(classId));
+        const selected = subs.find((s: any) => s.id === selectedSubjectId) || subs[0];
+
         setClassInfo(cls);
-
-        const subs = await fetchSubjects(classId);
         setSubjects(subs);
-
-        const selected =
-          subs.find((s: any) => s.id === selectedSubjectId) || subs[0];
-
         setSelectedSubject(selected);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    if (classId) load();
-  }, [classId]);
+        // ── 2. chapters for EVERY subject (not just selected) ──
+        //    This is the key fix: we need counts for all subjects
+        //    so the subject overview cards can show real numbers.
+        const allChaptersArrays = await Promise.all(
+          subs.map((s: any) =>
+            fetchChapters(s.id).catch(() => [] as any[])
+          )
+        );
 
-  // chapters + videos
-  useEffect(() => {
-    if (!selectedSubject) return;
+        if (cancelled) return;
 
-    const loadChapters = async () => {
-      setLoading(true);
-      try {
-        const chaps = await fetchChapters(selectedSubject.id);
-        setChapters(chaps);
+        // Flatten into one array, each chapter already carries subject_id
+        // from the API. If the API doesn't include subject_id, we tag it here.
+        const allChapters: any[] = [];
+        subs.forEach((s: any, i: number) => {
+          (allChaptersArrays[i] || []).forEach((ch: any) => {
+            allChapters.push({ ...ch, subject_id: ch.subject_id ?? s.id });
+          });
+        });
 
+        setChapters(allChapters);
+
+        // ── 3. videos for every chapter ────────────────────────
         const videoMap: Record<number, any[]> = {};
 
         await Promise.all(
-          chaps.map(async (c: any) => {
+          allChapters.map(async (ch: any) => {
             try {
-              videoMap[c.id] = await fetchVideos(c.id);
+              videoMap[ch.id] = await fetchVideos(ch.id);
             } catch {
-              videoMap[c.id] = [];
+              videoMap[ch.id] = [];
             }
           })
         );
 
+        if (cancelled) return;
         setChapterVideos(videoMap);
+
+      } catch (err) {
+        console.error("useClassSubjects load error:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    loadChapters();
-  }, [selectedSubject]);
+    load();
+    return () => { cancelled = true; };
+  }, [classId, selectedSubjectId]);
 
+  // Allow the view to switch the selected subject without re-fetching everything
   return {
     classInfo,
     subjects,

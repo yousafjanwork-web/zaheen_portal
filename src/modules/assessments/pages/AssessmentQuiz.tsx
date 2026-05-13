@@ -34,24 +34,28 @@ const S: any = {
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
     position: "relative" as const,
   },
-  sidebar: (open: boolean, isMobile: boolean) => ({
-    width: isMobile ? (open ? "100vw" : 0) : 220,
-    minWidth: isMobile ? undefined : 220,
-    maxWidth: isMobile ? "100vw" : 220,
-    background: "#f4f6fb",
-    borderRight: isMobile ? "none" : "1px solid #e2e8f0",
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column" as const,
-    flexShrink: 0,
-    overflow: "hidden",
-    transition: "width 0.25s ease",
-    position: isMobile ? ("fixed" as const) : ("relative" as const),
-    top: 0,
-    left: 0,
-    zIndex: isMobile ? 200 : "auto",
-    boxShadow: isMobile && open ? "4px 0 24px rgba(0,0,0,0.15)" : "none",
-  }),
+ sidebar: (open: boolean, isMobile: boolean) => ({
+  width: isMobile ? (open ? "100vw" : 0) : 220,
+  minWidth: isMobile ? undefined : 220,
+  maxWidth: isMobile ? "100vw" : 220,
+  background: "#f4f6fb",
+  borderRight: isMobile ? "none" : "1px solid #e2e8f0",
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column" as const,
+  flexShrink: 0,
+  overflow: "hidden",
+  transition: "width 0.25s ease",
+  position: isMobile ? ("fixed" as const) : ("relative" as const),
+
+  top: 100,
+  height: "calc(100vh - 12px)",
+  paddingTop: 10,
+
+  left: 0,
+  zIndex: isMobile ? 200 : "auto",
+  boxShadow: isMobile && open ? "4px 0 24px rgba(0,0,0,0.15)" : "none",
+}),
   sidebarOverlay: (open: boolean) => ({
     display: open ? "block" : "none",
     position: "fixed" as const,
@@ -64,15 +68,7 @@ const S: any = {
     borderBottom: "1px solid rgba(62, 193, 1, 0.1)",
     flexShrink: 0,
   },
-  brandIcon: {
-    width: 36, height: 36,
-    background: "rgba(255,255,255,0.15)",
-    borderRadius: 8,
-    display: "flex", alignItems: "center", justifyContent: "center",
-    marginBottom: 8,
-  },
-  brandTitle: { fontSize: 14, fontWeight: 600, color: "#1e293b", lineHeight: 1.2, whiteSpace: "nowrap" as const },
-  brandSub: { fontSize: 11, color: "#64748b", marginTop: 2, letterSpacing: "0.3px", whiteSpace: "nowrap" as const },
+  
   navSection: { padding: "14px 10px", flex: 1, overflowY: "auto" as const },
   navItem: (active: boolean) => ({
     display: "flex", alignItems: "center", gap: 9,
@@ -81,7 +77,7 @@ const S: any = {
     fontSize: 15, fontWeight: 500,
     background: active ? "rgba(37,99,235,0.08)" : "transparent",
     border: "none", width: "100%", textAlign: "left" as const,
-    marginBottom: 2, transition: "all 0.15s", whiteSpace: "nowrap" as const,
+    marginBottom: 15, transition: "all 0.15s", whiteSpace: "nowrap" as const,
   }),
   navDivider: { height: 1, background: "#e2e8f0", margin: "8px 0" },
   main: { flex: 1, display: "flex", flexDirection: "column" as const, minWidth: 0 },
@@ -827,21 +823,14 @@ function SidebarComp({ open, isMobile, onClose }: { open: boolean; isMobile: boo
     <div style={S.sidebar(open, isMobile)}>
       <div style={S.sidebarBrand}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={S.brandIcon}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="#1e293b">
-              <path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
-            </svg>
-          </div>
+         
           {isMobile && (
             <button style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: 4 }} onClick={onClose}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           )}
         </div>
-        <div style={{ marginTop: 8 }}>
-          <div style={S.brandTitle}>Learning Center</div>
-          <div style={S.brandSub}>Academic Excellence</div>
-        </div>
+       
       </div>
       <div style={S.navSection}>
        {NAV.map((item, i) =>
