@@ -8,10 +8,10 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
   const [stars, setStars] = useState<any[]>([]);
 
   useEffect(() => {
-    // generate floating stars
     const s = Array.from({ length: 15 }).map((_, i) => ({
       id: i,
       left: Math.random() * 100,
+      top: Math.random() * 100,
       delay: Math.random() * 5,
       size: Math.random() * 20 + 10,
     }));
@@ -24,10 +24,10 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
       {stars.map((s) => (
         <div
           key={s.id}
-          className="absolute animate-bounce opacity-70"
+          className="absolute animate-bounce opacity-70 pointer-events-none"
           style={{
             left: `${s.left}%`,
-            top: `${Math.random() * 100}%`,
+            top: `${s.top}%`,
             fontSize: s.size,
             animationDelay: `${s.delay}s`,
           }}
@@ -54,21 +54,17 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
         </div>
       </div>
 
-      {/* 🧸 Mascot */}
-      {/* 🧸 Mascot (Desktop Only) */}
+      {/* 🧸 Mascot — DESKTOP (fixed bottom-left) */}
       <div className="hidden md:block fixed bottom-0 left-[-10px] w-40 md:w-52 z-20 pointer-events-none">
-        <img
-          src={mascot}
-          alt="mascot"
-          className="w-full animate-bounce drop-shadow-2xl"
-        />
+        <img src={mascot} alt="mascot" className="w-full drop-shadow-2xl" />
       </div>
-      {/* 🧸 Mascot (Mobile Only - Centered at bottom) */}
+
+      {/* 🧸 Mascot — MOBILE (centered at bottom) */}
       <div className="md:hidden flex justify-center pb-6 relative z-20">
         <img
           src={mascot}
           alt="mascot"
-          className="w-28 h-28 object-contain animate-bounce duration-[4000ms] drop-shadow-xl"
+          className="w-28 h-28 object-contain drop-shadow-xl"
         />
       </div>
 

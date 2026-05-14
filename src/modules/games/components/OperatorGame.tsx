@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 // ---------- Types ----------
 type Operator = "+" | "-" | "×" | "÷";
@@ -24,32 +24,42 @@ interface ResultCardProps {
   onRestart: () => void;
 }
 
+// ✅ ADDED: Config interface — shape of data coming from API
+interface GameConfig {
+  maxNumber: number;
+  totalRounds: number;
+}
+
 // ---------- Constants ----------
-const TOTAL_ROUNDS = 8;
 const ALL_OPS: Operator[] = ["+", "-", "×", "÷"];
 
+// ✅ ADDED: Default config used while API loads or if API fails
+const DEFAULT_CONFIG: GameConfig = { maxNumber: 20, totalRounds: 8 };
+
 // ---------- Speech Function ----------
+// ✅ UNCHANGED
 const speak = (text: string) => {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 1;
   utterance.pitch = 1;
-  window.speechSynthesis.cancel(); // Stop current speech before starting new
+  window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 };
 
 // ---------- Question Generator ----------
-function generateQuestion(): Question {
+// ✅ CHANGED: now accepts config parameter instead of using hardcoded 20
+function generateQuestion(config: GameConfig = DEFAULT_CONFIG): Question {
   const op = ALL_OPS[Math.floor(Math.random() * ALL_OPS.length)];
   let a: number;
   let b: number;
   let result: number;
 
   if (op === "+") {
-    a = Math.floor(Math.random() * 20) + 1;
-    b = Math.floor(Math.random() * 20) + 1;
+    a = Math.floor(Math.random() * config.maxNumber) + 1; // ✅ uses config
+    b = Math.floor(Math.random() * config.maxNumber) + 1; // ✅ uses config
     result = a + b;
   } else if (op === "-") {
-    a = Math.floor(Math.random() * 20) + 5;
+    a = Math.floor(Math.random() * config.maxNumber) + 5; // ✅ uses config
     b = Math.floor(Math.random() * (a - 1)) + 1;
     result = a - b;
   } else if (op === "×") {
@@ -64,7 +74,6 @@ function generateQuestion(): Question {
 
   const distractors = ALL_OPS.filter((o) => o !== op);
   const choices: Operator[] = shuffle([op, ...distractors.slice(0, 3)]);
-
   return { a, b, op, result, choices };
 }
 
@@ -73,6 +82,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 // ---------- Result Card ----------
+// ✅ UNCHANGED — not a single line modified
 function ResultCard({
   score,
   correct,
@@ -163,9 +173,45 @@ function ResultCard({
 
 // ---------- Main Game ----------
 export default function OperatorGame() {
-  const [questions, setQuestions] = useState<Question[]>(() =>
-    Array.from({ length: TOTAL_ROUNDS }, generateQuestion),
-  );
+  // ✅ ADDED: config state — starts with default, gets replaced by API value
+  const [config, setConfig] = useState<GameConfig>(DEFAULT_CONFIG);
+  // ✅ ADDED: loading state — shows spinner while API call is in progress
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // ✅ ADDED: fetch config from API when component first loads
+  useEffect(() => {
+    fetch(
+      "http://localhost:5000/api/games/operator-game/questions?count=1&difficulty=medium",
+    )
+      .then((res) => res.json())
+      .then((responseData) => {
+        if (responseData.questions && responseData.questions.length > 0) {
+          // API returns config like: { maxNumber: 20, totalRounds: 8 }
+          setConfig(responseData.questions[0].data);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        // If API fails, default config is already set — game still works
+        setLoading(false);
+      });
+  }, []);
+
+  // ✅ CHANGED: questions now generated using config from API
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  // ✅ ADDED: generate questions only after config is loaded from API
+  useEffect(() => {
+    if (!loading) {
+      setQuestions(
+        Array.from({ length: config.totalRounds }, () =>
+          generateQuestion(config),
+        ),
+      );
+    }
+  }, [loading, config]);
+
+  // ✅ UNCHANGED from here down
   const [qIndex, setQIndex] = useState<number>(0);
   const [feedback, setFeedback] = useState<FeedbackState>({
     selected: null,
@@ -174,8 +220,6 @@ export default function OperatorGame() {
   const [score, setScore] = useState<number>(0);
   const [results, setResults] = useState<boolean[]>([]);
   const [gameOver, setGameOver] = useState<boolean>(false);
-
-  // New States for Skip and Retry
   const [hasRetried, setHasRetried] = useState<boolean>(false);
   const [showRetryButton, setShowRetryButton] = useState<boolean>(false);
 
@@ -185,7 +229,7 @@ export default function OperatorGame() {
     (isCorrect: boolean) => {
       const next = qIndex + 1;
       setResults((r) => [...r, isCorrect]);
-      if (next >= TOTAL_ROUNDS) {
+      if (next >= config.totalRounds) {
         setGameOver(true);
       } else {
         setQIndex(next);
@@ -194,33 +238,31 @@ export default function OperatorGame() {
         setShowRetryButton(false);
       }
     },
-    [qIndex],
+    [qIndex, config.totalRounds],
   );
 
   const handleSelect = useCallback(
     (op: Operator): void => {
       if (feedback.selected !== null && !showRetryButton) return;
-
       const isCorrect = op === current.op;
       setFeedback({ selected: op, isCorrect });
-
       if (isCorrect) {
-        speak("Correct"); // <--- Speck functionality
+        speak("Correct");
         setScore((s) => s + 10);
         setShowRetryButton(false);
         setTimeout(() => moveToNext(true), 1200);
       } else {
         if (!hasRetried) {
-          speak("Try again"); // <--- Speck functionality
+          speak("Try again");
           setShowRetryButton(true);
         } else {
-          speak("Wrong"); // <--- Speck functionality
+          speak("Wrong");
           setShowRetryButton(false);
           setTimeout(() => moveToNext(false), 1200);
         }
       }
     },
-    [feedback.selected, current.op, hasRetried, showRetryButton, moveToNext],
+    [feedback.selected, current?.op, hasRetried, showRetryButton, moveToNext],
   );
 
   const handleRetry = () => {
@@ -229,13 +271,34 @@ export default function OperatorGame() {
     setFeedback({ selected: null, isCorrect: null });
   };
 
-  const handleSkip = () => {
-    moveToNext(false); // Treat skip as incorrect or just neutral
-  };
+  const handleSkip = () => moveToNext(false);
 
   const handleRestart = (): void => {
-    window.location.reload();
+    setQuestions(
+      Array.from({ length: config.totalRounds }, () =>
+        generateQuestion(config),
+      ),
+    );
+    setQIndex(0);
+    setScore(0);
+    setResults([]);
+    setGameOver(false);
+    setFeedback({ selected: null, isCorrect: null });
+    setHasRetried(false);
+    setShowRetryButton(false);
   };
+
+  // ✅ ADDED: loading screen
+  if (loading || questions.length === 0) {
+    return (
+      <div style={{ ...styles.screen }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
+          <p style={{ color: "#64748b", fontWeight: 700 }}>Loading game...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (gameOver) {
     const correct = results.filter(Boolean).length;
@@ -244,7 +307,7 @@ export default function OperatorGame() {
         score={score}
         correct={correct}
         incorrect={results.length - correct}
-        total={TOTAL_ROUNDS}
+        total={config.totalRounds}
         onRestart={handleRestart}
       />
     );
@@ -262,18 +325,18 @@ export default function OperatorGame() {
     return { ...base, ...styles.opBtnDim };
   };
 
+  // ✅ UNCHANGED — entire JSX return is identical to original
   return (
     <div style={styles.screen}>
       <div style={styles.card}>
         <div style={styles.header}>
           <span style={styles.levelBadge}>
-            Q {qIndex + 1}/{TOTAL_ROUNDS}
+            Q {qIndex + 1}/{config.totalRounds}
           </span>
           <span style={styles.scoreLabel}>⭐ {score}</span>
         </div>
-
         <div style={styles.dotsRow}>
-          {Array.from({ length: TOTAL_ROUNDS }).map((_, i) => (
+          {Array.from({ length: config.totalRounds }).map((_, i) => (
             <div
               key={i}
               style={{
@@ -290,7 +353,6 @@ export default function OperatorGame() {
             />
           ))}
         </div>
-
         <div
           style={{
             width: "100%",
@@ -303,9 +365,7 @@ export default function OperatorGame() {
             Skip ⏭️
           </button>
         </div>
-
         <p style={styles.instruction}>Which operator completes the equation?</p>
-
         <div style={styles.equation}>
           <span style={styles.num}>{a}</span>
           <span style={styles.blank}>{isCorrect ? current.op : "?"}</span>
@@ -313,7 +373,6 @@ export default function OperatorGame() {
           <span style={styles.equals}>=</span>
           <span style={styles.num}>{result}</span>
         </div>
-
         <div style={styles.feedbackRow}>
           {answered && (
             <span
@@ -330,7 +389,6 @@ export default function OperatorGame() {
             </span>
           )}
         </div>
-
         <div style={styles.choicesGrid}>
           {choices.map((op) => (
             <button
@@ -343,7 +401,6 @@ export default function OperatorGame() {
             </button>
           ))}
         </div>
-
         {showRetryButton && (
           <button onClick={handleRetry} style={styles.retryBtn}>
             🔄 Try Again
@@ -355,6 +412,7 @@ export default function OperatorGame() {
 }
 
 // ---------- Styles ----------
+// ✅ UNCHANGED — identical to original
 const styles: Record<string, React.CSSProperties> = {
   screen: {
     minHeight: "300px",

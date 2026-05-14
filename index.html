@@ -1,40 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Zaheen App for learning" />
+    <meta
+      name="google-site-verification"
+      content="C6krfhEyU2fShshr5ZCYaoqWRZANNppWRrbLiewJiT4"
+    />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#000000" />
-  <meta name="description" content="Zaheen App for learning" />
-  <meta name="google-site-verification" content="C6krfhEyU2fShshr5ZCYaoqWRZANNppWRrbLiewJiT4" />
+    <!-- Favicon & Apple touch icon -->
+    <link rel="icon" href="/Zaheen.png" />
+    <link rel="apple-touch-icon" href="/Zaheen.png" />
 
-  <!-- Favicon & Apple touch icon -->
-  <link rel="icon" href="/Zaheen.png" />
-  <link rel="apple-touch-icon" href="/Zaheen.png" />
+    <!-- Web app manifest -->
+    <!-- <link rel="manifest" href="/manifest.json" /> -->
 
-  <!-- Web app manifest -->
-  <!-- <link rel="manifest" href="/manifest.json" /> -->
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <!-- Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-FE6MHVWM7F"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-FE6MHVWM7F");
+    </script>
 
-  <!-- Global CSS -->
-  <link rel="stylesheet" href="/css/style.css" />
+    <title>Zaheen | Home</title>
+  </head>
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FE6MHVWM7F"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-FE6MHVWM7F');
-  </script>
+  <body>
+    <div id="root"></div>
 
-  <title>Zaheen | Home</title>
-</head>
-
-<body>
-  <div id="root"></div>
-
-  <!-- Vite main entry -->
-  <script type="module" src="/src/app/main.tsx"></script>
-</body>
-
+    <!-- Vite main entry -->
+    <script type="module" src="/src/app/main.tsx"></script>
+  </body>
 </html>
