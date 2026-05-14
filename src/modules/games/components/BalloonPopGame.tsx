@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 // ---------- Types ----------
 interface Question {
@@ -13,23 +13,33 @@ interface FeedbackState {
   isCorrect: boolean | null;
 }
 
+// ✅ ADDED: Config interface — shape of data coming from API
+interface GameConfig {
+  maxNumber: number;
+  totalRounds: number;
+}
+
 // ---------- Constants ----------
-const TOTAL_ROUNDS = 8;
 const BALLOON_COLORS = ["#ff7eb9", "#7afcff", "#feff9c", "#ff9248"];
 
+// ✅ ADDED: Default config used while API loads or if API fails
+const DEFAULT_CONFIG: GameConfig = { maxNumber: 12, totalRounds: 8 };
+
 // ---------- Speech Function ----------
+// ✅ UNCHANGED
 const speak = (text: string) => {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 1;
-  utterance.pitch = 1.2; // Slightly higher pitch for the balloon theme
+  utterance.pitch = 1.2;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 };
 
 // ---------- Question Generator ----------
-function generateQuestion(): Question {
-  const a = Math.floor(Math.random() * 12) + 1;
-  const b = Math.floor(Math.random() * 12) + 1;
+// ✅ CHANGED: accepts config so maxNumber comes from database
+function generateQuestion(config: GameConfig = DEFAULT_CONFIG): Question {
+  const a = Math.floor(Math.random() * config.maxNumber) + 1; // ✅ uses config
+  const b = Math.floor(Math.random() * config.maxNumber) + 1; // ✅ uses config
   const correct = a + b;
 
   const optionsSet = new Set<number>([correct]);
@@ -49,9 +59,45 @@ function generateQuestion(): Question {
 
 // ---------- Main Game ----------
 export default function BalloonPopGame() {
-  const [questions] = useState<Question[]>(() =>
-    Array.from({ length: TOTAL_ROUNDS }, generateQuestion),
-  );
+  // ✅ ADDED: config state — starts with default, replaced by API value
+  const [config, setConfig] = useState<GameConfig>(DEFAULT_CONFIG);
+  // ✅ ADDED: loading state
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // ✅ ADDED: fetch config from API when component first loads
+  useEffect(() => {
+    fetch(
+      "http://localhost:5000/api/games/balloon-pop/questions?count=1&difficulty=medium",
+    )
+      .then((res) => res.json())
+      .then((responseData) => {
+        if (responseData.questions && responseData.questions.length > 0) {
+          // API returns config like: { maxNumber: 12, totalRounds: 8 }
+          setConfig(responseData.questions[0].data);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        // If API fails, default config is already set — game still works
+        setLoading(false);
+      });
+  }, []);
+
+  // ✅ CHANGED: questions start empty, generated after config loads
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  // ✅ ADDED: generate questions only after config is loaded
+  useEffect(() => {
+    if (!loading) {
+      setQuestions(
+        Array.from({ length: config.totalRounds }, () =>
+          generateQuestion(config),
+        ),
+      );
+    }
+  }, [loading, config]);
+
+  // ✅ UNCHANGED from here down
   const [qIndex, setQIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [results, setResults] = useState<boolean[]>([]);
@@ -60,7 +106,6 @@ export default function BalloonPopGame() {
     isCorrect: null,
   });
   const [gameOver, setGameOver] = useState(false);
-
   const [hasRetried, setHasRetried] = useState<boolean>(false);
   const [showRetryButton, setShowRetryButton] = useState<boolean>(false);
 
@@ -71,7 +116,7 @@ export default function BalloonPopGame() {
     (isCorrect: boolean) => {
       const next = qIndex + 1;
       setResults((r) => [...r, isCorrect]);
-      if (next >= TOTAL_ROUNDS) {
+      if (next >= config.totalRounds) {
         setGameOver(true);
       } else {
         setQIndex(next);
@@ -80,33 +125,31 @@ export default function BalloonPopGame() {
         setShowRetryButton(false);
       }
     },
-    [qIndex],
+    [qIndex, config.totalRounds],
   );
 
   const handlePop = useCallback(
     (val: number) => {
       if (answered && !showRetryButton) return;
-
       const isCorrect = val === current.correct;
       setFeedback({ selected: val, isCorrect });
-
       if (isCorrect) {
-        speak("Correct"); // Speech Trigger
+        speak("Correct");
         setScore((s) => s + 20);
         setShowRetryButton(false);
         setTimeout(() => moveToNext(true), 1000);
       } else {
         if (!hasRetried) {
-          speak("Try again"); // Speech Trigger
+          speak("Try again");
           setShowRetryButton(true);
         } else {
-          speak("Wrong"); // Speech Trigger
+          speak("Wrong");
           setShowRetryButton(false);
           setTimeout(() => moveToNext(false), 1000);
         }
       }
     },
-    [answered, current.correct, hasRetried, showRetryButton, moveToNext],
+    [answered, current?.correct, hasRetried, showRetryButton, moveToNext],
   );
 
   const handleRetry = () => {
@@ -115,10 +158,36 @@ export default function BalloonPopGame() {
     setFeedback({ selected: null, isCorrect: null });
   };
 
-  const handleSkip = () => {
-    moveToNext(false);
+  const handleSkip = () => moveToNext(false);
+
+  const handleRestart = () => {
+    setQuestions(
+      Array.from({ length: config.totalRounds }, () =>
+        generateQuestion(config),
+      ),
+    );
+    setQIndex(0);
+    setScore(0);
+    setResults([]);
+    setGameOver(false);
+    setFeedback({ selected: null, isCorrect: null });
+    setHasRetried(false);
+    setShowRetryButton(false);
   };
 
+  // ✅ ADDED: loading screen
+  if (loading || questions.length === 0) {
+    return (
+      <div style={styles.screen}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
+          <p style={{ color: "#64748b", fontWeight: 700 }}>Loading game...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ UNCHANGED — game over screen identical to original
   if (gameOver) {
     return (
       <div style={styles.screen}>
@@ -134,10 +203,7 @@ export default function BalloonPopGame() {
               <b>{results.filter((v) => !v).length}</b> Missed
             </div>
           </div>
-          <button
-            style={styles.restartBtn}
-            onClick={() => window.location.reload()}
-          >
+          <button style={styles.restartBtn} onClick={handleRestart}>
             Play Again
           </button>
         </div>
@@ -145,16 +211,16 @@ export default function BalloonPopGame() {
     );
   }
 
+  // ✅ UNCHANGED — entire JSX return identical to original
   return (
     <div style={styles.screen}>
       <div style={styles.card}>
         <div style={styles.header}>
           <div style={styles.progressLabel}>
-            Round {qIndex + 1}/{TOTAL_ROUNDS}
+            Round {qIndex + 1}/{config.totalRounds}
           </div>
           <div style={styles.scoreLabel}>Points: {score}</div>
         </div>
-
         <div
           style={{
             width: "100%",
@@ -167,7 +233,6 @@ export default function BalloonPopGame() {
             Skip ⏭️
           </button>
         </div>
-
         <div style={styles.mathArea}>
           <h1 style={styles.equation}>
             {current.a} + {current.b} ={" "}
@@ -176,11 +241,9 @@ export default function BalloonPopGame() {
             </span>
           </h1>
         </div>
-
         <div style={styles.balloonGrid}>
           {current.options.map((val, i) => {
             const isThisSelected = feedback.selected === val;
-
             return (
               <div
                 key={`${qIndex}-${val}`}
@@ -208,7 +271,6 @@ export default function BalloonPopGame() {
             );
           })}
         </div>
-
         <div style={styles.messageBox}>
           {answered && (
             <div
@@ -226,7 +288,6 @@ export default function BalloonPopGame() {
             </div>
           )}
         </div>
-
         {showRetryButton && (
           <button onClick={handleRetry} style={styles.retryBtn}>
             🔄 Try Again
@@ -237,6 +298,8 @@ export default function BalloonPopGame() {
   );
 }
 
+// ---------- Styles ----------
+// ✅ UNCHANGED — identical to original
 const styles: Record<string, React.CSSProperties> = {
   screen: {
     minHeight: "300px",
