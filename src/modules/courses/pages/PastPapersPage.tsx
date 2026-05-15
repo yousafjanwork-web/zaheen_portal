@@ -275,13 +275,19 @@ const NAV_ITEMS = [
   { label: "Assessments",    icon: Clipboard,   path: "/assessment/1" },
   { label: "Past Papers",    icon: BookMarked,  path: "/class/10/subject/27/past-papers" },
 ];
-
 const SidebarContent = ({ activePath, onNavClick }: { activePath: string; onNavClick?: () => void }) => {
   const navigate = useNavigate();
   const nav = (path: string) => { navigate(path); onNavClick?.(); };
+
   return (
     <div className="flex flex-col h-full">
-      <nav className="flex-1 px-3 pt-35 pb-2 space-y-1">
+      {/* ─── Added Course Manager Header ─── */}
+      <div className="px-6 pt-7 pb-5 border-b border-slate-100">
+        <p className="text-[#1E3A8A] font-extrabold text-[16px] leading-tight">Course Manager</p>
+        <p className="text-slate-400 text-[12px] mt-0.5">Academic Session 2024</p>
+      </div>
+
+      <nav className="flex-1 px-3 pt-4 pb-2 space-y-1">
         {NAV_ITEMS.map(({ label, icon: Icon, path }) => {
           const active = path.includes("past-papers") ? activePath.includes("past-papers") : activePath === path;
           return (
@@ -296,6 +302,8 @@ const SidebarContent = ({ activePath, onNavClick }: { activePath: string; onNavC
           );
         })}
       </nav>
+
+      
       <div className="px-3 pb-6 pt-4 border-t border-slate-200/60">
         <button className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-[15px] font-semibold text-slate-500 hover:bg-white/60 hover:text-slate-700 transition-all">
           <Settings size={20} strokeWidth={1.7} className="text-slate-400" /><span>Settings</span>
@@ -652,9 +660,8 @@ const PastPapersPage = () => {
       <MobileNav activePath={location.pathname} />
 
       {/* Reduced horizontal padding: px-3 sm:px-4 */}
-      <main className="flex-1 min-w-0 overflow-x-hidden">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-8">
-
+     <main className="flex-1 min-w-0 overflow-x-hidden">
+  <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 py-8">
           
 
           {/* Breadcrumb */}
@@ -667,22 +674,7 @@ const PastPapersPage = () => {
             <ChevronRight size={13} className="text-slate-300" />
             <span className="text-slate-700 font-semibold">Past Papers</span>
           </div>
-          {/* ── Mobile back button ── */}
-<div className="lg:hidden sticky top-[65px] z-30 bg-[#EEF2F7] pb-3 mb-2">
-  <button
-    onClick={() => {
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate(`/class/${classId}`);
-      }
-    }}
-    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[13px] font-semibold hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
-  >
-    <ChevronLeft size={16} />
-    {isUrdu ? "واپس" : "Back"}
-  </button>
-</div>
+         
 
           {/* Show inline video player OR papers list */}
           <AnimatePresence mode="wait">

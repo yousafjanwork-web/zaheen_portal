@@ -821,6 +821,7 @@ function SidebarComp({ open, isMobile, onClose }: { open: boolean; isMobile: boo
   const navigate = useNavigate();
   return (
     <div style={S.sidebar(open, isMobile)}>
+      
       <div style={S.sidebarBrand}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
          

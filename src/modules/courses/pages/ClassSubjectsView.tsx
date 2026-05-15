@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import physicsSection from "../../../assets/images/physics.png";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
@@ -29,7 +28,6 @@ const BASE_URL = "https://api.zaheen.com.pk/api";
 ──────────────────────────────────────────────────────────────── */
 const getMeta = (name: string) => {
   const n = name.toLowerCase();
-
   if (n.includes("physic"))
     return { icon: Atom,         description: "Explore the fundamental principles governing the physical world.", iconColor: "text-blue-700",   iconBg: "bg-blue-50"   };
   if (n.includes("math"))
@@ -48,16 +46,11 @@ const getMeta = (name: string) => {
     return { icon: Globe,        description: "History, geography, and civics of Pakistan.",                      iconColor: "text-orange-700", iconBg: "bg-orange-50" };
   if (n.includes("computer") || n.includes("cs"))
     return { icon: Cpu,          description: "Master programming, algorithms, and computational thinking.",      iconColor: "text-indigo-700", iconBg: "bg-indigo-50" };
-
   return   { icon: Calculator,   description: "Course materials and lectures.",                                   iconColor: "text-slate-600",  iconBg: "bg-slate-100" };
 };
 
 /* ─────────────────────────────────────────────────────────────
-   Sort:
-     1. Physics  (featured card, row 1 left)
-     2. Maths    (row 1 right)
-     3. Everything else alphabetically
-     4. Biology  (always last)
+   Sort subjects
 ──────────────────────────────────────────────────────────────── */
 const sortSubjects = (subjects: any[]) =>
   [...subjects].sort((a, b) => {
@@ -75,8 +68,10 @@ const sortSubjects = (subjects: any[]) =>
   });
 
 /* ─────────────────────────────────────────────────────────────
-   StatValue — shows skeleton while loading, "Coming Soon" only
-   when data has fully loaded and count is still 0
+   StatValue
+   - loading=true  → animated skeleton  (never "Coming Soon")
+   - count === 0   → "Coming Soon"      (only after fully loaded)
+   - count > 0     → the real number
 ──────────────────────────────────────────────────────────────── */
 const StatValue = ({
   count,
@@ -119,15 +114,9 @@ const QuizzesComingSoonModal = ({ onClose }: { onClose: () => void }) => (
       onClick={(e) => e.stopPropagation()}
       className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-8 flex flex-col items-center text-center gap-5 relative"
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-      >
+      <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
         <X size={16} />
       </button>
-
-      {/* Animated icon */}
       <motion.div
         initial={{ scale: 0.6, rotate: -10 }}
         animate={{ scale: 1, rotate: 0 }}
@@ -136,30 +125,17 @@ const QuizzesComingSoonModal = ({ onClose }: { onClose: () => void }) => (
       >
         <Sparkles size={34} className="text-amber-400" strokeWidth={1.6} />
       </motion.div>
-
-      {/* Badge */}
       <span className="text-[10px] font-black tracking-widest uppercase text-amber-500 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
         Coming Soon
       </span>
-
-      {/* Text */}
       <div className="space-y-2">
-        <h2 className="text-[22px] font-black text-[#0F172A] leading-tight">
-          Quizzes are on the way!
-        </h2>
+        <h2 className="text-[22px] font-black text-[#0F172A] leading-tight">Quizzes are on the way!</h2>
         <p className="text-slate-500 text-[14px] leading-relaxed">
           We're crafting interactive quizzes for every subject to help you test your knowledge. Stay tuned — they'll be live very soon.
         </p>
       </div>
-
-      {/* Divider */}
       <div className="w-full border-t border-slate-100" />
-
-      {/* CTA */}
-      <button
-        onClick={onClose}
-        className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-bold text-[14px] py-3 rounded-xl transition-colors duration-200"
-      >
+      <button onClick={onClose} className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-bold text-[14px] py-3 rounded-xl transition-colors duration-200">
         Got it, thanks!
       </button>
     </motion.div>
@@ -173,7 +149,6 @@ interface StatsRowProps {
   lectures: number;
   quizzes: number;
   pastPapers: number;
-  // ✅ FIX: separate loading flags for lectures and past papers
   lecturesLoading: boolean;
   pastPapersLoading: boolean;
   iconColor: string;
@@ -187,45 +162,28 @@ const StatsRow = ({
   onLecturesClick, onQuizzesClick, onPastPapersClick,
 }: StatsRowProps) => (
   <div className="flex items-start gap-7">
-
-    {/* LECTURES — ✅ now respects lecturesLoading so it never shows "Coming Soon" while still fetching */}
-    <button
-      onClick={onLecturesClick}
-      className="text-left group/lec hover:opacity-70 transition-opacity focus:outline-none"
-    >
+    {/* LECTURES */}
+    <button onClick={onLecturesClick} className="text-left group/lec hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={lectures} loading={lecturesLoading} iconColor={iconColor} />
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/lec:text-slate-600 transition-colors">
-        LECTURES
-      </p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/lec:text-slate-600 transition-colors">LECTURES</p>
     </button>
 
-    {/* QUIZZES — always "Coming Soon" (quizzes not implemented yet) */}
-    <button
-      onClick={onQuizzesClick}
-      className="text-left group/quiz hover:opacity-70 transition-opacity focus:outline-none"
-    >
-      <StatValue count={quizzes} iconColor={iconColor} />
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/quiz:text-slate-600 transition-colors">
-        QUIZZES
-      </p>
+    {/* QUIZZES — always "Coming Soon", intentional */}
+    <button onClick={onQuizzesClick} className="text-left group/quiz hover:opacity-70 transition-opacity focus:outline-none">
+      <StatValue count={0} iconColor={iconColor} />
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/quiz:text-slate-600 transition-colors">QUIZZES</p>
     </button>
 
     {/* PAST PAPERS */}
-    <button
-      onClick={onPastPapersClick}
-      className="text-left group/pp hover:opacity-70 transition-opacity focus:outline-none"
-    >
+    <button onClick={onPastPapersClick} className="text-left group/pp hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={pastPapers} loading={pastPapersLoading} iconColor={iconColor} />
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 leading-tight underline underline-offset-2 decoration-dotted group-hover/pp:text-slate-600 transition-colors">
-        PAST PAPERS
-      </p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 leading-tight underline underline-offset-2 decoration-dotted group-hover/pp:text-slate-600 transition-colors">PAST PAPERS</p>
     </button>
-
   </div>
 );
 
 /* ═══════════════════════════════════════════════════════════
-   FEATURED Physics card — wide (col-span-2), with image banner
+   FEATURED Physics card
 ═══════════════════════════════════════════════════════════ */
 interface FeaturedCardProps {
   subject: any;
@@ -236,7 +194,6 @@ interface FeaturedCardProps {
   lectures: number;
   quizzes: number;
   pastPapers: number;
-  // ✅ FIX: added lecturesLoading prop
   lecturesLoading: boolean;
   pastPapersLoading: boolean;
   onQuizzesClick: () => void;
@@ -255,13 +212,8 @@ const FeaturedPhysicsCard = ({
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
 
-  const handleLecturesClick = (e: React.MouseEvent) => { e.stopPropagation(); goToLectures(); };
-
-  const handleQuizzesClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onQuizzesClick();
-  };
-
+  const handleLecturesClick   = (e: React.MouseEvent) => { e.stopPropagation(); goToLectures(); };
+  const handleQuizzesClick    = (e: React.MouseEvent) => { e.stopPropagation(); onQuizzesClick(); };
   const handlePastPapersClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
@@ -277,40 +229,25 @@ const FeaturedPhysicsCard = ({
       onClick={goToLectures}
       className="col-span-1 sm:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col sm:flex-row cursor-pointer hover:shadow-md hover:border-slate-300 transition-all duration-200"
     >
-      {/* Image banner */}
       <div className="relative w-full sm:w-[260px] min-h-[180px] sm:min-h-0 shrink-0 overflow-hidden bg-slate-900">
-        <img
-          src={physicsSection}
-          alt="Physics"
+        <img src={physicsSection} alt="Physics"
           className="absolute inset-0 w-full h-full object-contain object-center opacity-90"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/50 to-transparent sm:from-white/100 sm:via-white/70 sm:to-transparent" />
       </div>
-
-      {/* Content */}
       <div className="flex flex-col flex-1 p-6 gap-4">
         <div className="flex items-start gap-3">
           <div className={`${meta.iconBg} p-3 rounded-xl`}>
             <Icon size={22} className={meta.iconColor} strokeWidth={1.7} />
           </div>
-          <h3 className={`text-[24px] font-bold text-[#0F172A] leading-none mt-1 ${isUrdu ? "font-urdu" : ""}`}>
-            {title}
-          </h3>
+          <h3 className={`text-[24px] font-bold text-[#0F172A] leading-none mt-1 ${isUrdu ? "font-urdu" : ""}`}>{title}</h3>
         </div>
-
-        <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
-          {meta.description}
-        </p>
-
+        <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>{meta.description}</p>
         <div className="border-t border-slate-100 mt-auto" />
-
         <StatsRow
-          lectures={lectures}
-          quizzes={quizzes}
-          pastPapers={pastPapers}
-          lecturesLoading={lecturesLoading}
-          pastPapersLoading={pastPapersLoading}
+          lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
+          lecturesLoading={lecturesLoading} pastPapersLoading={pastPapersLoading}
           iconColor={meta.iconColor}
           onLecturesClick={handleLecturesClick}
           onQuizzesClick={handleQuizzesClick}
@@ -322,7 +259,7 @@ const FeaturedPhysicsCard = ({
 };
 
 /* ═══════════════════════════════════════════════════════════
-   Regular Subject Card — single column, full card clickable
+   Regular Subject Card
 ═══════════════════════════════════════════════════════════ */
 interface SubjectCardProps {
   subject: any;
@@ -334,7 +271,6 @@ interface SubjectCardProps {
   lectures: number;
   quizzes: number;
   pastPapers: number;
-  // ✅ FIX: added lecturesLoading prop
   lecturesLoading: boolean;
   pastPapersLoading: boolean;
   onQuizzesClick: () => void;
@@ -353,13 +289,8 @@ const SubjectCard = ({
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
 
-  const handleLecturesClick = (e: React.MouseEvent) => { e.stopPropagation(); goToLectures(); };
-
-  const handleQuizzesClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onQuizzesClick();
-  };
-
+  const handleLecturesClick   = (e: React.MouseEvent) => { e.stopPropagation(); goToLectures(); };
+  const handleQuizzesClick    = (e: React.MouseEvent) => { e.stopPropagation(); onQuizzesClick(); };
   const handlePastPapersClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
@@ -378,24 +309,14 @@ const SubjectCard = ({
       <div className={`${meta.iconBg} p-3.5 rounded-xl w-fit`}>
         <Icon size={24} className={meta.iconColor} strokeWidth={1.7} />
       </div>
-
       <div>
-        <h3 className={`text-[21px] font-bold text-[#0F172A] leading-tight mb-1.5 ${isUrdu ? "text-right" : ""}`}>
-          {title}
-        </h3>
-        <p className={`text-[14px] text-slate-500 leading-relaxed line-clamp-2 ${isUrdu ? "text-right" : ""}`}>
-          {meta.description}
-        </p>
+        <h3 className={`text-[21px] font-bold text-[#0F172A] leading-tight mb-1.5 ${isUrdu ? "text-right" : ""}`}>{title}</h3>
+        <p className={`text-[14px] text-slate-500 leading-relaxed line-clamp-2 ${isUrdu ? "text-right" : ""}`}>{meta.description}</p>
       </div>
-
       <div className="border-t border-slate-100" />
-
       <StatsRow
-        lectures={lectures}
-        quizzes={quizzes}
-        pastPapers={pastPapers}
-        lecturesLoading={lecturesLoading}
-        pastPapersLoading={pastPapersLoading}
+        lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
+        lecturesLoading={lecturesLoading} pastPapersLoading={pastPapersLoading}
         iconColor={meta.iconColor}
         onLecturesClick={handleLecturesClick}
         onQuizzesClick={handleQuizzesClick}
@@ -408,9 +329,7 @@ const SubjectCard = ({
 /* ─── Skeletons ─── */
 const CardSkeleton = ({ wide = false }: { wide?: boolean }) => (
   <div className={`bg-white rounded-2xl border border-slate-200 animate-pulse overflow-hidden ${
-    wide
-      ? "col-span-1 sm:col-span-2 flex sm:flex-row flex-col"
-      : "flex flex-col p-6 gap-5"
+    wide ? "col-span-1 sm:col-span-2 flex sm:flex-row flex-col" : "flex flex-col p-6 gap-5"
   }`}>
     {wide && <div className="w-full sm:w-[260px] min-h-[160px] bg-slate-100 shrink-0" />}
     <div className={`flex flex-col gap-4 ${wide ? "flex-1 p-6" : ""}`}>
@@ -449,16 +368,28 @@ const ClassSubjectsView = () => {
     useClassSubjects(Number(classId));
 
   const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
+  const [showQuizModal, setShowQuizModal]     = useState(false);
 
-  /* ── Quizzes Coming Soon modal ── */
-  const [showQuizModal, setShowQuizModal] = useState(false);
-
-  /* ── Past paper counts ── */
+  /* ── Past paper counts ──────────────────────────────────────
+   *
+   * THE KEY FIX:
+   *
+   * ppLoading starts as TRUE so the PAST PAPERS stat always shows
+   * a skeleton until the actual API response arrives. Previously it
+   * started as false, so between mount and the first fetch completing
+   * every subject showed count=0 → "Coming Soon".
+   *
+   * ppFetched tracks whether the fetch has ever run. While subjects
+   * haven't loaded yet (subjects.length === 0) the effect early-returns
+   * without setting ppFetched=true, so the skeleton stays visible.
+   */
   const [pastPaperCounts, setPastPaperCounts] = useState<Record<number, number>>({});
-  const [ppLoading, setPpLoading]             = useState(false);
+  const [ppLoading, setPpLoading]             = useState(true);  // ← TRUE from the start
+  const [ppFetched, setPpFetched]             = useState(false);
 
   useEffect(() => {
-    if (!classId || subjects.length === 0) return;
+    if (!classId || subjects.length === 0) return; // wait for subjects
+
     let cancelled = false;
 
     const fetchAllCounts = async () => {
@@ -474,13 +405,18 @@ const ClassSubjectsView = () => {
         );
         if (!cancelled) {
           const counts: Record<number, number> = {};
-          results.forEach((r) => { if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count; });
+          results.forEach((r) => {
+            if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count;
+          });
           setPastPaperCounts(counts);
         }
       } catch (err) {
         console.error("Failed to fetch past paper counts:", err);
       } finally {
-        if (!cancelled) setPpLoading(false);
+        if (!cancelled) {
+          setPpLoading(false);
+          setPpFetched(true);
+        }
       }
     };
 
@@ -490,45 +426,33 @@ const ClassSubjectsView = () => {
 
   const gradeName = classInfo?.name || `Grade ${classId}`;
 
-  /*
-   * ✅ KEY FIX: getSubjectStats now returns a `lecturesLoading` flag.
-   *
-   * The hook's `loading` flag covers the initial fetch of subjects +
-   * chapters. But `chapterVideos` is often populated in a *second*
-   * async pass inside the hook. We treat lectures as "still loading"
-   * whenever the top-level `loading` is true OR when chapters exist
-   * for this subject but chapterVideos hasn't populated any of them
-   * yet — which means the video fetch is still in-flight.
-   */
+  /* ── Per-subject stats ────────────────────────────────────── */
   const getSubjectStats = (subjectId: number) => {
     const subjectChapters = chapters.filter((c: any) => c.subject_id === subjectId);
 
-    // If overall loading is still true, show skeleton for lectures too
-    if (loading) {
-      return { lectures: 0, quizzes: 0, pastPapers: 0, lecturesLoading: true };
-    }
+    // LECTURES loading guard:
+    // Show skeleton while the hook is still loading, OR while chapters exist
+    // but none of their IDs appear in chapterVideos yet (video fetch in-flight).
+    const chaptersExist  = subjectChapters.length > 0;
+    const videosInFlight = chaptersExist &&
+      subjectChapters.every((c: any) => !(c.id in chapterVideos));
+    const lecturesLoading = loading || videosInFlight;
 
     let lectures = 0, quizzes = 0;
-    subjectChapters.forEach((c: any) => {
-      lectures += (chapterVideos[c.id] || []).length;
-      quizzes  += (c.quizzes || []).length;
-    });
+    if (!lecturesLoading) {
+      subjectChapters.forEach((c: any) => {
+        lectures += (chapterVideos[c.id] || []).length;
+        quizzes  += (c.quizzes || []).length;
+      });
+    }
 
-    /*
-     * Secondary guard: chapters exist but none have videos yet →
-     * the video fetch is still in-flight inside the hook.
-     * Show skeleton instead of "Coming Soon".
-     */
-    const chaptersExist      = subjectChapters.length > 0;
-    const noVideosLoadedYet  = chaptersExist && lectures === 0 &&
-      subjectChapters.every((c: any) => !(c.id in chapterVideos));
+    // PAST PAPERS loading guard:
+    // Show skeleton until ppFetched=true AND ppLoading=false.
+    // This prevents "Coming Soon" from flashing before the fetch runs.
+    const pastPapersLoading = !ppFetched || ppLoading;
+    const pastPapers        = pastPapersLoading ? 0 : (pastPaperCounts[subjectId] ?? 0);
 
-    return {
-      lectures,
-      quizzes,
-      pastPapers: pastPaperCounts[subjectId] ?? 0,
-      lecturesLoading: noVideosLoadedYet,
-    };
+    return { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading };
   };
 
   const sortedSubjects  = sortSubjects(subjects);
@@ -558,7 +482,6 @@ const ClassSubjectsView = () => {
             <Download size={15} /> Download Syllabus
           </button>
         </div>
-
         <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
           {loading
             ? Array.from({ length: 7 }).map((_, i) => (
@@ -574,16 +497,10 @@ const ClassSubjectsView = () => {
                     key={sub.id}
                     onClick={() => setActiveSidebarId(isActive ? null : sub.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all duration-150 ${
-                      isActive
-                        ? "bg-blue-50 text-[#1E3A8A]"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
+                      isActive ? "bg-blue-50 text-[#1E3A8A]" : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
                     }`}
                   >
-                    <Icon
-                      size={18}
-                      strokeWidth={1.8}
-                      className={isActive ? "text-[#1E3A8A]" : "text-slate-400"}
-                    />
+                    <Icon size={18} strokeWidth={1.8} className={isActive ? "text-[#1E3A8A]" : "text-slate-400"} />
                     <span>{label}</span>
                   </button>
                 );
@@ -593,7 +510,8 @@ const ClassSubjectsView = () => {
 
       {/* ══════ MAIN ══════ */}
       <main className="flex-1 min-w-0 overflow-x-hidden">
-        <div className="max-w-6xl mx-auto px-8 xl:px-16 py-10">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-10">
+        
 
           {/* Mobile subject chips */}
           <div className="lg:hidden mb-6 overflow-x-auto">
@@ -638,7 +556,6 @@ const ClassSubjectsView = () => {
 
           {/* ── GRID ── */}
           <AnimatePresence mode="wait">
-
             {loading ? (
               <motion.div
                 key="skeletons"
@@ -667,12 +584,11 @@ const ClassSubjectsView = () => {
             ) : (
               <motion.div key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
 
-                {/* ── ROW 1: Physics (featured, 2 cols) + Maths (1 col) ── */}
+                {/* ROW 1: Physics (2 cols) + Maths (1 col) */}
                 {showFeaturedRow && (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-
                     {physicsSubject ? (() => {
-                      const { lectures, quizzes, pastPapers, lecturesLoading } = getSubjectStats(physicsSubject.id);
+                      const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(physicsSubject.id);
                       return (
                         <FeaturedPhysicsCard
                           key={physicsSubject.id}
@@ -685,16 +601,14 @@ const ClassSubjectsView = () => {
                           quizzes={quizzes}
                           pastPapers={pastPapers}
                           lecturesLoading={lecturesLoading}
-                          pastPapersLoading={ppLoading}
+                          pastPapersLoading={pastPapersLoading}
                           onQuizzesClick={() => setShowQuizModal(true)}
                         />
                       );
-                    })() : (
-                      <div className="col-span-2" />
-                    )}
+                    })() : <div className="col-span-2" />}
 
                     {mathsSubject && (() => {
-                      const { lectures, quizzes, pastPapers, lecturesLoading } = getSubjectStats(mathsSubject.id);
+                      const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(mathsSubject.id);
                       return (
                         <SubjectCard
                           key={mathsSubject.id}
@@ -708,20 +622,19 @@ const ClassSubjectsView = () => {
                           quizzes={quizzes}
                           pastPapers={pastPapers}
                           lecturesLoading={lecturesLoading}
-                          pastPapersLoading={ppLoading}
+                          pastPapersLoading={pastPapersLoading}
                           onQuizzesClick={() => setShowQuizModal(true)}
                         />
                       );
                     })()}
-
                   </div>
                 )}
 
-                {/* ── ROW 2+: Remaining subjects ── */}
+                {/* ROW 2+: remaining subjects */}
                 {restSubjects.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {restSubjects.map((subject: any, i: number) => {
-                      const { lectures, quizzes, pastPapers, lecturesLoading } = getSubjectStats(subject.id);
+                      const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(subject.id);
                       return (
                         <SubjectCard
                           key={subject.id}
@@ -735,7 +648,7 @@ const ClassSubjectsView = () => {
                           quizzes={quizzes}
                           pastPapers={pastPapers}
                           lecturesLoading={lecturesLoading}
-                          pastPapersLoading={ppLoading}
+                          pastPapersLoading={pastPapersLoading}
                           onQuizzesClick={() => setShowQuizModal(true)}
                         />
                       );
@@ -750,7 +663,7 @@ const ClassSubjectsView = () => {
         </div>
       </main>
 
-      {/* ══════ QUIZZES COMING SOON MODAL ══════ */}
+      {/* QUIZZES MODAL */}
       <AnimatePresence>
         {showQuizModal && (
           <QuizzesComingSoonModal onClose={() => setShowQuizModal(false)} />

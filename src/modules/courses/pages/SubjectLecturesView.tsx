@@ -19,7 +19,6 @@ import {
   LayoutDashboard,
   FileText,
   ClipboardList,
-  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
@@ -67,7 +66,7 @@ const getMeta = (name: string) => {
 };
 
 /* ══════════════════════════════════════════
-   SIDEBAR
+   DESKTOP SIDEBAR
 ══════════════════════════════════════════ */
 interface NewSidebarProps {
   classId: string | undefined;
@@ -90,54 +89,22 @@ const NewSidebar = ({
   isWatchMode, meta, isUrdu, exitWatchMode, scrollToChapter,
 }: NewSidebarProps) => {
   const navigate = useNavigate();
-
   const navState = { gradeType, selectedSubject };
 
   const navItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      path: null,
-      isStatic: true,
-      isActive: false,
-    },
-    {
-      id: "my-courses",
-      label: "My Courses",
-      icon: BookOpen,
-      path: `/class/${classId}/subject/${subjectId}`,
-      isStatic: false,
-      isActive: true,
-    },
-    {
-      id: "assessments",
-      label: "Assessments",
-      icon: ClipboardList,
-      path: `/assessment/1`,
-      isStatic: false,
-      isActive: false,
-    },
-    {
-      id: "past-papers",
-      label: "Past Papers",
-      icon: FileText,
-      path: `/class/${classId}/subject/${subjectId}/past-papers`,
-      isStatic: false,
-      isActive: false,
-    },
+    { id: "dashboard",   label: "Dashboard",   icon: LayoutDashboard, path: null,                                                    isStatic: true,  isActive: false },
+    { id: "my-courses",  label: "My Courses",  icon: BookOpen,        path: `/class/${classId}/subject/${subjectId}`,                isStatic: false, isActive: true  },
+    { id: "assessments", label: "Assessments", icon: ClipboardList,   path: `/assessment/1`,                                         isStatic: false, isActive: false },
+    { id: "past-papers", label: "Past Papers", icon: FileText,        path: `/class/${classId}/subject/${subjectId}/past-papers`,    isStatic: false, isActive: false },
   ];
 
   return (
     <aside className="hidden lg:flex w-[272px] shrink-0 h-screen sticky top-0 border-r border-slate-200 flex-col bg-white">
-
-      {/* Header */}
       <div className="px-6 pt-7 pb-5 border-b border-slate-100">
         <p className="text-[#1E3A8A] font-extrabold text-[16px] leading-tight">Course Manager</p>
         <p className="text-slate-400 text-[12px] mt-0.5">Academic Session 2024</p>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -157,21 +124,12 @@ const NewSidebar = ({
                   : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
               }`}
             >
-              <Icon
-                size={18}
-                strokeWidth={1.8}
-                className={
-                  item.isActive ? "text-[#1E3A8A]"
-                  : item.isStatic ? "text-slate-300"
-                  : "text-slate-400"
-                }
-              />
+              <Icon size={18} strokeWidth={1.8} className={item.isActive ? "text-[#1E3A8A]" : item.isStatic ? "text-slate-300" : "text-slate-400"} />
               <span>{item.label}</span>
             </button>
           );
         })}
 
-        {/* Chapter list indented under My Courses */}
         {subjectChapters.length > 0 && (
           <div className="mt-3 ml-2 border-l-2 border-slate-100 pl-4 space-y-0.5">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Chapters</p>
@@ -194,9 +152,7 @@ const NewSidebar = ({
                   <span
                     className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-white text-[9px] font-black"
                     style={{ backgroundColor: isActive ? meta.accent : "#cbd5e1" }}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+                  >{String(i + 1).padStart(2, "0")}</span>
                   <span className="truncate flex-1 text-[12px]">{chLabel}</span>
                   {watched > 0 && watched === ch.videos.length && (
                     <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
@@ -212,13 +168,82 @@ const NewSidebar = ({
           </div>
         )}
       </nav>
-
     </aside>
   );
 };
 
 /* ══════════════════════════════════════════
-   SUBJECT HEADER BANNER
+   MOBILE TOP NAV BAR
+   No hamburger — nav pills + chapter pills
+══════════════════════════════════════════ */
+interface MobileTopNavProps {
+  classId: string | undefined;
+  subjectId: string | undefined;
+  gradeType: string;
+  selectedSubject: any;
+  subjectChapters: ChapterWithVideos[];
+  isWatchMode: boolean;
+  exitWatchMode: () => void;
+  scrollToChapter: (idx: number) => void;
+  isUrdu: boolean;
+}
+
+const MobileTopNav = ({
+  classId, subjectId, gradeType, selectedSubject,
+  subjectChapters, isWatchMode, exitWatchMode, scrollToChapter, isUrdu,
+}: MobileTopNavProps) => {
+  const navigate = useNavigate();
+  const navState = { gradeType, selectedSubject };
+
+  const navItems = [
+    { label: isUrdu ? "کورسز" : "My Courses",   path: `/class/${classId}/subject/${subjectId}`,              isActive: true  },
+    { label: isUrdu ? "امتحان" : "Assessments",  path: `/assessment/1`,                                       isActive: false },
+    { label: isUrdu ? "پیپرز" : "Past Papers",   path: `/class/${classId}/subject/${subjectId}/past-papers`, isActive: false },
+  ];
+
+  return (
+    <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+      {/* Row 1: Nav pills */}
+      <div className="flex items-center gap-2 px-3 py-3 overflow-x-auto scrollbar-none">
+        {navItems.map((item) => (
+          <button
+            key={item.label}
+            onClick={() => navigate(item.path, { state: navState })}
+            className={`whitespace-nowrap px-4 py-2 rounded-xl text-[13px] font-bold border transition-all shrink-0 ${
+              item.isActive
+                ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Row 2: Chapter pills */}
+      {subjectChapters.length > 0 && (
+        <div className="flex items-center gap-2 px-3 pb-3 overflow-x-auto scrollbar-none">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">Chapters:</span>
+          {subjectChapters.map((ch, i) => (
+            <button
+              key={ch.id}
+              onClick={() => {
+                if (isWatchMode) exitWatchMode();
+                setTimeout(() => scrollToChapter(i), 50);
+              }}
+              className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[12px] font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 shrink-0 transition-all"
+            >
+              Ch {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════
+   SUBJECT HEADER BANNER  (no progress bar)
 ══════════════════════════════════════════ */
 interface SubjectHeaderProps {
   gradeName: string;
@@ -226,86 +251,40 @@ interface SubjectHeaderProps {
   meta: ReturnType<typeof getMeta>;
   isUrdu: boolean;
   gradeType: string;
-  totalWatched: number;
-  totalLectures: number;
-  progressPercent: number;
 }
 
-// Extracts just the number from a grade name like "Grade 9" → "9"
-// Falls back to gradeType if no number found
 const getGradeBadgeLabel = (gradeName: string, gradeType: string): string => {
-  if (gradeName) {
-    const match = gradeName.match(/\d+/);
-    if (match) return match[0];
-  }
+  if (gradeName) { const m = gradeName.match(/\d+/); if (m) return m[0]; }
   return gradeType || "SSC";
 };
 
-const SubjectHeader = ({
-  gradeName, subjectName, meta, isUrdu, gradeType,
-  totalWatched, totalLectures, progressPercent,
-}: SubjectHeaderProps) => {
-  const Icon = meta.icon;
+const SubjectHeader = ({ gradeName, subjectName, meta, isUrdu, gradeType }: SubjectHeaderProps) => {
+  const Icon       = meta.icon;
   const gradeBadge = getGradeBadgeLabel(gradeName, gradeType);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 justify-between">
-      <div className="flex-1 min-w-0">
-
-        {/* Badge row */}
-        <div className="flex items-center gap-2.5 mb-3">
-          <span
-            className="text-[11px] font-black tracking-widest uppercase text-white px-2.5 py-1 rounded-lg"
-            style={{ backgroundColor: meta.accent }}
-          >
-            {gradeBadge}
-          </span>
-          <div className={`${meta.bg} p-1.5 rounded-lg`}>
-            <Icon size={14} className={meta.color} strokeWidth={2} />
-          </div>
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="text-[11px] font-black tracking-widest uppercase text-white px-2.5 py-1 rounded-lg" style={{ backgroundColor: meta.accent }}>
+          {gradeBadge}
+        </span>
+        <div className={`${meta.bg} p-1.5 rounded-lg`}>
+          <Icon size={14} className={meta.color} strokeWidth={2} />
         </div>
-
-        {/* Subject name — large, bold */}
-        <h1 className={`text-[32px] font-black text-[#0F172A] leading-tight mb-1 ${isUrdu ? "text-right" : ""}`}>
-          {subjectName}
-        </h1>
-
-        {/* Grade name — small, muted */}
-        {gradeName && (
-          <p className="text-[13px] font-semibold text-slate-400 mb-2">{gradeName}</p>
-        )}
-
-        {/* Description */}
-        <p className={`text-[14px] text-slate-500 leading-relaxed max-w-xl ${isUrdu ? "text-right" : ""}`}>
-          {meta.desc}
-        </p>
       </div>
-
-      {/* Progress box */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shrink-0 w-full sm:w-[220px]">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[13px] font-semibold text-slate-500">Course Progress</span>
-          <span className="text-[24px] font-black text-[#1E3A8A]">{progressPercent}%</span>
-        </div>
-        <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden mb-2">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.6 }}
-            className="h-full rounded-full"
-            style={{ backgroundColor: meta.accent }}
-          />
-        </div>
-        <p className="text-[12px] text-slate-400 text-center font-medium">
-          {totalWatched} / {totalLectures} Lectures Completed
-        </p>
-      </div>
+      <h1 className={`text-[28px] sm:text-[32px] font-black text-[#0F172A] leading-tight mb-1 ${isUrdu ? "text-right" : ""}`}>
+        {subjectName}
+      </h1>
+      {gradeName && <p className="text-[13px] font-semibold text-slate-400 mb-2">{gradeName}</p>}
+      <p className={`text-[14px] text-slate-500 leading-relaxed max-w-xl ${isUrdu ? "text-right" : ""}`}>
+        {meta.desc}
+      </p>
     </div>
   );
 };
 
 /* ══════════════════════════════════════════
-   LECTURE CARD — fixed uniform height
+   LECTURE CARD
 ══════════════════════════════════════════ */
 interface LectureCardProps {
   video: Video;
@@ -341,17 +320,11 @@ const LectureCard = ({
       <div className="relative h-[155px] shrink-0 overflow-hidden">
         <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
         {isUpNext && !isSelected && (
-          <div
-            className="absolute top-3 left-3 z-20 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg"
-            style={{ backgroundColor: accentColor }}
-          >Up Next</div>
+          <div className="absolute top-3 left-3 z-20 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: accentColor }}>Up Next</div>
         )}
         {isWatched && !isSelected && (
-          <div className="absolute top-3 right-3 z-20">
-            <CheckCircle2 size={20} className="text-emerald-400" />
-          </div>
+          <div className="absolute top-3 right-3 z-20"><CheckCircle2 size={20} className="text-emerald-400" /></div>
         )}
         {isSelected ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center">
@@ -373,27 +346,18 @@ const LectureCard = ({
           <span className="text-white/70 text-[10px] font-bold tracking-widest uppercase">Lecture {lectureNumber}</span>
         </div>
       </div>
-
       <div className="p-4 flex flex-col flex-1 overflow-hidden">
         <div className="flex items-center justify-between mb-1.5">
           {isWatched ? (
-            <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1">
-              <CheckCircle2 size={11} /> Watched
-            </span>
+            <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1"><CheckCircle2 size={11} /> Watched</span>
           ) : progress > 0 && progress < 100 ? (
-            <span className="text-[11px] font-semibold" style={{ color: accentColor }}>
-              {Math.round(100 - progress)}% left
-            </span>
+            <span className="text-[11px] font-semibold" style={{ color: accentColor }}>{Math.round(100 - progress)}% left</span>
           ) : (
             <span className="text-[11px] text-slate-400 font-medium">Not started</span>
           )}
         </div>
-        <h4 className={`text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 ${isUrdu ? "text-right" : ""}`}>
-          {title}
-        </h4>
-        {shortDesc && (
-          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{shortDesc}</p>
-        )}
+        <h4 className={`text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 ${isUrdu ? "text-right" : ""}`}>{title}</h4>
+        {shortDesc && <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{shortDesc}</p>}
       </div>
     </motion.div>
   );
@@ -413,9 +377,7 @@ interface SidebarRowProps {
   accentColor: string;
 }
 
-const SidebarRow = ({
-  video, lectureNumber, isSelected, isWatched, progress, onClick, isUrdu, accentColor,
-}: SidebarRowProps) => {
+const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onClick, isUrdu, accentColor }: SidebarRowProps) => {
   const title = isUrdu ? video.urdu_name || video.name : video.name;
   return (
     <div
@@ -438,9 +400,7 @@ const SidebarRow = ({
           </div>
         )}
         {isWatched && !isSelected && (
-          <div className="absolute top-1 right-1">
-            <CheckCircle2 size={13} className="text-emerald-400" />
-          </div>
+          <div className="absolute top-1 right-1"><CheckCircle2 size={13} className="text-emerald-400" /></div>
         )}
       </div>
       <div className="flex-1 min-w-0 py-0.5">
@@ -448,18 +408,12 @@ const SidebarRow = ({
         <h4
           className={`text-[12px] font-bold leading-snug line-clamp-2 ${isUrdu ? "text-right" : ""}`}
           style={isSelected ? { color: accentColor } : { color: "#1e293b" }}
-        >
-          {title}
-        </h4>
+        >{title}</h4>
         {isWatched && (
-          <span className="text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1">
-            <CheckCircle2 size={10} /> Watched
-          </span>
+          <span className="text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1"><CheckCircle2 size={10} /> Watched</span>
         )}
         {!isWatched && progress > 0 && (
-          <span className="text-[10px] font-semibold mt-0.5 block" style={{ color: accentColor }}>
-            {Math.round(100 - progress)}% left
-          </span>
+          <span className="text-[10px] font-semibold mt-0.5 block" style={{ color: accentColor }}>{Math.round(100 - progress)}% left</span>
         )}
       </div>
     </div>
@@ -467,7 +421,7 @@ const SidebarRow = ({
 };
 
 /* ══════════════════════════════════════════
-   CHAPTER SECTION — 4 per page (2×2 grid)
+   CHAPTER SECTION
 ══════════════════════════════════════════ */
 interface ChapterSectionProps {
   chapter: ChapterWithVideos;
@@ -490,53 +444,33 @@ const ChapterSection = ({
   selectedVideo, watchedSet, progressMap,
   currentGlobalIdx, onSelect, isUrdu, accentColor, sidebarRef,
 }: ChapterSectionProps) => {
-  const [page, setPage]      = useState(0);
-  const totalPages            = Math.ceil(chapter.videos.length / CARDS_PER_PAGE);
-  const visible               = chapter.videos.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
-  const watchedInChapter      = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
-  const chapterLabel          = isUrdu ? chapter.urdu_name || chapter.name : chapter.name;
-  const chapterNum            = String(chapterIndex + 1).padStart(2, "0");
+  const [page, setPage] = useState(0);
+  const totalPages       = Math.ceil(chapter.videos.length / CARDS_PER_PAGE);
+  const visible          = chapter.videos.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
+  const watchedInChapter = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
+  const chapterLabel     = isUrdu ? chapter.urdu_name || chapter.name : chapter.name;
+  const chapterNum       = String(chapterIndex + 1).padStart(2, "0");
 
   return (
     <div id={`chapter-${chapter.id}`} ref={sidebarRef} className="mb-12 scroll-mt-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[12px] font-black"
-            style={{ backgroundColor: accentColor }}
-          >{chapterNum}</div>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[12px] font-black" style={{ backgroundColor: accentColor }}>{chapterNum}</div>
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chapter {chapterNum}</span>
-            <h3 className={`text-[16px] font-black text-slate-900 leading-tight mt-0.5 ${isUrdu ? "text-right" : ""}`}>
-              {chapterLabel}
-            </h3>
+            <h3 className={`text-[16px] font-black text-slate-900 leading-tight mt-0.5 ${isUrdu ? "text-right" : ""}`}>{chapterLabel}</h3>
           </div>
         </div>
-
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-[12px] text-slate-400 font-medium hidden sm:block">
             {chapter.videos.length} lecture{chapter.videos.length !== 1 ? "s" : ""}
-            {watchedInChapter > 0 && (
-              <span className="ml-1.5 text-emerald-500">· {watchedInChapter} watched</span>
-            )}
+            {watchedInChapter > 0 && <span className="ml-1.5 text-emerald-500">· {watchedInChapter} watched</span>}
           </span>
           {totalPages > 1 && (
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] text-slate-400 font-medium">{page + 1}/{totalPages}</span>
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft size={15} />
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page === totalPages - 1}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronRight size={15} />
-              </button>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"><ChevronLeft size={15} /></button>
+              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"><ChevronRight size={15} /></button>
             </div>
           )}
         </div>
@@ -545,9 +479,7 @@ const ChapterSection = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={page}
-          initial={{ opacity: 0, x: 8 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -8 }}
+          initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
           transition={{ duration: 0.18 }}
           className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5"
         >
@@ -561,11 +493,7 @@ const ChapterSection = ({
                 isSelected={selectedVideo?.id === video.id}
                 isWatched={watchedSet.has(video.id)}
                 progress={watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0}
-                isUpNext={
-                  selectedVideo?.id !== video.id &&
-                  !watchedSet.has(video.id) &&
-                  globalIdx === currentGlobalIdx + 1
-                }
+                isUpNext={selectedVideo?.id !== video.id && !watchedSet.has(video.id) && globalIdx === currentGlobalIdx + 1}
                 onClick={() => onSelect(video, chapter.id)}
                 isUrdu={isUrdu}
                 accentColor={accentColor}
@@ -590,7 +518,7 @@ const SubjectLecturesView = () => {
   const lang      = getLanguage();
   const isUrdu    = lang === "ur";
 
-  const gradeType              = location.state?.gradeType;
+  const gradeType               = location.state?.gradeType;
   const selectedSubjectFromState = location.state?.selectedSubject;
 
   const { classInfo, chapters, chapterVideos, subjects, loading } =
@@ -606,10 +534,7 @@ const SubjectLecturesView = () => {
 
   const subjectRawName = selectedSubject?.name || "";
   const meta           = getMeta(subjectRawName);
-
-  const subjectName = isUrdu
-    ? selectedSubject?.urdu_name || subjectRawName
-    : subjectRawName;
+  const subjectName    = isUrdu ? selectedSubject?.urdu_name || subjectRawName : subjectRawName;
 
   const subjectChapters: ChapterWithVideos[] = useMemo(() =>
     chapters
@@ -643,16 +568,12 @@ const SubjectLecturesView = () => {
     [allVideos, selectedVideo]
   );
 
-  const totalWatched    = watchedSet.size;
-  const totalLectures   = allVideos.length;
-  const progressPercent = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
+  const totalLectures = allVideos.length;
 
   const trackEvent = useCallback((eventName: string) => {
     if (!window.gtag || !selectedVideo) return;
     window.gtag("event", eventName, {
-      video_id:   selectedVideo.id,
-      video_name: selectedVideo.name,
-      page_path:  window.location.pathname,
+      video_id: selectedVideo.id, video_name: selectedVideo.name, page_path: window.location.pathname,
     });
   }, [selectedVideo]);
 
@@ -684,18 +605,9 @@ const SubjectLecturesView = () => {
     }
   }, [currentGlobalIdx, allVideos, subjectChapters, selectVideo]);
 
-  const handleLoaded = () => {
-    if (!videoRef.current || (videoRef.current as any)._started) return;
-    (videoRef.current as any)._started = true;
-    trackEvent("video_start");
-  };
-  const handlePlay = () => {
-    if (!(videoRef.current as any)?._started) {
-      (videoRef.current as any)._started = true;
-      trackEvent("video_start");
-    }
-  };
-  const handleEnded = () => {
+  const handleLoaded    = () => { if (!videoRef.current || (videoRef.current as any)._started) return; (videoRef.current as any)._started = true; trackEvent("video_start"); };
+  const handlePlay      = () => { if (!(videoRef.current as any)?._started) { (videoRef.current as any)._started = true; trackEvent("video_start"); } };
+  const handleEnded     = () => {
     if (selectedVideo) {
       setWatchedSet((prev) => new Set(prev).add(selectedVideo.id));
       setProgressMap((prev) => ({ ...prev, [selectedVideo.id]: 100 }));
@@ -708,10 +620,7 @@ const SubjectLecturesView = () => {
     if (!v.duration || !selectedVideo) return;
     const pct = (v.currentTime / v.duration) * 100;
     setProgressMap((prev) => ({ ...prev, [selectedVideo.id]: Math.round(pct) }));
-    if (pct > 50 && !(v as any)._tracked50) {
-      (v as any)._tracked50 = true;
-      trackEvent("video_50_percent");
-    }
+    if (pct > 50 && !(v as any)._tracked50) { (v as any)._tracked50 = true; trackEvent("video_50_percent"); }
   };
 
   useEffect(() => {
@@ -727,12 +636,12 @@ const SubjectLecturesView = () => {
   const scrollToChapter = (idx: number) =>
     chapterRefs.current[idx]?.scrollIntoView({ behavior: "smooth", block: "start" });
 
-  const exitWatchMode = () => {
+  const exitWatchMode = useCallback(() => {
     setIsWatchMode(false);
     setSelectedVideo(null);
     setVideoUrl("");
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
   const renderDesc = (video: Video | null) => {
     if (!video) return null;
@@ -753,107 +662,109 @@ const SubjectLecturesView = () => {
     );
   };
 
-  return (
-    <section className="bg-[#F8FAFC] min-h-screen flex">
+  /* ── Breadcrumb ─────────────────────────────────────────────
+   *
+   * Structure:
+   *   Home  /  Grade 9  /  Physics Grade 9  /  [lecture name]
+   *
+   * "Home"           → navigates to /
+   * "Grade 9"        → navigates to /class/:classId  (subject overview)
+   * "Physics Grade 9"→ if in watch mode, EXITS watch mode (back to lecture grid)
+   *                    if not in watch mode, it's the current page (plain text)
+   * "[lecture name]" → only shown in watch mode, plain text (current page)
+   */
+  const renderBreadcrumb = () => {
+    const videoTitle = selectedVideo
+      ? (isUrdu ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name)
+      : null;
 
-      {/* SIDEBAR */}
+    return (
+      <div className="text-sm text-slate-400 flex items-center gap-1.5 mb-6 flex-wrap min-w-0">
+        {/* Home */}
+        <Link to="/" className="hover:text-slate-600 transition-colors shrink-0">
+          {isUrdu ? "ہوم" : "Home"}
+        </Link>
+        <span className="text-slate-300 shrink-0">/</span>
+
+        {/* Grade (class overview) */}
+        <Link
+          to={`/class/${classId}`}
+          state={{ gradeType, selectedSubject }}
+          className="hover:text-slate-600 transition-colors shrink-0"
+        >
+          {classTitle || `Grade ${classId}`}
+        </Link>
+        <span className="text-slate-300 shrink-0">/</span>
+
+        {isWatchMode && videoTitle ? (
+          /* In watch mode:
+             "Physics Grade 9" is a clickable button → exits watch mode
+             Then "/" + lecture name as plain current-page text */
+          <>
+            <button
+              onClick={exitWatchMode}
+              className="hover:text-[#1E3A8A] text-slate-500 font-semibold transition-colors shrink-0  decoration-dotted"
+            >
+              {subjectName}
+            </button>
+            <span className="text-slate-300 shrink-0">/</span>
+            {/* Full lecture name — no truncation, wraps naturally */}
+            <span className="text-slate-700 font-semibold break-words">
+              {videoTitle}
+            </span>
+          </>
+        ) : (
+          /* Not in watch mode: "Physics Grade 9" is the current page */
+          <span className="text-slate-700 font-semibold">{subjectName}</span>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <section className="bg-[#F8FAFC] min-h-screen flex flex-col lg:flex-row">
+
+      {/* Desktop sidebar */}
       <NewSidebar
-        classId={classId}
-        subjectId={subjectId}
-        gradeType={gradeType}
-        selectedSubject={selectedSubject}
-        activeChapterId={activeChapterId}
-        subjectChapters={subjectChapters}
-        watchedSet={watchedSet}
-        isWatchMode={isWatchMode}
-        meta={meta}
-        isUrdu={isUrdu}
-        exitWatchMode={exitWatchMode}
-        scrollToChapter={scrollToChapter}
+        classId={classId} subjectId={subjectId} gradeType={gradeType}
+        selectedSubject={selectedSubject} activeChapterId={activeChapterId}
+        subjectChapters={subjectChapters} watchedSet={watchedSet}
+        isWatchMode={isWatchMode} meta={meta} isUrdu={isUrdu}
+        exitWatchMode={exitWatchMode} scrollToChapter={scrollToChapter}
+      />
+
+      {/* Mobile top nav */}
+      <MobileTopNav
+        classId={classId} subjectId={subjectId} gradeType={gradeType}
+        selectedSubject={selectedSubject} subjectChapters={subjectChapters}
+        isWatchMode={isWatchMode} exitWatchMode={exitWatchMode}
+        scrollToChapter={scrollToChapter} isUrdu={isUrdu}
       />
 
       {/* MAIN */}
-      <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-10 py-10 overflow-x-hidden">
+      <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-10 py-6 overflow-x-hidden">
 
-        {/* ── Mobile back button ── */}
-        <div className="lg:hidden mb-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 text-[13px] font-semibold hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
-          >
-            <ChevronLeft size={16} />
-            {isUrdu ? "واپس" : "Back"}
-          </button>
-        </div>
-
-        {/* Mobile chapter pills */}
-        <div className="lg:hidden mb-6 overflow-x-auto">
-          <div className="flex gap-2 pb-2">
-            {subjectChapters.map((ch, i) => (
-              <button
-                key={ch.id}
-                onClick={() => {
-                  if (isWatchMode) exitWatchMode();
-                  setTimeout(() => scrollToChapter(i), 50);
-                }}
-                className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[12px] font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              >
-                Ch {i + 1}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Breadcrumb */}
-        <div className="text-sm text-slate-400 flex items-center gap-2 mb-6 flex-wrap">
-          <Link to="/" className="hover:text-slate-600 transition-colors">
-            {isUrdu ? "ہوم" : "Home"}
-          </Link>
-          <span>/</span>
-          <Link
-            to={`/class/${classId}`}
-            state={{ gradeType, selectedSubject }}
-            className="hover:text-slate-600 transition-colors"
-          >
-            {classTitle}
-          </Link>
-          <span>/</span>
-          <span className="text-slate-700 font-semibold">{subjectName}</span>
-          {isWatchMode && selectedVideo && (
-            <>
-              <span>/</span>
-              <span className="text-slate-500 truncate max-w-[200px]">
-                {isUrdu ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name}
-              </span>
-            </>
-          )}
-        </div>
+        {/* ✅ Fixed breadcrumb */}
+        {renderBreadcrumb()}
 
         {/* Subject header banner */}
         {!loading && (
           <SubjectHeader
-            gradeName={gradeName}
-            subjectName={subjectName}
-            meta={meta}
-            isUrdu={isUrdu}
-            gradeType={gradeType}
-            totalWatched={totalWatched}
-            totalLectures={totalLectures}
-            progressPercent={progressPercent}
+            gradeName={gradeName} subjectName={subjectName}
+            meta={meta} isUrdu={isUrdu} gradeType={gradeType}
           />
         )}
 
         {/* Loading skeleton */}
         {loading ? (
           <div className="space-y-10">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex justify-between gap-5 animate-pulse">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 animate-pulse">
               <div className="flex-1 space-y-3">
                 <div className="h-4 w-20 bg-slate-200 rounded" />
                 <div className="h-8 w-48 bg-slate-200 rounded" />
                 <div className="h-3 w-24 bg-slate-200 rounded" />
                 <div className="h-4 w-3/4 bg-slate-200 rounded" />
               </div>
-              <div className="w-[220px] h-[110px] bg-slate-200 rounded-xl shrink-0" />
             </div>
             {Array.from({ length: 2 }).map((_, ci) => (
               <div key={ci}>
@@ -881,19 +792,15 @@ const SubjectLecturesView = () => {
             <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
               <Clock size={38} className="text-slate-400" strokeWidth={1.5} />
             </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-3">
-              {isUrdu ? "جلد آرہا ہے" : "Coming Soon"}
-            </h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-3">{isUrdu ? "جلد آرہا ہے" : "Coming Soon"}</h2>
             <p className="text-slate-500 max-w-sm leading-relaxed">
-              {isUrdu
-                ? `${subjectName} کے لیے مواد تیار کیا جا رہا ہے۔`
-                : `Content for ${subjectName} is being prepared. Check back soon!`}
+              {isUrdu ? `${subjectName} کے لیے مواد تیار کیا جا رہا ہے۔` : `Content for ${subjectName} is being prepared. Check back soon!`}
             </p>
           </div>
 
         ) : isWatchMode && selectedVideo ? (
 
-          /* WATCH MODE */
+          /* ══ WATCH MODE ══ */
           <AnimatePresence mode="wait">
             <motion.div
               key="watch"
@@ -914,6 +821,7 @@ const SubjectLecturesView = () => {
                   </div>
                 </div>
 
+                {/* Info panel below video */}
                 <div className="bg-white rounded-2xl border border-slate-100 p-5 mt-4">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0">
@@ -926,52 +834,29 @@ const SubjectLecturesView = () => {
                       <div className="mt-2 space-y-1">{renderDesc(selectedVideo)}</div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      {/* ✅ "All Lectures" exits watch mode → shows lecture grid again */}
                       <button
                         onClick={exitWatchMode}
                         className="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-[13px] font-semibold hover:bg-slate-50 transition-all"
                       >
                         All Lectures
                       </button>
-                      <button
-                        onClick={goPrev} disabled={currentGlobalIdx === 0}
-                        className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      >
+                      <button onClick={goPrev} disabled={currentGlobalIdx === 0} className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                         <ChevronLeft size={20} />
                       </button>
-                      <button
-                        onClick={goNext} disabled={currentGlobalIdx >= allVideos.length - 1}
-                        className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      >
+                      <button onClick={goNext} disabled={currentGlobalIdx >= allVideos.length - 1} className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                         <ChevronRight size={20} />
                       </button>
                     </div>
                   </div>
-
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-slate-400 font-medium">Course Progress</span>
-                      <span className="text-xs font-black" style={{ color: meta.accent }}>{progressPercent}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }}
-                        transition={{ duration: 0.5 }}
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: meta.accent }}
-                      />
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">{totalWatched} / {totalLectures} completed</p>
-                  </div>
                 </div>
               </div>
 
-              {/* Right panel — all lectures */}
+              {/* Right panel — lecture list */}
               <div className="w-full xl:w-[320px] shrink-0">
                 <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden sticky top-6">
                   <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-[14px] font-black text-slate-900">
-                      {isUrdu ? "تمام لیکچرز" : "All Lectures"}
-                    </h3>
+                    <h3 className="text-[14px] font-black text-slate-900">{isUrdu ? "تمام لیکچرز" : "All Lectures"}</h3>
                     <span className="text-[12px] text-slate-400 font-medium">{totalLectures} total</span>
                   </div>
                   <div className="overflow-y-auto max-h-[75vh] p-2 space-y-1">
@@ -979,10 +864,7 @@ const SubjectLecturesView = () => {
                       <div key={chapter.id}>
                         <div className="px-2 pt-3 pb-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                            <span
-                              className="w-4 h-4 rounded flex items-center justify-center text-white text-[8px] font-black"
-                              style={{ backgroundColor: meta.accent }}
-                            >{chIdx + 1}</span>
+                            <span className="w-4 h-4 rounded flex items-center justify-center text-white text-[8px] font-black" style={{ backgroundColor: meta.accent }}>{chIdx + 1}</span>
                             {isUrdu ? chapter.urdu_name || chapter.name : chapter.name}
                           </p>
                         </div>
@@ -990,15 +872,12 @@ const SubjectLecturesView = () => {
                           const globalIdx = chapterOffsets[chIdx] + vidIdx;
                           return (
                             <SidebarRow
-                              key={video.id}
-                              video={video}
-                              lectureNumber={globalIdx + 1}
+                              key={video.id} video={video} lectureNumber={globalIdx + 1}
                               isSelected={selectedVideo?.id === video.id}
                               isWatched={watchedSet.has(video.id)}
                               progress={progressMap[video.id] || 0}
                               onClick={() => selectVideo(video, chapter.id)}
-                              isUrdu={isUrdu}
-                              accentColor={meta.accent}
+                              isUrdu={isUrdu} accentColor={meta.accent}
                             />
                           );
                         })}
@@ -1012,7 +891,7 @@ const SubjectLecturesView = () => {
 
         ) : (
 
-          /* GRID VIEW */
+          /* ══ GRID VIEW ══ */
           <div>
             <h2 className="text-[20px] font-black text-slate-900 mb-7">
               {isUrdu ? "ویڈیو لیکچرز" : "Video Lectures"}

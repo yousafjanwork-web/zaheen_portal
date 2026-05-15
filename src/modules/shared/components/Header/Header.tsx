@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
         <div
           ref={dropdownRef}
-          className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16"
+          className="max-w-full mx-auto px-10 flex items-center justify-between h-16"
         >
 
           {/* LEFT */}
