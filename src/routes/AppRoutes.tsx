@@ -5,10 +5,9 @@ import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ScrollToTop from "@/modules/shared/components/ScrollToTop";
 import GradesView from "@/modules/courses/pages/GradesView";
-import ClassSubjectsView from "@/modules/courses/pages/ClassSubjectsView";
 import LecturesPage from "@/modules/lectures/pages/LecturesPage";
-import Assessment from '@/modules/assessments/pages/Assessment';
-import AssessmentQuiz from '@/modules/assessments/pages/AssessmentQuiz';
+import Assessment from "@/modules/assessments/pages/Assessment";
+import AssessmentQuiz from "@/modules/assessments/pages/AssessmentQuiz";
 import SkillsChaptersPage from "@/modules/courses/pages/SkillsChaptersPage";
 import PracticeCornerPage from "@/modules/practice/pages/PracticeCornerPage";
 import WorksheetsPage from "@/modules/worksheets/pages/WorksheetPage";
@@ -22,13 +21,14 @@ import ResourcePlayer from "@/modules/courses/pages/ResourcesPlayer";
 import { EnrollmentLandingPage } from "@/modules/auth/enrollnow/EnrollNowPage";
 import SubEnrollNow from "@/modules/auth/enrollnow/pages/SubEnrollNow";
 import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
-import ProtectedRoute from "./ProtectedRoute";
 import GamesPage from "@/modules/games/pages/GamesPage";
 import PlayGamePage from "@/modules/games/pages/PlayGamePage";
-import SubjectLecturesView from "@/modules/courses/pages/SubjectLecturesView";
 import PastPapersPage from "@/modules/courses/pages/PastPapersPage";
-import AllProfessionalCourses from "@/modules/home/sections/AllProfessionalCourses"
+import AllProfessionalCourses from "@/modules/home/sections/AllProfessionalCourses";
 
+// ✅ Routers that pick the right view based on class type
+import ClassSubjectsRouter from "@/modules/courses/pages/ClassSubjectsRouter";
+import SubjectLecturesRouter from "@/modules/courses/pages/SubjectLecturesRouter";
 
 const AppRoutes = () => {
   return (
@@ -37,7 +37,7 @@ const AppRoutes = () => {
 
       <Routes>
 
-        {/* Routes WITH MainLayout */}
+        {/* ── Routes WITH MainLayout ── */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/terms" element={<TermsOfService />} />
@@ -45,10 +45,22 @@ const AppRoutes = () => {
           <Route path="/grade-view/:type" element={<GradesView />} />
           <Route path="/all-professional-courses" element={<AllProfessionalCourses />} />
 
+          {/*
+           * /class/:classId
+           *   → KGClassView      if Kindergarten
+           *   → ClassSubjectsView if regular grade
+           */}
+          <Route path="/class/:classId" element={<ClassSubjectsRouter />} />
 
-          <Route path="/class/:classId" element={<ClassSubjectsView />} />
-          <Route path="/class/:classId/subject/:subjectId" element={<SubjectLecturesView />} />
-
+          {/*
+           * /class/:classId/subject/:subjectId
+           *   → KGLectureView      if Kindergarten   ✅ NEW
+           *   → SubjectLecturesView if regular grade
+           */}
+          <Route
+            path="/class/:classId/subject/:subjectId"
+            element={<SubjectLecturesRouter />}
+          />
 
           <Route path="/assessment/" element={<Assessment />} />
           <Route path="/assessment/:skillId" element={<AssessmentQuiz />} />
@@ -56,7 +68,10 @@ const AppRoutes = () => {
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}
           />
-          <Route path="/class/:classId/subject/:subjectId/past-papers" element={<PastPapersPage />} />
+          <Route
+            path="/class/:classId/subject/:subjectId/past-papers"
+            element={<PastPapersPage />}
+          />
           <Route path="/skills/:classId" element={<SkillsChaptersPage />} />
           <Route path="/practice" element={<PracticeCornerPage />} />
           <Route path="/worksheets/:subjectId" element={<WorksheetsPage />} />
@@ -71,12 +86,10 @@ const AppRoutes = () => {
           <Route path="/ai" element={<Chatbot />} />
         </Route>
 
-        {/* Routes WITHOUT MainLayout */}
+        {/* ── Routes WITHOUT MainLayout ── */}
         <Route path="/enrollnow" element={<EnrollmentLandingPage />} />
         <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
-
         <Route path="thanks-for-subscribing" element={<SuccessScreen />} />
-        
 
       </Routes>
     </BrowserRouter>

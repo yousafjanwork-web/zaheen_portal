@@ -69,9 +69,6 @@ const sortSubjects = (subjects: any[]) =>
 
 /* ─────────────────────────────────────────────────────────────
    StatValue
-   - loading=true  → animated skeleton  (never "Coming Soon")
-   - count === 0   → "Coming Soon"      (only after fully loaded)
-   - count > 0     → the real number
 ──────────────────────────────────────────────────────────────── */
 const StatValue = ({
   count,
@@ -370,25 +367,12 @@ const ClassSubjectsView = () => {
   const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
   const [showQuizModal, setShowQuizModal]     = useState(false);
 
-  /* ── Past paper counts ──────────────────────────────────────
-   *
-   * THE KEY FIX:
-   *
-   * ppLoading starts as TRUE so the PAST PAPERS stat always shows
-   * a skeleton until the actual API response arrives. Previously it
-   * started as false, so between mount and the first fetch completing
-   * every subject showed count=0 → "Coming Soon".
-   *
-   * ppFetched tracks whether the fetch has ever run. While subjects
-   * haven't loaded yet (subjects.length === 0) the effect early-returns
-   * without setting ppFetched=true, so the skeleton stays visible.
-   */
   const [pastPaperCounts, setPastPaperCounts] = useState<Record<number, number>>({});
-  const [ppLoading, setPpLoading]             = useState(true);  // ← TRUE from the start
+  const [ppLoading, setPpLoading]             = useState(true);
   const [ppFetched, setPpFetched]             = useState(false);
 
   useEffect(() => {
-    if (!classId || subjects.length === 0) return; // wait for subjects
+    if (!classId || subjects.length === 0) return;
 
     let cancelled = false;
 
@@ -430,9 +414,6 @@ const ClassSubjectsView = () => {
   const getSubjectStats = (subjectId: number) => {
     const subjectChapters = chapters.filter((c: any) => c.subject_id === subjectId);
 
-    // LECTURES loading guard:
-    // Show skeleton while the hook is still loading, OR while chapters exist
-    // but none of their IDs appear in chapterVideos yet (video fetch in-flight).
     const chaptersExist  = subjectChapters.length > 0;
     const videosInFlight = chaptersExist &&
       subjectChapters.every((c: any) => !(c.id in chapterVideos));
@@ -446,9 +427,6 @@ const ClassSubjectsView = () => {
       });
     }
 
-    // PAST PAPERS loading guard:
-    // Show skeleton until ppFetched=true AND ppLoading=false.
-    // This prevents "Coming Soon" from flashing before the fetch runs.
     const pastPapersLoading = !ppFetched || ppLoading;
     const pastPapers        = pastPapersLoading ? 0 : (pastPaperCounts[subjectId] ?? 0);
 
@@ -468,7 +446,28 @@ const ClassSubjectsView = () => {
       !s.name.toLowerCase().includes("math")
   );
 
-  const showFeaturedRow = physicsSubject || mathsSubject;
+  // Helper to render a SubjectCard for maths
+  const renderMathCard = (index: number) => {
+    if (!mathsSubject) return null;
+    const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(mathsSubject.id);
+    return (
+      <SubjectCard
+        key={mathsSubject.id}
+        subject={mathsSubject}
+        classInfo={classInfo}
+        gradeType={gradeType}
+        navigate={navigate}
+        isUrdu={isUrdu}
+        index={index}
+        lectures={lectures}
+        quizzes={quizzes}
+        pastPapers={pastPapers}
+        lecturesLoading={lecturesLoading}
+        pastPapersLoading={pastPapersLoading}
+        onQuizzesClick={() => setShowQuizModal(true)}
+      />
+    );
+  };
 
   return (
     <section className="bg-[#F8FAFC] min-h-screen flex">
@@ -511,7 +510,6 @@ const ClassSubjectsView = () => {
       {/* ══════ MAIN ══════ */}
       <main className="flex-1 min-w-0 overflow-x-hidden">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-10">
-        
 
           {/* Mobile subject chips */}
           <div className="lg:hidden mb-6 overflow-x-auto">
@@ -584,10 +582,12 @@ const ClassSubjectsView = () => {
             ) : (
               <motion.div key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
 
-                {/* ROW 1: Physics (2 cols) + Maths (1 col) */}
-                {showFeaturedRow && (
+                {/* ── ROW 1: Physics (wide, 2 cols) + Maths (1 col)
+                     Only rendered when Physics is visible.
+                     When only Maths is selected, it falls into the regular grid below. */}
+                {physicsSubject && (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    {physicsSubject ? (() => {
+                    {(() => {
                       const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(physicsSubject.id);
                       return (
                         <FeaturedPhysicsCard
@@ -605,34 +605,19 @@ const ClassSubjectsView = () => {
                           onQuizzesClick={() => setShowQuizModal(true)}
                         />
                       );
-                    })() : <div className="col-span-2" />}
-
-                    {mathsSubject && (() => {
-                      const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(mathsSubject.id);
-                      return (
-                        <SubjectCard
-                          key={mathsSubject.id}
-                          subject={mathsSubject}
-                          classInfo={classInfo}
-                          gradeType={gradeType}
-                          navigate={navigate}
-                          isUrdu={isUrdu}
-                          index={0}
-                          lectures={lectures}
-                          quizzes={quizzes}
-                          pastPapers={pastPapers}
-                          lecturesLoading={lecturesLoading}
-                          pastPapersLoading={pastPapersLoading}
-                          onQuizzesClick={() => setShowQuizModal(true)}
-                        />
-                      );
                     })()}
+
+                    {/* Maths sits next to Physics only when both are visible */}
+                    {mathsSubject && renderMathCard(0)}
                   </div>
                 )}
 
-                {/* ROW 2+: remaining subjects */}
-                {restSubjects.length > 0 && (
+                {/* ── ROW 2+: remaining subjects + Maths when Physics is hidden ── */}
+                {(restSubjects.length > 0 || (!physicsSubject && mathsSubject)) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {/* If Physics is not shown, render Maths first (left-aligned) */}
+                    {!physicsSubject && mathsSubject && renderMathCard(0)}
+
                     {restSubjects.map((subject: any, i: number) => {
                       const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(subject.id);
                       return (

@@ -68,7 +68,7 @@
     "slide1": {
       "title": "Kindergarten",
       "highlight": "Learn with Fun and Lead Tomorrow.",
-      "description": "Zaheen turns KG kids’ curiosity into lifelong success.",
+      "description": "Zaheen turns KG kids' curiosity into lifelong success.",
       "button": "Start the Journey",
       "link": "/grade-view/kg"
     },
@@ -224,5 +224,154 @@
   },
   "mob": {
     "heading1": "Learn Skills from Rs 5/day"
+  },
+
+  "kgClassView": {
+    "home": "Home",
+    "defaultGrade": "Kindergarten",
+    "pageTitle": "Learning World!",
+    "pageSubtitle": "Pick a fun adventure to start learning today!",
+    "soonBadge": "SOON",
+
+    "subjects": {
+      "english": {
+        "tagline": "Fun stories and A-B-C games!",
+        "btnLabel": "Let's Go!"
+      },
+      "urdu": {
+        "tagline": "Learn Alif Bay Pay with songs!",
+        "btnLabel": "Start"
+      },
+      "math": {
+        "tagline": "Count numbers and find shapes!",
+        "btnLabel": "Explore"
+      },
+      "physics": {
+        "tagline": "Discover how things move!",
+        "btnLabel": "Discover"
+      },
+      "chemistry": {
+        "tagline": "Mix and explore cool reactions!",
+        "btnLabel": "Explore"
+      },
+      "biology": {
+        "tagline": "Learn about plants and animals!",
+        "btnLabel": "Discover"
+      },
+      "islamic": {
+        "tagline": "Quranic stories and lessons!",
+        "btnLabel": "Learn"
+      },
+      "pakistan": {
+        "tagline": "Our beautiful country and history!",
+        "btnLabel": "Explore"
+      },
+      "computer": {
+        "tagline": "Code, play, and create with tech!",
+        "btnLabel": "Create"
+      },
+      "art": {
+        "tagline": "Draw, color, and create magic!",
+        "btnLabel": "Create"
+      },
+      "music": {
+        "tagline": "Sing, clap, and make music!",
+        "btnLabel": "Sing"
+      },
+      "default": {
+        "tagline": "Let's learn something new!",
+        "btnLabel": "Start"
+      }
+    },
+
+    "quizzes": {
+      "title": "Quizzes",
+      "tagline": "Answer and win shiny stars!",
+      "btnLabel": "Win Stars",
+      "modalTitle": "Quizzes",
+      "modalDesc": "We're crafting exciting quizzes for every subject to help kids test what they've learned and win shiny stars. Stay tuned — they'll be live very soon!"
+    },
+    "funGames": {
+      "title": "Fun Games",
+      "tagline": "Exciting brain games for kids!",
+      "btnLabel": "Play"
+    },
+    "aiBestie": {
+      "title": "AI Bestie",
+      "tagline": "Your magical learning robot friend!",
+      "btnLabel": "Say Hello!"
+    },
+
+    "cta": {
+      "badge": "Join 10,000+ Happy Friends",
+      "title": "Ready for School?",
+      "desc": "We help children in Pakistan learn in the most fun way possible. Join the Zaheen family today!",
+      "btnLessons": "See All Fun Lessons",
+      "btnApp": "Get the App"
+    },
+
+    "modal": {
+      "comingSoon": "Coming Soon",
+      "onTheWay": "are on the way!",
+      "gotIt": "Got it, thanks! 🎉"
+    }
+  },
+
+  "kgLectureView": {
+    "home": "Home",
+    "breadcrumbSep": "›",
+
+    "hero": {
+      "kgBadge": "KG Foundation",
+      "lessons": "Lessons",
+      "hoursVideo": "3 Hours Video",
+      "mathematics": "Mathematics"
+    },
+
+    "progress": {
+      "journeyTitle": "Your Learning Journey",
+      "completed": "Completed",
+      "done": "Done",
+      "lessonsCompleted": "lessons completed",
+      "activitiesCompleted": "activities completed"
+    },
+
+    "taglines": {
+      "english": "Embark on a magical journey through letters, sounds, and stories! Perfect for early learners to build confidence in reading and writing.",
+      "urdu": "Embark on a joyful journey to learn the beautiful Urdu language through stories, songs, and interactive play.",
+      "math": "Embark on a magical adventure through numbers, shapes, and patterns designed specifically for curious young minds.",
+      "islamic": "Learn beautiful duas, Quranic surahs, and Islamic values in a fun and friendly way!",
+      "pakistan": "Discover the beautiful stories, geography and culture of our amazing country Pakistan!",
+      "computer": "Learn to code, create and think like a computer! Tech is for every kid.",
+      "default": "Let's explore and learn together! Every lesson is a new adventure."
+    },
+
+    "player": {
+      "lectureOf": "Lecture {{current}} of {{total}}",
+      "allLessons": "All Lessons"
+    },
+
+    "videoCard": {
+      "lecture": "Lecture"
+    },
+
+    "chapter": {
+      "label": "Chapter"
+    },
+
+    "videoLessons": {
+      "title": "Video Lessons",
+      "lessonsCount": "Lessons",
+      "videoLessonsLabel": "Video Lessons"
+    },
+
+    "empty": {
+      "title": "Coming Soon!",
+      "desc": "We're preparing amazing lessons for {{subject}}. Check back soon!"
+    },
+
+    "back": {
+      "toSubjects": "Back to Subjects"
+    }
   }
 }

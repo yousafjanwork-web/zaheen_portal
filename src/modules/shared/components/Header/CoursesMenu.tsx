@@ -69,24 +69,29 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
           <ul className="space-y-3 text-sm text-slate-600">
 
             {[
-              { link: "/grade-view/kg", label: t("courses.kg") },
+            {
+               label: t("courses.kg"),
+              onClick: () => navigate("/class/1", { state: { gradeType: "kg" } })
+              },
               { link: "/grade-view/1-5", label: t("courses.grade1to5") },
               { link: "/grade-view/6-8", label: t("courses.grade6to8") },
               { link: "/grade-view/9-12", label: t("courses.grade9to12") },
             ].map((item, i) => (
-              <li
+             <li
                 key={i}
-                onClick={onClose}
-                className="flex items-center gap-2 hover:text-primary cursor-pointer"
-              >
-                <span className="flex-shrink-0">
-                  <BookOpen size={18} />
-                </span>
-
-                <a href={item.link}>
-                  {item.label}
-                </a>
-              </li>
+                 onClick={() => {
+                     if (item.onClick) {
+                 item.onClick();
+                    } else {
+                navigate(item.link);
+              }
+                 onClose();
+          }}
+            className="flex items-center gap-2 hover:text-primary cursor-pointer"
+           >
+                   <BookOpen size={18} />
+                 {item.label}
+            </li>
             ))}
 
           </ul>

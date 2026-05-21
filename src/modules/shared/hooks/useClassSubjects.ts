@@ -32,7 +32,7 @@ export const useClassSubjects = (
 
         if (cancelled) return;
 
-        const cls      = classes.find((c: any) => c.id === Number(classId));
+        const cls = classes.find((c: any) => c.id === Number(classId));
         const selected = subs.find((s: any) => s.id === selectedSubjectId) || subs[0];
 
         setClassInfo(cls);

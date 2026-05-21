@@ -14,7 +14,7 @@ const grades = [
     iconBg: "bg-[#F8E7B0]",
     iconColor: "text-orange-500",
     badgeText: "Games Included",
-    link: "/grade-view/kg"
+    link: "/class/1"
   },
   {
     title: t("browseGrade.g1Title"),
