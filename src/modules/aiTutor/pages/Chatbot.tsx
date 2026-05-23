@@ -1,6 +1,40 @@
 import React, { useState, useRef, useEffect, useCallback, FormEvent } from "react";
 import "../../../styles/chatbot_fullpage.css";
+import { getLanguage } from "@/modules/shared/i18n";
+import enTranslations from "@/modules/shared/i18n/en.json";
+import urTranslations from "@/modules/shared/i18n/ur.json";
 
+/* ─────────────────────────────────────────────────────────────
+   TRANSLATION HELPER  (same pattern as SubjectLecturesView)
+──────────────────────────────────────────────────────────────── */
+const translations: Record<string, any> = {
+  en: enTranslations,
+  ur: urTranslations,
+};
+
+const getNestedValue = (obj: any, key: string): string => {
+  const value = key.split(".").reduce((acc: any, part: string) => acc?.[part], obj);
+  return typeof value === "string" ? value : key;
+};
+
+const useT = () => {
+  const [lang, setLang] = useState<string>(() => getLanguage());
+  useEffect(() => {
+    const sync = () => setLang(getLanguage());
+    window.addEventListener("storage", sync);
+    window.addEventListener("languageChange", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("languageChange", sync);
+    };
+  }, []);
+  const dict = translations[lang] ?? translations.en;
+  return (key: string) => getNestedValue(dict, key);
+};
+
+/* ─────────────────────────────────────────────────────────────
+   Types
+──────────────────────────────────────────────────────────────── */
 interface Message {
   text: string;
   type: "user" | "bot";
@@ -26,51 +60,71 @@ function formatBotResponse(text: string): string {
   return html;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   CHATBOT COMPONENT
+──────────────────────────────────────────────────────────────── */
 const Chatbot: React.FC = () => {
+  const t = useT();
+
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState<string>("");
-  const [topic, setTopic] = useState<string>("Maths");
-  const [language, setLanguage] = useState<string>("English");
+  const [input, setInput]       = useState<string>("");
+
+  // topic key stored internally (always English), displayed label comes from t()
+  const [topicKey, setTopicKey] = useState<string>("Maths");
+
+  // chatLanguage is the AI reply language — "English" or "Urdu" (sent to API unchanged)
+  const [chatLanguage, setChatLanguage] = useState<string>("English");
+
   const [loading, setLoading] = useState<boolean>(false);
 
-  const chatRef = useRef<HTMLDivElement | null>(null);
-  const recognitionRef = useRef<any>(null);
-  const memoryRef = useRef<string>("");
-  const isListening = useRef<boolean>(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const historyRef = useRef<ChatHistory[]>([]);
-  const languageRef = useRef<string>("English");
-  const queueRef = useRef<string[]>([]);
-  const isProcessingRef = useRef<boolean>(false);
+  const chatRef          = useRef<HTMLDivElement | null>(null);
+  const recognitionRef   = useRef<any>(null);
+  const memoryRef        = useRef<string>("");
+  const isListening      = useRef<boolean>(false);
+  const inputRef         = useRef<HTMLInputElement | null>(null);
+  const historyRef       = useRef<ChatHistory[]>([]);
+  const languageRef      = useRef<string>("English");
+  const queueRef         = useRef<string[]>([]);
+  const isProcessingRef  = useRef<boolean>(false);
 
-  // ROOT CAUSE FIX for "AI keeps replying in old language":
-  // The conversation history (historyRef) contained all the previous Urdu messages.
-  // When a new question was sent, that Urdu history was included in the API payload.
-  // The AI model uses conversation history as strong context for which language to use,
-  // so it ignored the new language setting and kept replying in Urdu.
-  // Fix: on language change, wipe history + memory so the AI has a clean slate.
+  // ── topic options: key maps to en.json chatbot.topics key ──
+  const topicOptions: { key: string; i18nKey: string; apiValue: string }[] = [
+    { key: "Maths",     i18nKey: "chatbot.topics.maths",     apiValue: "Maths"     },
+    { key: "English",   i18nKey: "chatbot.topics.english",   apiValue: "English"   },
+    { key: "Urdu",      i18nKey: "chatbot.topics.urdu",      apiValue: "Urdu"      },
+    { key: "Chemistry", i18nKey: "chatbot.topics.chemistry", apiValue: "Chemistry" },
+    { key: "Physics",   i18nKey: "chatbot.topics.physics",   apiValue: "Physics"   },
+    { key: "Science",   i18nKey: "chatbot.topics.science",   apiValue: "Science"   },
+    { key: "Computer",  i18nKey: "chatbot.topics.computer",  apiValue: "Computer"  },
+  ];
+
+  // derive the API topic value from the current key
+  const apiTopic = topicOptions.find((o) => o.key === topicKey)?.apiValue ?? topicKey;
+
+  /* ─── Language change: wipe history so AI gets a clean slate ─── */
   const handleLanguageChange = (val: string) => {
-    setLanguage(val);
+    setChatLanguage(val);
     languageRef.current = val;
 
     // Clear all state that carries the old language's context
     historyRef.current = [];
-    memoryRef.current = "";
-    queueRef.current = [];
+    memoryRef.current  = "";
+    queueRef.current   = [];
 
-    // Show a divider so the user knows a new session started
-    const notice =
+    // Notice key differs by target language
+    const noticeKey =
       val === "Urdu"
-        ? "🔄 زبان اردو میں تبدیل ہو گئی — نئی گفتگو شروع"
-        : "🔄 Language switched to English — new session started";
+        ? "chatbot.switchNotice"   // ur.json: "🔄 زبان اردو میں تبدیل ہو گئی — نئی گفتگو شروع"
+        : "chatbot.switchNotice";  // en.json: "🔄 Language switched to English — new session started"
+
+    // We need the notice in the *new* language, so read directly from the dict
+    const dict = val === "Urdu" ? urTranslations : enTranslations;
+    const notice = getNestedValue(dict, noticeKey);
     setMessages((prev) => [...prev, { text: notice, type: "bot", isHtml: false }]);
   };
 
   useEffect(() => {
-    chatRef.current?.scrollTo({
-      top: chatRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
   const typeMessage = useCallback((text: string, onComplete: () => void) => {
@@ -89,7 +143,7 @@ const Chatbot: React.FC = () => {
       i++;
       if (i >= text.length) {
         clearInterval(interval);
-        historyRef.current.push({ role: "model", text: text });
+        historyRef.current.push({ role: "model", text });
         if (historyRef.current.length > 10) historyRef.current.shift();
         onComplete();
       }
@@ -110,10 +164,8 @@ const Chatbot: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            topic,
-            // Read from ref (not state) to avoid stale closure — ensures
-            // language is always current even inside memoized callback
-            language: languageRef.current,
+            topic: apiTopic,
+            language: languageRef.current, // always current via ref
             history: historyRef.current.slice(-10),
             memory: memoryRef.current,
           }),
@@ -127,18 +179,14 @@ const Chatbot: React.FC = () => {
           typeMessage(data.reply, () => {
             isProcessingRef.current = false;
             if (queueRef.current.length > 0) {
-              const next = queueRef.current.shift()!;
-              processMessage(next);
+              processMessage(queueRef.current.shift()!);
             } else {
               setTimeout(() => inputRef.current?.focus(), 50);
             }
           });
         } else {
           isProcessingRef.current = false;
-          if (queueRef.current.length > 0) {
-            const next = queueRef.current.shift()!;
-            processMessage(next);
-          }
+          if (queueRef.current.length > 0) processMessage(queueRef.current.shift()!);
         }
       } catch (err) {
         setLoading(false);
@@ -148,14 +196,13 @@ const Chatbot: React.FC = () => {
         ]);
         isProcessingRef.current = false;
         if (queueRef.current.length > 0) {
-          const next = queueRef.current.shift()!;
-          processMessage(next);
+          processMessage(queueRef.current.shift()!);
         } else {
           setTimeout(() => inputRef.current?.focus(), 50);
         }
       }
     },
-    [topic, typeMessage]
+    [apiTopic, typeMessage]
   );
 
   const sendMessage = (e?: FormEvent) => {
@@ -178,67 +225,59 @@ const Chatbot: React.FC = () => {
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.lang = languageRef.current === "Urdu" ? "ur-PK" : "en-US";
-    isListening.current = true;
+    recognition.lang      = languageRef.current === "Urdu" ? "ur-PK" : "en-US";
+    isListening.current   = true;
     recognition.start();
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
     };
-
     recognition.onend = () => {
       isListening.current = false;
       inputRef.current?.focus();
     };
   };
 
-  const isUrdu = (text: string) => /[\u0600-\u06FF]/.test(text);
-  const isUrduLang = language === "Urdu";
+  const isUrdu     = (text: string) => /[\u0600-\u06FF]/.test(text);
+  const isUrduLang = chatLanguage === "Urdu";
 
   return (
     <div
       className="chatbot-container"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100dvh",
-        overflow: "hidden",
-      }}
+      style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
-      <div className="chatbot-header">📘 Zaheen AI Tutor</div>
+      {/* ── Header ── */}
+      <div className="chatbot-header">{t("chatbot.header")}</div>
 
+      {/* ── Controls ── */}
       <div className="controls">
-        <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-          <option value="Maths">Maths</option>
-          <option value="English">English</option>
-          <option value="Urdu">Urdu</option>
-          <option value="Chemistry">Chemistry</option>
-          <option value="Physics">Physics</option>
-          <option value="Science">Science</option>
-          <option value="Computer">Computer</option>
+        {/* Topic dropdown — labels come from translation */}
+        <select value={topicKey} onChange={(e) => setTopicKey(e.target.value)}>
+          {topicOptions.map((opt) => (
+            <option key={opt.key} value={opt.key}>
+              {t(opt.i18nKey)}
+            </option>
+          ))}
         </select>
-        <select value={language} onChange={(e) => handleLanguageChange(e.target.value)}>
-          <option value="English">English</option>
-          <option value="Urdu">Urdu</option>
+
+        {/* Language dropdown — labels come from translation */}
+        <select value={chatLanguage} onChange={(e) => handleLanguageChange(e.target.value)}>
+          <option value="English">{t("chatbot.languages.english")}</option>
+          <option value="Urdu">{t("chatbot.languages.urdu")}</option>
         </select>
       </div>
 
+      {/* ── Chat area ── */}
       <div
         className="chat-area"
         ref={chatRef}
         style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}
       >
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`msg ${msg.type} ${isUrdu(msg.text) ? "urdu" : ""}`}
-          >
+          <div key={i} className={`msg ${msg.type} ${isUrdu(msg.text) ? "urdu" : ""}`}>
             {msg.isHtml && msg.type === "bot" ? (
-              <div
-                className="bubble bot-formatted"
-                dangerouslySetInnerHTML={{ __html: msg.text }}
-              />
+              <div className="bubble bot-formatted" dangerouslySetInnerHTML={{ __html: msg.text }} />
             ) : (
               <div className="bubble">{msg.text}</div>
             )}
@@ -247,30 +286,30 @@ const Chatbot: React.FC = () => {
 
         {loading && (
           <div className={`msg bot ${isUrduLang ? "urdu" : ""}`}>
-            <div className="bubble thinking">
-              {isUrduLang ? "🤖 AI soch raha hai..." : "🤖 AI is thinking..."}
-            </div>
+            <div className="bubble thinking">{t("chatbot.thinking")}</div>
           </div>
         )}
       </div>
 
+      {/* ── Queue notice ── */}
       {queueRef.current.length > 0 && (
         <div className="queue-notice">
-          {queueRef.current.length} message(s) waiting...
+          {queueRef.current.length} {t("chatbot.queueNotice")}
         </div>
       )}
 
+      {/* ── Input form ── */}
       <form className="input-box" onSubmit={sendMessage} style={{ flexShrink: 0 }}>
         <input
           ref={inputRef}
           value={input}
-          placeholder={isUrduLang ? "اپنا سوال پوچھیں..." : "Ask your question..."}
+          placeholder={t("chatbot.placeholder")}
           onChange={(e) => setInput(e.target.value)}
           autoFocus
           className={isUrduLang ? "urdu-input" : ""}
         />
-        <button type="button" onClick={startListening}>🎤</button>
-        <button type="submit">Send</button>
+        <button type="button" onClick={startListening}>{t("chatbot.micBtn")}</button>
+        <button type="submit">{t("chatbot.sendBtn")}</button>
       </form>
     </div>
   );

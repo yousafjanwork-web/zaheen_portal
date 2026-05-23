@@ -1,93 +1,103 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  BookOpen,
-  FileText,
-  FolderOpen,
-  Settings,
-  LayoutDashboard,
-  GraduationCap,
-  PlayCircle,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  CheckCircle2,
-  Check,
-  Clock,
-  Star,
-  Users,
-  ArrowLeft,
+  BookOpen, FileText, FolderOpen, Settings, LayoutDashboard,
+  GraduationCap, PlayCircle, ChevronLeft, ChevronRight, ChevronDown,
+  CheckCircle2, Check, Clock, Star, Users, ArrowLeft,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
 
-/* ─────────────────────────────────────────
-   TYPES
-───────────────────────────────────────── */
-interface Subject {
-  id: number;
-  name: string;
-  urdu_name?: string;
-}
+import enTranslations from "@/modules/shared/i18n/en.json";
+import urTranslations from "@/modules/shared/i18n/ur.json";
 
-interface Chapter {
-  id: number;
-  name: string;
-  urdu_name?: string;
-}
+/* ─────────────────────────────────────────────────────────────
+   TRANSLATION HOOK  — single source of truth for lang/isRtl.
+   Returns { t, lang } — both reactive, re-render on change.
+   To add Pashto: import psTranslations, add  ps: psTranslations.
+──────────────────────────────────────────────────────────────── */
+const translations: Record<string, any> = {
+  en: enTranslations,
+  ur: urTranslations,
+  // ps: psTranslations,
+};
 
-interface Lecture {
-  id: number;
-  name: string;
-  urdu_name?: string;
-  path: string;
-  chapter_id: number;
-  duration?: string;
-  desc?: string;
-}
+const getNestedValue = (obj: any, key: string): any => {
+  return key.split(".").reduce((acc: any, part: string) => acc?.[part], obj);
+};
 
-interface ClassInfo {
-  class_id: number;
-  name: string;
-  urdu_name?: string;
-  thumbnailUrl?: string;
-  chapterCount?: number;
-}
+const useTranslation = () => {
+  const [lang, setLang] = useState<string>(() => getLanguage());
 
-/* ─────────────────────────────────────────
-   STATIC ENRICHMENT DATA
-───────────────────────────────────────── */
-const LEARN_POINTS = [
-  "Master the core fundamentals from scratch with guided lectures",
-  "Build real-world projects and apply concepts confidently",
-  "Understand industry-standard techniques used by professionals",
-  "Apply advanced strategies to solve complex, real-world problems",
-  "Develop a structured and systematic professional mindset",
-  "Learn through hands-on examples, exercises, and case studies",
-];
+  useEffect(() => {
+    const sync = () => setLang(getLanguage());
+    window.addEventListener("storage", sync);
+    window.addEventListener("languageChange", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("languageChange", sync);
+    };
+  }, []);
 
-const REQUIREMENTS = [
-  "Basic interest in the subject area",
-  "A computer or mobile device with internet access",
-  "No prior experience required — we start from the basics",
-  "Willingness to learn, practice, and grow",
-];
+  const dict = translations[lang] ?? translations.en;
 
-const DESCRIPTION = `This comprehensive course takes you from complete beginner to professional level with a structured, practical curriculum.
+  /* t() for strings — falls back to en if key missing in current lang */
+  const t = useCallback(
+    (key: string, vars?: Record<string, string | number>): string => {
+      let val = getNestedValue(dict, key);
+      if (typeof val !== "string") {
+        val = getNestedValue(translations.en, key);
+      }
+      if (typeof val !== "string") return key;
+      if (vars) {
+        Object.entries(vars).forEach(([k, v]) => {
+          val = val.replace(`{{${k}}}`, String(v));
+        });
+      }
+      return val;
+    },
+    [dict]
+  );
 
-You will explore real-world scenarios guided by step-by-step video lectures that break down complex topics into digestible lessons. Each chapter builds upon the last, ensuring steady and confident progress.
+  /* tArr() for array keys (learnSection.points, requirements.items) */
+  const tArr = useCallback(
+    (key: string): string[] => {
+      const val = getNestedValue(dict, key);
+      if (Array.isArray(val)) return val as string[];
+      const fallback = getNestedValue(translations.en, key);
+      return Array.isArray(fallback) ? (fallback as string[]) : [];
+    },
+    [dict]
+  );
 
-Whether you're looking to upskill for career advancement or simply explore a new domain, this course provides everything you need to succeed and stand out in your field.`;
+  return { t, tArr, lang };
+};
+
+/* ─────────────────────────────────────────────────────────────
+   Types
+──────────────────────────────────────────────────────────────── */
+interface Subject   { id: number; name: string; urdu_name?: string; }
+interface Chapter   { id: number; name: string; urdu_name?: string; }
+interface Lecture   { id: number; name: string; urdu_name?: string; path: string; chapter_id: number; duration?: string; desc?: string; }
+interface ClassInfo { class_id: number; name: string; urdu_name?: string; thumbnailUrl?: string; chapterCount?: number; }
 
 const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard];
 
-/* ─────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────
+   Localised name helper
+──────────────────────────────────────────────────────────────── */
+const localName = (en: string, ur?: string, isRtl?: boolean) =>
+  isRtl ? ur || en : en;
+
+/* ═══════════════════════════════════════════════════════════
    MAIN PAGE
-───────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 const SkillsChaptersPage = () => {
   const { classId } = useParams();
   const navigate    = useNavigate();
-  const lang        = getLanguage();
-  const isUrdu      = lang === "ur";
+
+  /* ── i18n — single call, no duplicate useState ── */
+  const { t, tArr, lang } = useTranslation();
+  const isRtl = lang === "ur"; // add "ps" when Pashto is ready
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, []);
 
@@ -100,7 +110,6 @@ const SkillsChaptersPage = () => {
 
   /* ── loading state ── */
   const [loadingClass, setLoadingClass]       = useState(true);
-  const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [loadingChapters, setLoadingChapters] = useState(true);
 
   /* ── watch mode state ── */
@@ -112,13 +121,15 @@ const SkillsChaptersPage = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   /* ── derived ── */
-  const currentIdx       = lectures.findIndex((l) => l.id === selectedLecture?.id);
-  const totalLectures    = lectures.length;
-  const totalWatched     = watchedSet.size;
-  const progressPercent  = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
-  const courseName       = isUrdu ? classInfo?.urdu_name || classInfo?.name : classInfo?.name;
+  const currentIdx      = lectures.findIndex((l) => l.id === selectedLecture?.id);
+  const totalLectures   = lectures.length;
+  const totalWatched    = watchedSet.size;
+  const progressPercent = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
 
-  /* ── group lectures by chapter for sidebar ── */
+  /* ✅ FIX: always derive courseName from reactive isRtl */
+  const courseName = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
+
+  /* ── group lectures by chapter ── */
   const lecturesByChapter: Record<number, Lecture[]> = {};
   lectures.forEach((l) => {
     if (!lecturesByChapter[l.chapter_id]) lecturesByChapter[l.chapter_id] = [];
@@ -126,16 +137,15 @@ const SkillsChaptersPage = () => {
   });
   const chapterIds = Object.keys(lecturesByChapter).map(Number);
 
-  /* ════════════════════════════════════════
-     FETCH CLASS
-  ════════════════════════════════════════ */
+  /* ── fetch class ── */
   useEffect(() => {
     setLoadingClass(true);
     (async () => {
       try {
-        const res  = await fetch(`https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?t=${Date.now()}`, {
-          headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" },
-        });
+        const res  = await fetch(
+          `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?t=${Date.now()}`,
+          { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
+        );
         const data = await res.json();
         const cls  = data.find((c: ClassInfo) => c.class_id === Number(classId));
         setClassInfo(cls ?? null);
@@ -144,27 +154,22 @@ const SkillsChaptersPage = () => {
     })();
   }, [classId]);
 
-  /* ════════════════════════════════════════
-     FETCH SUBJECTS
-  ════════════════════════════════════════ */
+  /* ── fetch subjects ── */
   useEffect(() => {
-    setLoadingSubjects(true);
     (async () => {
       try {
-        const res  = await fetch(`https://api.zaheen.com.pk/api/class/${classId}/subjects?ts=${Date.now()}`, {
-          headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" },
-        });
+        const res  = await fetch(
+          `https://api.zaheen.com.pk/api/class/${classId}/subjects?ts=${Date.now()}`,
+          { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
+        );
         const data: Subject[] = await res.json();
         setSubjects(data);
         if (data.length > 0) setSelectedSubject(data[0]);
       } catch (e) { console.error(e); }
-      setLoadingSubjects(false);
     })();
   }, [classId]);
 
-  /* ════════════════════════════════════════
-     FETCH LECTURES (chapters → videos)
-  ════════════════════════════════════════ */
+  /* ── fetch lectures ── */
   useEffect(() => {
     if (!selectedSubject) return;
     setLoadingChapters(true);
@@ -176,15 +181,14 @@ const SkillsChaptersPage = () => {
 
     (async () => {
       try {
-        const chRes      = await fetch(`https://api.zaheen.com.pk/api/subject/${selectedSubject.id}/chapters?ts=${Date.now()}`);
+        const chRes = await fetch(
+          `https://api.zaheen.com.pk/api/subject/${selectedSubject.id}/chapters?ts=${Date.now()}`
+        );
         const chaptersData: Chapter[] = await chRes.json();
-
         const map: Record<number, Chapter> = {};
         chaptersData.forEach((c) => { map[c.id] = c; });
         setChapterMap(map);
-
         if (chaptersData.length > 0) setOpenChapters(new Set([chaptersData[0].id]));
-
         const lecturesArrays = await Promise.all(
           chaptersData.map((c) =>
             fetch(`https://api.zaheen.com.pk/api/chapter/${c.id}/videos?ts=${Date.now()}`).then((r) => r.json())
@@ -196,9 +200,7 @@ const SkillsChaptersPage = () => {
     })();
   }, [selectedSubject]);
 
-  /* ════════════════════════════════════════
-     WATCH HELPERS
-  ════════════════════════════════════════ */
+  /* ── watch helpers ── */
   const selectLecture = useCallback((lecture: Lecture) => {
     setSelectedLecture(lecture);
     setIsWatchMode(true);
@@ -240,16 +242,34 @@ const SkillsChaptersPage = () => {
   };
 
   const toggleChapter = (id: number) =>
-    setOpenChapters((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setOpenChapters((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+
+  /* ── localised name helpers ── */
+  const chapterName = (chId: number) => {
+    const ch = chapterMap[chId];
+    if (!ch) return t("skillsChaptersPage.watchMode.chapter");
+    return localName(ch.name, ch.urdu_name, isRtl);
+  };
+
+  const lectureName = (l: Lecture) => localName(l.name, l.urdu_name, isRtl);
+
+  /* ── arrays from JSON ── */
+  const learnPoints  = tArr("skillsChaptersPage.learnSection.points");
+  const requirements = tArr("skillsChaptersPage.requirements.items");
+  const descriptionText = t("skillsChaptersPage.description.text");
 
   /* ════════════════════════════════════════
-     WATCH MODE — white background, left-aligned video, large sidebar
+     WATCH MODE
   ════════════════════════════════════════ */
   if (isWatchMode && selectedLecture) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
 
-        {/* ── Top navbar — white with border ── */}
+        {/* Top navbar */}
         <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm">
           <button
             onClick={exitWatchMode}
@@ -258,29 +278,22 @@ const SkillsChaptersPage = () => {
             <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
               <ArrowLeft size={16} />
             </div>
-            <span className="hidden sm:block">{isUrdu ? "تمام لیکچرز" : "Back to Course"}</span>
+            <span className="hidden sm:block">{t("skillsChaptersPage.watchMode.backBtn")}</span>
           </button>
 
           <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
 
           <div className="flex-1 min-w-0">
-            <p className="text-slate-900 font-bold text-sm truncate leading-tight">
-              {courseName}
-            </p>
+            <p className="text-slate-900 font-bold text-sm truncate leading-tight">{courseName}</p>
             <p className="text-slate-400 text-[11px] font-medium truncate">
-              {isUrdu
-                ? `لیکچر ${currentIdx + 1} از ${totalLectures}`
-                : `Lecture ${currentIdx + 1} of ${totalLectures}`}
+              {t("skillsChaptersPage.watchMode.lectureOf", { current: currentIdx + 1, total: totalLectures })}
             </p>
           </div>
 
           {/* Progress pill */}
           <div className="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5 shrink-0">
             <div className="relative w-28 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-indigo-500 transition-all duration-700"
-                style={{ width: `${progressPercent}%` }}
-              />
+              <div className="h-full rounded-full bg-indigo-500 transition-all duration-700" style={{ width: `${progressPercent}%` }} />
             </div>
             <span className="text-xs font-bold text-indigo-600">{progressPercent}%</span>
           </div>
@@ -304,13 +317,11 @@ const SkillsChaptersPage = () => {
           </div>
         </div>
 
-        {/* ── Main body: video column + sidebar ── */}
+        {/* Main body */}
         <div className="flex flex-col xl:flex-row flex-1 overflow-hidden">
 
-          {/* LEFT — Video column, left-aligned, full width of its column */}
+          {/* LEFT — Video column */}
           <div className="flex-1 min-w-0 flex flex-col overflow-y-auto bg-white">
-
-            {/* Video player — black background, left-aligned, no centering */}
             <div className="w-full bg-black">
               <div className="w-full aspect-video">
                 {selectedLecture.path ? (
@@ -336,31 +347,25 @@ const SkillsChaptersPage = () => {
                       <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
                         <PlayCircle size={40} className="text-white" />
                       </div>
-                      <p className="text-white/60 text-sm text-center px-8">
-                        {isUrdu ? selectedLecture.urdu_name || selectedLecture.name : selectedLecture.name}
-                      </p>
+                      <p className="text-white/60 text-sm text-center px-8">{lectureName(selectedLecture)}</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Video info card — with top gap from the video */}
+            {/* Video info card */}
             <div className="w-full px-5 md:px-7 pt-5 pb-6">
               <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5">
                 <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest mb-1.5">
-                  {chapterMap[selectedLecture.chapter_id]
-                    ? (isUrdu
-                      ? chapterMap[selectedLecture.chapter_id].urdu_name || chapterMap[selectedLecture.chapter_id].name
-                      : chapterMap[selectedLecture.chapter_id].name)
-                    : isUrdu ? "باب" : "Chapter"}
+                  {chapterName(selectedLecture.chapter_id)}
                 </p>
-                <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-snug mb-3">
-                  {isUrdu ? selectedLecture.urdu_name || selectedLecture.name : selectedLecture.name}
+                <h2 className={`text-xl md:text-2xl font-black text-slate-900 leading-snug mb-3 ${isRtl ? "text-right" : ""}`}>
+                  {lectureName(selectedLecture)}
                 </h2>
                 {selectedLecture.desc && (() => {
-                  const lines = selectedLecture.desc.split("\n").filter(Boolean);
-                  const intro: string[] = [];
+                  const lines   = selectedLecture.desc.split("\n").filter(Boolean);
+                  const intro:   string[] = [];
                   const bullets: string[] = [];
                   lines.forEach((line) => {
                     const stripped = line.replace(/^\*+\s*/, "").trim();
@@ -386,57 +391,43 @@ const SkillsChaptersPage = () => {
                   );
                 })()}
 
-                {/* Mobile progress bar */}
+                {/* Mobile progress */}
                 <div className="mt-4 pt-4 border-t border-slate-200 xl:hidden">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">
-                      {isUrdu ? "کورس پیشرفت" : "Course Progress"}
-                    </span>
+                    <span className="text-xs text-slate-400 font-medium">{t("skillsChaptersPage.watchMode.progress")}</span>
                     <span className="text-xs font-black text-indigo-600">{progressPercent}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-indigo-500 transition-all duration-500"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                    <div className="h-full rounded-full bg-indigo-500 transition-all duration-500" style={{ width: `${progressPercent}%` }} />
                   </div>
                   <p className="text-xs text-slate-400 mt-1.5">
-                    {totalWatched} / {totalLectures} {isUrdu ? "مکمل" : "completed"}
+                    {totalWatched} / {totalLectures} {t("skillsChaptersPage.watchMode.completed")}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT — Large sticky scrollable lecture sidebar */}
+          {/* RIGHT — Sidebar */}
           <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
-
-            {/* Sidebar header */}
             <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[16px] font-black text-slate-900">
-                  {isUrdu ? "کورس مواد" : "Course Content"}
-                </h3>
+                <h3 className="text-[16px] font-black text-slate-900">{t("skillsChaptersPage.watchMode.courseContent")}</h3>
                 <span className="text-[12px] text-slate-500 font-semibold bg-white border border-slate-200 px-3 py-1 rounded-full">
-                  {totalLectures} {isUrdu ? "لیکچرز" : "lectures"}
+                  {totalLectures} {t("skillsChaptersPage.content.lectures")}
                 </span>
               </div>
-              {/* Progress */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-indigo-500 rounded-full transition-all duration-700"
-                    style={{ width: `${progressPercent}%` }}
-                  />
+                  <div className="h-full bg-indigo-500 rounded-full transition-all duration-700" style={{ width: `${progressPercent}%` }} />
                 </div>
                 <span className="text-[12px] font-bold text-indigo-600 shrink-0">{progressPercent}%</span>
               </div>
               <p className="text-[12px] text-slate-400 mt-1.5">
-                {totalWatched} / {totalLectures} {isUrdu ? "مکمل" : "completed"}
+                {totalWatched} / {totalLectures} {t("skillsChaptersPage.watchMode.completed")}
               </p>
             </div>
 
-            {/* Chapter + lecture list — scrollable */}
             <div className="overflow-y-auto flex-1">
               {chapterIds.map((chId, chIdx) => {
                 const chapter      = chapterMap[chId];
@@ -448,7 +439,6 @@ const SkillsChaptersPage = () => {
 
                 return (
                   <div key={chId}>
-                    {/* Chapter header */}
                     <button
                       onClick={() => toggleChapter(chId)}
                       className="w-full flex items-center justify-between px-6 py-4 bg-slate-50 hover:bg-slate-100 border-b border-slate-200 transition-colors text-left"
@@ -458,9 +448,10 @@ const SkillsChaptersPage = () => {
                           {chIdx + 1}
                         </span>
                         <span className="text-[13px] font-bold text-slate-800 truncate">
+                          {/* ✅ FIX: urdu_name used when isRtl */}
                           {chapter
-                            ? (isUrdu ? chapter.urdu_name || chapter.name : chapter.name)
-                            : `Chapter ${chIdx + 1}`}
+                            ? localName(chapter.name, chapter.urdu_name, isRtl)
+                            : `${t("skillsChaptersPage.watchMode.chapter")} ${chIdx + 1}`}
                         </span>
                       </div>
                       <ChevronDown
@@ -469,7 +460,6 @@ const SkillsChaptersPage = () => {
                       />
                     </button>
 
-                    {/* Lecture rows */}
                     {isOpen && vids.map((lecture, vidIdx) => {
                       const globalIdx  = globalOffset + vidIdx;
                       const isSelected = selectedLecture?.id === lecture.id;
@@ -481,12 +471,9 @@ const SkillsChaptersPage = () => {
                           key={lecture.id}
                           onClick={() => selectLecture(lecture)}
                           className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${
-                            isSelected
-                              ? "bg-indigo-50 border-l-4 border-l-indigo-500"
-                              : "hover:bg-slate-50"
+                            isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
                           }`}
                         >
-                          {/* Status icon */}
                           <div className="shrink-0 mt-0.5">
                             {isWatched ? (
                               <CheckCircle2 size={20} className="text-emerald-500" />
@@ -498,18 +485,17 @@ const SkillsChaptersPage = () => {
                               </div>
                             )}
                           </div>
-
-                          {/* Text */}
                           <div className="flex-1 min-w-0">
                             <p className={`text-[13px] font-semibold leading-snug ${
                               isSelected ? "text-indigo-700" : isWatched ? "text-slate-400" : "text-slate-800"
-                            }`}>
-                              {isUrdu ? lecture.urdu_name || lecture.name : lecture.name}
+                            } ${isRtl ? "text-right" : ""}`}>
+                              {lectureName(lecture)}
                             </p>
                             {lecture.duration && (
-                              <span className="text-[11px] text-slate-400 font-medium mt-0.5 block">{lecture.duration}</span>
+                              <span className="text-[11px] text-slate-400 font-medium mt-0.5 block">
+                                {lecture.duration}
+                              </span>
                             )}
-                            {/* In-progress bar */}
                             {!isWatched && progress > 0 && progress < 100 && (
                               <div className="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden w-full">
                                 <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${progress}%` }} />
@@ -530,14 +516,12 @@ const SkillsChaptersPage = () => {
   }
 
   /* ════════════════════════════════════════
-     COURSE PAGE (non-watch mode) — unchanged
+     COURSE PAGE (non-watch mode)
   ════════════════════════════════════════ */
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
 
-      {/* ══════════════════════════════════
-          HERO BANNER
-      ══════════════════════════════════ */}
+      {/* HERO BANNER */}
       <div className="relative w-full min-h-[400px] md:min-h-[590px] overflow-hidden">
         <img
           src={classInfo?.thumbnailUrl || "https://placehold.co/1600x600/1e293b/ffffff?text=Course"}
@@ -552,51 +536,49 @@ const SkillsChaptersPage = () => {
           className="absolute top-5 left-5 z-20 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold hover:bg-white/20 transition-all"
         >
           <ArrowLeft size={16} />
-          {isUrdu ? "واپس" : "Back"}
+          {t("skillsChaptersPage.hero.back")}
         </button>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 flex flex-col justify-end h-full min-h-[400px] md:min-h-[480px] pb-14 pt-20">
 
           <div className="flex items-center gap-3 mb-4">
             <span className="bg-indigo-600 text-white text-[11px] font-black tracking-widest uppercase px-3 py-1 rounded-full">
-              Bestseller
+              {t("skillsChaptersPage.badges.bestseller")}
             </span>
             <span className="bg-white/15 backdrop-blur-sm text-white text-[11px] font-semibold px-3 py-1 rounded-full border border-white/20">
-              Professional Course
+              {t("skillsChaptersPage.badges.professional")}
             </span>
           </div>
 
           {loadingClass ? (
             <div className="h-12 w-72 bg-white/20 rounded-xl animate-pulse mb-4" />
           ) : (
-            <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 max-w-2xl drop-shadow-lg">
-              {courseName || "Professional Course"}
+            <h1 className={`text-3xl md:text-5xl font-black text-white leading-tight mb-4 max-w-2xl drop-shadow-lg ${isRtl ? "text-right" : ""}`}>
+              {courseName || t("skillsChaptersPage.badges.professional")}
             </h1>
           )}
 
-          <p className="text-white/80 text-[15px] leading-relaxed max-w-xl mb-6">
-            {isUrdu
-              ? "یہ کورس آپ کو جدید مہارتیں سکھانے کے لیے تیار کیا گیا ہے۔ مرحلہ وار لیکچرز کے ذریعے آسان سیکھنے کا تجربہ حاصل کریں۔"
-              : "Elevate your skills with our comprehensive, hands-on curriculum designed by industry professionals."}
+          <p className={`text-white/80 text-[15px] leading-relaxed max-w-xl mb-6 ${isRtl ? "text-right" : ""}`}>
+            {t("skillsChaptersPage.hero.subtitle")}
           </p>
 
           <div className="flex flex-wrap items-center gap-5 text-sm mb-7">
             <div className="flex items-center gap-1.5 text-amber-400 font-bold">
               <Star size={15} fill="currentColor" />
               <span>4.9</span>
-              <span className="text-white/50 font-normal">(12,480 {isUrdu ? "جائزے" : "ratings"})</span>
+              <span className="text-white/50 font-normal">(12,480 {t("skillsChaptersPage.hero.ratings")})</span>
             </div>
             <div className="flex items-center gap-1.5 text-white/80">
               <Users size={14} />
-              <span>45,192 {isUrdu ? "طلبا" : "students"}</span>
+              <span>45,192 {t("skillsChaptersPage.hero.students")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-white/80">
               <BookOpen size={14} />
-              <span>{totalLectures} {isUrdu ? "لیکچرز" : "lectures"}</span>
+              <span>{totalLectures} {t("skillsChaptersPage.hero.lectures")}</span>
             </div>
             <div className="flex items-center gap-1.5 text-white/80">
               <Clock size={14} />
-              <span>{isUrdu ? "ابتدائی سطح" : "Beginner level"}</span>
+              <span>{t("skillsChaptersPage.hero.level")}</span>
             </div>
           </div>
 
@@ -605,31 +587,27 @@ const SkillsChaptersPage = () => {
             className="w-fit flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-[15px] px-7 py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-900/40"
           >
             <PlayCircle size={20} />
-            {isUrdu ? "سیکھنا شروع کریں" : "Start Learning"}
+            {t("skillsChaptersPage.hero.startBtn")}
           </button>
         </div>
       </div>
 
-      {/* ══════════════════════════════════
-          WHAT YOU'LL LEARN
-      ══════════════════════════════════ */}
+      {/* WHAT YOU'LL LEARN */}
       <div className="max-w-5xl mx-auto px-6 py-12">
-        <h2 className="text-2xl font-black text-slate-900 mb-6">
-          {isUrdu ? "آپ کیا سیکھیں گے" : "What you'll learn"}
-        </h2>
+        <h2 className="text-2xl font-black text-slate-900 mb-6">{t("skillsChaptersPage.learnSection.title")}</h2>
         <div className="bg-white rounded-2xl border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {LEARN_POINTS.map((point, i) => (
+          {learnPoints.map((point, i) => (
             <div key={i} className="flex items-start gap-3">
               <Check size={16} className="text-indigo-600 shrink-0 mt-0.5" strokeWidth={2.5} />
-              <span className="text-[14px] text-slate-700 leading-relaxed">{point}</span>
+              <span className={`text-[14px] text-slate-700 leading-relaxed ${isRtl ? "text-right" : ""}`}>
+                {point}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ══════════════════════════════════
-          SUBJECT TABS
-      ══════════════════════════════════ */}
+      {/* SUBJECT TABS */}
       {subjects.length > 1 && (
         <div className="max-w-5xl mx-auto px-6 mb-8">
           <div className="flex flex-wrap gap-2">
@@ -647,7 +625,8 @@ const SkillsChaptersPage = () => {
                   }`}
                 >
                   <Icon size={15} />
-                  {isUrdu ? subject.urdu_name || subject.name : subject.name}
+                  {/* ✅ FIX: subject tab label respects current language */}
+                  {localName(subject.name, subject.urdu_name, isRtl)}
                 </button>
               );
             })}
@@ -655,25 +634,18 @@ const SkillsChaptersPage = () => {
         </div>
       )}
 
-      {/* ══════════════════════════════════
-          COURSE CONTENT SECTION
-      ══════════════════════════════════ */}
+      {/* COURSE CONTENT */}
       <div id="content-section" className="max-w-5xl mx-auto px-6 pb-12">
-        <h2 className="text-2xl font-black text-slate-900 mb-6">
-          {isUrdu ? "کورس مواد" : "Course Content"}
-        </h2>
+        <h2 className="text-2xl font-black text-slate-900 mb-6">{t("skillsChaptersPage.content.title")}</h2>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 className="text-[15px] font-bold text-slate-900">
-              {isUrdu ? "تمام لیکچرز" : "All Lectures"}
-            </h3>
+            <h3 className="text-[15px] font-bold text-slate-900">{t("skillsChaptersPage.content.allLectures")}</h3>
             <span className="text-[13px] text-slate-400 font-medium">
-              {totalLectures} {isUrdu ? "لیکچرز" : "lectures"}
+              {totalLectures} {t("skillsChaptersPage.content.lectures")}
             </span>
           </div>
 
-          {/* Loading skeleton */}
           {loadingChapters ? (
             <div className="space-y-0">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -702,22 +674,17 @@ const SkillsChaptersPage = () => {
                     {index + 1}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 text-[15px]">
-                      {isUrdu ? lecture.urdu_name || lecture.name : lecture.name}
+                    <p className={`font-bold text-slate-900 text-[15px] ${isRtl ? "text-right" : ""}`}>
+                      {lectureName(lecture)}
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {chapterMap[lecture.chapter_id]
-                        ? (isUrdu
-                          ? chapterMap[lecture.chapter_id].urdu_name || chapterMap[lecture.chapter_id].name
-                          : chapterMap[lecture.chapter_id].name)
-                        : isUrdu ? "ویڈیو لیکچر" : "Video Lecture"}
+                    <p className={`text-xs text-slate-400 mt-0.5 ${isRtl ? "text-right" : ""}`}>
+                      {chapterName(lecture.chapter_id)}
                     </p>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm group-hover:gap-3 transition-all shrink-0">
                   <PlayCircle size={18} />
-                  <span className="hidden sm:block">{isUrdu ? "دیکھیں" : "Watch"}</span>
+                  <span className="hidden sm:block">{t("skillsChaptersPage.content.watch")}</span>
                 </div>
               </div>
             ))
@@ -727,50 +694,44 @@ const SkillsChaptersPage = () => {
                 <GraduationCap size={38} className="text-slate-400" strokeWidth={1.5} />
               </div>
               <h3 className="text-xl font-black text-slate-900 mb-2">
-                {isUrdu ? "اسباق جلد آرہے ہیں" : "Lessons Coming Soon"}
+                {t("skillsChaptersPage.content.comingSoonTitle")}
               </h3>
               <p className="text-slate-500 max-w-md text-[14px] leading-relaxed">
-                {isUrdu
-                  ? "ہم اس مضمون کے لیے اسباق تیار کر رہے ہیں۔"
-                  : "We are preparing lessons for this course. Check back soon!"}
+                {t("skillsChaptersPage.content.comingSoonDesc")}
               </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ══════════════════════════════════
-          REQUIREMENTS & DESCRIPTION
-      ══════════════════════════════════ */}
+      {/* REQUIREMENTS & DESCRIPTION */}
       <div className="max-w-5xl mx-auto px-6 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 mb-5">
-              {isUrdu ? "ضروریات" : "Requirements"}
-            </h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-5">{t("skillsChaptersPage.requirements.title")}</h2>
             <ul className="space-y-3">
-              {REQUIREMENTS.map((req, i) => (
+              {requirements.map((req, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="mt-2 w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
-                  <span className="text-[14px] text-slate-600 leading-relaxed">{req}</span>
+                  <span className={`text-[14px] text-slate-600 leading-relaxed ${isRtl ? "text-right" : ""}`}>
+                    {req}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
-
           <div>
-            <h2 className="text-2xl font-black text-slate-900 mb-5">
-              {isUrdu ? "تفصیل" : "Description"}
-            </h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-5">{t("skillsChaptersPage.description.title")}</h2>
             <div className="space-y-3">
-              {DESCRIPTION.split("\n\n").filter(Boolean).map((para, i) => (
-                <p key={i} className="text-[14px] text-slate-600 leading-relaxed">{para.trim()}</p>
+              {descriptionText.split("\n\n").filter(Boolean).map((para, i) => (
+                <p key={i} className={`text-[14px] text-slate-600 leading-relaxed ${isRtl ? "text-right" : ""}`}>
+                  {para.trim()}
+                </p>
               ))}
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 };

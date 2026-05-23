@@ -225,14 +225,12 @@
   "mob": {
     "heading1": "Learn Skills from Rs 5/day"
   },
-
   "kgClassView": {
     "home": "Home",
     "defaultGrade": "Kindergarten",
     "pageTitle": "Learning World!",
     "pageSubtitle": "Pick a fun adventure to start learning today!",
     "soonBadge": "SOON",
-
     "subjects": {
       "english": {
         "tagline": "Fun stories and A-B-C games!",
@@ -283,7 +281,6 @@
         "btnLabel": "Start"
       }
     },
-
     "quizzes": {
       "title": "Quizzes",
       "tagline": "Answer and win shiny stars!",
@@ -301,7 +298,6 @@
       "tagline": "Your magical learning robot friend!",
       "btnLabel": "Say Hello!"
     },
-
     "cta": {
       "badge": "Join 10,000+ Happy Friends",
       "title": "Ready for School?",
@@ -309,25 +305,21 @@
       "btnLessons": "See All Fun Lessons",
       "btnApp": "Get the App"
     },
-
     "modal": {
       "comingSoon": "Coming Soon",
       "onTheWay": "are on the way!",
       "gotIt": "Got it, thanks! 🎉"
     }
   },
-
   "kgLectureView": {
     "home": "Home",
     "breadcrumbSep": "›",
-
     "hero": {
       "kgBadge": "KG Foundation",
       "lessons": "Lessons",
       "hoursVideo": "3 Hours Video",
       "mathematics": "Mathematics"
     },
-
     "progress": {
       "journeyTitle": "Your Learning Journey",
       "completed": "Completed",
@@ -335,7 +327,6 @@
       "lessonsCompleted": "lessons completed",
       "activitiesCompleted": "activities completed"
     },
-
     "taglines": {
       "english": "Embark on a magical journey through letters, sounds, and stories! Perfect for early learners to build confidence in reading and writing.",
       "urdu": "Embark on a joyful journey to learn the beautiful Urdu language through stories, songs, and interactive play.",
@@ -345,33 +336,294 @@
       "computer": "Learn to code, create and think like a computer! Tech is for every kid.",
       "default": "Let's explore and learn together! Every lesson is a new adventure."
     },
-
     "player": {
       "lectureOf": "Lecture {{current}} of {{total}}",
       "allLessons": "All Lessons"
     },
-
     "videoCard": {
       "lecture": "Lecture"
     },
-
     "chapter": {
       "label": "Chapter"
     },
-
     "videoLessons": {
       "title": "Video Lessons",
       "lessonsCount": "Lessons",
       "videoLessonsLabel": "Video Lessons"
     },
-
     "empty": {
       "title": "Coming Soon!",
       "desc": "We're preparing amazing lessons for {{subject}}. Check back soon!"
     },
-
     "back": {
       "toSubjects": "Back to Subjects"
     }
+  },
+  "classSubjectsView": {
+    "home": "Home",
+    "curriculumLabel": "Curriculum",
+    "academicYear": "Academic Year 2024-25",
+    "downloadSyllabus": "Download Syllabus",
+    "subjectOverview": "Subject Overview",
+    "pageSubtitle": "Click any subject card to open lectures, or click",
+    "pastPapersHighlight": "PAST PAPERS",
+    "pageSubtitleSuffix": "to jump directly to past papers.",
+    "noSubjectsFound": "No subjects found",
+    "stats": {
+      "lectures": "LECTURES",
+      "quizzes": "QUIZZES",
+      "pastPapers": "PAST PAPERS",
+      "comingSoon": "Coming\nSoon"
+    },
+    "quizModal": {
+      "comingSoon": "Coming Soon",
+      "title": "Quizzes are on the way!",
+      "description": "We're crafting interactive quizzes for every subject to help you test your knowledge. Stay tuned — they'll be live very soon.",
+      "gotIt": "Got it, thanks!"
+    },
+    "subjects": {
+      "physics": {
+        "description": "Explore the fundamental principles governing the physical world."
+      },
+      "math": {
+        "description": "Algebra, geometry, trigonometry, and problem solving."
+      },
+      "chemistry": {
+        "description": "Chemical reactions, atomic structure, and laboratory."
+      },
+      "biology": {
+        "description": "Cellular processes, genetics, and study of living organisms."
+      },
+      "english": {
+        "description": "Literature analysis, advanced grammar, and composition."
+      },
+      "urdu": {
+        "description": "Classical literature, poetry, and advanced linguistics."
+      },
+      "islamic": {
+        "description": "Quranic studies, Hadith, Islamic history and ethics."
+      },
+      "pakistan": {
+        "description": "History, geography, and civics of Pakistan."
+      },
+      "computer": {
+        "description": "Master programming, algorithms, and computational thinking."
+      },
+      "default": {
+        "description": "Course materials and lectures."
+      }
+    }
+  },
+  "subjectLecturesView": {
+    "subjects": {
+      "physics": "Explore the fundamental laws of nature, from space and time to matter and energy.",
+      "math": "Master mathematical concepts, advanced algebra, and analytical geometry.",
+      "chemistry": "Discover the fascinating world of atoms, molecular structures, and chemical reactions.",
+      "biology": "Delve into the study of living organisms, ecological systems, and life processes.",
+      "english": "Enhance your language proficiency, reading comprehension, and literary analysis skills.",
+      "urdu": "Develop deep comprehension of Urdu prose, classical poetry, and advanced grammar.",
+      "islamic": "Understand key Islamic values, historical events, and foundational teachings.",
+      "pakistan": "Examine the history, complex geography, and socio-cultural aspects of Pakistan.",
+      "computer": "Learn core concepts of computer systems, software design, and digital literacy.",
+      "default": "Browse and learn from the active course syllabus and curated lecture videos."
+    },
+    "sidebar": {
+      "title": "Course Manager",
+      "subtitle": "Academic Session 2024",
+      "dashboard": "Dashboard",
+      "myCourses": "My Courses",
+      "assessments": "Assessments",
+      "pastPapers": "Past Papers",
+      "chaptersLabel": "Chapters"
+    },
+    "mobileNav": {
+      "myCourses": "My Courses",
+      "assessments": "Assessments",
+      "pastPapers": "Past Papers",
+      "chapters": "Chapters:"
+    },
+    "breadcrumb": {
+      "home": "Home"
+    },
+    "card": {
+      "upNext": "Up Next",
+      "watched": "Watched",
+      "notStarted": "Not started",
+      "left": "left",
+      "lecture": "Lecture"
+    },
+    "chapter": {
+      "label": "Chapter",
+      "lectures": "lecture",
+      "lecturesPlural": "lectures",
+      "watched": "watched"
+    },
+    "player": {
+      "lectureOf": "Lecture {{current}} of {{total}}",
+      "allLectures": "All Lectures",
+      "allLecturesTitle": "All Lectures",
+      "total": "total"
+    },
+    "grid": {
+      "title": "Video Lectures"
+    },
+    "empty": {
+      "title": "Coming Soon",
+      "desc": "Content for {{subject}} is being prepared. Check back soon!"
+    }
+  },
+  "skillsChaptersPage": {
+    "badges": {
+      "bestseller": "Bestseller",
+      "professional": "Professional Course"
+    },
+    "hero": {
+      "subtitle": "Elevate your skills with our comprehensive, hands-on curriculum designed by industry professionals.",
+      "ratings": "ratings",
+      "students": "students",
+      "lectures": "lectures",
+      "level": "Beginner level",
+      "startBtn": "Start Learning",
+      "back": "Back"
+    },
+    "learnSection": {
+      "title": "What you'll learn",
+      "points": [
+        "Master the core fundamentals from scratch with guided lectures",
+        "Build real-world projects and apply concepts confidently",
+        "Understand industry-standard techniques used by professionals",
+        "Apply advanced strategies to solve complex, real-world problems",
+        "Develop a structured and systematic professional mindset",
+        "Learn through hands-on examples, exercises, and case studies"
+      ]
+    },
+    "requirements": {
+      "title": "Requirements",
+      "items": [
+        "Basic interest in the subject area",
+        "A computer or mobile device with internet access",
+        "No prior experience required — we start from the basics",
+        "Willingness to learn, practice, and grow"
+      ]
+    },
+    "description": {
+      "title": "Description",
+      "text": "This comprehensive course takes you from complete beginner to professional level with a structured, practical curriculum.\n\nYou will explore real-world scenarios guided by step-by-step video lectures that break down complex topics into digestible lessons. Each chapter builds upon the last, ensuring steady and confident progress.\n\nWhether you're looking to upskill for career advancement or simply explore a new domain, this course provides everything you need to succeed and stand out in your field."
+    },
+    "content": {
+      "title": "Course Content",
+      "allLectures": "All Lectures",
+      "lectures": "lectures",
+      "watch": "Watch",
+      "videoLecture": "Video Lecture",
+      "comingSoonTitle": "Lessons Coming Soon",
+      "comingSoonDesc": "We are preparing lessons for this course. Check back soon!"
+    },
+    "watchMode": {
+      "backBtn": "Back to Course",
+      "courseContent": "Course Content",
+      "lectureOf": "Lecture {{current}} of {{total}}",
+      "progress": "Course Progress",
+      "completed": "completed",
+      "chapter": "Chapter"
+    }
+  },
+  "chatbot" :{
+  "header": "Zaheen AI Tutor",
+  "topics": {
+    "maths": "Maths",
+    "english": "English",
+    "urdu": "Urdu",
+    "chemistry": "Chemistry",
+    "physics": "Physics",
+    "science": "Science",
+    "computer": "Computer"
+  },
+  "languages": {
+    "english": "English",
+    "urdu": "Urdu"
+  },
+  "placeholder": "Ask your question...",
+  "sendBtn": "Send",
+  "micBtn": "🎤",
+  "thinking": "🤖 AI is thinking...",
+  "queueNotice": "message(s) waiting...",
+  "switchNotice": "🔄 Language switched to English — new session started"
+},
+"pastPapersPage": {
+  "header": {
+    "title": "Past Papers",
+    "subtitle": "Watch solved past papers and prepare smarter for your exams."
+  },
+
+  "breadcrumb": {
+    "home": "Home",
+    "pastPapers": "Past Papers"
+  },
+"labels": {
+    "grade": "Grade",
+    "video": "Video",
+    "pastPaper": "Past Paper"
+  },
+  "sidebar": {
+    "title": "Exam Preparation",
+    "subtitle": "Academic Session 2024",
+    "home": "Home",
+    "videoLectures": "Video Lectures",
+    "assessments": "Assessments",
+    "pastPapers": "Past Papers",
+    "settings": "Settings"
+  },
+
+  "filters": {
+    "subjectLabel": "Subject",
+    "yearLabel": "Year",
+    "typeLabel": "Paper Type",
+    "allSubjects": "All Subjects",
+    "allYears": "All Years",
+    "allTypes": "All Types",
+    "applyBtn": "Apply Filters",
+    "active": "Active Filters",
+    "clearAll": "Clear All",
+    "clearFilters": "Clear Filters"
+  },
+
+  "results": {
+    "noPapersFound": "No papers found",
+    "papersFound": "{{count}} papers found"
+  },
+
+  "card": {
+    "watchVideo": "Watch Video",
+    "watchVideoShort": "Watch",
+    "downloadPdf": "PDF Coming Soon"
+  },
+
+  "player": {
+    "backToPapers": "Back to Papers",
+    "openInTab": "Open in New Tab",
+    "retry": "Retry",
+    "videoError": "Video failed to load.",
+    "noVideo": "No video available for this paper.",
+    "morePapers": "More Papers",
+    "noPapers": "No more papers available."
+  },
+
+  "yearHeading": {
+    "pastPapers": "Past Papers",
+    "paper": "paper",
+    "papers": "papers"
+  },
+
+  "error": {
+    "title": "Failed to load papers",
+    "desc": "Something went wrong while loading past papers.",
+    "retry": "Try Again"
+  },
+
+  "empty": {
+    "title": "No Past Papers Found",
+    "desc": "Try changing filters or check back later for more papers."
   }
+}
 }

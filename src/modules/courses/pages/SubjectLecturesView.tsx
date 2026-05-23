@@ -1,108 +1,116 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
-  BookOpen,
-  FlaskConical,
-  Atom,
-  Leaf,
-  Languages,
-  Sigma,
-  Landmark,
-  Globe,
-  Calculator,
-  Cpu,
-  PlayCircle,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  LayoutDashboard,
-  FileText,
-  ClipboardList,
+  BookOpen, FlaskConical, Atom, Leaf, Languages, Sigma, Landmark, Globe,
+  Calculator, Cpu, PlayCircle, CheckCircle2, ChevronLeft, ChevronRight,
+  Clock, LayoutDashboard, FileText, ClipboardList,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import thumbnail from "../../../assets/images/physics.png";
 
+import enTranslations from "@/modules/shared/i18n/en.json";
+import urTranslations from "@/modules/shared/i18n/ur.json";
+
+/* ─────────────────────────────────────────────────────────────
+   TRANSLATION HELPER
+──────────────────────────────────────────────────────────────── */
+const translations: Record<string, any> = {
+  en: enTranslations,
+  ur: urTranslations,
+};
+
+const getNestedValue = (obj: any, key: string): string => {
+  const value = key.split(".").reduce((acc: any, part: string) => acc?.[part], obj);
+  return typeof value === "string" ? value : key;
+};
+
+const useT = () => {
+  const [lang, setLang] = useState<string>(() => getLanguage());
+  useEffect(() => {
+    const sync = () => setLang(getLanguage());
+    window.addEventListener("storage", sync);
+    window.addEventListener("languageChange", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("languageChange", sync);
+    };
+  }, []);
+  const dict = translations[lang] ?? translations.en;
+  return (key: string, vars?: Record<string, string | number>) => {
+    let str = getNestedValue(dict, key);
+    if (vars) {
+      Object.entries(vars).forEach(([k, v]) => {
+        str = str.replace(`{{${k}}}`, String(v));
+      });
+    }
+    return str;
+  };
+};
+
+/* ─────────────────────────────────────────────────────────────
+   Types
+──────────────────────────────────────────────────────────────── */
 interface Video {
-  id: number;
-  name: string;
-  urdu_name?: string;
-  path: string;
-  desc?: string;
-  urdu_desc?: string;
+  id: number; name: string; urdu_name?: string; path: string;
+  desc?: string; urdu_desc?: string;
 }
-
 interface ChapterWithVideos {
-  id: number;
-  name: string;
-  urdu_name?: string;
-  subject_id: number;
-  videos: Video[];
+  id: number; name: string; urdu_name?: string; subject_id: number; videos: Video[];
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Subject meta — visual/style only, no text
+──────────────────────────────────────────────────────────────── */
 const getMeta = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes("physic"))
-    return { icon: Atom,         color: "text-blue-700",   bg: "bg-blue-50",   accent: "#1d4ed8", desc: "Explore the fundamental principles governing the physical world." };
-  if (n.includes("math"))
-    return { icon: Sigma,        color: "text-violet-700", bg: "bg-violet-50", accent: "#7c3aed", desc: "Master algebra, geometry, trigonometry, and advanced problem-solving techniques." };
-  if (n.includes("chem"))
-    return { icon: FlaskConical, color: "text-emerald-700",bg: "bg-emerald-50",accent: "#059669", desc: "Chemical reactions, atomic structure, and laboratory techniques." };
-  if (n.includes("bio"))
-    return { icon: Leaf,         color: "text-green-700",  bg: "bg-green-50",  accent: "#16a34a", desc: "Cellular processes, genetics, and the study of living organisms." };
-  if (n.includes("english"))
-    return { icon: BookOpen,     color: "text-sky-700",    bg: "bg-sky-50",    accent: "#0284c7", desc: "Literature analysis, advanced grammar, and composition." };
-  if (n.includes("urdu"))
-    return { icon: Languages,    color: "text-rose-700",   bg: "bg-rose-50",   accent: "#e11d48", desc: "Classical literature, poetry, and advanced linguistics." };
-  if (n.includes("islamic"))
-    return { icon: Landmark,     color: "text-teal-700",   bg: "bg-teal-50",   accent: "#0d9488", desc: "Quranic studies, Hadith, Islamic history and ethics." };
-  if (n.includes("pakistan"))
-    return { icon: Globe,        color: "text-orange-700", bg: "bg-orange-50", accent: "#ea580c", desc: "History, geography, and civics of Pakistan." };
+  if (n.includes("physic"))  return { icon: Atom,         color: "text-blue-700",   bg: "bg-blue-50",   accent: "#1d4ed8",  descKey: "subjectLecturesView.subjects.physics"  };
+  if (n.includes("math"))    return { icon: Sigma,        color: "text-violet-700", bg: "bg-violet-50", accent: "#7c3aed",  descKey: "subjectLecturesView.subjects.math"     };
+  if (n.includes("chem"))    return { icon: FlaskConical, color: "text-emerald-700",bg: "bg-emerald-50",accent: "#059669",  descKey: "subjectLecturesView.subjects.chemistry"};
+  if (n.includes("bio"))     return { icon: Leaf,         color: "text-green-700",  bg: "bg-green-50",  accent: "#16a34a",  descKey: "subjectLecturesView.subjects.biology"  };
+  if (n.includes("english")) return { icon: BookOpen,     color: "text-sky-700",    bg: "bg-sky-50",    accent: "#0284c7",  descKey: "subjectLecturesView.subjects.english"  };
+  if (n.includes("urdu"))    return { icon: Languages,    color: "text-rose-700",   bg: "bg-rose-50",   accent: "#e11d48",  descKey: "subjectLecturesView.subjects.urdu"     };
+  if (n.includes("islamic")) return { icon: Landmark,     color: "text-teal-700",   bg: "bg-teal-50",   accent: "#0d9488",  descKey: "subjectLecturesView.subjects.islamic"  };
+  if (n.includes("pakistan"))return { icon: Globe,        color: "text-orange-700", bg: "bg-orange-50", accent: "#ea580c",  descKey: "subjectLecturesView.subjects.pakistan" };
   if (n.includes("computer") || n.includes("cs"))
-    return { icon: Cpu,          color: "text-indigo-700", bg: "bg-indigo-50", accent: "#4338ca", desc: "Programming, algorithms, and computational thinking." };
-  return   { icon: Calculator,   color: "text-slate-600",  bg: "bg-slate-100", accent: "#475569", desc: "Course materials and lectures." };
+                             return { icon: Cpu,           color: "text-indigo-700", bg: "bg-indigo-50", accent: "#4338ca",  descKey: "subjectLecturesView.subjects.computer" };
+  return                            { icon: Calculator,    color: "text-slate-600",  bg: "bg-slate-100", accent: "#475569",  descKey: "subjectLecturesView.subjects.default"  };
 };
 
 /* ══════════════════════════════════════════
    DESKTOP SIDEBAR
 ══════════════════════════════════════════ */
 interface NewSidebarProps {
-  classId: string | undefined;
-  subjectId: string | undefined;
-  gradeType: string;
-  selectedSubject: any;
-  activeChapterId: number | null;
-  subjectChapters: ChapterWithVideos[];
-  watchedSet: Set<number>;
-  isWatchMode: boolean;
-  meta: ReturnType<typeof getMeta>;
-  isUrdu: boolean;
-  exitWatchMode: () => void;
-  scrollToChapter: (idx: number) => void;
+  classId: string | undefined; subjectId: string | undefined;
+  gradeType: string; selectedSubject: any;
+  activeChapterId: number | null; subjectChapters: ChapterWithVideos[];
+  watchedSet: Set<number>; isWatchMode: boolean;
+  meta: ReturnType<typeof getMeta>; isRtl: boolean;
+  exitWatchMode: () => void; scrollToChapter: (idx: number) => void;
+  t: ReturnType<typeof useT>;
 }
 
 const NewSidebar = ({
   classId, subjectId, gradeType, selectedSubject,
   activeChapterId, subjectChapters, watchedSet,
-  isWatchMode, meta, isUrdu, exitWatchMode, scrollToChapter,
+  isWatchMode, meta, isRtl, exitWatchMode, scrollToChapter, t,
 }: NewSidebarProps) => {
   const navigate = useNavigate();
   const navState = { gradeType, selectedSubject };
 
   const navItems = [
-    { id: "dashboard",   label: "Dashboard",   icon: LayoutDashboard, path: null,                                                    isStatic: true,  isActive: false },
-    { id: "my-courses",  label: "My Courses",  icon: BookOpen,        path: `/class/${classId}/subject/${subjectId}`,                isStatic: false, isActive: true  },
-    { id: "assessments", label: "Assessments", icon: ClipboardList,   path: `/assessment/1`,                                         isStatic: false, isActive: false },
-    { id: "past-papers", label: "Past Papers", icon: FileText,        path: `/class/${classId}/subject/${subjectId}/past-papers`,    isStatic: false, isActive: false },
+    { id: "dashboard",   labelKey: "subjectLecturesView.sidebar.dashboard",   icon: LayoutDashboard, path: null,                                                 isStatic: true,  isActive: false },
+    { id: "my-courses",  labelKey: "subjectLecturesView.sidebar.myCourses",   icon: BookOpen,        path: `/class/${classId}/subject/${subjectId}`,             isStatic: false, isActive: true  },
+    { id: "assessments", labelKey: "subjectLecturesView.sidebar.assessments", icon: ClipboardList,   path: `/assessment/1`,                                      isStatic: false, isActive: false },
+    { id: "past-papers", labelKey: "subjectLecturesView.sidebar.pastPapers",  icon: FileText,        path: `/class/${classId}/subject/${subjectId}/past-papers`, isStatic: false, isActive: false },
   ];
 
   return (
     <aside className="hidden lg:flex w-[272px] shrink-0 h-screen sticky top-0 border-r border-slate-200 flex-col bg-white">
       <div className="px-6 pt-7 pb-5 border-b border-slate-100">
-        <p className="text-[#1E3A8A] font-extrabold text-[16px] leading-tight">Course Manager</p>
-        <p className="text-slate-400 text-[12px] mt-0.5">Academic Session 2024</p>
+        <p className="text-[#1E3A8A] font-extrabold text-[16px] leading-tight">{t("subjectLecturesView.sidebar.title")}</p>
+        <p className="text-slate-400 text-[12px] mt-0.5">{t("subjectLecturesView.sidebar.subtitle")}</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-1">
@@ -112,55 +120,42 @@ const NewSidebar = ({
             <button
               key={item.id}
               disabled={item.isStatic}
-              onClick={() => {
-                if (item.isStatic || !item.path) return;
-                navigate(item.path, { state: navState });
-              }}
+              onClick={() => { if (item.isStatic || !item.path) return; navigate(item.path, { state: navState }); }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all duration-150 text-left ${
-                item.isActive
-                  ? "bg-blue-50 text-[#1E3A8A]"
-                  : item.isStatic
-                  ? "text-slate-400 cursor-default"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
+                item.isActive ? "bg-blue-50 text-[#1E3A8A]"
+                : item.isStatic ? "text-slate-400 cursor-default"
+                : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
               }`}
             >
               <Icon size={18} strokeWidth={1.8} className={item.isActive ? "text-[#1E3A8A]" : item.isStatic ? "text-slate-300" : "text-slate-400"} />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </button>
           );
         })}
 
         {subjectChapters.length > 0 && (
           <div className="mt-3 ml-2 border-l-2 border-slate-100 pl-4 space-y-0.5">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Chapters</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{t("subjectLecturesView.sidebar.chaptersLabel")}</p>
             {subjectChapters.map((ch, i) => {
               const isActive = activeChapterId === ch.id;
-              const chLabel  = isUrdu ? ch.urdu_name || ch.name : ch.name;
+              const chLabel  = isRtl ? ch.urdu_name || ch.name : ch.name;
               const watched  = ch.videos.filter((v) => watchedSet.has(v.id)).length;
               return (
                 <button
                   key={ch.id}
-                  onClick={() => {
-                    if (isWatchMode) exitWatchMode();
-                    setTimeout(() => scrollToChapter(i), 50);
-                  }}
+                  onClick={() => { if (isWatchMode) exitWatchMode(); setTimeout(() => scrollToChapter(i), 50); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 text-left ${
                     isActive ? "" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                   style={isActive ? { color: meta.accent } : {}}
                 >
-                  <span
-                    className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-white text-[9px] font-black"
-                    style={{ backgroundColor: isActive ? meta.accent : "#cbd5e1" }}
-                  >{String(i + 1).padStart(2, "0")}</span>
-                  <span className="truncate flex-1 text-[12px]">{chLabel}</span>
-                  {watched > 0 && watched === ch.videos.length && (
-                    <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                  )}
+                  <span className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-white text-[9px] font-black" style={{ backgroundColor: isActive ? meta.accent : "#cbd5e1" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="flex-1 text-[12px] whitespace-normal break-words leading-snug">{chLabel}</span>
+                  {watched > 0 && watched === ch.videos.length && <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />}
                   {watched > 0 && watched < ch.videos.length && (
-                    <span className="text-[10px] font-bold shrink-0" style={{ color: meta.accent }}>
-                      {watched}/{ch.videos.length}
-                    </span>
+                    <span className="text-[10px] font-bold shrink-0" style={{ color: meta.accent }}>{watched}/{ch.videos.length}</span>
                   )}
                 </button>
               );
@@ -173,67 +168,56 @@ const NewSidebar = ({
 };
 
 /* ══════════════════════════════════════════
-   MOBILE TOP NAV BAR
-   No hamburger — nav pills + chapter pills
+   MOBILE TOP NAV
 ══════════════════════════════════════════ */
 interface MobileTopNavProps {
-  classId: string | undefined;
-  subjectId: string | undefined;
-  gradeType: string;
-  selectedSubject: any;
+  classId: string | undefined; subjectId: string | undefined;
+  gradeType: string; selectedSubject: any;
   subjectChapters: ChapterWithVideos[];
-  isWatchMode: boolean;
-  exitWatchMode: () => void;
-  scrollToChapter: (idx: number) => void;
-  isUrdu: boolean;
+  isWatchMode: boolean; exitWatchMode: () => void;
+  scrollToChapter: (idx: number) => void; isRtl: boolean;
+  t: ReturnType<typeof useT>;
 }
 
 const MobileTopNav = ({
   classId, subjectId, gradeType, selectedSubject,
-  subjectChapters, isWatchMode, exitWatchMode, scrollToChapter, isUrdu,
+  subjectChapters, isWatchMode, exitWatchMode, scrollToChapter, isRtl, t,
 }: MobileTopNavProps) => {
   const navigate = useNavigate();
   const navState = { gradeType, selectedSubject };
 
   const navItems = [
-    { label: isUrdu ? "کورسز" : "My Courses",   path: `/class/${classId}/subject/${subjectId}`,              isActive: true  },
-    { label: isUrdu ? "امتحان" : "Assessments",  path: `/assessment/1`,                                       isActive: false },
-    { label: isUrdu ? "پیپرز" : "Past Papers",   path: `/class/${classId}/subject/${subjectId}/past-papers`, isActive: false },
+    { labelKey: "subjectLecturesView.mobileNav.myCourses",   path: `/class/${classId}/subject/${subjectId}`,             isActive: true  },
+    { labelKey: "subjectLecturesView.mobileNav.assessments", path: `/assessment/1`,                                      isActive: false },
+    { labelKey: "subjectLecturesView.mobileNav.pastPapers",  path: `/class/${classId}/subject/${subjectId}/past-papers`, isActive: false },
   ];
 
   return (
     <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-      {/* Row 1: Nav pills */}
       <div className="flex items-center gap-2 px-3 py-3 overflow-x-auto scrollbar-none">
         {navItems.map((item) => (
           <button
-            key={item.label}
+            key={item.labelKey}
             onClick={() => navigate(item.path, { state: navState })}
             className={`whitespace-nowrap px-4 py-2 rounded-xl text-[13px] font-bold border transition-all shrink-0 ${
-              item.isActive
-                ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+              item.isActive ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
             }`}
           >
-            {item.label}
+            {t(item.labelKey)}
           </button>
         ))}
       </div>
 
-      {/* Row 2: Chapter pills */}
       {subjectChapters.length > 0 && (
         <div className="flex items-center gap-2 px-3 pb-3 overflow-x-auto scrollbar-none">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">Chapters:</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">{t("subjectLecturesView.mobileNav.chapters")}</span>
           {subjectChapters.map((ch, i) => (
             <button
               key={ch.id}
-              onClick={() => {
-                if (isWatchMode) exitWatchMode();
-                setTimeout(() => scrollToChapter(i), 50);
-              }}
+              onClick={() => { if (isWatchMode) exitWatchMode(); setTimeout(() => scrollToChapter(i), 50); }}
               className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[12px] font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 shrink-0 transition-all"
             >
-              Ch {i + 1}
+              {t("subjectLecturesView.chapter.label")} {i + 1}
             </button>
           ))}
         </div>
@@ -243,14 +227,13 @@ const MobileTopNav = ({
 };
 
 /* ══════════════════════════════════════════
-   SUBJECT HEADER BANNER  (no progress bar)
+   SUBJECT HEADER BANNER
 ══════════════════════════════════════════ */
 interface SubjectHeaderProps {
-  gradeName: string;
-  subjectName: string;
+  gradeName: string; subjectName: string;
   meta: ReturnType<typeof getMeta>;
-  isUrdu: boolean;
-  gradeType: string;
+  isRtl: boolean; gradeType: string;
+  t: ReturnType<typeof useT>;
 }
 
 const getGradeBadgeLabel = (gradeName: string, gradeType: string): string => {
@@ -258,9 +241,10 @@ const getGradeBadgeLabel = (gradeName: string, gradeType: string): string => {
   return gradeType || "SSC";
 };
 
-const SubjectHeader = ({ gradeName, subjectName, meta, isUrdu, gradeType }: SubjectHeaderProps) => {
+const SubjectHeader = ({ gradeName, subjectName, meta, isRtl, gradeType, t }: SubjectHeaderProps) => {
   const Icon       = meta.icon;
   const gradeBadge = getGradeBadgeLabel(gradeName, gradeType);
+  const desc       = t(meta.descKey);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
@@ -272,13 +256,11 @@ const SubjectHeader = ({ gradeName, subjectName, meta, isUrdu, gradeType }: Subj
           <Icon size={14} className={meta.color} strokeWidth={2} />
         </div>
       </div>
-      <h1 className={`text-[28px] sm:text-[32px] font-black text-[#0F172A] leading-tight mb-1 ${isUrdu ? "text-right" : ""}`}>
+      <h1 className={`text-[28px] sm:text-[32px] font-black text-[#0F172A] leading-tight mb-1 ${isRtl ? "text-right" : ""}`}>
         {subjectName}
       </h1>
       {gradeName && <p className="text-[13px] font-semibold text-slate-400 mb-2">{gradeName}</p>}
-      <p className={`text-[14px] text-slate-500 leading-relaxed max-w-xl ${isUrdu ? "text-right" : ""}`}>
-        {meta.desc}
-      </p>
+      <p className={`text-[14px] text-slate-500 leading-relaxed max-w-xl ${isRtl ? "text-right" : ""}`}>{desc}</p>
     </div>
   );
 };
@@ -287,30 +269,19 @@ const SubjectHeader = ({ gradeName, subjectName, meta, isUrdu, gradeType }: Subj
    LECTURE CARD
 ══════════════════════════════════════════ */
 interface LectureCardProps {
-  video: Video;
-  lectureNumber: number;
-  isSelected: boolean;
-  isWatched: boolean;
-  progress: number;
-  isUpNext: boolean;
-  onClick: () => void;
-  isUrdu: boolean;
-  accentColor: string;
+  video: Video; lectureNumber: number; isSelected: boolean; isWatched: boolean;
+  progress: number; isUpNext: boolean; onClick: () => void;
+  isRtl: boolean; accentColor: string; t: ReturnType<typeof useT>;
 }
 
-const LectureCard = ({
-  video, lectureNumber, isSelected, isWatched,
-  progress, isUpNext, onClick, isUrdu, accentColor,
-}: LectureCardProps) => {
-  const title     = isUrdu ? video.urdu_name || video.name : video.name;
-  const descRaw   = isUrdu ? video.urdu_desc || video.desc : video.desc;
+const LectureCard = ({ video, lectureNumber, isSelected, isWatched, progress, isUpNext, onClick, isRtl, accentColor, t }: LectureCardProps) => {
+  const title     = isRtl ? video.urdu_name || video.name : video.name;
+  const descRaw   = isRtl ? video.urdu_desc || video.desc : video.desc;
   const shortDesc = descRaw?.split("|")[0]?.trim() || "";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
       onClick={onClick}
       className={`group cursor-pointer rounded-2xl overflow-hidden border transition-all duration-200 bg-white flex flex-col h-[280px] ${
         isSelected ? "border-2 shadow-lg" : "border-slate-100 hover:shadow-md hover:border-slate-200"
@@ -321,16 +292,16 @@ const LectureCard = ({
         <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         {isUpNext && !isSelected && (
-          <div className="absolute top-3 left-3 z-20 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: accentColor }}>Up Next</div>
+          <div className="absolute top-3 left-3 z-20 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: accentColor }}>
+            {t("subjectLecturesView.card.upNext")}
+          </div>
         )}
         {isWatched && !isSelected && (
           <div className="absolute top-3 right-3 z-20"><CheckCircle2 size={20} className="text-emerald-400" /></div>
         )}
         {isSelected ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5">
-              <PlayCircle size={34} className="text-white" />
-            </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5"><PlayCircle size={34} className="text-white" /></div>
           </div>
         ) : (
           <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -343,20 +314,26 @@ const LectureCard = ({
           </div>
         )}
         <div className="absolute bottom-2.5 left-3 z-20">
-          <span className="text-white/70 text-[10px] font-bold tracking-widest uppercase">Lecture {lectureNumber}</span>
+          <span className="text-white/70 text-[10px] font-bold tracking-widest uppercase">
+            {t("subjectLecturesView.card.lecture")} {lectureNumber}
+          </span>
         </div>
       </div>
       <div className="p-4 flex flex-col flex-1 overflow-hidden">
         <div className="flex items-center justify-between mb-1.5">
           {isWatched ? (
-            <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1"><CheckCircle2 size={11} /> Watched</span>
+            <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1">
+              <CheckCircle2 size={11} /> {t("subjectLecturesView.card.watched")}
+            </span>
           ) : progress > 0 && progress < 100 ? (
-            <span className="text-[11px] font-semibold" style={{ color: accentColor }}>{Math.round(100 - progress)}% left</span>
+            <span className="text-[11px] font-semibold" style={{ color: accentColor }}>
+              {Math.round(100 - progress)}% {t("subjectLecturesView.card.left")}
+            </span>
           ) : (
-            <span className="text-[11px] text-slate-400 font-medium">Not started</span>
+            <span className="text-[11px] text-slate-400 font-medium">{t("subjectLecturesView.card.notStarted")}</span>
           )}
         </div>
-        <h4 className={`text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 ${isUrdu ? "text-right" : ""}`}>{title}</h4>
+        <h4 className={`text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 ${isRtl ? "text-right" : ""}`}>{title}</h4>
         {shortDesc && <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{shortDesc}</p>}
       </div>
     </motion.div>
@@ -367,18 +344,13 @@ const LectureCard = ({
    SIDEBAR ROW (watch mode right panel)
 ══════════════════════════════════════════ */
 interface SidebarRowProps {
-  video: Video;
-  lectureNumber: number;
-  isSelected: boolean;
-  isWatched: boolean;
-  progress: number;
-  onClick: () => void;
-  isUrdu: boolean;
-  accentColor: string;
+  video: Video; lectureNumber: number; isSelected: boolean; isWatched: boolean;
+  progress: number; onClick: () => void; isRtl: boolean; accentColor: string;
+  t: ReturnType<typeof useT>;
 }
 
-const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onClick, isUrdu, accentColor }: SidebarRowProps) => {
-  const title = isUrdu ? video.urdu_name || video.name : video.name;
+const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onClick, isRtl, accentColor, t }: SidebarRowProps) => {
+  const title = isRtl ? video.urdu_name || video.name : video.name;
   return (
     <div
       onClick={onClick}
@@ -404,16 +376,22 @@ const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onC
         )}
       </div>
       <div className="flex-1 min-w-0 py-0.5">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">Lecture {lectureNumber}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">
+          {t("subjectLecturesView.card.lecture")} {lectureNumber}
+        </p>
         <h4
-          className={`text-[12px] font-bold leading-snug line-clamp-2 ${isUrdu ? "text-right" : ""}`}
+          className={`text-[12px] font-bold leading-snug line-clamp-2 ${isRtl ? "text-right" : ""}`}
           style={isSelected ? { color: accentColor } : { color: "#1e293b" }}
         >{title}</h4>
         {isWatched && (
-          <span className="text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1"><CheckCircle2 size={10} /> Watched</span>
+          <span className="text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1">
+            <CheckCircle2 size={10} /> {t("subjectLecturesView.card.watched")}
+          </span>
         )}
         {!isWatched && progress > 0 && (
-          <span className="text-[10px] font-semibold mt-0.5 block" style={{ color: accentColor }}>{Math.round(100 - progress)}% left</span>
+          <span className="text-[10px] font-semibold mt-0.5 block" style={{ color: accentColor }}>
+            {Math.round(100 - progress)}% {t("subjectLecturesView.card.left")}
+          </span>
         )}
       </div>
     </div>
@@ -424,17 +402,12 @@ const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onC
    CHAPTER SECTION
 ══════════════════════════════════════════ */
 interface ChapterSectionProps {
-  chapter: ChapterWithVideos;
-  chapterIndex: number;
-  globalLectureOffset: number;
-  selectedVideo: Video | null;
-  watchedSet: Set<number>;
-  progressMap: Record<number, number>;
-  currentGlobalIdx: number;
-  onSelect: (video: Video, chapterId: number) => void;
-  isUrdu: boolean;
-  accentColor: string;
+  chapter: ChapterWithVideos; chapterIndex: number; globalLectureOffset: number;
+  selectedVideo: Video | null; watchedSet: Set<number>; progressMap: Record<number, number>;
+  currentGlobalIdx: number; onSelect: (video: Video, chapterId: number) => void;
+  isRtl: boolean; accentColor: string;
   sidebarRef?: (el: HTMLDivElement | null) => void;
+  t: ReturnType<typeof useT>;
 }
 
 const CARDS_PER_PAGE = 4;
@@ -442,35 +415,45 @@ const CARDS_PER_PAGE = 4;
 const ChapterSection = ({
   chapter, chapterIndex, globalLectureOffset,
   selectedVideo, watchedSet, progressMap,
-  currentGlobalIdx, onSelect, isUrdu, accentColor, sidebarRef,
+  currentGlobalIdx, onSelect, isRtl, accentColor, sidebarRef, t,
 }: ChapterSectionProps) => {
-  const [page, setPage] = useState(0);
+  const [page, setPage]  = useState(0);
   const totalPages       = Math.ceil(chapter.videos.length / CARDS_PER_PAGE);
   const visible          = chapter.videos.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
   const watchedInChapter = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
-  const chapterLabel     = isUrdu ? chapter.urdu_name || chapter.name : chapter.name;
+  const chapterLabel     = isRtl ? chapter.urdu_name || chapter.name : chapter.name;
   const chapterNum       = String(chapterIndex + 1).padStart(2, "0");
+
+  const lectureWord = chapter.videos.length === 1
+    ? t("subjectLecturesView.chapter.lectures")
+    : t("subjectLecturesView.chapter.lecturesPlural");
 
   return (
     <div id={`chapter-${chapter.id}`} ref={sidebarRef} className="mb-12 scroll-mt-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[12px] font-black" style={{ backgroundColor: accentColor }}>{chapterNum}</div>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[12px] font-black" style={{ backgroundColor: accentColor }}>
+            {chapterNum}
+          </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chapter {chapterNum}</span>
-            <h3 className={`text-[16px] font-black text-slate-900 leading-tight mt-0.5 ${isUrdu ? "text-right" : ""}`}>{chapterLabel}</h3>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {t("subjectLecturesView.chapter.label")} {chapterNum}
+            </span>
+            <h3 className={`text-[16px] font-black text-slate-900 leading-tight mt-0.5 ${isRtl ? "text-right" : ""}`}>{chapterLabel}</h3>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-[12px] text-slate-400 font-medium hidden sm:block">
-            {chapter.videos.length} lecture{chapter.videos.length !== 1 ? "s" : ""}
-            {watchedInChapter > 0 && <span className="ml-1.5 text-emerald-500">· {watchedInChapter} watched</span>}
+            {chapter.videos.length} {lectureWord}
+            {watchedInChapter > 0 && (
+              <span className="ml-1.5 text-emerald-500">· {watchedInChapter} {t("subjectLecturesView.chapter.watched")}</span>
+            )}
           </span>
           {totalPages > 1 && (
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] text-slate-400 font-medium">{page + 1}/{totalPages}</span>
-              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"><ChevronLeft size={15} /></button>
-              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"><ChevronRight size={15} /></button>
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">{isRtl ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}</button>
+              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">{isRtl ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}</button>
             </div>
           )}
         </div>
@@ -487,16 +470,13 @@ const ChapterSection = ({
             const globalIdx = globalLectureOffset + page * CARDS_PER_PAGE + localIdx;
             return (
               <LectureCard
-                key={video.id}
-                video={video}
-                lectureNumber={globalIdx + 1}
+                key={video.id} video={video} lectureNumber={globalIdx + 1}
                 isSelected={selectedVideo?.id === video.id}
                 isWatched={watchedSet.has(video.id)}
                 progress={watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0}
                 isUpNext={selectedVideo?.id !== video.id && !watchedSet.has(video.id) && globalIdx === currentGlobalIdx + 1}
                 onClick={() => onSelect(video, chapter.id)}
-                isUrdu={isUrdu}
-                accentColor={accentColor}
+                isRtl={isRtl} accentColor={accentColor} t={t}
               />
             );
           })}
@@ -515,26 +495,90 @@ const SubjectLecturesView = () => {
   const { classId, subjectId } = useParams();
   const navigate  = useNavigate();
   const location  = useLocation();
-  const lang      = getLanguage();
-  const isUrdu    = lang === "ur";
 
-  const gradeType               = location.state?.gradeType;
+  /* ── i18n ── */
+  const t = useT();
+  const [lang, setLang] = useState<string>(() => getLanguage());
+  useEffect(() => {
+    const sync = () => setLang(getLanguage());
+    window.addEventListener("storage", sync);
+    window.addEventListener("languageChange", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("languageChange", sync);
+    };
+  }, []);
+  const isRtl = lang === "ur";
+
+  const gradeType                = location.state?.gradeType;
   const selectedSubjectFromState = location.state?.selectedSubject;
 
   const { classInfo, chapters, chapterVideos, subjects, loading } =
     useClassSubjects(Number(classId));
 
-  const gradeName  = classInfo?.name || "";
+  /* ─────────────────────────────────────────────────────────────
+     FIX: Always prefer the fresh subject from the API subjects
+     array (it has all fields including urdu_name for every subject).
+     Only fall back to location.state when the API hasn't returned
+     subjects yet (i.e. during the initial loading phase).
+
+     Root cause of the original bug:
+     - selectedSubjectFromState came from location.state which was
+       set when navigating FROM the class subjects list.
+     - For Physics, the state happened to include urdu_name correctly.
+     - For Maths and other subjects the state object was either
+       missing urdu_name or was a stale/partial object from the
+       previous navigation, so Urdu display silently fell back to
+       the English name.
+     - By always merging: API data (authoritative, complete) takes
+       precedence; state is only used as a loading placeholder.
+  ──────────────────────────────────────────────────────────────── */
+  const selectedSubject = useMemo(() => {
+    // Try to find the subject from the freshly loaded API data first.
+    // This guarantees urdu_name, and all other fields, are always present.
+    const fromApi = subjects?.find(
+      (s: any) => String(s.id) === String(subjectId)
+    ) ?? null;
+
+    if (fromApi) return fromApi;
+
+    // API hasn't loaded yet — use state as a temporary placeholder
+    // so the page doesn't flash blank while loading.
+    if (selectedSubjectFromState) return selectedSubjectFromState;
+
+    return null;
+  }, [subjects, subjectId, selectedSubjectFromState]);
+
+  /* ── Class / grade display name ── */
+  const gradeName  = (isRtl ? classInfo?.urdu_name : classInfo?.name) || classInfo?.name || "";
   const classTitle = gradeName;
 
-  const selectedSubject = useMemo(() => {
-    if (selectedSubjectFromState) return selectedSubjectFromState;
-    return subjects?.find((s: any) => String(s.id) === String(subjectId)) ?? null;
-  }, [selectedSubjectFromState, subjects, subjectId]);
-
+  /* ── Subject display name ──
+     Always derive subjectRawName from the English name (for getMeta keyword matching).
+     Derive subjectName (what the user sees) based on current lang. */
   const subjectRawName = selectedSubject?.name || "";
   const meta           = getMeta(subjectRawName);
-  const subjectName    = isUrdu ? selectedSubject?.urdu_name || subjectRawName : subjectRawName;
+
+  /* ─────────────────────────────────────────────────────────────
+     FIX: Re-derive subjectName reactively from both `selectedSubject`
+     AND `lang`/`isRtl`. Previously this was a plain derived value
+     at module scope, so it did not update when the language changed
+     after the component had already mounted with a different subject.
+  ──────────────────────────────────────────────────────────────── */
+  const subjectName = useMemo(() => {
+    if (!selectedSubject) return "";
+    return isRtl
+      ? (selectedSubject.urdu_name?.trim() || selectedSubject.name || "")
+      : (selectedSubject.name || "");
+  }, [selectedSubject, isRtl]);
+
+  /* ── Grade display name — also reactive to lang changes ── */
+  const gradeDisplayName = useMemo(() => {
+    if (!classInfo) return "";
+    return isRtl
+      ? (classInfo.urdu_name?.trim() || classInfo.name || "")
+      : (classInfo.name || "");
+  }, [classInfo, isRtl]);
 
   const subjectChapters: ChapterWithVideos[] = useMemo(() =>
     chapters
@@ -567,14 +611,11 @@ const SubjectLecturesView = () => {
     () => allVideos.findIndex((v) => v.id === selectedVideo?.id),
     [allVideos, selectedVideo]
   );
-
   const totalLectures = allVideos.length;
 
   const trackEvent = useCallback((eventName: string) => {
     if (!window.gtag || !selectedVideo) return;
-    window.gtag("event", eventName, {
-      video_id: selectedVideo.id, video_name: selectedVideo.name, page_path: window.location.pathname,
-    });
+    window.gtag("event", eventName, { video_id: selectedVideo.id, video_name: selectedVideo.name, page_path: window.location.pathname });
   }, [selectedVideo]);
 
   const selectVideo = useCallback((video: Video, chapterId: number) => {
@@ -608,26 +649,19 @@ const SubjectLecturesView = () => {
   const handleLoaded    = () => { if (!videoRef.current || (videoRef.current as any)._started) return; (videoRef.current as any)._started = true; trackEvent("video_start"); };
   const handlePlay      = () => { if (!(videoRef.current as any)?._started) { (videoRef.current as any)._started = true; trackEvent("video_start"); } };
   const handleEnded     = () => {
-    if (selectedVideo) {
-      setWatchedSet((prev) => new Set(prev).add(selectedVideo.id));
-      setProgressMap((prev) => ({ ...prev, [selectedVideo.id]: 100 }));
-      trackEvent("video_complete");
-    }
+    if (selectedVideo) { setWatchedSet((p) => new Set(p).add(selectedVideo.id)); setProgressMap((p) => ({ ...p, [selectedVideo.id]: 100 })); trackEvent("video_complete"); }
     goNext();
   };
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.target as HTMLVideoElement;
     if (!v.duration || !selectedVideo) return;
     const pct = (v.currentTime / v.duration) * 100;
-    setProgressMap((prev) => ({ ...prev, [selectedVideo.id]: Math.round(pct) }));
+    setProgressMap((p) => ({ ...p, [selectedVideo.id]: Math.round(pct) }));
     if (pct > 50 && !(v as any)._tracked50) { (v as any)._tracked50 = true; trackEvent("video_50_percent"); }
   };
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") goNext();
-      if (e.key === "ArrowLeft")  goPrev();
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === "ArrowRight") goNext(); if (e.key === "ArrowLeft") goPrev(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [goNext, goPrev]);
@@ -645,7 +679,7 @@ const SubjectLecturesView = () => {
 
   const renderDesc = (video: Video | null) => {
     if (!video) return null;
-    const fullText = isUrdu ? video.urdu_desc || video.desc : video.desc;
+    const fullText = isRtl ? video.urdu_desc || video.desc : video.desc;
     if (!fullText) return null;
     const parts = fullText.split("|").map((p) => p.trim()).filter(Boolean);
     return (
@@ -662,59 +696,32 @@ const SubjectLecturesView = () => {
     );
   };
 
-  /* ── Breadcrumb ─────────────────────────────────────────────
-   *
-   * Structure:
-   *   Home  /  Grade 9  /  Physics Grade 9  /  [lecture name]
-   *
-   * "Home"           → navigates to /
-   * "Grade 9"        → navigates to /class/:classId  (subject overview)
-   * "Physics Grade 9"→ if in watch mode, EXITS watch mode (back to lecture grid)
-   *                    if not in watch mode, it's the current page (plain text)
-   * "[lecture name]" → only shown in watch mode, plain text (current page)
-   */
+  /* ── Breadcrumb uses gradeDisplayName (reactive) instead of the
+        old gradeName/classTitle which was not re-derived on lang change ── */
   const renderBreadcrumb = () => {
     const videoTitle = selectedVideo
-      ? (isUrdu ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name)
+      ? (isRtl ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name)
       : null;
 
     return (
       <div className="text-sm text-slate-400 flex items-center gap-1.5 mb-6 flex-wrap min-w-0">
-        {/* Home */}
         <Link to="/" className="hover:text-slate-600 transition-colors shrink-0">
-          {isUrdu ? "ہوم" : "Home"}
+          {t("subjectLecturesView.breadcrumb.home")}
         </Link>
         <span className="text-slate-300 shrink-0">/</span>
-
-        {/* Grade (class overview) */}
-        <Link
-          to={`/class/${classId}`}
-          state={{ gradeType, selectedSubject }}
-          className="hover:text-slate-600 transition-colors shrink-0"
-        >
-          {classTitle || `Grade ${classId}`}
+        <Link to={`/class/${classId}`} state={{ gradeType, selectedSubject }} className="hover:text-slate-600 transition-colors shrink-0">
+          {gradeDisplayName || `Grade ${classId}`}
         </Link>
         <span className="text-slate-300 shrink-0">/</span>
-
         {isWatchMode && videoTitle ? (
-          /* In watch mode:
-             "Physics Grade 9" is a clickable button → exits watch mode
-             Then "/" + lecture name as plain current-page text */
           <>
-            <button
-              onClick={exitWatchMode}
-              className="hover:text-[#1E3A8A] text-slate-500 font-semibold transition-colors shrink-0  decoration-dotted"
-            >
+            <button onClick={exitWatchMode} className="hover:text-[#1E3A8A] text-slate-500 font-semibold transition-colors shrink-0 decoration-dotted">
               {subjectName}
             </button>
             <span className="text-slate-300 shrink-0">/</span>
-            {/* Full lecture name — no truncation, wraps naturally */}
-            <span className="text-slate-700 font-semibold break-words">
-              {videoTitle}
-            </span>
+            <span className="text-slate-700 font-semibold break-words">{videoTitle}</span>
           </>
         ) : (
-          /* Not in watch mode: "Physics Grade 9" is the current page */
           <span className="text-slate-700 font-semibold">{subjectName}</span>
         )}
       </div>
@@ -724,34 +731,29 @@ const SubjectLecturesView = () => {
   return (
     <section className="bg-[#F8FAFC] min-h-screen flex flex-col lg:flex-row">
 
-      {/* Desktop sidebar */}
       <NewSidebar
         classId={classId} subjectId={subjectId} gradeType={gradeType}
         selectedSubject={selectedSubject} activeChapterId={activeChapterId}
         subjectChapters={subjectChapters} watchedSet={watchedSet}
-        isWatchMode={isWatchMode} meta={meta} isUrdu={isUrdu}
-        exitWatchMode={exitWatchMode} scrollToChapter={scrollToChapter}
+        isWatchMode={isWatchMode} meta={meta} isRtl={isRtl}
+        exitWatchMode={exitWatchMode} scrollToChapter={scrollToChapter} t={t}
       />
 
-      {/* Mobile top nav */}
       <MobileTopNav
         classId={classId} subjectId={subjectId} gradeType={gradeType}
         selectedSubject={selectedSubject} subjectChapters={subjectChapters}
         isWatchMode={isWatchMode} exitWatchMode={exitWatchMode}
-        scrollToChapter={scrollToChapter} isUrdu={isUrdu}
+        scrollToChapter={scrollToChapter} isRtl={isRtl} t={t}
       />
 
-      {/* MAIN */}
       <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-10 py-6 overflow-x-hidden">
 
-        {/* ✅ Fixed breadcrumb */}
         {renderBreadcrumb()}
 
-        {/* Subject header banner */}
         {!loading && (
           <SubjectHeader
-            gradeName={gradeName} subjectName={subjectName}
-            meta={meta} isUrdu={isUrdu} gradeType={gradeType}
+            gradeName={gradeDisplayName} subjectName={subjectName}
+            meta={meta} isRtl={isRtl} gradeType={gradeType} t={t}
           />
         )}
 
@@ -792,9 +794,9 @@ const SubjectLecturesView = () => {
             <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
               <Clock size={38} className="text-slate-400" strokeWidth={1.5} />
             </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-3">{isUrdu ? "جلد آرہا ہے" : "Coming Soon"}</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-3">{t("subjectLecturesView.empty.title")}</h2>
             <p className="text-slate-500 max-w-sm leading-relaxed">
-              {isUrdu ? `${subjectName} کے لیے مواد تیار کیا جا رہا ہے۔` : `Content for ${subjectName} is being prepared. Check back soon!`}
+              {t("subjectLecturesView.empty.desc", { subject: subjectName })}
             </p>
           </div>
 
@@ -821,43 +823,38 @@ const SubjectLecturesView = () => {
                   </div>
                 </div>
 
-                {/* Info panel below video */}
                 <div className="bg-white rounded-2xl border border-slate-100 p-5 mt-4">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                        Lecture {currentGlobalIdx + 1} of {totalLectures}
+                        {t("subjectLecturesView.player.lectureOf", { current: currentGlobalIdx + 1, total: totalLectures })}
                       </p>
-                      <h2 className={`text-lg font-black text-slate-900 leading-snug ${isUrdu ? "text-right" : ""}`}>
-                        {isUrdu ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name}
+                      <h2 className={`text-lg font-black text-slate-900 leading-snug ${isRtl ? "text-right" : ""}`}>
+                        {isRtl ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name}
                       </h2>
                       <div className="mt-2 space-y-1">{renderDesc(selectedVideo)}</div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* ✅ "All Lectures" exits watch mode → shows lecture grid again */}
-                      <button
-                        onClick={exitWatchMode}
-                        className="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-[13px] font-semibold hover:bg-slate-50 transition-all"
-                      >
-                        All Lectures
+                      <button onClick={exitWatchMode} className="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-[13px] font-semibold hover:bg-slate-50 transition-all">
+                        {t("subjectLecturesView.player.allLectures")}
                       </button>
                       <button onClick={goPrev} disabled={currentGlobalIdx === 0} className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                        <ChevronLeft size={20} />
+                        {isRtl ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                       </button>
                       <button onClick={goNext} disabled={currentGlobalIdx >= allVideos.length - 1} className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                        <ChevronRight size={20} />
+                        {isRtl ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right panel — lecture list */}
+              {/* Right panel */}
               <div className="w-full xl:w-[320px] shrink-0">
                 <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden sticky top-6">
                   <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-[14px] font-black text-slate-900">{isUrdu ? "تمام لیکچرز" : "All Lectures"}</h3>
-                    <span className="text-[12px] text-slate-400 font-medium">{totalLectures} total</span>
+                    <h3 className="text-[14px] font-black text-slate-900">{t("subjectLecturesView.player.allLecturesTitle")}</h3>
+                    <span className="text-[12px] text-slate-400 font-medium">{totalLectures} {t("subjectLecturesView.player.total")}</span>
                   </div>
                   <div className="overflow-y-auto max-h-[75vh] p-2 space-y-1">
                     {subjectChapters.map((chapter, chIdx) => (
@@ -865,7 +862,7 @@ const SubjectLecturesView = () => {
                         <div className="px-2 pt-3 pb-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                             <span className="w-4 h-4 rounded flex items-center justify-center text-white text-[8px] font-black" style={{ backgroundColor: meta.accent }}>{chIdx + 1}</span>
-                            {isUrdu ? chapter.urdu_name || chapter.name : chapter.name}
+                            {isRtl ? chapter.urdu_name || chapter.name : chapter.name}
                           </p>
                         </div>
                         {chapter.videos.map((video, vidIdx) => {
@@ -877,7 +874,7 @@ const SubjectLecturesView = () => {
                               isWatched={watchedSet.has(video.id)}
                               progress={progressMap[video.id] || 0}
                               onClick={() => selectVideo(video, chapter.id)}
-                              isUrdu={isUrdu} accentColor={meta.accent}
+                              isRtl={isRtl} accentColor={meta.accent} t={t}
                             />
                           );
                         })}
@@ -894,22 +891,17 @@ const SubjectLecturesView = () => {
           /* ══ GRID VIEW ══ */
           <div>
             <h2 className="text-[20px] font-black text-slate-900 mb-7">
-              {isUrdu ? "ویڈیو لیکچرز" : "Video Lectures"}
+              {t("subjectLecturesView.grid.title")}
             </h2>
             {subjectChapters.map((chapter, chIdx) => (
               <ChapterSection
                 key={chapter.id}
-                chapter={chapter}
-                chapterIndex={chIdx}
+                chapter={chapter} chapterIndex={chIdx}
                 globalLectureOffset={chapterOffsets[chIdx]}
-                selectedVideo={selectedVideo}
-                watchedSet={watchedSet}
-                progressMap={progressMap}
-                currentGlobalIdx={currentGlobalIdx}
-                onSelect={selectVideo}
-                isUrdu={isUrdu}
-                accentColor={meta.accent}
-                sidebarRef={(el) => { chapterRefs.current[chIdx] = el; }}
+                selectedVideo={selectedVideo} watchedSet={watchedSet}
+                progressMap={progressMap} currentGlobalIdx={currentGlobalIdx}
+                onSelect={selectVideo} isRtl={isRtl} accentColor={meta.accent}
+                sidebarRef={(el) => { chapterRefs.current[chIdx] = el; }} t={t}
               />
             ))}
           </div>
