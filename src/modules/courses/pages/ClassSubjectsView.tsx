@@ -1,56 +1,47 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import physicsSection from "../../../assets/images/physics.png";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
-  BookOpen,
-  FlaskConical,
-  Atom,
-  Leaf,
-  Languages,
-  Sigma,
-  Landmark,
-  Globe,
-  Calculator,
-  Cpu,
-  Download,
-  GraduationCap,
-  X,
-  Sparkles,
+  BookOpen, FlaskConical, Atom, Leaf, Languages, Sigma, Landmark, Globe,
+  Calculator, Cpu, Download, GraduationCap, X, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
-
-// ─── i18n imports ────────────────────────────────────────────
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
 const BASE_URL = "https://api.zaheen.com.pk/api";
 
 /* ─────────────────────────────────────────────────────────────
-   useTranslation
-   Returns a t() helper scoped to the "classSubjectsView" section.
-   Adding a new language in the future only requires:
-     1. Creating a new locale JSON (e.g. ps.json) with the same keys.
-     2. Importing it below and adding it to the `translations` map.
+   useTranslation  — REACTIVE (same pattern as SubjectLecturesView)
+   Listens to storage + languageChange so the component re-renders
+   whenever the user switches language.  Previously getLanguage()
+   was called once at render time and never updated, which is why
+   "Grade 9" stayed in English after switching to Urdu.
 ──────────────────────────────────────────────────────────────── */
 type TranslationFile = typeof enTranslations;
 
 const translations: Record<string, TranslationFile> = {
   en: enTranslations,
   ur: urTranslations,
-  // ps: psTranslations,  ← add Pashto here when ready
 };
 
 const useTranslation = () => {
-  const lang = getLanguage();
-  // Fall back to English if the current language file doesn't exist yet
+  const [lang, setLang] = useState<string>(() => getLanguage());
+
+  useEffect(() => {
+    const sync = () => setLang(getLanguage());
+    window.addEventListener("storage", sync);
+    window.addEventListener("languageChange", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("languageChange", sync);
+    };
+  }, []);
+
   const locale = (translations[lang] ?? translations["en"]) as TranslationFile;
 
-  /**
-   * t("quizModal.title")            → locale.classSubjectsView.quizModal.title
-   * t("subjects.physics.description") → locale.classSubjectsView.subjects.physics.description
-   */
   const t = (key: string): string => {
     const parts = ["classSubjectsView", ...key.split(".")];
     let node: unknown = locale;
@@ -58,13 +49,12 @@ const useTranslation = () => {
       if (node && typeof node === "object" && part in (node as Record<string, unknown>)) {
         node = (node as Record<string, unknown>)[part];
       } else {
-        // Key missing in this locale → fall back to English
         let fallback: unknown = enTranslations;
         for (const p of parts) {
           if (fallback && typeof fallback === "object" && p in (fallback as Record<string, unknown>)) {
             fallback = (fallback as Record<string, unknown>)[p];
           } else {
-            return key; // last resort: return the key itself
+            return key;
           }
         }
         return typeof fallback === "string" ? fallback : key;
@@ -77,29 +67,21 @@ const useTranslation = () => {
 };
 
 /* ─────────────────────────────────────────────────────────────
-   getMeta  — descriptions now come from translation files
+   getMeta
 ──────────────────────────────────────────────────────────────── */
 const getMeta = (name: string, t: (key: string) => string) => {
   const n = name.toLowerCase();
-  if (n.includes("physic"))
-    return { icon: Atom,         description: t("subjects.physics.description"),   iconColor: "text-blue-700",   iconBg: "bg-blue-50"   };
-  if (n.includes("math"))
-    return { icon: Sigma,        description: t("subjects.math.description"),       iconColor: "text-violet-700", iconBg: "bg-violet-50" };
-  if (n.includes("chem"))
-    return { icon: FlaskConical, description: t("subjects.chemistry.description"),  iconColor: "text-emerald-700",iconBg: "bg-emerald-50"};
-  if (n.includes("bio"))
-    return { icon: Leaf,         description: t("subjects.biology.description"),    iconColor: "text-green-700",  iconBg: "bg-green-50"  };
-  if (n.includes("english"))
-    return { icon: BookOpen,     description: t("subjects.english.description"),    iconColor: "text-sky-700",    iconBg: "bg-sky-50"    };
-  if (n.includes("urdu"))
-    return { icon: Languages,    description: t("subjects.urdu.description"),       iconColor: "text-rose-700",   iconBg: "bg-rose-50"   };
-  if (n.includes("islamic"))
-    return { icon: Landmark,     description: t("subjects.islamic.description"),    iconColor: "text-teal-700",   iconBg: "bg-teal-50"   };
-  if (n.includes("pakistan"))
-    return { icon: Globe,        description: t("subjects.pakistan.description"),   iconColor: "text-orange-700", iconBg: "bg-orange-50" };
+  if (n.includes("physic"))  return { icon: Atom,         description: t("subjects.physics.description"),   iconColor: "text-blue-700",   iconBg: "bg-blue-50"   };
+  if (n.includes("math"))    return { icon: Sigma,        description: t("subjects.math.description"),       iconColor: "text-violet-700", iconBg: "bg-violet-50" };
+  if (n.includes("chem"))    return { icon: FlaskConical, description: t("subjects.chemistry.description"),  iconColor: "text-emerald-700",iconBg: "bg-emerald-50"};
+  if (n.includes("bio"))     return { icon: Leaf,         description: t("subjects.biology.description"),    iconColor: "text-green-700",  iconBg: "bg-green-50"  };
+  if (n.includes("english")) return { icon: BookOpen,     description: t("subjects.english.description"),    iconColor: "text-sky-700",    iconBg: "bg-sky-50"    };
+  if (n.includes("urdu"))    return { icon: Languages,    description: t("subjects.urdu.description"),       iconColor: "text-rose-700",   iconBg: "bg-rose-50"   };
+  if (n.includes("islamic")) return { icon: Landmark,     description: t("subjects.islamic.description"),    iconColor: "text-teal-700",   iconBg: "bg-teal-50"   };
+  if (n.includes("pakistan"))return { icon: Globe,        description: t("subjects.pakistan.description"),   iconColor: "text-orange-700", iconBg: "bg-orange-50" };
   if (n.includes("computer") || n.includes("cs"))
-    return { icon: Cpu,          description: t("subjects.computer.description"),   iconColor: "text-indigo-700", iconBg: "bg-indigo-50" };
-  return   { icon: Calculator,   description: t("subjects.default.description"),    iconColor: "text-slate-600",  iconBg: "bg-slate-100" };
+                             return { icon: Cpu,           description: t("subjects.computer.description"),   iconColor: "text-indigo-700", iconBg: "bg-indigo-50" };
+  return                            { icon: Calculator,   description: t("subjects.default.description"),    iconColor: "text-slate-600",  iconBg: "bg-slate-100" };
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -124,29 +106,17 @@ const sortSubjects = (subjects: any[]) =>
    StatValue
 ──────────────────────────────────────────────────────────────── */
 const StatValue = ({
-  count,
-  loading,
-  iconColor,
-  comingSoonLabel,
+  count, loading, iconColor, comingSoonLabel,
 }: {
-  count: number;
-  loading?: boolean;
-  iconColor: string;
-  comingSoonLabel: string;
+  count: number; loading?: boolean; iconColor: string; comingSoonLabel: string;
 }) => {
-  if (loading) {
-    return <div className="h-7 w-8 bg-slate-200 rounded animate-pulse mb-2" />;
-  }
+  if (loading) return <div className="h-7 w-8 bg-slate-200 rounded animate-pulse mb-2" />;
   if (count === 0) {
-    // comingSoonLabel uses "\n" as line break — render each part on its own line
     const lines = comingSoonLabel.split("\n");
     return (
       <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wide leading-tight">
         {lines.map((line, i) => (
-          <React.Fragment key={i}>
-            {line}
-            {i < lines.length - 1 && <br />}
-          </React.Fragment>
+          <React.Fragment key={i}>{line}{i < lines.length - 1 && <br />}</React.Fragment>
         ))}
       </p>
     );
@@ -155,38 +125,26 @@ const StatValue = ({
 };
 
 /* ─────────────────────────────────────────────────────────────
-   Quizzes Coming Soon Modal
+   Quiz Modal
 ──────────────────────────────────────────────────────────────── */
-interface QuizModalProps {
-  onClose: () => void;
-  t: (key: string) => string;
-}
-
-const QuizzesComingSoonModal = ({ onClose, t }: QuizModalProps) => (
+const QuizzesComingSoonModal = ({ onClose, t }: { onClose: () => void; t: (k: string) => string }) => (
   <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
+    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
     onClick={onClose}
     className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4"
   >
     <motion.div
-      initial={{ opacity: 0, scale: 0.88, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.88, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.88, y: 20 }}
       transition={{ type: "spring", stiffness: 340, damping: 28 }}
       onClick={(e) => e.stopPropagation()}
       className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-8 flex flex-col items-center text-center gap-5 relative"
     >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-      >
+      <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
         <X size={16} />
       </button>
       <motion.div
-        initial={{ scale: 0.6, rotate: -10 }}
-        animate={{ scale: 1, rotate: 0 }}
+        initial={{ scale: 0.6, rotate: -10 }} animate={{ scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.1 }}
         className="bg-amber-50 p-5 rounded-2xl border border-amber-100"
       >
@@ -200,10 +158,7 @@ const QuizzesComingSoonModal = ({ onClose, t }: QuizModalProps) => (
         <p className="text-slate-500 text-[14px] leading-relaxed">{t("quizModal.description")}</p>
       </div>
       <div className="w-full border-t border-slate-100" />
-      <button
-        onClick={onClose}
-        className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-bold text-[14px] py-3 rounded-xl transition-colors duration-200"
-      >
+      <button onClick={onClose} className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-bold text-[14px] py-3 rounded-xl transition-colors duration-200">
         {t("quizModal.gotIt")}
       </button>
     </motion.div>
@@ -213,46 +168,29 @@ const QuizzesComingSoonModal = ({ onClose, t }: QuizModalProps) => (
 /* ─────────────────────────────────────────────────────────────
    StatsRow
 ──────────────────────────────────────────────────────────────── */
-interface StatsRowProps {
-  lectures: number;
-  quizzes: number;
-  pastPapers: number;
-  lecturesLoading: boolean;
-  pastPapersLoading: boolean;
-  iconColor: string;
-  onLecturesClick: (e: React.MouseEvent) => void;
-  onQuizzesClick: (e: React.MouseEvent) => void;
-  onPastPapersClick: (e: React.MouseEvent) => void;
-  t: (key: string) => string;
-}
-
 const StatsRow = ({
   lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, iconColor,
   onLecturesClick, onQuizzesClick, onPastPapersClick, t,
-}: StatsRowProps) => (
+}: {
+  lectures: number; quizzes: number; pastPapers: number;
+  lecturesLoading: boolean; pastPapersLoading: boolean; iconColor: string;
+  onLecturesClick: (e: React.MouseEvent) => void;
+  onQuizzesClick: (e: React.MouseEvent) => void;
+  onPastPapersClick: (e: React.MouseEvent) => void;
+  t: (k: string) => string;
+}) => (
   <div className="flex items-start gap-7">
-    {/* LECTURES */}
     <button onClick={onLecturesClick} className="text-left group/lec hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={lectures} loading={lecturesLoading} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/lec:text-slate-600 transition-colors">
-        {t("stats.lectures")}
-      </p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/lec:text-slate-600 transition-colors">{t("stats.lectures")}</p>
     </button>
-
-    {/* QUIZZES — always "Coming Soon", intentional */}
     <button onClick={onQuizzesClick} className="text-left group/quiz hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={0} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/quiz:text-slate-600 transition-colors">
-        {t("stats.quizzes")}
-      </p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/quiz:text-slate-600 transition-colors">{t("stats.quizzes")}</p>
     </button>
-
-    {/* PAST PAPERS */}
     <button onClick={onPastPapersClick} className="text-left group/pp hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={pastPapers} loading={pastPapersLoading} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 leading-tight underline underline-offset-2 decoration-dotted group-hover/pp:text-slate-600 transition-colors">
-        {t("stats.pastPapers")}
-      </p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 leading-tight underline underline-offset-2 decoration-dotted group-hover/pp:text-slate-600 transition-colors">{t("stats.pastPapers")}</p>
     </button>
   </div>
 );
@@ -260,25 +198,16 @@ const StatsRow = ({
 /* ═══════════════════════════════════════════════════════════
    FEATURED Physics card
 ═══════════════════════════════════════════════════════════ */
-interface FeaturedCardProps {
-  subject: any;
-  classInfo: any;
-  gradeType: string;
-  navigate: ReturnType<typeof useNavigate>;
-  isUrdu: boolean;
-  lectures: number;
-  quizzes: number;
-  pastPapers: number;
-  lecturesLoading: boolean;
-  pastPapersLoading: boolean;
-  onQuizzesClick: () => void;
-  t: (key: string) => string;
-}
-
 const FeaturedPhysicsCard = ({
   subject, classInfo, gradeType, navigate, isUrdu,
   lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, onQuizzesClick, t,
-}: FeaturedCardProps) => {
+}: {
+  subject: any; classInfo: any; gradeType: string;
+  navigate: ReturnType<typeof useNavigate>; isUrdu: boolean;
+  lectures: number; quizzes: number; pastPapers: number;
+  lecturesLoading: boolean; pastPapersLoading: boolean;
+  onQuizzesClick: () => void; t: (k: string) => string;
+}) => {
   const meta  = getMeta(subject.name, t);
   const Icon  = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
@@ -288,27 +217,14 @@ const FeaturedPhysicsCard = ({
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
 
-  const handleLecturesClick   = (e: React.MouseEvent) => { e.stopPropagation(); goToLectures(); };
-  const handleQuizzesClick    = (e: React.MouseEvent) => { e.stopPropagation(); onQuizzesClick(); };
-  const handlePastPapersClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
-      state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
-    });
-  };
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
       onClick={goToLectures}
       className="col-span-1 sm:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col sm:flex-row cursor-pointer hover:shadow-md hover:border-slate-300 transition-all duration-200"
     >
       <div className="relative w-full sm:w-[260px] min-h-[180px] sm:min-h-0 shrink-0 overflow-hidden bg-slate-900">
-        <img
-          src={physicsSection}
-          alt="Physics"
+        <img src={physicsSection} alt="Physics"
           className="absolute inset-0 w-full h-full object-contain object-center opacity-90"
           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
         />
@@ -327,9 +243,14 @@ const FeaturedPhysicsCard = ({
           lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
           lecturesLoading={lecturesLoading} pastPapersLoading={pastPapersLoading}
           iconColor={meta.iconColor}
-          onLecturesClick={handleLecturesClick}
-          onQuizzesClick={handleQuizzesClick}
-          onPastPapersClick={handlePastPapersClick}
+          onLecturesClick={(e) => { e.stopPropagation(); goToLectures(); }}
+          onQuizzesClick={(e) => { e.stopPropagation(); onQuizzesClick(); }}
+          onPastPapersClick={(e) => {
+            e.stopPropagation();
+            navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
+              state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
+            });
+          }}
           t={t}
         />
       </div>
@@ -340,26 +261,16 @@ const FeaturedPhysicsCard = ({
 /* ═══════════════════════════════════════════════════════════
    Regular Subject Card
 ═══════════════════════════════════════════════════════════ */
-interface SubjectCardProps {
-  subject: any;
-  classInfo: any;
-  gradeType: string;
-  navigate: ReturnType<typeof useNavigate>;
-  isUrdu: boolean;
-  index: number;
-  lectures: number;
-  quizzes: number;
-  pastPapers: number;
-  lecturesLoading: boolean;
-  pastPapersLoading: boolean;
-  onQuizzesClick: () => void;
-  t: (key: string) => string;
-}
-
 const SubjectCard = ({
   subject, classInfo, gradeType, navigate, isUrdu, index,
   lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, onQuizzesClick, t,
-}: SubjectCardProps) => {
+}: {
+  subject: any; classInfo: any; gradeType: string;
+  navigate: ReturnType<typeof useNavigate>; isUrdu: boolean; index: number;
+  lectures: number; quizzes: number; pastPapers: number;
+  lecturesLoading: boolean; pastPapersLoading: boolean;
+  onQuizzesClick: () => void; t: (k: string) => string;
+}) => {
   const meta  = getMeta(subject.name, t);
   const Icon  = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
@@ -369,19 +280,9 @@ const SubjectCard = ({
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
 
-  const handleLecturesClick   = (e: React.MouseEvent) => { e.stopPropagation(); goToLectures(); };
-  const handleQuizzesClick    = (e: React.MouseEvent) => { e.stopPropagation(); onQuizzesClick(); };
-  const handlePastPapersClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
-      state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
-    });
-  };
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
       onClick={goToLectures}
       className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col gap-5 cursor-pointer hover:shadow-md hover:border-slate-300 transition-all duration-200"
@@ -398,9 +299,14 @@ const SubjectCard = ({
         lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
         lecturesLoading={lecturesLoading} pastPapersLoading={pastPapersLoading}
         iconColor={meta.iconColor}
-        onLecturesClick={handleLecturesClick}
-        onQuizzesClick={handleQuizzesClick}
-        onPastPapersClick={handlePastPapersClick}
+        onLecturesClick={(e) => { e.stopPropagation(); goToLectures(); }}
+        onQuizzesClick={(e) => { e.stopPropagation(); onQuizzesClick(); }}
+        onPastPapersClick={(e) => {
+          e.stopPropagation();
+          navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
+            state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
+          });
+        }}
         t={t}
       />
     </motion.div>
@@ -442,25 +348,53 @@ const ClassSubjectsView = () => {
   const location    = useLocation();
   const gradeType   = location.state?.gradeType;
 
-  // ── i18n ──────────────────────────────────────────────────
+  // ── i18n — now fully reactive ──────────────────────────────
   const { t, lang } = useTranslation();
   const isUrdu      = lang === "ur";
 
   const { classInfo, subjects, chapterVideos, chapters, loading } =
     useClassSubjects(Number(classId));
 
+  /* ─────────────────────────────────────────────────────────────
+     FIX: gradeName is now derived reactively from both classInfo
+     AND the current language (lang/isUrdu).
+
+     Previously: const gradeName = classInfo?.name  ← always English
+
+     Now:
+       1. Use classInfo.urdu_name when Urdu is active (from API).
+       2. If urdu_name is null/empty, extract the grade number from
+          the English name and build "جماعت 9" as a safe fallback,
+          so we NEVER show "Grade 9" while in Urdu mode.
+       3. Wrapped in useMemo so it reacts to both classInfo loading
+          AND language switching without any extra state.
+  ──────────────────────────────────────────────────────────────── */
+  const gradeName = useMemo(() => {
+    if (!classInfo) return `Grade ${classId}`;
+    if (!isUrdu) return classInfo.name || `Grade ${classId}`;
+
+    // Prefer the API-supplied Urdu name when it exists
+    const apiUrdu = classInfo.urdu_name?.trim();
+    if (apiUrdu) return apiUrdu;
+
+    // Fallback: extract number → build "جماعت N"
+    // e.g. "Grade 9" → "جماعت 9"  |  "Class 10" → "جماعت 10"
+    const numMatch = (classInfo.name || "").match(/\d+/);
+    if (numMatch) return `جماعت ${numMatch[0]}`;
+
+    // Last resort: return English rather than blank
+    return classInfo.name || `Grade ${classId}`;
+  }, [classInfo, isUrdu, classId]);
+
   const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
   const [showQuizModal, setShowQuizModal]     = useState(false);
-
   const [pastPaperCounts, setPastPaperCounts] = useState<Record<number, number>>({});
   const [ppLoading, setPpLoading]             = useState(true);
   const [ppFetched, setPpFetched]             = useState(false);
 
   useEffect(() => {
     if (!classId || subjects.length === 0) return;
-
     let cancelled = false;
-
     const fetchAllCounts = async () => {
       setPpLoading(true);
       try {
@@ -474,36 +408,24 @@ const ClassSubjectsView = () => {
         );
         if (!cancelled) {
           const counts: Record<number, number> = {};
-          results.forEach((r) => {
-            if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count;
-          });
+          results.forEach((r) => { if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count; });
           setPastPaperCounts(counts);
         }
       } catch (err) {
         console.error("Failed to fetch past paper counts:", err);
       } finally {
-        if (!cancelled) {
-          setPpLoading(false);
-          setPpFetched(true);
-        }
+        if (!cancelled) { setPpLoading(false); setPpFetched(true); }
       }
     };
-
     fetchAllCounts();
     return () => { cancelled = true; };
   }, [classId, subjects]);
 
-  const gradeName = classInfo?.name || `Grade ${classId}`;
-
-  /* ── Per-subject stats ────────────────────────────────────── */
   const getSubjectStats = (subjectId: number) => {
     const subjectChapters = chapters.filter((c: any) => c.subject_id === subjectId);
-
-    const chaptersExist  = subjectChapters.length > 0;
-    const videosInFlight = chaptersExist &&
-      subjectChapters.every((c: any) => !(c.id in chapterVideos));
+    const chaptersExist   = subjectChapters.length > 0;
+    const videosInFlight  = chaptersExist && subjectChapters.every((c: any) => !(c.id in chapterVideos));
     const lecturesLoading = loading || videosInFlight;
-
     let lectures = 0, quizzes = 0;
     if (!lecturesLoading) {
       subjectChapters.forEach((c: any) => {
@@ -511,10 +433,8 @@ const ClassSubjectsView = () => {
         quizzes  += (c.quizzes || []).length;
       });
     }
-
     const pastPapersLoading = !ppFetched || ppLoading;
     const pastPapers        = pastPapersLoading ? 0 : (pastPaperCounts[subjectId] ?? 0);
-
     return { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading };
   };
 
@@ -526,31 +446,16 @@ const ClassSubjectsView = () => {
   const physicsSubject = visibleSubjects.find((s: any) => s.name.toLowerCase().includes("physic"));
   const mathsSubject   = visibleSubjects.find((s: any) => s.name.toLowerCase().includes("math"));
   const restSubjects   = visibleSubjects.filter(
-    (s: any) =>
-      !s.name.toLowerCase().includes("physic") &&
-      !s.name.toLowerCase().includes("math")
+    (s: any) => !s.name.toLowerCase().includes("physic") && !s.name.toLowerCase().includes("math")
   );
 
-  // Helper to render a SubjectCard for maths
   const renderMathCard = (index: number) => {
     if (!mathsSubject) return null;
-    const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(mathsSubject.id);
+    const stats = getSubjectStats(mathsSubject.id);
     return (
-      <SubjectCard
-        key={mathsSubject.id}
-        subject={mathsSubject}
-        classInfo={classInfo}
-        gradeType={gradeType}
-        navigate={navigate}
-        isUrdu={isUrdu}
-        index={index}
-        lectures={lectures}
-        quizzes={quizzes}
-        pastPapers={pastPapers}
-        lecturesLoading={lecturesLoading}
-        pastPapersLoading={pastPapersLoading}
-        onQuizzesClick={() => setShowQuizModal(true)}
-        t={t}
+      <SubjectCard key={mathsSubject.id} subject={mathsSubject} classInfo={classInfo}
+        gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={index}
+        {...stats} onQuizzesClick={() => setShowQuizModal(true)} t={t}
       />
     );
   };
@@ -561,6 +466,7 @@ const ClassSubjectsView = () => {
       {/* ══════ SIDEBAR ══════ */}
       <aside className="hidden lg:flex w-[272px] shrink-0 h-screen sticky top-0 border-r border-slate-200 flex-col bg-white">
         <div className="px-6 pt-8 pb-6 border-b border-slate-100">
+          {/* FIX: gradeName is now reactive — shows جماعت 9 in Urdu */}
           <p className="text-[#1E3A8A] font-extrabold text-[15px] leading-tight">
             {gradeName} {t("curriculumLabel")}
           </p>
@@ -580,9 +486,7 @@ const ClassSubjectsView = () => {
                 const isActive = activeSidebarId === sub.id;
                 const label    = isUrdu ? sub.urdu_name || sub.name : sub.name;
                 return (
-                  <button
-                    key={sub.id}
-                    onClick={() => setActiveSidebarId(isActive ? null : sub.id)}
+                  <button key={sub.id} onClick={() => setActiveSidebarId(isActive ? null : sub.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all duration-150 ${
                       isActive ? "bg-blue-50 text-[#1E3A8A]" : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
                     }`}
@@ -606,9 +510,7 @@ const ClassSubjectsView = () => {
                 const isActive = activeSidebarId === sub.id;
                 const label    = isUrdu ? sub.urdu_name || sub.name : sub.name;
                 return (
-                  <button
-                    key={sub.id}
-                    onClick={() => setActiveSidebarId(isActive ? null : sub.id)}
+                  <button key={sub.id} onClick={() => setActiveSidebarId(isActive ? null : sub.id)}
                     className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold border transition ${
                       isActive ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : "bg-white text-slate-600 border-slate-200"
                     }`}
@@ -620,16 +522,14 @@ const ClassSubjectsView = () => {
             </div>
           </div>
 
-          {/* Breadcrumb */}
+          {/* Breadcrumb — also uses reactive gradeName */}
           <div className="text-sm text-slate-400 flex items-center gap-2 mb-7">
-            <Link to="/" className="hover:text-slate-600 transition-colors">
-              {t("home")}
-            </Link>
+            <Link to="/" className="hover:text-slate-600 transition-colors">{t("home")}</Link>
             <span>/</span>
             <span className="text-slate-700 font-semibold">{gradeName}</span>
           </div>
 
-          {/* Heading */}
+          {/* Heading — also uses reactive gradeName */}
           <div className="mb-9">
             <h1 className="text-[34px] font-black text-[#0F172A] tracking-tight leading-none mb-2">
               {gradeName} {t("subjectOverview")}
@@ -644,14 +544,9 @@ const ClassSubjectsView = () => {
           {/* ── GRID ── */}
           <AnimatePresence mode="wait">
             {loading ? (
-              <motion.div
-                key="skeletons"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
+              <motion.div key="skeletons" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <CardSkeleton wide />
-                  <CardSkeleton />
+                  <CardSkeleton wide /><CardSkeleton />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
@@ -659,9 +554,7 @@ const ClassSubjectsView = () => {
               </motion.div>
 
             ) : visibleSubjects.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="flex flex-col items-center justify-center py-28 text-slate-400"
               >
                 <GraduationCap size={52} strokeWidth={1} className="mb-4" />
@@ -671,59 +564,31 @@ const ClassSubjectsView = () => {
             ) : (
               <motion.div key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
 
-                {/* ── ROW 1: Physics (wide, 2 cols) + Maths (1 col) ── */}
                 {physicsSubject && (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     {(() => {
-                      const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(physicsSubject.id);
+                      const stats = getSubjectStats(physicsSubject.id);
                       return (
-                        <FeaturedPhysicsCard
-                          key={physicsSubject.id}
-                          subject={physicsSubject}
-                          classInfo={classInfo}
-                          gradeType={gradeType}
-                          navigate={navigate}
-                          isUrdu={isUrdu}
-                          lectures={lectures}
-                          quizzes={quizzes}
-                          pastPapers={pastPapers}
-                          lecturesLoading={lecturesLoading}
-                          pastPapersLoading={pastPapersLoading}
-                          onQuizzesClick={() => setShowQuizModal(true)}
-                          t={t}
+                        <FeaturedPhysicsCard key={physicsSubject.id} subject={physicsSubject}
+                          classInfo={classInfo} gradeType={gradeType} navigate={navigate}
+                          isUrdu={isUrdu} {...stats}
+                          onQuizzesClick={() => setShowQuizModal(true)} t={t}
                         />
                       );
                     })()}
-
-                    {/* Maths sits next to Physics only when both are visible */}
                     {mathsSubject && renderMathCard(0)}
                   </div>
                 )}
 
-                {/* ── ROW 2+: remaining subjects + Maths when Physics is hidden ── */}
                 {(restSubjects.length > 0 || (!physicsSubject && mathsSubject)) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {/* If Physics is not shown, render Maths first (left-aligned) */}
                     {!physicsSubject && mathsSubject && renderMathCard(0)}
-
                     {restSubjects.map((subject: any, i: number) => {
-                      const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(subject.id);
+                      const stats = getSubjectStats(subject.id);
                       return (
-                        <SubjectCard
-                          key={subject.id}
-                          subject={subject}
-                          classInfo={classInfo}
-                          gradeType={gradeType}
-                          navigate={navigate}
-                          isUrdu={isUrdu}
-                          index={i}
-                          lectures={lectures}
-                          quizzes={quizzes}
-                          pastPapers={pastPapers}
-                          lecturesLoading={lecturesLoading}
-                          pastPapersLoading={pastPapersLoading}
-                          onQuizzesClick={() => setShowQuizModal(true)}
-                          t={t}
+                        <SubjectCard key={subject.id} subject={subject} classInfo={classInfo}
+                          gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={i}
+                          {...stats} onQuizzesClick={() => setShowQuizModal(true)} t={t}
                         />
                       );
                     })}
@@ -737,11 +602,8 @@ const ClassSubjectsView = () => {
         </div>
       </main>
 
-      {/* QUIZZES MODAL */}
       <AnimatePresence>
-        {showQuizModal && (
-          <QuizzesComingSoonModal onClose={() => setShowQuizModal(false)} t={t} />
-        )}
+        {showQuizModal && <QuizzesComingSoonModal onClose={() => setShowQuizModal(false)} t={t} />}
       </AnimatePresence>
 
     </section>

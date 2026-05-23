@@ -10,15 +10,9 @@ import { getLanguage } from "@/modules/shared/i18n";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
-/* ─────────────────────────────────────────────────────────────
-   TRANSLATION HOOK  — single source of truth for lang/isRtl.
-   Returns { t, lang } — both reactive, re-render on change.
-   To add Pashto: import psTranslations, add  ps: psTranslations.
-──────────────────────────────────────────────────────────────── */
 const translations: Record<string, any> = {
   en: enTranslations,
   ur: urTranslations,
-  // ps: psTranslations,
 };
 
 const getNestedValue = (obj: any, key: string): any => {
@@ -40,7 +34,6 @@ const useTranslation = () => {
 
   const dict = translations[lang] ?? translations.en;
 
-  /* t() for strings — falls back to en if key missing in current lang */
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
       let val = getNestedValue(dict, key);
@@ -58,7 +51,6 @@ const useTranslation = () => {
     [dict]
   );
 
-  /* tArr() for array keys (learnSection.points, requirements.items) */
   const tArr = useCallback(
     (key: string): string[] => {
       const val = getNestedValue(dict, key);
@@ -72,9 +64,6 @@ const useTranslation = () => {
   return { t, tArr, lang };
 };
 
-/* ─────────────────────────────────────────────────────────────
-   Types
-──────────────────────────────────────────────────────────────── */
 interface Subject   { id: number; name: string; urdu_name?: string; }
 interface Chapter   { id: number; name: string; urdu_name?: string; }
 interface Lecture   { id: number; name: string; urdu_name?: string; path: string; chapter_id: number; duration?: string; desc?: string; }
@@ -82,37 +71,50 @@ interface ClassInfo { class_id: number; name: string; urdu_name?: string; thumbn
 
 const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard];
 
-/* ─────────────────────────────────────────────────────────────
-   Localised name helper
-──────────────────────────────────────────────────────────────── */
 const localName = (en: string, ur?: string, isRtl?: boolean) =>
   isRtl ? ur || en : en;
 
-/* ═══════════════════════════════════════════════════════════
-   MAIN PAGE
-═══════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────────────────────────────
+   Desc localisation: replace known English phrases with Urdu
+──────────────────────────────────────────────────────────────── */
+const URDU_DESC_MAP: Record<string, string> = {
+  "Benefits Of Learning Financial Market Trading": "فنانشل مارکیٹ ٹریڈنگ سیکھنے کے فوائد",
+  "Additional Income Source": "اضافی آمدنی کا ذریعہ",
+  "High-Income Skill": "زیادہ آمدنی والی مہارت",
+  "Freedom & Flexibility": "آزادی اور لچک",
+  "Global Opportunity": "عالمی موقع",
+  "Skill-Based Growth": "مہارت پر مبنی ترقی",
+  "Liquidity Pools and Stop Runs": "لیکویڈیٹی پولز اور اسٹاپ رنز",
+  "Trading View Demo Account": "ٹریڈنگ ویو ڈیمو اکاؤنٹ",
+  "Type Of Orders": "آرڈرز کی اقسام",
+  "Liquidity Zones": "لیکویڈیٹی زونز",
+};
+
+const localiseDesc = (desc: string, isRtl: boolean): string => {
+  if (!isRtl) return desc;
+  let result = desc;
+  Object.entries(URDU_DESC_MAP).forEach(([en, ur]) => {
+    result = result.replace(new RegExp(en, "g"), ur);
+  });
+  return result;
+};
+
 const SkillsChaptersPage = () => {
   const { classId } = useParams();
   const navigate    = useNavigate();
 
-  /* ── i18n — single call, no duplicate useState ── */
   const { t, tArr, lang } = useTranslation();
-  const isRtl = lang === "ur"; // add "ps" when Pashto is ready
+  const isRtl = lang === "ur";
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, []);
 
-  /* ── data state ── */
   const [classInfo, setClassInfo]             = useState<ClassInfo | null>(null);
   const [subjects, setSubjects]               = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [chapterMap, setChapterMap]           = useState<Record<number, Chapter>>({});
   const [lectures, setLectures]               = useState<Lecture[]>([]);
-
-  /* ── loading state ── */
   const [loadingClass, setLoadingClass]       = useState(true);
   const [loadingChapters, setLoadingChapters] = useState(true);
-
-  /* ── watch mode state ── */
   const [isWatchMode, setIsWatchMode]         = useState(false);
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
   const [openChapters, setOpenChapters]       = useState<Set<number>>(new Set());
@@ -120,16 +122,12 @@ const SkillsChaptersPage = () => {
   const [progressMap, setProgressMap]         = useState<Record<number, number>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  /* ── derived ── */
   const currentIdx      = lectures.findIndex((l) => l.id === selectedLecture?.id);
   const totalLectures   = lectures.length;
   const totalWatched    = watchedSet.size;
   const progressPercent = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
+  const courseName      = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
 
-  /* ✅ FIX: always derive courseName from reactive isRtl */
-  const courseName = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
-
-  /* ── group lectures by chapter ── */
   const lecturesByChapter: Record<number, Lecture[]> = {};
   lectures.forEach((l) => {
     if (!lecturesByChapter[l.chapter_id]) lecturesByChapter[l.chapter_id] = [];
@@ -137,7 +135,6 @@ const SkillsChaptersPage = () => {
   });
   const chapterIds = Object.keys(lecturesByChapter).map(Number);
 
-  /* ── fetch class ── */
   useEffect(() => {
     setLoadingClass(true);
     (async () => {
@@ -154,7 +151,6 @@ const SkillsChaptersPage = () => {
     })();
   }, [classId]);
 
-  /* ── fetch subjects ── */
   useEffect(() => {
     (async () => {
       try {
@@ -169,7 +165,6 @@ const SkillsChaptersPage = () => {
     })();
   }, [classId]);
 
-  /* ── fetch lectures ── */
   useEffect(() => {
     if (!selectedSubject) return;
     setLoadingChapters(true);
@@ -178,7 +173,6 @@ const SkillsChaptersPage = () => {
     setSelectedLecture(null);
     setWatchedSet(new Set());
     setProgressMap({});
-
     (async () => {
       try {
         const chRes = await fetch(
@@ -200,7 +194,6 @@ const SkillsChaptersPage = () => {
     })();
   }, [selectedSubject]);
 
-  /* ── watch helpers ── */
   const selectLecture = useCallback((lecture: Lecture) => {
     setSelectedLecture(lecture);
     setIsWatchMode(true);
@@ -248,7 +241,6 @@ const SkillsChaptersPage = () => {
       return n;
     });
 
-  /* ── localised name helpers ── */
   const chapterName = (chId: number) => {
     const ch = chapterMap[chId];
     if (!ch) return t("skillsChaptersPage.watchMode.chapter");
@@ -257,9 +249,8 @@ const SkillsChaptersPage = () => {
 
   const lectureName = (l: Lecture) => localName(l.name, l.urdu_name, isRtl);
 
-  /* ── arrays from JSON ── */
-  const learnPoints  = tArr("skillsChaptersPage.learnSection.points");
-  const requirements = tArr("skillsChaptersPage.requirements.items");
+  const learnPoints     = tArr("skillsChaptersPage.learnSection.points");
+  const requirements    = tArr("skillsChaptersPage.requirements.items");
   const descriptionText = t("skillsChaptersPage.description.text");
 
   /* ════════════════════════════════════════
@@ -269,8 +260,8 @@ const SkillsChaptersPage = () => {
     return (
       <div className="min-h-screen bg-white flex flex-col">
 
-        {/* Top navbar */}
-        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm">
+        {/* Top navbar — always LTR so layout never flips in Urdu */}
+        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm" dir="ltr">
           <button
             onClick={exitWatchMode}
             className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors text-sm font-semibold group"
@@ -290,16 +281,8 @@ const SkillsChaptersPage = () => {
             </p>
           </div>
 
-          {/* Progress pill */}
-          <div className="hidden md:flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-full px-4 py-1.5 shrink-0">
-            <div className="relative w-28 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-              <div className="h-full rounded-full bg-indigo-500 transition-all duration-700" style={{ width: `${progressPercent}%` }} />
-            </div>
-            <span className="text-xs font-bold text-indigo-600">{progressPercent}%</span>
-          </div>
-
-          {/* Prev / Next */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Prev / Next — dir="ltr" forces < > order regardless of page RTL */}
+          <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
             <button
               onClick={goPrev}
               disabled={currentIdx === 0}
@@ -363,8 +346,11 @@ const SkillsChaptersPage = () => {
                 <h2 className={`text-xl md:text-2xl font-black text-slate-900 leading-snug mb-3 ${isRtl ? "text-right" : ""}`}>
                   {lectureName(selectedLecture)}
                 </h2>
+
+                {/* ✅ FIX 3: localiseDesc replaces known English phrases with Urdu when isRtl */}
                 {selectedLecture.desc && (() => {
-                  const lines   = selectedLecture.desc.split("\n").filter(Boolean);
+                  const localisedDesc = localiseDesc(selectedLecture.desc, isRtl);
+                  const lines   = localisedDesc.split("\n").filter(Boolean);
                   const intro:   string[] = [];
                   const bullets: string[] = [];
                   lines.forEach((line) => {
@@ -375,14 +361,14 @@ const SkillsChaptersPage = () => {
                   return (
                     <div className="space-y-3">
                       {intro.map((p, i) => (
-                        <p key={i} className="text-slate-500 text-sm leading-relaxed">{p}</p>
+                        <p key={i} className={`text-slate-500 text-sm leading-relaxed ${isRtl ? "text-right" : ""}`}>{p}</p>
                       ))}
                       {bullets.length > 0 && (
                         <ul className="space-y-2 mt-1">
                           {bullets.map((b, i) => (
-                            <li key={i} className="flex items-start gap-2.5">
+                            <li key={i} className={`flex items-start gap-2.5 ${isRtl ? "flex-row-reverse" : ""}`}>
                               <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                              <span className="text-slate-700 text-sm font-medium leading-relaxed">{b}</span>
+                              <span className={`text-slate-700 text-sm font-medium leading-relaxed ${isRtl ? "text-right" : ""}`}>{b}</span>
                             </li>
                           ))}
                         </ul>
@@ -408,7 +394,7 @@ const SkillsChaptersPage = () => {
             </div>
           </div>
 
-          {/* RIGHT — Sidebar */}
+          {/* RIGHT — Sidebar (progress bar lives here only on desktop) */}
           <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
             <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
               <div className="flex items-center justify-between mb-3">
@@ -448,7 +434,6 @@ const SkillsChaptersPage = () => {
                           {chIdx + 1}
                         </span>
                         <span className="text-[13px] font-bold text-slate-800 truncate">
-                          {/* ✅ FIX: urdu_name used when isRtl */}
                           {chapter
                             ? localName(chapter.name, chapter.urdu_name, isRtl)
                             : `${t("skillsChaptersPage.watchMode.chapter")} ${chIdx + 1}`}
@@ -625,7 +610,6 @@ const SkillsChaptersPage = () => {
                   }`}
                 >
                   <Icon size={15} />
-                  {/* ✅ FIX: subject tab label respects current language */}
                   {localName(subject.name, subject.urdu_name, isRtl)}
                 </button>
               );
