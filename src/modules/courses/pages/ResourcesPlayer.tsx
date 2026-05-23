@@ -42,7 +42,7 @@ const ResourcePlayer = () => {
                 if (list.length > 0) {
                     setSelectedVideo(list[0]);
                     setVideoUrl(
-                        `https://api.zaheen.com.pk/api/playwsvideo/${list[0].id}`
+                        `https://cdn.zaheen.com.pk/videos/${list[0].file_path}`
                     );
                 }
             } catch (err) {
@@ -59,7 +59,7 @@ const ResourcePlayer = () => {
         setSelectedVideo(video);
 
         setVideoUrl(
-            `https://api.zaheen.com.pk/api/playwsvideo/${video.id}`
+            `https://cdn.zaheen.com.pk/videos/${video.file_path}`
         );
     };
 

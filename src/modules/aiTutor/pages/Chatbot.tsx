@@ -1,15 +1,20 @@
 import React, { useState, useRef, useEffect, useCallback, FormEvent } from "react";
 import "../../../styles/chatbot_fullpage.css";
 import { getLanguage } from "@/modules/shared/i18n";
+
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
 /* ─────────────────────────────────────────────────────────────
-   TRANSLATION HELPER  (same pattern as SubjectLecturesView)
+   TRANSLATION HOOK
+   Reactive — re-renders when language changes via storage or
+   custom "languageChange" event (same pattern as every other page).
+   To add Pashto: import psTranslations, add  ps: psTranslations.
 ──────────────────────────────────────────────────────────────── */
 const translations: Record<string, any> = {
   en: enTranslations,
   ur: urTranslations,
+  // ps: psTranslations,
 };
 
 const getNestedValue = (obj: any, key: string): string => {
@@ -17,8 +22,9 @@ const getNestedValue = (obj: any, key: string): string => {
   return typeof value === "string" ? value : key;
 };
 
-const useT = () => {
+const useTranslation = () => {
   const [lang, setLang] = useState<string>(() => getLanguage());
+
   useEffect(() => {
     const sync = () => setLang(getLanguage());
     window.addEventListener("storage", sync);
@@ -28,8 +34,20 @@ const useT = () => {
       window.removeEventListener("languageChange", sync);
     };
   }, []);
+
   const dict = translations[lang] ?? translations.en;
-  return (key: string) => getNestedValue(dict, key);
+
+  const t = useCallback(
+    (key: string): string => {
+      const val = getNestedValue(dict, key);
+      if (val !== key) return val;
+      // fallback to English if key missing in current lang
+      return getNestedValue(translations.en, key);
+    },
+    [dict]
+  );
+
+  return { t, lang };
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -53,82 +71,72 @@ function formatBotResponse(text: string): string {
     .replace(/^## (.+)$/gm, '<h2 class="bot-heading">$1</h2>')
     .replace(/^### (.+)$/gm, '<h3 class="bot-subheading">$1</h3>')
     .replace(/\*\*(.+?)\*\*/g, '<strong class="bot-bold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/^- (.+)$/gm, "<li>$1</li>")
     .replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul class="bot-list">${match}</ul>`)
-    .replace(/\n(?!<)/g, '<br/>');
+    .replace(/\n(?!<)/g, "<br/>");
   return html;
 }
 
-/* ─────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
    CHATBOT COMPONENT
-──────────────────────────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════ */
 const Chatbot: React.FC = () => {
-  const t = useT();
+  /* ── i18n ── */
+  const { t, lang } = useTranslation();
+  const isUrduLang  = lang === "ur";
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput]       = useState<string>("");
+  /* ── chat state ── */
+  const [messages, setMessages]   = useState<Message[]>([]);
+  const [input, setInput]         = useState<string>("");
+  const [loading, setLoading]     = useState<boolean>(false);
 
-  // topic key stored internally (always English), displayed label comes from t()
-  const [topicKey, setTopicKey] = useState<string>("Maths");
+  /* ── topic & language for API — kept in both state (for UI) and ref (for callbacks) ── */
+  const [topic, setTopic]         = useState<string>("Maths");
+  const [apiLang, setApiLang]     = useState<string>("English");
+  const apiLangRef                = useRef<string>("English");
 
-  // chatLanguage is the AI reply language — "English" or "Urdu" (sent to API unchanged)
-  const [chatLanguage, setChatLanguage] = useState<string>("English");
+  /* ── refs ── */
+  const chatRef         = useRef<HTMLDivElement | null>(null);
+  const recognitionRef  = useRef<any>(null);
+  const memoryRef       = useRef<string>("");
+  const isListening     = useRef<boolean>(false);
+  const inputRef        = useRef<HTMLInputElement | null>(null);
+  const historyRef      = useRef<ChatHistory[]>([]);
+  const queueRef        = useRef<string[]>([]);
+  const isProcessingRef = useRef<boolean>(false);
 
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const chatRef          = useRef<HTMLDivElement | null>(null);
-  const recognitionRef   = useRef<any>(null);
-  const memoryRef        = useRef<string>("");
-  const isListening      = useRef<boolean>(false);
-  const inputRef         = useRef<HTMLInputElement | null>(null);
-  const historyRef       = useRef<ChatHistory[]>([]);
-  const languageRef      = useRef<string>("English");
-  const queueRef         = useRef<string[]>([]);
-  const isProcessingRef  = useRef<boolean>(false);
-
-  // ── topic options: key maps to en.json chatbot.topics key ──
-  const topicOptions: { key: string; i18nKey: string; apiValue: string }[] = [
-    { key: "Maths",     i18nKey: "chatbot.topics.maths",     apiValue: "Maths"     },
-    { key: "English",   i18nKey: "chatbot.topics.english",   apiValue: "English"   },
-    { key: "Urdu",      i18nKey: "chatbot.topics.urdu",      apiValue: "Urdu"      },
-    { key: "Chemistry", i18nKey: "chatbot.topics.chemistry", apiValue: "Chemistry" },
-    { key: "Physics",   i18nKey: "chatbot.topics.physics",   apiValue: "Physics"   },
-    { key: "Science",   i18nKey: "chatbot.topics.science",   apiValue: "Science"   },
-    { key: "Computer",  i18nKey: "chatbot.topics.computer",  apiValue: "Computer"  },
-  ];
-
-  // derive the API topic value from the current key
-  const apiTopic = topicOptions.find((o) => o.key === topicKey)?.apiValue ?? topicKey;
-
-  /* ─── Language change: wipe history so AI gets a clean slate ─── */
-  const handleLanguageChange = (val: string) => {
-    setChatLanguage(val);
-    languageRef.current = val;
+  /* ── language switch handler ──────────────────────────────
+   * ROOT CAUSE FIX: conversation history carried the old language
+   * as strong context, so the AI kept replying in Urdu even after
+   * switching back to English. Clearing history + memory on switch
+   * gives the AI a clean slate.
+   *────────────────────────────────────────────────────────── */
+  const handleApiLangChange = (val: string) => {
+    setApiLang(val);
+    apiLangRef.current = val;
 
     // Clear all state that carries the old language's context
     historyRef.current = [];
     memoryRef.current  = "";
     queueRef.current   = [];
 
-    // Notice key differs by target language
-    const noticeKey =
-      val === "Urdu"
-        ? "chatbot.switchNotice"   // ur.json: "🔄 زبان اردو میں تبدیل ہو گئی — نئی گفتگو شروع"
-        : "chatbot.switchNotice";  // en.json: "🔄 Language switched to English — new session started"
+    // Show a divider so the user knows a new session started
+    const notice = val === "Urdu"
+      ? t("chatbot.switchNotice").replace("English", "Urdu")
+      : t("chatbot.switchNotice");
 
-    // We need the notice in the *new* language, so read directly from the dict
-    const dict = val === "Urdu" ? urTranslations : enTranslations;
-    const notice = getNestedValue(dict, noticeKey);
     setMessages((prev) => [...prev, { text: notice, type: "bot", isHtml: false }]);
   };
 
+  /* ── auto-scroll ── */
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  /* ── typing animation ── */
   const typeMessage = useCallback((text: string, onComplete: () => void) => {
-    let i = 0;
+    let i    = 0;
     let temp = "";
     setMessages((prev) => [...prev, { text: "", type: "bot", isHtml: true }]);
 
@@ -150,6 +158,7 @@ const Chatbot: React.FC = () => {
     }, 8);
   }, []);
 
+  /* ── send to API ── */
   const processMessage = useCallback(
     async (textToSend: string) => {
       isProcessingRef.current = true;
@@ -164,10 +173,12 @@ const Chatbot: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            topic: apiTopic,
-            language: languageRef.current, // always current via ref
+            topic,
+            // Read from ref (not state) to avoid stale closure — ensures
+            // language is always current even inside memoized callback
+            language: apiLangRef.current,
             history: historyRef.current.slice(-10),
-            memory: memoryRef.current,
+            memory:  memoryRef.current,
           }),
         });
 
@@ -202,7 +213,7 @@ const Chatbot: React.FC = () => {
         }
       }
     },
-    [apiTopic, typeMessage]
+    [topic, typeMessage]
   );
 
   const sendMessage = (e?: FormEvent) => {
@@ -217,21 +228,21 @@ const Chatbot: React.FC = () => {
     }
   };
 
+  /* ── voice input ── */
   const startListening = () => {
     if (isListening.current) return;
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    const recognition = new SpeechRecognition();
+    const recognition     = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.lang      = languageRef.current === "Urdu" ? "ur-PK" : "en-US";
-    isListening.current   = true;
+    recognition.lang       = apiLangRef.current === "Urdu" ? "ur-PK" : "en-US";
+    isListening.current    = true;
     recognition.start();
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
+      setInput(event.results[0][0].transcript);
     };
     recognition.onend = () => {
       isListening.current = false;
@@ -239,45 +250,72 @@ const Chatbot: React.FC = () => {
     };
   };
 
-  const isUrdu     = (text: string) => /[\u0600-\u06FF]/.test(text);
-  const isUrduLang = chatLanguage === "Urdu";
+  const isUrduText = (text: string) => /[\u0600-\u06FF]/.test(text);
 
+  /* ── topic options — values stay English (sent to API), labels translated ── */
+  const topicOptions = [
+    { value: "Maths",     labelKey: "chatbot.topics.maths"     },
+    { value: "English",   labelKey: "chatbot.topics.english"   },
+    { value: "Urdu",      labelKey: "chatbot.topics.urdu"      },
+    { value: "Chemistry", labelKey: "chatbot.topics.chemistry" },
+    { value: "Physics",   labelKey: "chatbot.topics.physics"   },
+    { value: "Science",   labelKey: "chatbot.topics.science"   },
+    { value: "Computer",  labelKey: "chatbot.topics.computer"  },
+  ];
+
+  const langOptions = [
+    { value: "English", labelKey: "chatbot.languages.english" },
+    { value: "Urdu",    labelKey: "chatbot.languages.urdu"    },
+  ];
+
+  /* ── render ── */
   return (
     <div
       className="chatbot-container"
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
-      {/* ── Header ── */}
-      <div className="chatbot-header">{t("chatbot.header")}</div>
+      {/* Header */}
+      <div className="chatbot-header">
+        {t("chatbot.header")}
+      </div>
 
-      {/* ── Controls ── */}
+      {/* Topic + Language selectors */}
       <div className="controls">
-        {/* Topic dropdown — labels come from translation */}
-        <select value={topicKey} onChange={(e) => setTopicKey(e.target.value)}>
+        {/* Topic — value stays in English so the API always receives the correct subject name */}
+        <select value={topic} onChange={(e) => setTopic(e.target.value)}>
           {topicOptions.map((opt) => (
-            <option key={opt.key} value={opt.key}>
-              {t(opt.i18nKey)}
+            <option key={opt.value} value={opt.value}>
+              {t(opt.labelKey)}
             </option>
           ))}
         </select>
 
-        {/* Language dropdown — labels come from translation */}
-        <select value={chatLanguage} onChange={(e) => handleLanguageChange(e.target.value)}>
-          <option value="English">{t("chatbot.languages.english")}</option>
-          <option value="Urdu">{t("chatbot.languages.urdu")}</option>
+        {/* Language for API replies */}
+        <select value={apiLang} onChange={(e) => handleApiLangChange(e.target.value)}>
+          {langOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {t(opt.labelKey)}
+            </option>
+          ))}
         </select>
       </div>
 
-      {/* ── Chat area ── */}
+      {/* Chat area */}
       <div
         className="chat-area"
         ref={chatRef}
         style={{ flex: 1, overflowY: "auto", paddingBottom: "8px" }}
       >
         {messages.map((msg, i) => (
-          <div key={i} className={`msg ${msg.type} ${isUrdu(msg.text) ? "urdu" : ""}`}>
+          <div
+            key={i}
+            className={`msg ${msg.type} ${isUrduText(msg.text) ? "urdu" : ""}`}
+          >
             {msg.isHtml && msg.type === "bot" ? (
-              <div className="bubble bot-formatted" dangerouslySetInnerHTML={{ __html: msg.text }} />
+              <div
+                className="bubble bot-formatted"
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+              />
             ) : (
               <div className="bubble">{msg.text}</div>
             )}
@@ -286,19 +324,21 @@ const Chatbot: React.FC = () => {
 
         {loading && (
           <div className={`msg bot ${isUrduLang ? "urdu" : ""}`}>
-            <div className="bubble thinking">{t("chatbot.thinking")}</div>
+            <div className="bubble thinking">
+              {t("chatbot.thinking")}
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── Queue notice ── */}
+      {/* Queue notice — only rendered when messages are queued */}
       {queueRef.current.length > 0 && (
         <div className="queue-notice">
           {queueRef.current.length} {t("chatbot.queueNotice")}
         </div>
       )}
 
-      {/* ── Input form ── */}
+      {/* Input form */}
       <form className="input-box" onSubmit={sendMessage} style={{ flexShrink: 0 }}>
         <input
           ref={inputRef}
@@ -308,8 +348,12 @@ const Chatbot: React.FC = () => {
           autoFocus
           className={isUrduLang ? "urdu-input" : ""}
         />
-        <button type="button" onClick={startListening}>{t("chatbot.micBtn")}</button>
-        <button type="submit">{t("chatbot.sendBtn")}</button>
+        <button type="button" onClick={startListening}>
+          {t("chatbot.micBtn")}
+        </button>
+        <button type="submit">
+          {t("chatbot.sendBtn")}
+        </button>
       </form>
     </div>
   );

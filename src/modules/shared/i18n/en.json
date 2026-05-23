@@ -528,102 +528,26 @@
       "chapter": "Chapter"
     }
   },
-  "chatbot" :{
-  "header": "Zaheen AI Tutor",
-  "topics": {
-    "maths": "Maths",
-    "english": "English",
-    "urdu": "Urdu",
-    "chemistry": "Chemistry",
-    "physics": "Physics",
-    "science": "Science",
-    "computer": "Computer"
-  },
-  "languages": {
-    "english": "English",
-    "urdu": "Urdu"
-  },
-  "placeholder": "Ask your question...",
-  "sendBtn": "Send",
-  "micBtn": "🎤",
-  "thinking": "🤖 AI is thinking...",
-  "queueNotice": "message(s) waiting...",
-  "switchNotice": "🔄 Language switched to English — new session started"
-},
-"pastPapersPage": {
-  "header": {
-    "title": "Past Papers",
-    "subtitle": "Watch solved past papers and prepare smarter for your exams."
-  },
-
-  "breadcrumb": {
-    "home": "Home",
-    "pastPapers": "Past Papers"
-  },
-"labels": {
-    "grade": "Grade",
-    "video": "Video",
-    "pastPaper": "Past Paper"
-  },
-  "sidebar": {
-    "title": "Exam Preparation",
-    "subtitle": "Academic Session 2024",
-    "home": "Home",
-    "videoLectures": "Video Lectures",
-    "assessments": "Assessments",
-    "pastPapers": "Past Papers",
-    "settings": "Settings"
-  },
-
-  "filters": {
-    "subjectLabel": "Subject",
-    "yearLabel": "Year",
-    "typeLabel": "Paper Type",
-    "allSubjects": "All Subjects",
-    "allYears": "All Years",
-    "allTypes": "All Types",
-    "applyBtn": "Apply Filters",
-    "active": "Active Filters",
-    "clearAll": "Clear All",
-    "clearFilters": "Clear Filters"
-  },
-
-  "results": {
-    "noPapersFound": "No papers found",
-    "papersFound": "{{count}} papers found"
-  },
-
-  "card": {
-    "watchVideo": "Watch Video",
-    "watchVideoShort": "Watch",
-    "downloadPdf": "PDF Coming Soon"
-  },
-
-  "player": {
-    "backToPapers": "Back to Papers",
-    "openInTab": "Open in New Tab",
-    "retry": "Retry",
-    "videoError": "Video failed to load.",
-    "noVideo": "No video available for this paper.",
-    "morePapers": "More Papers",
-    "noPapers": "No more papers available."
-  },
-
-  "yearHeading": {
-    "pastPapers": "Past Papers",
-    "paper": "paper",
-    "papers": "papers"
-  },
-
-  "error": {
-    "title": "Failed to load papers",
-    "desc": "Something went wrong while loading past papers.",
-    "retry": "Try Again"
-  },
-
-  "empty": {
-    "title": "No Past Papers Found",
-    "desc": "Try changing filters or check back later for more papers."
+  "chatbot": {
+    "header": "Zaheen AI Tutor",
+    "topics": {
+      "maths": "Maths",
+      "english": "English",
+      "urdu": "Urdu",
+      "chemistry": "Chemistry",
+      "physics": "Physics",
+      "science": "Science",
+      "computer": "Computer"
+    },
+    "languages": {
+      "english": "English",
+      "urdu": "Urdu"
+    },
+    "placeholder": "Ask your question...",
+    "sendBtn": "Send",
+    "micBtn": "🎤",
+    "thinking": "🤖 AI is thinking...",
+    "queueNotice": "message(s) waiting...",
+    "switchNotice": "🔄 Language switched to English — new session started"
   }
-}
 }

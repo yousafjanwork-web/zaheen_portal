@@ -29,12 +29,10 @@ const BASE_URL = "https://api.zaheen.com.pk/api";
 
 /* ─────────────────────────────────────────────────────────────
    useTranslation
-   FIX: Now REACTIVE — listens to storage + languageChange events
-   so the component re-renders when the user switches language,
-   exactly like useT() in SubjectLecturesView.
-   Previously getLanguage() was called once at render time and
-   never updated, so "Grade 9" (and all other strings) stayed in
-   English even after switching to Urdu.
+   Returns a t() helper scoped to the "classSubjectsView" section.
+   Adding a new language in the future only requires:
+     1. Creating a new locale JSON (e.g. ps.json) with the same keys.
+     2. Importing it below and adding it to the `translations` map.
 ──────────────────────────────────────────────────────────────── */
 type TranslationFile = typeof enTranslations;
 
@@ -45,21 +43,14 @@ const translations: Record<string, TranslationFile> = {
 };
 
 const useTranslation = () => {
-  // ── FIXED: reactive lang state instead of one-time getLanguage() call ──
-  const [lang, setLang] = useState<string>(() => getLanguage());
-
-  useEffect(() => {
-    const sync = () => setLang(getLanguage());
-    window.addEventListener("storage", sync);
-    window.addEventListener("languageChange", sync);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("languageChange", sync);
-    };
-  }, []);
-
+  const lang = getLanguage();
+  // Fall back to English if the current language file doesn't exist yet
   const locale = (translations[lang] ?? translations["en"]) as TranslationFile;
 
+  /**
+   * t("quizModal.title")            → locale.classSubjectsView.quizModal.title
+   * t("subjects.physics.description") → locale.classSubjectsView.subjects.physics.description
+   */
   const t = (key: string): string => {
     const parts = ["classSubjectsView", ...key.split(".")];
     let node: unknown = locale;
@@ -67,12 +58,13 @@ const useTranslation = () => {
       if (node && typeof node === "object" && part in (node as Record<string, unknown>)) {
         node = (node as Record<string, unknown>)[part];
       } else {
+        // Key missing in this locale → fall back to English
         let fallback: unknown = enTranslations;
         for (const p of parts) {
           if (fallback && typeof fallback === "object" && p in (fallback as Record<string, unknown>)) {
             fallback = (fallback as Record<string, unknown>)[p];
           } else {
-            return key;
+            return key; // last resort: return the key itself
           }
         }
         return typeof fallback === "string" ? fallback : key;
@@ -85,7 +77,7 @@ const useTranslation = () => {
 };
 
 /* ─────────────────────────────────────────────────────────────
-   getMeta  — descriptions come from translation files
+   getMeta  — descriptions now come from translation files
 ──────────────────────────────────────────────────────────────── */
 const getMeta = (name: string, t: (key: string) => string) => {
   const n = name.toLowerCase();
@@ -146,6 +138,7 @@ const StatValue = ({
     return <div className="h-7 w-8 bg-slate-200 rounded animate-pulse mb-2" />;
   }
   if (count === 0) {
+    // comingSoonLabel uses "\n" as line break — render each part on its own line
     const lines = comingSoonLabel.split("\n");
     return (
       <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wide leading-tight">
@@ -238,18 +231,23 @@ const StatsRow = ({
   onLecturesClick, onQuizzesClick, onPastPapersClick, t,
 }: StatsRowProps) => (
   <div className="flex items-start gap-7">
+    {/* LECTURES */}
     <button onClick={onLecturesClick} className="text-left group/lec hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={lectures} loading={lecturesLoading} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/lec:text-slate-600 transition-colors">
         {t("stats.lectures")}
       </p>
     </button>
+
+    {/* QUIZZES — always "Coming Soon", intentional */}
     <button onClick={onQuizzesClick} className="text-left group/quiz hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={0} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/quiz:text-slate-600 transition-colors">
         {t("stats.quizzes")}
       </p>
     </button>
+
+    {/* PAST PAPERS */}
     <button onClick={onPastPapersClick} className="text-left group/pp hover:opacity-70 transition-opacity focus:outline-none">
       <StatValue count={pastPapers} loading={pastPapersLoading} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 leading-tight underline underline-offset-2 decoration-dotted group-hover/pp:text-slate-600 transition-colors">
@@ -444,20 +442,12 @@ const ClassSubjectsView = () => {
   const location    = useLocation();
   const gradeType   = location.state?.gradeType;
 
-  // ── i18n — now fully reactive ──────────────────────────────
+  // ── i18n ──────────────────────────────────────────────────
   const { t, lang } = useTranslation();
   const isUrdu      = lang === "ur";
 
   const { classInfo, subjects, chapterVideos, chapters, loading } =
     useClassSubjects(Number(classId));
-
-  // ── FIX: gradeName respects current language ──────────────
-  // Previously this was always `classInfo?.name` (English only).
-  // Now it picks urdu_name when Urdu is active, with a safe
-  // fallback chain so it never shows blank.
-  const gradeName = isUrdu
-    ? (classInfo?.urdu_name?.trim() || classInfo?.name || `Grade ${classId}`)
-    : (classInfo?.name || `Grade ${classId}`);
 
   const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
   const [showQuizModal, setShowQuizModal]     = useState(false);
@@ -503,6 +493,8 @@ const ClassSubjectsView = () => {
     return () => { cancelled = true; };
   }, [classId, subjects]);
 
+  const gradeName = classInfo?.name || `Grade ${classId}`;
+
   /* ── Per-subject stats ────────────────────────────────────── */
   const getSubjectStats = (subjectId: number) => {
     const subjectChapters = chapters.filter((c: any) => c.subject_id === subjectId);
@@ -539,6 +531,7 @@ const ClassSubjectsView = () => {
       !s.name.toLowerCase().includes("math")
   );
 
+  // Helper to render a SubjectCard for maths
   const renderMathCard = (index: number) => {
     if (!mathsSubject) return null;
     const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(mathsSubject.id);
@@ -678,6 +671,7 @@ const ClassSubjectsView = () => {
             ) : (
               <motion.div key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
 
+                {/* ── ROW 1: Physics (wide, 2 cols) + Maths (1 col) ── */}
                 {physicsSubject && (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     {(() => {
@@ -700,13 +694,18 @@ const ClassSubjectsView = () => {
                         />
                       );
                     })()}
+
+                    {/* Maths sits next to Physics only when both are visible */}
                     {mathsSubject && renderMathCard(0)}
                   </div>
                 )}
 
+                {/* ── ROW 2+: remaining subjects + Maths when Physics is hidden ── */}
                 {(restSubjects.length > 0 || (!physicsSubject && mathsSubject)) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {/* If Physics is not shown, render Maths first (left-aligned) */}
                     {!physicsSubject && mathsSubject && renderMathCard(0)}
+
                     {restSubjects.map((subject: any, i: number) => {
                       const { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading } = getSubjectStats(subject.id);
                       return (

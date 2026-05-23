@@ -204,7 +204,7 @@ const ComingSoonScreen = ({
    Main LecturesPage
 ───────────────────────────────────────────── */
 const LecturesPage = () => {
-  const { chapterId, chapterName } = useParams();
+  const { chapterId, chapterName, className } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -298,6 +298,7 @@ const LecturesPage = () => {
           setSelectedVideo(initialVideo);
           setVideoUrl(`https://cdn.zaheen.com.pk/videos/${initialVideo.path}`);
         }
+
       } catch (err) {
         console.error("Failed to fetch videos:", err);
       }
