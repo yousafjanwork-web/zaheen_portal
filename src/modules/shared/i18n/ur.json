@@ -535,5 +535,68 @@
     "thinking": "🤖 AI سوچ رہا ہے...",
     "queueNotice": "پیغام(ات) انتظار میں...",
     "switchNotice": "🔄 زبان اردو میں تبدیل ہو گئی — نئی گفتگو شروع"
+  },
+  "pastPapersPage": {
+  "sidebar": {
+    "title": "ایجوپورٹل",
+    "subtitle": "تعلیمی انتظام",
+    "home": "ہوم",
+    "videoLectures": "ویڈیو لیکچرز",
+    "assessments": "جائزے",
+    "pastPapers": "پرانے پرچے",
+    "settings": "ترتیبات"
+  },
+  "breadcrumb": {
+    "home": "ہوم",
+    "pastPapers": "پرانے پرچے"
+  },
+  "header": {
+    "title": "پرانے پرچے",
+    "subtitle": "ویڈیو حل کے ساتھ گزشتہ امتحانی پرچے دیکھیں۔ مضمون، سال یا پرچے کی قسم کے مطابق فلٹر کریں۔"
+  },
+  "filters": {
+    "subjectLabel": "مضمون",
+    "yearLabel": "سال",
+    "typeLabel": "قسم",
+    "allSubjects": "تمام مضامین",
+    "allYears": "تمام سال",
+    "allTypes": "تمام اقسام",
+    "applyBtn": "فلٹر لگائیں",
+    "active": "فعال فلٹرز:",
+    "clearAll": "سب صاف کریں",
+    "clearFilters": "فلٹرز صاف کریں"
+  },
+  "results": {
+    "noPapersFound": "کوئی پرچہ نہیں ملا۔",
+    "papersFound": "{{count}} پرچے ملے"
+  },
+  "card": {
+    "watchVideo": "ویڈیو دیکھیں",
+    "watchVideoShort": "دیکھیں",
+    "downloadPdf": "PDF ڈاؤنلوڈ کریں"
+  },
+  "yearHeading": {
+    "pastPapers": "پرانے پرچے",
+    "paper": "پرچہ",
+    "papers": "پرچے"
+  },
+  "player": {
+    "backToPapers": "پرچوں پر واپس",
+    "noVideo": "اس پرچے کے لیے کوئی ویڈیو دستیاب نہیں۔",
+    "videoError": "ویڈیو خرابی کوڈ",
+    "openInTab": "نئے ٹیب میں کھولیں",
+    "retry": "دوبارہ کوشش کریں",
+    "morePapers": "مزید پرچے",
+    "noPapers": "کوئی اور پرچہ دستیاب نہیں۔"
+  },
+  "empty": {
+    "title": "کوئی پرچہ نہیں ملا",
+    "desc": "آپ کے فلٹرز سے کوئی پرچہ میل نہیں کھاتا۔ فلٹرز تبدیل یا صاف کریں۔"
+  },
+  "error": {
+    "title": "لوڈ نہیں ہو سکا",
+    "desc": "پرچے حاصل کرتے وقت کوئی مسئلہ پیش آیا۔ دوبارہ کوشش کریں۔",
+    "retry": "دوبارہ کوشش کریں"
   }
+}
 }
