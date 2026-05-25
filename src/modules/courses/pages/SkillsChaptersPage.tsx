@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   BookOpen, FileText, FolderOpen, Settings, LayoutDashboard,
   GraduationCap, PlayCircle, ChevronLeft, ChevronRight, ChevronDown,
-  CheckCircle2, Check, Clock, Star, Users, ArrowLeft,
+  CheckCircle2, Check, Clock, Star, Users, ArrowLeft, Loader2,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
 
@@ -74,30 +74,69 @@ const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard]
 const localName = (en: string, ur?: string, isRtl?: boolean) =>
   isRtl ? ur || en : en;
 
-/* ─────────────────────────────────────────────────────────────
-   Desc localisation: replace known English phrases with Urdu
-──────────────────────────────────────────────────────────────── */
-const URDU_DESC_MAP: Record<string, string> = {
-  "Benefits Of Learning Financial Market Trading": "فنانشل مارکیٹ ٹریڈنگ سیکھنے کے فوائد",
-  "Additional Income Source": "اضافی آمدنی کا ذریعہ",
-  "High-Income Skill": "زیادہ آمدنی والی مہارت",
-  "Freedom & Flexibility": "آزادی اور لچک",
-  "Global Opportunity": "عالمی موقع",
-  "Skill-Based Growth": "مہارت پر مبنی ترقی",
-  "Liquidity Pools and Stop Runs": "لیکویڈیٹی پولز اور اسٹاپ رنز",
-  "Trading View Demo Account": "ٹریڈنگ ویو ڈیمو اکاؤنٹ",
-  "Type Of Orders": "آرڈرز کی اقسام",
-  "Liquidity Zones": "لیکویڈیٹی زونز",
+
+
+const DescriptionBlock = ({
+  desc,
+  isRtl,
+}: {
+  desc: string;
+  isRtl: boolean;
+}) => {
+  if (!desc) return null;
+
+  const lines = desc.split("\n").filter(Boolean);
+  const intro: string[] = [];
+  const bullets: string[] = [];
+
+  lines.forEach((line) => {
+    const stripped = line.replace(/^\*+\s*/, "").trim();
+
+    if (line.trim().startsWith("*")) {
+      bullets.push(stripped);
+    } else {
+      intro.push(line.trim());
+    }
+  });
+
+  return (
+    <div className="space-y-3">
+      {intro.map((p, i) => (
+        <p
+          key={i}
+          className={`text-slate-500 text-sm leading-relaxed ${
+            isRtl ? "text-right" : ""
+          }`}
+        >
+          {p}
+        </p>
+      ))}
+
+      {bullets.length > 0 && (
+        <ul className="space-y-2 mt-1">
+          {bullets.map((b, i) => (
+            <li
+              key={i}
+              className={`flex items-start gap-2.5 ${
+                isRtl ? "flex-row-reverse" : ""
+              }`}
+            >
+              <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+              <span
+                className={`text-slate-700 text-sm font-medium leading-relaxed ${
+                  isRtl ? "text-right" : ""
+                }`}
+              >
+                {b}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 };
 
-const localiseDesc = (desc: string, isRtl: boolean): string => {
-  if (!isRtl) return desc;
-  let result = desc;
-  Object.entries(URDU_DESC_MAP).forEach(([en, ur]) => {
-    result = result.replace(new RegExp(en, "g"), ur);
-  });
-  return result;
-};
 
 const SkillsChaptersPage = () => {
   const { classId } = useParams();
@@ -258,10 +297,10 @@ const SkillsChaptersPage = () => {
   ════════════════════════════════════════ */
   if (isWatchMode && selectedLecture) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+     <div className="min-h-screen bg-white flex flex-col">
 
         {/* Top navbar — always LTR so layout never flips in Urdu */}
-        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm" dir="ltr">
+        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm">
           <button
             onClick={exitWatchMode}
             className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors text-sm font-semibold group"
@@ -281,7 +320,7 @@ const SkillsChaptersPage = () => {
             </p>
           </div>
 
-          {/* Prev / Next — dir="ltr" forces < > order regardless of page RTL */}
+          {/* Prev / Next */}
           <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
             <button
               onClick={goPrev}
@@ -347,56 +386,27 @@ const SkillsChaptersPage = () => {
                   {lectureName(selectedLecture)}
                 </h2>
 
-                {/* ✅ FIX 3: localiseDesc replaces known English phrases with Urdu when isRtl */}
-                {selectedLecture.desc && (() => {
-                  const localisedDesc = localiseDesc(selectedLecture.desc, isRtl);
-                  const lines   = localisedDesc.split("\n").filter(Boolean);
-                  const intro:   string[] = [];
-                  const bullets: string[] = [];
-                  lines.forEach((line) => {
-                    const stripped = line.replace(/^\*+\s*/, "").trim();
-                    if (line.trim().startsWith("*")) bullets.push(stripped);
-                    else intro.push(line.trim());
-                  });
-                  return (
-                    <div className="space-y-3">
-                      {intro.map((p, i) => (
-                        <p key={i} className={`text-slate-500 text-sm leading-relaxed ${isRtl ? "text-right" : ""}`}>{p}</p>
-                      ))}
-                      {bullets.length > 0 && (
-                        <ul className="space-y-2 mt-1">
-                          {bullets.map((b, i) => (
-                            <li key={i} className={`flex items-start gap-2.5 ${isRtl ? "flex-row-reverse" : ""}`}>
-                              <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                              <span className={`text-slate-700 text-sm font-medium leading-relaxed ${isRtl ? "text-right" : ""}`}>{b}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* Mobile progress */}
-                <div className="mt-4 pt-4 border-t border-slate-200 xl:hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">{t("skillsChaptersPage.watchMode.progress")}</span>
-                    <span className="text-xs font-black text-indigo-600">{progressPercent}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-indigo-500 transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1.5">
-                    {totalWatched} / {totalLectures} {t("skillsChaptersPage.watchMode.completed")}
-                  </p>
-                </div>
+               {(isRtl
+  ? selectedLecture.urdu_desc
+  : selectedLecture.desc) && (
+  <DescriptionBlock
+    desc={
+      isRtl
+        ? selectedLecture.urdu_desc || selectedLecture.desc || ""
+        : selectedLecture.desc || ""
+    }
+    isRtl={isRtl}
+  />
+)}
+ 
+            
               </div>
             </div>
           </div>
 
-          {/* RIGHT — Sidebar (progress bar lives here only on desktop) */}
-          <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
-            <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
+          {/* RIGHT — Sidebar */}
+          <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-1 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
+         <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[16px] font-black text-slate-900">{t("skillsChaptersPage.watchMode.courseContent")}</h3>
                 <span className="text-[12px] text-slate-500 font-semibold bg-white border border-slate-200 px-3 py-1 rounded-full">
