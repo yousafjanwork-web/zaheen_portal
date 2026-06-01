@@ -12,6 +12,8 @@ import HowManyGame from "../components/Howmanygame";
 import UrduMatch from "../components/UrduMatch";
 import AnimalAlphabetDray from "../components/AnimalAlphabetDrag";
 import UrduAnimalAlphabet from "../components/UrduAnimalAlphabet";
+import HowManyFruits from "../components/HowManyFruits";
+import Missinglettergame from "../components/Missinglettergame";
 // ✅ Games that have their OWN GameLayout inside — no double wrapping
 const SELF_LAYOUT_GAMES = [
   "alphabet-match",
@@ -62,6 +64,8 @@ const PlayGamePage = () => {
     if (game === "urdu-match") return <UrduMatch />;
     if (game === "animal-alphabet") return <AnimalAlphabetDray />;
     if (game === "urdu-animal-alphabet") return <UrduAnimalAlphabet />;
+    if (game === "how-many-fruit") return <HowManyFruits />;
+    if (game === "missing-letter") return <Missinglettergame />;
     if (externalGames[game]) {
       const url = externalGames[game];
       return (

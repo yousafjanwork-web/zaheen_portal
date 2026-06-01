@@ -212,6 +212,18 @@ const GamesPage = () => {
   if (type === "1-5") {
     const games = [
       {
+        id: "how-many-fruit",
+        title: "How Many Fruit",
+        emoji: "🍎",
+        color: "bg-pink-700",
+      },
+      {
+        id: "missing-letter",
+        title: "Missing Letter Game",
+        emoji: "🚌",
+        color: "bg-pink-500",
+      },
+      {
         id: "word-builder",
         title: "Word Builder",
         emoji: "🔤",
