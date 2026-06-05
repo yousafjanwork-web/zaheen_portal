@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-const sounds = {
-  correct: new Audio("/sounds/correct.mp3"),
-  wrong: new Audio("/sounds/wrong.mp3"),
-};
-
 const getRangeByGrade = (grade) => {
   switch (grade) {
     case "KG":
@@ -54,8 +49,7 @@ export default function MathGame({ grade = "KG" }) {
     let a = getRandom(min, max);
     let b = getRandom(min, max);
 
-    // Optional: ensure carry for KG2
-    if (grade === "KG2" && (a % 10 + b % 10 < 10)) {
+    if (grade === "KG2" && (a % 10) + (b % 10) < 10) {
       b = getRandom(10, 99);
     }
 
@@ -75,15 +69,9 @@ export default function MathGame({ grade = "KG" }) {
 
   const handleClick = (val) => {
     if (val === correct) {
-      sounds.correct.currentTime = 0;
-      sounds.correct.play();
-
       setScore((s) => s + 10);
       setAnimate("correct");
     } else {
-      sounds.wrong.currentTime = 0;
-      sounds.wrong.play();
-
       setScore((s) => s - 5);
       setAnimate("wrong");
     }
@@ -125,8 +113,6 @@ export default function MathGame({ grade = "KG" }) {
     </div>
   );
 }
-
-/* 🎨 Styles */
 
 const styles = {
   container: {
