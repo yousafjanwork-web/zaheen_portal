@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   BookOpen, FileText, FolderOpen, Settings, LayoutDashboard,
   GraduationCap, PlayCircle, ChevronLeft, ChevronRight, ChevronDown,
-  CheckCircle2, Check, Clock, Star, Users, ArrowLeft,
+  CheckCircle2, Check, Clock, Star, Users, ArrowLeft, Loader2,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
 
@@ -64,9 +64,18 @@ const useTranslation = () => {
   return { t, tArr, lang };
 };
 
-interface Subject   { id: number; name: string; urdu_name?: string; }
-interface Chapter   { id: number; name: string; urdu_name?: string; }
-interface Lecture   { id: number; name: string; urdu_name?: string; path: string; chapter_id: number; duration?: string; desc?: string; }
+interface Subject { id: number; name: string; urdu_name?: string; }
+interface Chapter { id: number; name: string; urdu_name?: string; }
+interface Lecture {
+  id: number;
+  name: string;
+  urdu_name?: string;
+  path: string;
+  chapter_id: number;
+  duration?: string;
+  desc?: string;
+  urdu_desc?: string;
+}
 interface ClassInfo { class_id: number; name: string; urdu_name?: string; thumbnailUrl?: string; chapterCount?: number; }
 
 const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard];
@@ -75,58 +84,175 @@ const localName = (en: string, ur?: string, isRtl?: boolean) =>
   isRtl ? ur || en : en;
 
 /* ─────────────────────────────────────────────────────────────
-   Desc localisation: replace known English phrases with Urdu
+   AI-POWERED URDU TRANSLATION
+   Uses Claude API to translate lecture descriptions on-the-fly.
+   Results are cached in a module-level Map so the same text is
+   never sent twice — even across component re-renders.
 ──────────────────────────────────────────────────────────────── */
-const URDU_DESC_MAP: Record<string, string> = {
-  "Benefits Of Learning Financial Market Trading": "فنانشل مارکیٹ ٹریڈنگ سیکھنے کے فوائد",
-  "Additional Income Source": "اضافی آمدنی کا ذریعہ",
-  "High-Income Skill": "زیادہ آمدنی والی مہارت",
-  "Freedom & Flexibility": "آزادی اور لچک",
-  "Global Opportunity": "عالمی موقع",
-  "Skill-Based Growth": "مہارت پر مبنی ترقی",
-  "Liquidity Pools and Stop Runs": "لیکویڈیٹی پولز اور اسٹاپ رنز",
-  "Trading View Demo Account": "ٹریڈنگ ویو ڈیمو اکاؤنٹ",
-  "Type Of Orders": "آرڈرز کی اقسام",
-  "Liquidity Zones": "لیکویڈیٹی زونز",
+const translationCache = new Map<string, string>();
+
+async function translateToUrdu(text: string): Promise<string> {
+  if (!text?.trim()) return text;
+
+  // Return cached result immediately
+  const cached = translationCache.get(text);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [
+          {
+            role: "user",
+            content: `Translate the following lecture description from English to Urdu.\nKeep the same structure (line breaks, bullet points starting with *).\nReturn ONLY the Urdu translation, nothing else, no explanations.\n\nText to translate:\n${text}`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Translation API error:", response.status, errText);
+      return text;
+    }
+
+    const data = await response.json();
+    const translated = data?.content?.[0]?.text?.trim() ?? text;
+    translationCache.set(text, translated);
+    return translated;
+  } catch (err) {
+    console.error("Translation error:", err);
+    return text;
+  }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   Hook: useUrduDesc
+   Returns the translated description (or original while loading)
+──────────────────────────────────────────────────────────────── */
+function useUrduDesc(desc: string | undefined, isRtl: boolean) {
+  const [translated, setTranslated] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!desc) { setTranslated(""); return; }
+    if (!isRtl) { setTranslated(desc); return; }
+
+    // Check cache synchronously first — no flash of English
+    const cached = translationCache.get(desc);
+    if (cached) { setTranslated(cached); return; }
+
+    // Not cached yet — translate async
+    setLoading(true);
+    setTranslated(""); // clear while loading
+    translateToUrdu(desc).then((result) => {
+      setTranslated(result);
+      setLoading(false);
+    });
+  }, [desc, isRtl]);
+
+  return { translated, loading };
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DescriptionBlock: renders the translated (or original) desc
+──────────────────────────────────────────────────────────────── */
+const DescriptionBlock = ({
+  desc,
+  isRtl,
+}: {
+  desc: string;
+  isRtl: boolean;
+}) => {
+  if (!desc) return null;
+
+  const lines = desc.split("\n").filter(Boolean);
+  const intro: string[] = [];
+  const bullets: string[] = [];
+
+  lines.forEach((line) => {
+    const stripped = line.replace(/^\*+\s*/, "").trim();
+
+    if (line.trim().startsWith("*")) {
+      bullets.push(stripped);
+    } else {
+      intro.push(line.trim());
+    }
+  });
+
+  return (
+    <div className="space-y-3">
+      {intro.map((p, i) => (
+        <p
+          key={i}
+          className={`text-slate-500 text-sm leading-relaxed ${isRtl ? "text-right" : ""
+            }`}
+        >
+          {p}
+        </p>
+      ))}
+
+      {bullets.length > 0 && (
+        <ul className="space-y-2 mt-1">
+          {bullets.map((b, i) => (
+            <li
+              key={i}
+              className={`flex items-start gap-2.5 ${isRtl ? "flex-row-reverse" : ""
+                }`}
+            >
+              <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+              <span
+                className={`text-slate-700 text-sm font-medium leading-relaxed ${isRtl ? "text-right" : ""
+                  }`}
+              >
+                {b}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 };
 
-const localiseDesc = (desc: string, isRtl: boolean): string => {
-  if (!isRtl) return desc;
-  let result = desc;
-  Object.entries(URDU_DESC_MAP).forEach(([en, ur]) => {
-    result = result.replace(new RegExp(en, "g"), ur);
-  });
-  return result;
-};
 
 const SkillsChaptersPage = () => {
   const { classId } = useParams();
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
 
   const { t, tArr, lang } = useTranslation();
   const isRtl = lang === "ur";
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, []);
 
-  const [classInfo, setClassInfo]             = useState<ClassInfo | null>(null);
-  const [subjects, setSubjects]               = useState<Subject[]>([]);
+  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [chapterMap, setChapterMap]           = useState<Record<number, Chapter>>({});
-  const [lectures, setLectures]               = useState<Lecture[]>([]);
-  const [loadingClass, setLoadingClass]       = useState(true);
+  const [chapterMap, setChapterMap] = useState<Record<number, Chapter>>({});
+  const [lectures, setLectures] = useState<Lecture[]>([]);
+  const [loadingClass, setLoadingClass] = useState(true);
   const [loadingChapters, setLoadingChapters] = useState(true);
-  const [isWatchMode, setIsWatchMode]         = useState(false);
+  const [isWatchMode, setIsWatchMode] = useState(false);
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
-  const [openChapters, setOpenChapters]       = useState<Set<number>>(new Set());
-  const [watchedSet, setWatchedSet]           = useState<Set<number>>(new Set());
-  const [progressMap, setProgressMap]         = useState<Record<number, number>>({});
+  const [openChapters, setOpenChapters] = useState<Set<number>>(new Set());
+  const [watchedSet, setWatchedSet] = useState<Set<number>>(new Set());
+  const [progressMap, setProgressMap] = useState<Record<number, number>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const currentIdx      = lectures.findIndex((l) => l.id === selectedLecture?.id);
-  const totalLectures   = lectures.length;
-  const totalWatched    = watchedSet.size;
+  const currentIdx = lectures.findIndex((l) => l.id === selectedLecture?.id);
+  const totalLectures = lectures.length;
+  const totalWatched = watchedSet.size;
   const progressPercent = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
-  const courseName      = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
+  const courseName = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
 
   const lecturesByChapter: Record<number, Lecture[]> = {};
   lectures.forEach((l) => {
@@ -139,12 +265,12 @@ const SkillsChaptersPage = () => {
     setLoadingClass(true);
     (async () => {
       try {
-        const res  = await fetch(
+        const res = await fetch(
           `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?t=${Date.now()}`,
           { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
         );
         const data = await res.json();
-        const cls  = data.find((c: ClassInfo) => c.class_id === Number(classId));
+        const cls = data.find((c: ClassInfo) => c.class_id === Number(classId));
         setClassInfo(cls ?? null);
       } catch (e) { console.error(e); }
       setLoadingClass(false);
@@ -154,7 +280,7 @@ const SkillsChaptersPage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res  = await fetch(
+        const res = await fetch(
           `https://api.zaheen.com.pk/api/class/${classId}/subjects?ts=${Date.now()}`,
           { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
         );
@@ -200,7 +326,7 @@ const SkillsChaptersPage = () => {
     window.scrollTo({ top: 0, behavior: "auto" });
     if (videoRef.current) {
       (videoRef.current as any)._tracked50 = false;
-      (videoRef.current as any)._started   = false;
+      (videoRef.current as any)._started = false;
     }
     setOpenChapters((prev) => new Set(prev).add(lecture.chapter_id));
   }, []);
@@ -249,8 +375,8 @@ const SkillsChaptersPage = () => {
 
   const lectureName = (l: Lecture) => localName(l.name, l.urdu_name, isRtl);
 
-  const learnPoints     = tArr("skillsChaptersPage.learnSection.points");
-  const requirements    = tArr("skillsChaptersPage.requirements.items");
+  const learnPoints = tArr("skillsChaptersPage.learnSection.points");
+  const requirements = tArr("skillsChaptersPage.requirements.items");
   const descriptionText = t("skillsChaptersPage.description.text");
 
   /* ════════════════════════════════════════
@@ -281,7 +407,7 @@ const SkillsChaptersPage = () => {
             </p>
           </div>
 
-          {/* Prev / Next — dir="ltr" forces < > order regardless of page RTL */}
+          {/* Prev / Next */}
           <div className="flex items-center gap-1.5 shrink-0" dir="ltr">
             <button
               onClick={goPrev}
@@ -347,35 +473,19 @@ const SkillsChaptersPage = () => {
                   {lectureName(selectedLecture)}
                 </h2>
 
-                {/* ✅ FIX 3: localiseDesc replaces known English phrases with Urdu when isRtl */}
-                {selectedLecture.desc && (() => {
-                  const localisedDesc = localiseDesc(selectedLecture.desc, isRtl);
-                  const lines   = localisedDesc.split("\n").filter(Boolean);
-                  const intro:   string[] = [];
-                  const bullets: string[] = [];
-                  lines.forEach((line) => {
-                    const stripped = line.replace(/^\*+\s*/, "").trim();
-                    if (line.trim().startsWith("*")) bullets.push(stripped);
-                    else intro.push(line.trim());
-                  });
-                  return (
-                    <div className="space-y-3">
-                      {intro.map((p, i) => (
-                        <p key={i} className={`text-slate-500 text-sm leading-relaxed ${isRtl ? "text-right" : ""}`}>{p}</p>
-                      ))}
-                      {bullets.length > 0 && (
-                        <ul className="space-y-2 mt-1">
-                          {bullets.map((b, i) => (
-                            <li key={i} className={`flex items-start gap-2.5 ${isRtl ? "flex-row-reverse" : ""}`}>
-                              <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                              <span className={`text-slate-700 text-sm font-medium leading-relaxed ${isRtl ? "text-right" : ""}`}>{b}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  );
-                })()}
+                {/* Description — AI-translated when Urdu is active */}
+                {(isRtl
+                  ? selectedLecture.urdu_desc
+                  : selectedLecture.desc) && (
+                    <DescriptionBlock
+                      desc={
+                        isRtl
+                          ? selectedLecture.urdu_desc || selectedLecture.desc || ""
+                          : selectedLecture.desc || ""
+                      }
+                      isRtl={isRtl}
+                    />
+                  )}
 
                 {/* Mobile progress */}
                 <div className="mt-4 pt-4 border-t border-slate-200 xl:hidden">
@@ -394,7 +504,7 @@ const SkillsChaptersPage = () => {
             </div>
           </div>
 
-          {/* RIGHT — Sidebar (progress bar lives here only on desktop) */}
+          {/* RIGHT — Sidebar */}
           <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
             <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
               <div className="flex items-center justify-between mb-3">
@@ -416,9 +526,9 @@ const SkillsChaptersPage = () => {
 
             <div className="overflow-y-auto flex-1">
               {chapterIds.map((chId, chIdx) => {
-                const chapter      = chapterMap[chId];
-                const vids         = lecturesByChapter[chId] ?? [];
-                const isOpen       = openChapters.has(chId);
+                const chapter = chapterMap[chId];
+                const vids = lecturesByChapter[chId] ?? [];
+                const isOpen = openChapters.has(chId);
                 const globalOffset = chapterIds
                   .slice(0, chIdx)
                   .reduce((acc, id) => acc + (lecturesByChapter[id]?.length ?? 0), 0);
@@ -446,18 +556,17 @@ const SkillsChaptersPage = () => {
                     </button>
 
                     {isOpen && vids.map((lecture, vidIdx) => {
-                      const globalIdx  = globalOffset + vidIdx;
+                      const globalIdx = globalOffset + vidIdx;
                       const isSelected = selectedLecture?.id === lecture.id;
-                      const isWatched  = watchedSet.has(lecture.id);
-                      const progress   = progressMap[lecture.id] ?? 0;
+                      const isWatched = watchedSet.has(lecture.id);
+                      const progress = progressMap[lecture.id] ?? 0;
 
                       return (
                         <div
                           key={lecture.id}
                           onClick={() => selectLecture(lecture)}
-                          className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${
-                            isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
-                          }`}
+                          className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
+                            }`}
                         >
                           <div className="shrink-0 mt-0.5">
                             {isWatched ? (
@@ -471,9 +580,8 @@ const SkillsChaptersPage = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-[13px] font-semibold leading-snug ${
-                              isSelected ? "text-indigo-700" : isWatched ? "text-slate-400" : "text-slate-800"
-                            } ${isRtl ? "text-right" : ""}`}>
+                            <p className={`text-[13px] font-semibold leading-snug ${isSelected ? "text-indigo-700" : isWatched ? "text-slate-400" : "text-slate-800"
+                              } ${isRtl ? "text-right" : ""}`}>
                               {lectureName(lecture)}
                             </p>
                             {lecture.duration && (
@@ -597,17 +705,16 @@ const SkillsChaptersPage = () => {
         <div className="max-w-5xl mx-auto px-6 mb-8">
           <div className="flex flex-wrap gap-2">
             {subjects.map((subject, index) => {
-              const Icon     = subjectIcons[index % subjectIcons.length];
+              const Icon = subjectIcons[index % subjectIcons.length];
               const isActive = selectedSubject?.id === subject.id;
               return (
                 <button
                   key={subject.id}
                   onClick={() => setSelectedSubject(subject)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-all duration-150 ${
-                    isActive
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-all duration-150 ${isActive
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
+                    }`}
                 >
                   <Icon size={15} />
                   {localName(subject.name, subject.urdu_name, isRtl)}
