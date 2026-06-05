@@ -70,7 +70,7 @@
       "highlight": "Learn with Fun and Lead Tomorrow.",
       "description": "Zaheen turns KG kids' curiosity into lifelong success.",
       "button": "Start the Journey",
-      "link": "/grade-view/kg"
+      "link": "/class/1"
     },
     "slide2": {
       "title": "Grade 1 to 5",
@@ -92,7 +92,30 @@
       "description": "Zaheen helps you grow from a student into a digital architect.",
       "button": "Secure Your Future",
       "link": "/skills/300"
-    }
+    },
+    "slide5": {
+  "title": "Advanced Kindergarten Learning",
+  "highlight": "Building Bright Minds with Creativity.",
+  "description": "Interactive activities and playful lessons designed for early learners.",
+  "button": "Explore More",
+  "link": "/class/1"
+},
+
+"slide6": {
+  "title": "Grade 1 to 5 Excellence",
+  "highlight": "Empowering Young Learners Every Day.",
+  "description": "A strong educational foundation with engaging and modern learning methods.",
+  "button": "Start Learning",
+  "link": "/grade-view/1-5"
+},
+
+"slide7": {
+  "title": "Modern Web Skills",
+  "highlight": "Become the Developer of Tomorrow.",
+  "description": "Learn modern technologies and create real-world professional websites.",
+  "button": "Join Now",
+  "link": "/skills/300"
+}
   },
   "browseGrade": {
     "title": "Browse by Grade",

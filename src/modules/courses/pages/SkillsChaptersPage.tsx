@@ -83,89 +83,8 @@ const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard]
 const localName = (en: string, ur?: string, isRtl?: boolean) =>
   isRtl ? ur || en : en;
 
-/* ─────────────────────────────────────────────────────────────
-   AI-POWERED URDU TRANSLATION
-   Uses Claude API to translate lecture descriptions on-the-fly.
-   Results are cached in a module-level Map so the same text is
-   never sent twice — even across component re-renders.
-──────────────────────────────────────────────────────────────── */
-const translationCache = new Map<string, string>();
-
-async function translateToUrdu(text: string): Promise<string> {
-  if (!text?.trim()) return text;
-
-  // Return cached result immediately
-  const cached = translationCache.get(text);
-  if (cached) return cached;
-
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `Translate the following lecture description from English to Urdu.\nKeep the same structure (line breaks, bullet points starting with *).\nReturn ONLY the Urdu translation, nothing else, no explanations.\n\nText to translate:\n${text}`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Translation API error:", response.status, errText);
-      return text;
-    }
-
-    const data = await response.json();
-    const translated = data?.content?.[0]?.text?.trim() ?? text;
-    translationCache.set(text, translated);
-    return translated;
-  } catch (err) {
-    console.error("Translation error:", err);
-    return text;
-  }
-}
 
 
-/* ─────────────────────────────────────────────────────────────
-   Hook: useUrduDesc
-   Returns the translated description (or original while loading)
-──────────────────────────────────────────────────────────────── */
-function useUrduDesc(desc: string | undefined, isRtl: boolean) {
-  const [translated, setTranslated] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!desc) { setTranslated(""); return; }
-    if (!isRtl) { setTranslated(desc); return; }
-
-    // Check cache synchronously first — no flash of English
-    const cached = translationCache.get(desc);
-    if (cached) { setTranslated(cached); return; }
-
-    // Not cached yet — translate async
-    setLoading(true);
-    setTranslated(""); // clear while loading
-    translateToUrdu(desc).then((result) => {
-      setTranslated(result);
-      setLoading(false);
-    });
-  }, [desc, isRtl]);
-
-  return { translated, loading };
-}
-
-/* ─────────────────────────────────────────────────────────────
-   DescriptionBlock: renders the translated (or original) desc
-──────────────────────────────────────────────────────────────── */
 const DescriptionBlock = ({
   desc,
   isRtl,
@@ -194,8 +113,9 @@ const DescriptionBlock = ({
       {intro.map((p, i) => (
         <p
           key={i}
-          className={`text-slate-500 text-sm leading-relaxed ${isRtl ? "text-right" : ""
-            }`}
+          className={`text-slate-500 text-sm leading-relaxed ${
+            isRtl ? "text-right" : ""
+          }`}
         >
           {p}
         </p>
@@ -206,13 +126,15 @@ const DescriptionBlock = ({
           {bullets.map((b, i) => (
             <li
               key={i}
-              className={`flex items-start gap-2.5 ${isRtl ? "flex-row-reverse" : ""
-                }`}
+              className={`flex items-start gap-2.5 ${
+                isRtl ? "flex-row-reverse" : ""
+              }`}
             >
               <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
               <span
-                className={`text-slate-700 text-sm font-medium leading-relaxed ${isRtl ? "text-right" : ""
-                  }`}
+                className={`text-slate-700 text-sm font-medium leading-relaxed ${
+                  isRtl ? "text-right" : ""
+                }`}
               >
                 {b}
               </span>
@@ -384,10 +306,10 @@ const SkillsChaptersPage = () => {
   ════════════════════════════════════════ */
   if (isWatchMode && selectedLecture) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+     <div className="min-h-screen bg-white flex flex-col">
 
         {/* Top navbar — always LTR so layout never flips in Urdu */}
-        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm" dir="ltr">
+        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm">
           <button
             onClick={exitWatchMode}
             className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors text-sm font-semibold group"
@@ -473,40 +395,27 @@ const SkillsChaptersPage = () => {
                   {lectureName(selectedLecture)}
                 </h2>
 
-                {/* Description — AI-translated when Urdu is active */}
-                {(isRtl
-                  ? selectedLecture.urdu_desc
-                  : selectedLecture.desc) && (
-                    <DescriptionBlock
-                      desc={
-                        isRtl
-                          ? selectedLecture.urdu_desc || selectedLecture.desc || ""
-                          : selectedLecture.desc || ""
-                      }
-                      isRtl={isRtl}
-                    />
-                  )}
-
-                {/* Mobile progress */}
-                <div className="mt-4 pt-4 border-t border-slate-200 xl:hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">{t("skillsChaptersPage.watchMode.progress")}</span>
-                    <span className="text-xs font-black text-indigo-600">{progressPercent}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-indigo-500 transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1.5">
-                    {totalWatched} / {totalLectures} {t("skillsChaptersPage.watchMode.completed")}
-                  </p>
-                </div>
+               {(isRtl
+  ? selectedLecture.urdu_desc
+  : selectedLecture.desc) && (
+  <DescriptionBlock
+    desc={
+      isRtl
+        ? selectedLecture.urdu_desc || selectedLecture.desc || ""
+        : selectedLecture.desc || ""
+    }
+    isRtl={isRtl}
+  />
+)}
+ 
+            
               </div>
             </div>
           </div>
 
           {/* RIGHT — Sidebar */}
-          <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-14 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
-            <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
+          <div className="w-full xl:w-[520px] shrink-0 bg-white border-t xl:border-t-0 xl:border-l border-slate-200 flex flex-col xl:sticky xl:top-1 xl:h-[calc(100vh-3.5rem)] overflow-hidden shadow-xl">
+         <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[16px] font-black text-slate-900">{t("skillsChaptersPage.watchMode.courseContent")}</h3>
                 <span className="text-[12px] text-slate-500 font-semibold bg-white border border-slate-200 px-3 py-1 rounded-full">
