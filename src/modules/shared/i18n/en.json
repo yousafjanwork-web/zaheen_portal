@@ -115,6 +115,13 @@
   "description": "Learn modern technologies and create real-world professional websites.",
   "button": "Join Now",
   "link": "/skills/300"
+},
+"slide8": {
+  "title": "MDCAT Preparation",
+  "highlight": "Master the MDCAT Secure Your Medical Seat",
+  "description": "Master the Syllabus. Practice Precision. Achieve Excellence.",
+  "button": "Start Preparing",
+  "link": "/skills/mdcat"
 }
   },
   "browseGrade": {
@@ -635,5 +642,19 @@
     "desc": "Something went wrong while fetching past papers. Please try again.",
     "retry": "Retry"
   }
+},
+"quiz": {
+  "title": "Chapter 1 Quiz: The Magic Alphabet!",
+  "progress": "QUEST PROGRESS",
+  "earned": "3 of 10 stars earned!",
+  "question": "Which letter makes the 'Ah' sound like in Apple?",
+  "select": "Selected",
+  "prev": "Previous",
+  "next": "Next Question",
+  "rewards": "Your Rewards",
+  "locked": "LOCKED",
+  "goal": "7 more correct answers to unlock the Magical Chest!",
+  "tipLabel": "TUTOR TIP",
+  "tipText": "You're doing great, Explorer! Think about the sound of an Apple!"
 }
 }

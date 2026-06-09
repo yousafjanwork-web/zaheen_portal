@@ -47,18 +47,23 @@ const ProfessionalCourses = () => {
             </p>
           </div>
 
-          {/* View All Courses link */}
-          <button
-            onClick={() => navigate("/all-professional-courses")}
-            className="flex items-center gap-2 text-indigo-600 font-semibold text-sm md:text-base 
-                       hover:text-indigo-800 transition-colors group shrink-0 ml-4"
-          >
-            {lang === "ur" ? "تمام کورسز دیکھیں" : "View All Courses"}
-            <ArrowRight
-              size={18}
-              className="group-hover:translate-x-1 transition-transform"
-            />
-          </button>
+         
+         {/* View All Courses link */}
+<button
+  onClick={() => navigate("/all-professional-courses")}
+  className="flex items-center gap-2 text-indigo-600 font-semibold text-sm md:text-base 
+             hover:text-indigo-800 transition-colors group shrink-0 ml-4"
+>
+  {lang === "ur" ? "تمام کورسز دیکھیں" : "View All Courses"}
+  <ArrowRight
+    size={18}
+    className={`transition-transform 
+                ${lang === "ur" 
+                  ? "rotate-180 group-hover:-translate-x-1" 
+                  : "group-hover:translate-x-1"
+                }`}
+  />
+</button>
         </div>
       </div>
 

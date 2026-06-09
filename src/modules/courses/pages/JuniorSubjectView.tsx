@@ -82,7 +82,6 @@ const JuniorSubjectsView = () => {
                       ? "اس مضمون کے ابواب جلد شامل کیے جائیں گے۔"
                       : "Chapters for this subject will be available soon."}
                   </p>
-
                   {/* Optional subtle animation */}
                   <div className="mt-6 flex justify-center gap-2">
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce"></span>

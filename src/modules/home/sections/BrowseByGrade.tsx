@@ -65,13 +65,21 @@ const BrowseByGrade = () => {
             </p>
           </div>
 
-          <a
-            href="/grade-view/k-12"
-            className="text-primary font-semibold flex items-center hover:underline mt-4 md:mt-0 group"
-          >
-            {t("browseGrade.viewAll")}
-            <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition" />
-          </a>
+          {/* Header ke andar jo link hai, usay is se replace karein */}
+<a
+  href="/grade-view/k-12"
+  className="text-primary font-semibold flex items-center hover:underline mt-4 md:mt-0 group"
+>
+  {t("browseGrade.viewAll")}
+  <ArrowRight 
+    size={16} 
+    className={`ml-2 transition-transform
+                ${localStorage.getItem("lang") === "ur" 
+                  ? "rotate-180 group-hover:-translate-x-1" 
+                  : "group-hover:translate-x-1"
+                }`} 
+  />
+</a>
 
         </div>
 

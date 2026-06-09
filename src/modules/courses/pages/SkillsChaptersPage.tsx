@@ -299,17 +299,19 @@ const SkillsChaptersPage = () => {
     return (
      <div className="min-h-screen bg-white flex flex-col">
 
-        {/* Top navbar — always LTR so layout never flips in Urdu */}
-        <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm">
-          <button
-            onClick={exitWatchMode}
-            className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors text-sm font-semibold group"
-          >
-            <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
-              <ArrowLeft size={16} />
-            </div>
-            <span className="hidden sm:block">{t("skillsChaptersPage.watchMode.backBtn")}</span>
-          </button>
+   
+       {/* Top navbar — always LTR so layout never flips in Urdu */}
+<div className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 md:px-6 h-14 flex items-center gap-4 shrink-0 shadow-sm">
+         <button
+  onClick={exitWatchMode}
+  className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors text-sm font-semibold group"
+>
+  <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 flex items-center justify-center transition-colors">
+    {/* Icon ke andar yeh className add karein */}
+    <ArrowLeft size={16} className={isRtl ? "rotate-180" : ""} />
+  </div>
+  <span className="hidden sm:block">{t("skillsChaptersPage.watchMode.backBtn")}</span>
+</button>
 
           <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
 

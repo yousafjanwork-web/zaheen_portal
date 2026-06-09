@@ -270,7 +270,7 @@ const KGClassView = () => {
   const subjectCount = subjects.length;
 
   return (
-    <section className="min-h-screen relative overflow-x-hidden" style={{ background: "#EFF6FF" }}>
+   <section className="min-h-screen relative z-0 overflow-x-hidden" style={{ background: "#EFF6FF" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
         @keyframes kgFloat  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
@@ -283,7 +283,7 @@ const KGClassView = () => {
       <div className="pointer-events-none fixed top-8 right-8 z-0 opacity-25 select-none" style={{ fontSize: 28, animation: "kgSpin 7s linear infinite" }}>✦</div>
       <div className="pointer-events-none fixed bottom-14 right-14 z-0 opacity-20 select-none" style={{ fontSize: 22, animation: "kgSpin 9s linear infinite reverse" }}>✦</div>
 
-      <div className="relative z-10 max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-10 py-10">
+     <div className="relative z-10 max-w-[1160px] mx-auto px-4 pt-24 sm:pt-16 pb-10 flex flex-col items-center">
 
         {/* ── Breadcrumb ── */}
         <div className="flex items-center justify-center gap-2 mb-5" style={{ fontSize: 14, color: "#94A3B8", direction: isRtl ? "rtl" : "ltr" }}>

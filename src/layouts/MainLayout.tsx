@@ -22,16 +22,19 @@ const MainLayout = () => {
 
   return (
     <>
-      <div className="hidden lg:block">
+      {/* Desktop Header Container */}
+      <div className="hidden lg:block relative z-50">
         <Header isDark={isDark} toggleTheme={toggleTheme} />
       </div>
 
-      <div className="lg:hidden dark:bg-black dark:text-white">
+      {/* FIXED: Mobile Header Wrapper Container */}
+      {/* Yahan relative aur z-[99] lagaya hai taake language switcher dropdown har kism ke custom cards aur mobile animation se hamesha upar render ho */}
+      <div className="lg:hidden relative z-[99] dark:bg-black dark:text-white">
         <MobileMarketingBanner />
         <MobileHeader />
       </div>
 
-      <main>
+      <main className="relative z-10">
         <Outlet />
       </main>
 

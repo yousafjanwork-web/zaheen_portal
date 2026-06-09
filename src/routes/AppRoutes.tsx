@@ -29,6 +29,7 @@ import AllProfessionalCourses from "@/modules/home/sections/AllProfessionalCours
 // ✅ Routers that pick the right view based on class type
 import ClassSubjectsRouter from "@/modules/courses/pages/ClassSubjectsRouter";
 import SubjectLecturesRouter from "@/modules/courses/pages/SubjectLecturesRouter";
+import PrimaryGradesQuiz from "@/modules/courses/pages/PrimaryGradesQuizz"
 
 const AppRoutes = () => {
   return (
@@ -45,23 +46,15 @@ const AppRoutes = () => {
           <Route path="/grade-view/:type" element={<GradesView />} />
           <Route path="/all-professional-courses" element={<AllProfessionalCourses />} />
 
-          {/*
-           * /class/:classId
-           *   → KGClassView      if Kindergarten
-           *   → ClassSubjectsView if regular grade
-           */}
+         
           <Route path="/class/:classId" element={<ClassSubjectsRouter />} />
 
-          {/*
-           * /class/:classId/subject/:subjectId
-           *   → KGLectureView      if Kindergarten   ✅ NEW
-           *   → SubjectLecturesView if regular grade
-           */}
+         
           <Route
             path="/class/:classId/subject/:subjectId"
             element={<SubjectLecturesRouter />}
           />
-
+          <Route path="/class/:classId/quiz" element={<PrimaryGradesQuiz />} />
           <Route path="/assessment/" element={<Assessment />} />
           <Route path="/assessment/:skillId" element={<AssessmentQuiz />} />
           <Route

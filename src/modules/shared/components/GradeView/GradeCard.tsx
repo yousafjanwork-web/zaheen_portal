@@ -1,14 +1,16 @@
 import { motion } from "motion/react";
 
+
 const GradeCard = ({ grade, navigate, type }: any) => {
   return (
     <motion.div
       whileHover={{ y: -8 }}
-      onClick={() =>
+      onClick={() => {
+        // Yeh direct usey usi class ki id par bhejega jo clicked hai
         navigate(`/class/${grade.id}`, {
-          state: { gradeType: type },
-        })
-      }
+          state: { gradeType: type === "k-12" ? undefined : type }, // k-12 ke waqt undefined bhejenge taake router khud check kare
+        });
+      }}
       className="bg-white rounded-3xl p-5 border border-slate-200 hover:shadow-xl cursor-pointer"
     >
       <div className="h-30 rounded-2xl overflow-hidden mb-4 relative">
@@ -17,6 +19,7 @@ const GradeCard = ({ grade, navigate, type }: any) => {
           className={`w-full h-full ${
             grade.id <= 6 ? "object-contain bg-slate-50 p-2" : "object-cover"
           }`}
+          alt={grade.title}
         />
         <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">
           {grade.lessons}

@@ -11,7 +11,7 @@ import webBanner from "@/assets/images/web-banner.png";
 import kgbanner2 from "@/assets/images/kg-banner-2.png";
 import bannerontofive2 from "@/assets/images/grade-1-5-banner-2.png";
 import webBanner2 from "@/assets/images/web-banner-2.png";
-
+import mdcat from "@/assets/images/md-cat.png"
 
 const slides = [
   { id: 1, image: kgBanner, accentColor: "text-primary", bgColor: "bg-primary" },
@@ -21,6 +21,8 @@ const slides = [
   { id: 5, image: kgbanner2, accentColor: "text-primary", bgColor: "bg-primary" },
   { id: 6, image: bannerontofive2, accentColor: "text-secondary", bgColor: "bg-secondary" },
   { id: 7, image: webBanner2, accentColor: "text-secondary", bgColor: "bg-secondary" },
+  // { id: 8, image: mdcat, accentColor: "text-secondary", bgColor: "bg-secondary" }
+
 
 ];
 

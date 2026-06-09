@@ -515,56 +515,30 @@ const SubjectLecturesView = () => {
 
   const { classInfo, chapters, chapterVideos, subjects, loading } =
     useClassSubjects(Number(classId));
+    
 
-  /* ─────────────────────────────────────────────────────────────
-     FIX: Always prefer the fresh subject from the API subjects
-     array (it has all fields including urdu_name for every subject).
-     Only fall back to location.state when the API hasn't returned
-     subjects yet (i.e. during the initial loading phase).
-
-     Root cause of the original bug:
-     - selectedSubjectFromState came from location.state which was
-       set when navigating FROM the class subjects list.
-     - For Physics, the state happened to include urdu_name correctly.
-     - For Maths and other subjects the state object was either
-       missing urdu_name or was a stale/partial object from the
-       previous navigation, so Urdu display silently fell back to
-       the English name.
-     - By always merging: API data (authoritative, complete) takes
-       precedence; state is only used as a loading placeholder.
-  ──────────────────────────────────────────────────────────────── */
   const selectedSubject = useMemo(() => {
-    // Try to find the subject from the freshly loaded API data first.
-    // This guarantees urdu_name, and all other fields, are always present.
+  
     const fromApi = subjects?.find(
       (s: any) => String(s.id) === String(subjectId)
     ) ?? null;
 
     if (fromApi) return fromApi;
 
-    // API hasn't loaded yet — use state as a temporary placeholder
-    // so the page doesn't flash blank while loading.
+    
     if (selectedSubjectFromState) return selectedSubjectFromState;
 
     return null;
   }, [subjects, subjectId, selectedSubjectFromState]);
 
-  /* ── Class / grade display name ── */
+ 
   const gradeName  = (isRtl ? classInfo?.urdu_name : classInfo?.name) || classInfo?.name || "";
   const classTitle = gradeName;
 
-  /* ── Subject display name ──
-     Always derive subjectRawName from the English name (for getMeta keyword matching).
-     Derive subjectName (what the user sees) based on current lang. */
   const subjectRawName = selectedSubject?.name || "";
   const meta           = getMeta(subjectRawName);
 
-  /* ─────────────────────────────────────────────────────────────
-     FIX: Re-derive subjectName reactively from both `selectedSubject`
-     AND `lang`/`isRtl`. Previously this was a plain derived value
-     at module scope, so it did not update when the language changed
-     after the component had already mounted with a different subject.
-  ──────────────────────────────────────────────────────────────── */
+  
   const subjectName = useMemo(() => {
     if (!selectedSubject) return "";
     return isRtl
@@ -652,6 +626,7 @@ const SubjectLecturesView = () => {
     if (selectedVideo) { setWatchedSet((p) => new Set(p).add(selectedVideo.id)); setProgressMap((p) => ({ ...p, [selectedVideo.id]: 100 })); trackEvent("video_complete"); }
     goNext();
   };
+  
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.target as HTMLVideoElement;
     if (!v.duration || !selectedVideo) return;
