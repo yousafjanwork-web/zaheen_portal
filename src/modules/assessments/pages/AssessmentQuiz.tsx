@@ -1,6 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useParams } from "react-router-dom";
+import {
+  getNextQuestion,
+  submitAnswer
+} from "../../shared/services/adaptiveService";
 /* ---------------- TYPES ---------------- */
 
 type Option = { id: number; option_text: string };
@@ -9,9 +13,11 @@ type Question = {
   type: "mcq" | "input";
   prompt: string;
   image_url?: string | null;
+  explanation_en?: string | null;
+  explanation_ur?: string | null;
   options: Option[];
 };
-type Props = { studentId?: number; chapterId?: number };
+type Props = { studentId?: number; };
 
 /* ---------------- RESPONSIVE HELPERS ---------------- */
 const useIsMobile = () => {
@@ -34,28 +40,28 @@ const S: any = {
     fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
     position: "relative" as const,
   },
- sidebar: (open: boolean, isMobile: boolean) => ({
-  width: isMobile ? (open ? "100vw" : 0) : 220,
-  minWidth: isMobile ? undefined : 220,
-  maxWidth: isMobile ? "100vw" : 220,
-  background: "#f4f6fb",
-  borderRight: isMobile ? "none" : "1px solid #e2e8f0",
-  minHeight: "100vh",
-  display: "flex",
-  flexDirection: "column" as const,
-  flexShrink: 0,
-  overflow: "hidden",
-  transition: "width 0.25s ease",
-  position: isMobile ? ("fixed" as const) : ("relative" as const),
+  sidebar: (open: boolean, isMobile: boolean) => ({
+    width: isMobile ? (open ? "100vw" : 0) : 220,
+    minWidth: isMobile ? undefined : 220,
+    maxWidth: isMobile ? "100vw" : 220,
+    background: "#f4f6fb",
+    borderRight: isMobile ? "none" : "1px solid #e2e8f0",
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column" as const,
+    flexShrink: 0,
+    overflow: "hidden",
+    transition: "width 0.25s ease",
+    position: isMobile ? ("fixed" as const) : ("relative" as const),
 
-  top: 100,
-  height: "calc(100vh - 12px)",
-  paddingTop: 10,
+    top: 100,
+    height: "calc(100vh - 12px)",
+    paddingTop: 10,
 
-  left: 0,
-  zIndex: isMobile ? 200 : "auto",
-  boxShadow: isMobile && open ? "4px 0 24px rgba(0,0,0,0.15)" : "none",
-}),
+    left: 0,
+    zIndex: isMobile ? 200 : "auto",
+    boxShadow: isMobile && open ? "4px 0 24px rgba(0,0,0,0.15)" : "none",
+  }),
   sidebarOverlay: (open: boolean) => ({
     display: open ? "block" : "none",
     position: "fixed" as const,
@@ -68,7 +74,7 @@ const S: any = {
     borderBottom: "1px solid rgba(62, 193, 1, 0.1)",
     flexShrink: 0,
   },
-  
+
   navSection: { padding: "14px 10px", flex: 1, overflowY: "auto" as const },
   navItem: (active: boolean) => ({
     display: "flex", alignItems: "center", gap: 9,
@@ -339,18 +345,18 @@ const S: any = {
 
 /* ---- ICON HELPERS ---- */
 const Icon = {
-  Home: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-  Video: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>,
-  Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
-  Doc: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a 2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-  Settings: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>,
-  Help: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-  Speaker: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>,
-  ChevronRight: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>,
-  Menu: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
-  Close: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-  Bulb: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21h6M12 3a6 6 0 016 6c0 2.22-1.21 4.16-3 5.2V17H9v-2.8A6 6 0 0112 3z"/></svg>,
-  Timer: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  Home: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+  Video: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg>,
+  Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></svg>,
+  Doc: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a 2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
+  Settings: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14" /></svg>,
+  Help: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
+  Speaker: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 010 7.07" /></svg>,
+  ChevronRight: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg>,
+  Menu: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>,
+  Close: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>,
+  Bulb: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21h6M12 3a6 6 0 016 6c0 2.22-1.21 4.16-3 5.2V17H9v-2.8A6 6 0 0112 3z" /></svg>,
+  Timer: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
 };
 
 const NAV = [
@@ -358,7 +364,7 @@ const NAV = [
   { label: "Video Lectures", icon: <Icon.Video />, path: "//class/10/subject/27" },
   { label: "Assessments", icon: <Icon.Check />, path: "/assessment/1" },
   { label: "Past Papers", icon: <Icon.Doc />, path: "/class/10/subject/27/past-papers" },
- 
+
 ];
 
 /* ---- MOBILE TOP WIDGETS ---- */
@@ -434,9 +440,12 @@ function MobileTopWidgets({
 /* ============================================================
    MAIN COMPONENT
    ============================================================ */
-function Quiz({ studentId = 2, chapterId = 105 }: Props) {
+function Quiz({ studentId = 2 }: Props) {
+  const { skillId } = useParams();
+  const numericSkillId = Number(skillId);
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   // ── DYNAMIC: starts at 10 as a sensible default, updated once chapter API responds ──
   const [totalQuestions, setTotalQuestions] = useState(10);
@@ -468,26 +477,12 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
 
   // ── Fetch chapter info — name AND total question count ──
   useEffect(() => {
-    fetch(`https://zai.zaheen.com.pk/api/adaptive/chapter?chapterId=${chapterId}`)
-      .then(r => r.json())
-      .then(d => {
-        setTestName(d?.name || d?.title || d?.chapter_name || "Adaptive Quiz");
 
-        // Accept any of these common field names from the API
-        const count =
-          d?.total_questions ??
-          d?.question_count ??
-          d?.totalQuestions ??
-          d?.questionsCount ??
-          d?.count ??
-          null;
+    if (!numericSkillId) return;
 
-        if (typeof count === "number" && count > 0) {
-          setTotalQuestions(count);
-        }
-      })
-      .catch(() => setTestName("Adaptive Quiz"));
-  }, [chapterId]);
+    setTestName(`Skill Assessment`);
+
+  }, [numericSkillId]);
 
   useEffect(() => {
     timerRef.current = setInterval(() => setElapsedTime(p => p + 1), 1000);
@@ -500,48 +495,74 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  const loadQuestion = (qIndex: number) => {
-    window.speechSynthesis.cancel();
+  const loadQuestion = async () => {
+
     setSubmitted(false);
     setSelected(null);
     setInputAnswer("");
     setStatus(null);
     setQuestion(null);
     setLoading(true);
-    setShowExplain(false);
-    setExplanation(null);
 
-    fetch(`https://zai.zaheen.com.pk/api/adaptive/next?studentId=${studentId}&chapterId=${chapterId}&t=${Date.now()}`)
-      .then(r => r.json())
-      .then(data => {
-        const q = data?.question || data?.data || data;
+    try {
 
-        // ── If the API tells us the quiz is finished or sends a new total, respect it ──
-        if (data?.total_questions && typeof data.total_questions === "number") {
-          setTotalQuestions(data.total_questions);
+      const data = await getNextQuestion(
+        studentId,
+        numericSkillId
+      );
+
+      console.log("Question Response:", data);
+
+      if (
+        data?.status === "completed"
+      ) {
+
+        setShowResult(true);
+
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
         }
 
-        if (!q || q.finished) {
-          setShowResult(true);
-          if (timerRef.current) clearInterval(timerRef.current);
-          return;
-        }
-        setQuestion({
-          id: q.id,
-          type: q.type || "mcq",
-          prompt: q.prompt,
-          image_url: q.image_url || null,
-          options: q.options || [],
-        });
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        return;
+      }
+
+      setQuestion({
+        id: data.id,
+        prompt: data.prompt,
+        image_url: data.image_url,
+
+        type:
+          data.type === "numeric" ||
+            data.type === "text"
+            ? "input"
+            : "mcq",
+
+        explanation_en: data.explanation_en || null,
+        explanation_ur: data.explanation_ur || null,
+
+        options: data.options || []
+
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
   };
 
   useEffect(() => {
-    loadQuestion(0);
-    return () => { window.speechSynthesis.cancel(); };
-  }, []);
+
+    if (numericSkillId) {
+      loadQuestion();
+    }
+
+  }, [numericSkillId]);
+
 
   const speak = () => {
     if (!question) return;
@@ -553,26 +574,58 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
     window.speechSynthesis.speak(u);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+
     if (!question || submitted) return;
+
     setSubmitted(true);
 
-    const payload: any = { studentId, questionId: question.id };
-    if (isMCQ) payload.selectedOptionId = selected?.id;
-    if (isInput) payload.answerText = inputAnswer;
+    try {
 
-    fetch("https://zai.zaheen.com.pk/api/adaptive/submit", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
-    })
-      .then(r => r.json())
-      .then(data => {
-        const isCorrect = data.correct === true || data.is_correct === true;
-        if (isCorrect) setCorrectCount(p => p + 1);
-        else setWrongCount(p => p + 1);
-        setStatus(isCorrect ? "correct" : "wrong");
-        setAnsweredMap(prev => ({ ...prev, [currentQ]: isCorrect ? "correct" : "wrong" }));
-      })
-      .catch(() => setSubmitted(false));
+      const payload: any = {
+        studentId,
+        questionId: question.id,
+        timeTaken: elapsedTime
+      };
+
+      if (isMCQ) {
+        payload.selectedOptionId = selected?.id;
+      }
+
+      if (isInput) {
+        payload.submittedAnswer = inputAnswer;
+      }
+
+      const data = await submitAnswer(payload);
+
+      const isCorrect = data.correct === true;
+
+      if (isCorrect) {
+        setCorrectCount(prev => prev + 1);
+      } else {
+        setWrongCount(prev => prev + 1);
+      }
+
+      setStatus(
+        isCorrect
+          ? "correct"
+          : "wrong"
+      );
+
+      setAnsweredMap(prev => ({
+        ...prev,
+        [currentQ]:
+          isCorrect
+            ? "correct"
+            : "wrong"
+      }));
+
+    } catch (error) {
+
+      console.error(error);
+
+      setSubmitted(false);
+    }
   };
 
   const handleNext = () => {
@@ -584,24 +637,22 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
+    setExplanation("__none__");
     setCurrentQ(next);
-    loadQuestion(next);
+    loadQuestion();
   };
 
   const handleExplain = () => {
-    if (!submitted || !question) return;
-    setShowExplain(true);
-    if (explanation !== null) return;
-    setExplainLoading(true);
-    fetch(`https://zai.zaheen.com.pk/api/adaptive/explanation?questionId=${question.id}`)
-      .then(r => r.json())
-      .then(data => {
-        const exp = data?.explanation || data?.text || data?.content || null;
-        setExplanation(exp || "__none__");
-        setExplainLoading(false);
-      })
-      .catch(() => { setExplanation("__none__"); setExplainLoading(false); });
-  };
+  if (!submitted || !question) return;
+
+  setShowExplain(true);
+
+  setExplanation(
+    question.explanation_en ||
+    question.explanation_ur ||
+    "__none__"
+  );
+};
 
   const qNumState = (i: number): "current" | "correct" | "wrong" | "done" | "none" => {
     if (i === currentQ) return "current";
@@ -627,7 +678,7 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
               {isMobile && <button style={S.hamburger} onClick={() => setSidebarOpen(o => !o)}><Icon.Menu /></button>}
               <div><div style={S.topbarTitle}>{testName}</div><div style={S.topbarSub}>Section 1: Multiple Choice Questions</div></div>
             </div>
-            <span style={S.sectionBadge}>Chapter {chapterId}</span>
+            <span style={S.sectionBadge}>Skill #{numericSkillId}</span>
           </div>
           <div style={S.resultWrapper}>
             <div style={S.resultCard}>
@@ -641,7 +692,7 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
                 <div style={S.resultBox}><div style={{ ...S.resultNum, color: "#1a2f5e" }}>{formatTime(elapsedTime)}</div><div style={S.resultLbl}>⏱ Total Time</div></div>
               </div>
               <div style={S.resultBtns}>
-                <button style={S.rBtnPrimary} onClick={() => window.location.reload()}>🔄 Restart</button>
+                <button style={S.rBtnPrimary} onClick={() => navigate(`/assessment/${numericSkillId}`)}>🔄 Restart</button>
                 <button style={S.rBtnSecondary} onClick={() => window.history.back()}>🚪 Exit</button>
               </div>
             </div>
@@ -669,7 +720,7 @@ function Quiz({ studentId = 2, chapterId = 105 }: Props) {
               <div style={S.topbarSub}>Section 1: Multiple Choice Questions</div>
             </div>
           </div>
-          <span style={S.sectionBadge}>Chapter {chapterId}</span>
+          <span style={S.sectionBadge}>Skill #{numericSkillId}</span>
         </div>
 
         {/* CONTENT */}
@@ -821,49 +872,49 @@ function SidebarComp({ open, isMobile, onClose }: { open: boolean; isMobile: boo
   const navigate = useNavigate();
   return (
     <div style={S.sidebar(open, isMobile)}>
-      
+
       <div style={S.sidebarBrand}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-         
+
           {isMobile && (
             <button style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: 4 }} onClick={onClose}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
             </button>
           )}
         </div>
-       
+
       </div>
       <div style={S.navSection}>
-       {NAV.map((item, i) =>
-  item === null ? (
-    <div key={i} style={S.navDivider} />
-  ) : (
-   <button
-  key={i}
-  onMouseEnter={() => setHovered(i)}
-  onMouseLeave={() => setHovered(null)}
-  style={{
-    ...S.navItem(false),
-    background:
-      hovered === i
-        ? "rgba(37,99,235,0.08)"
-        : S.navItem(false).background,
-    color: hovered === i ? "#2563eb" : S.navItem(false).color,
-    transform: hovered === i ? "translateX(3px)" : "none",
-    transition: "all 0.2s ease",
-  }}
-  onClick={() => {
-    navigate(item.path);
-    onClose?.();
-  }}
->
-  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-    {item.icon}
-    {item.label}
-  </span>
-</button>
-  )
-)}
+        {NAV.map((item, i) =>
+          item === null ? (
+            <div key={i} style={S.navDivider} />
+          ) : (
+            <button
+              key={i}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                ...S.navItem(false),
+                background:
+                  hovered === i
+                    ? "rgba(37,99,235,0.08)"
+                    : S.navItem(false).background,
+                color: hovered === i ? "#2563eb" : S.navItem(false).color,
+                transform: hovered === i ? "translateX(3px)" : "none",
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => {
+                navigate(item.path);
+                onClose?.();
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {item.icon}
+                {item.label}
+              </span>
+            </button>
+          )
+        )}
       </div>
     </div>
   );

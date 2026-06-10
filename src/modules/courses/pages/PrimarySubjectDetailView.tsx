@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Lock, CheckCircle2, PlayCircle,
   ArrowLeft,ArrowRight, Clock, BookOpen, Gamepad2, HelpCircle,
-  ChevronRight, Target, Play,
+  ChevronRight, Target, Play,Zap, FileText, BookMarked
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
@@ -619,7 +619,55 @@ const PrimarySubjectDetailView = () => {
             </div>
           </div>
         )}
+{/* --- QUICK RESOURCES SECTION --- */}
+<div style={{ 
+  background: "#fff", 
+  borderRadius: "20px", 
+  padding: "24px", 
+  marginBottom: "32px", 
+  boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+  border: "1px solid #E9EEF6" 
+}}>
+  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+    <div style={{ background: theme.light, padding: "10px", borderRadius: "12px", color: theme.color }}>
+      <Zap size={20} />
+    </div>
+    <div>
+      <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 900, color: "#111827" }}>
+        {isUrdu ? "فوری وسائل" : "Quick Resources"}
+      </h3>
+      <p style={{ margin: 0, fontSize: "0.8rem", color: "#6B7280" }}>
+        {isUrdu ? "اپنی پڑھائی کو مزید بہتر بنائیں" : "Enhance your learning with extra materials"}
+      </p>
+    </div>
+  </div>
 
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+    <button onClick={() => navigate(`/worksheets/0`)}
+      style={{ 
+        display: "flex", alignItems: "center", gap: "12px", padding: "16px", 
+        borderRadius: "14px", border: "1.5px solid #E9EEF6", background: "#F8FAFC", 
+        cursor: "pointer", transition: "all 0.2s", fontWeight: 800, fontSize: "0.9rem", color: "#374151"
+      }}
+      onMouseOver={(e) => e.currentTarget.style.borderColor = theme.color}
+      onMouseOut={(e) => e.currentTarget.style.borderColor = "#E9EEF6"}>
+      <FileText size={20} style={{ color: theme.color }} />
+      {isUrdu ? "ورک شیٹس" : "Worksheets"}
+    </button>
+
+    <button onClick={() => navigate(`/class/${classId}/quiz`)}
+      style={{ 
+        display: "flex", alignItems: "center", gap: "12px", padding: "16px", 
+        borderRadius: "14px", border: "1.5px solid #E9EEF6", background: "#F0FDF4", 
+        cursor: "pointer", transition: "all 0.2s", fontWeight: 800, fontSize: "0.9rem", color: "#065F46" 
+      }}
+      onMouseOver={(e) => e.currentTarget.style.borderColor = "#22C55E"}
+      onMouseOut={(e) => e.currentTarget.style.borderColor = "#E9EEF6"}>
+      <BookMarked size={20} style={{ color: "#22C55E" }} />
+      {isUrdu ? "باب کے کوئز" : "Chapter Quizzes"}
+    </button>
+  </div>
+</div>
         {/* ══ CHAPTER LAYOUT ══ */}
         <div className="psv-layout">
 

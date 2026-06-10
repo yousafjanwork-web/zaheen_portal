@@ -547,7 +547,7 @@ const MiddleSubjectsView = () => {
           <button className="ms-qr-btn-solid" onClick={() => navigate("/worksheets/0")}>
             <FileText size={14} /> {isUrdu ? "ورک شیٹس" : "Worksheets"}
           </button>
-          <button className="ms-qr-btn-outline" onClick={() => navigate("/assessment")}>
+          <button className="ms-qr-btn-outline" onClick={() => navigate("/class/${classId}/quiz")}>
             <BookMarked size={14} /> {isUrdu ? "باب کے کوئز" : "Chapter Quizzes"}
           </button>
         </div>

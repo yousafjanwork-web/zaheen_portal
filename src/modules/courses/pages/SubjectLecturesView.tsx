@@ -1,14 +1,37 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
-  BookOpen, FlaskConical, Atom, Leaf, Languages, Sigma, Landmark, Globe,
-  Calculator, Cpu, PlayCircle, CheckCircle2, ChevronLeft, ChevronRight,
-  Clock, LayoutDashboard, FileText, ClipboardList,
+  BookOpen,
+  FlaskConical,
+  Atom,
+  Leaf,
+  Languages,
+  Sigma,
+  Landmark,
+  Globe,
+  Calculator,
+  Cpu,
+  PlayCircle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  LayoutDashboard,
+  FileText,
+  ClipboardList,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import thumbnail from "../../../assets/images/physics.png";
+// ── AUTH ──────────────────────────────────────────────────────
+import { useAuth } from "@/modules/shared/context/AuthContext";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
@@ -22,7 +45,9 @@ const translations: Record<string, any> = {
 };
 
 const getNestedValue = (obj: any, key: string): string => {
-  const value = key.split(".").reduce((acc: any, part: string) => acc?.[part], obj);
+  const value = key
+    .split(".")
+    .reduce((acc: any, part: string) => acc?.[part], obj);
   return typeof value === "string" ? value : key;
 };
 
@@ -53,11 +78,19 @@ const useT = () => {
    Types
 ──────────────────────────────────────────────────────────────── */
 interface Video {
-  id: number; name: string; urdu_name?: string; path: string;
-  desc?: string; urdu_desc?: string;
+  id: number;
+  name: string;
+  urdu_name?: string;
+  path: string;
+  desc?: string;
+  urdu_desc?: string;
 }
 interface ChapterWithVideos {
-  id: number; name: string; urdu_name?: string; subject_id: number; videos: Video[];
+  id: number;
+  name: string;
+  urdu_name?: string;
+  subject_id: number;
+  videos: Video[];
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -65,52 +98,168 @@ interface ChapterWithVideos {
 ──────────────────────────────────────────────────────────────── */
 const getMeta = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes("physic"))  return { icon: Atom,         color: "text-blue-700",   bg: "bg-blue-50",   accent: "#1d4ed8",  descKey: "subjectLecturesView.subjects.physics"  };
-  if (n.includes("math"))    return { icon: Sigma,        color: "text-violet-700", bg: "bg-violet-50", accent: "#7c3aed",  descKey: "subjectLecturesView.subjects.math"     };
-  if (n.includes("chem"))    return { icon: FlaskConical, color: "text-emerald-700",bg: "bg-emerald-50",accent: "#059669",  descKey: "subjectLecturesView.subjects.chemistry"};
-  if (n.includes("bio"))     return { icon: Leaf,         color: "text-green-700",  bg: "bg-green-50",  accent: "#16a34a",  descKey: "subjectLecturesView.subjects.biology"  };
-  if (n.includes("english")) return { icon: BookOpen,     color: "text-sky-700",    bg: "bg-sky-50",    accent: "#0284c7",  descKey: "subjectLecturesView.subjects.english"  };
-  if (n.includes("urdu"))    return { icon: Languages,    color: "text-rose-700",   bg: "bg-rose-50",   accent: "#e11d48",  descKey: "subjectLecturesView.subjects.urdu"     };
-  if (n.includes("islamic")) return { icon: Landmark,     color: "text-teal-700",   bg: "bg-teal-50",   accent: "#0d9488",  descKey: "subjectLecturesView.subjects.islamic"  };
-  if (n.includes("pakistan"))return { icon: Globe,        color: "text-orange-700", bg: "bg-orange-50", accent: "#ea580c",  descKey: "subjectLecturesView.subjects.pakistan" };
+  if (n.includes("physic"))
+    return {
+      icon: Atom,
+      color: "text-blue-700",
+      bg: "bg-blue-50",
+      accent: "#1d4ed8",
+      descKey: "subjectLecturesView.subjects.physics",
+    };
+  if (n.includes("math"))
+    return {
+      icon: Sigma,
+      color: "text-violet-700",
+      bg: "bg-violet-50",
+      accent: "#7c3aed",
+      descKey: "subjectLecturesView.subjects.math",
+    };
+  if (n.includes("chem"))
+    return {
+      icon: FlaskConical,
+      color: "text-emerald-700",
+      bg: "bg-emerald-50",
+      accent: "#059669",
+      descKey: "subjectLecturesView.subjects.chemistry",
+    };
+  if (n.includes("bio"))
+    return {
+      icon: Leaf,
+      color: "text-green-700",
+      bg: "bg-green-50",
+      accent: "#16a34a",
+      descKey: "subjectLecturesView.subjects.biology",
+    };
+  if (n.includes("english"))
+    return {
+      icon: BookOpen,
+      color: "text-sky-700",
+      bg: "bg-sky-50",
+      accent: "#0284c7",
+      descKey: "subjectLecturesView.subjects.english",
+    };
+  if (n.includes("urdu"))
+    return {
+      icon: Languages,
+      color: "text-rose-700",
+      bg: "bg-rose-50",
+      accent: "#e11d48",
+      descKey: "subjectLecturesView.subjects.urdu",
+    };
+  if (n.includes("islamic"))
+    return {
+      icon: Landmark,
+      color: "text-teal-700",
+      bg: "bg-teal-50",
+      accent: "#0d9488",
+      descKey: "subjectLecturesView.subjects.islamic",
+    };
+  if (n.includes("pakistan"))
+    return {
+      icon: Globe,
+      color: "text-orange-700",
+      bg: "bg-orange-50",
+      accent: "#ea580c",
+      descKey: "subjectLecturesView.subjects.pakistan",
+    };
   if (n.includes("computer") || n.includes("cs"))
-                             return { icon: Cpu,           color: "text-indigo-700", bg: "bg-indigo-50", accent: "#4338ca",  descKey: "subjectLecturesView.subjects.computer" };
-  return                            { icon: Calculator,    color: "text-slate-600",  bg: "bg-slate-100", accent: "#475569",  descKey: "subjectLecturesView.subjects.default"  };
+    return {
+      icon: Cpu,
+      color: "text-indigo-700",
+      bg: "bg-indigo-50",
+      accent: "#4338ca",
+      descKey: "subjectLecturesView.subjects.computer",
+    };
+  return {
+    icon: Calculator,
+    color: "text-slate-600",
+    bg: "bg-slate-100",
+    accent: "#475569",
+    descKey: "subjectLecturesView.subjects.default",
+  };
 };
 
 /* ══════════════════════════════════════════
    DESKTOP SIDEBAR
 ══════════════════════════════════════════ */
 interface NewSidebarProps {
-  classId: string | undefined; subjectId: string | undefined;
-  gradeType: string; selectedSubject: any;
-  activeChapterId: number | null; subjectChapters: ChapterWithVideos[];
-  watchedSet: Set<number>; isWatchMode: boolean;
-  meta: ReturnType<typeof getMeta>; isRtl: boolean;
-  exitWatchMode: () => void; scrollToChapter: (idx: number) => void;
+  classId: string | undefined;
+  subjectId: string | undefined;
+  gradeType: string;
+  selectedSubject: any;
+  activeChapterId: number | null;
+  subjectChapters: ChapterWithVideos[];
+  watchedSet: Set<number>;
+  isWatchMode: boolean;
+  meta: ReturnType<typeof getMeta>;
+  isRtl: boolean;
+  exitWatchMode: () => void;
+  scrollToChapter: (idx: number) => void;
   t: ReturnType<typeof useT>;
 }
 
 const NewSidebar = ({
-  classId, subjectId, gradeType, selectedSubject,
-  activeChapterId, subjectChapters, watchedSet,
-  isWatchMode, meta, isRtl, exitWatchMode, scrollToChapter, t,
+  classId,
+  subjectId,
+  gradeType,
+  selectedSubject,
+  activeChapterId,
+  subjectChapters,
+  watchedSet,
+  isWatchMode,
+  meta,
+  isRtl,
+  exitWatchMode,
+  scrollToChapter,
+  t,
 }: NewSidebarProps) => {
   const navigate = useNavigate();
   const navState = { gradeType, selectedSubject };
 
   const navItems = [
-    { id: "dashboard",   labelKey: "subjectLecturesView.sidebar.dashboard",   icon: LayoutDashboard, path: null,                                                 isStatic: true,  isActive: false },
-    { id: "my-courses",  labelKey: "subjectLecturesView.sidebar.myCourses",   icon: BookOpen,        path: `/class/${classId}/subject/${subjectId}`,             isStatic: false, isActive: true  },
-    { id: "assessments", labelKey: "subjectLecturesView.sidebar.assessments", icon: ClipboardList,   path: `/assessment/1`,                                      isStatic: false, isActive: false },
-    { id: "past-papers", labelKey: "subjectLecturesView.sidebar.pastPapers",  icon: FileText,        path: `/class/${classId}/subject/${subjectId}/past-papers`, isStatic: false, isActive: false },
+    {
+      id: "dashboard",
+      labelKey: "subjectLecturesView.sidebar.dashboard",
+      icon: LayoutDashboard,
+      path: null,
+      isStatic: true,
+      isActive: false,
+    },
+    {
+      id: "my-courses",
+      labelKey: "subjectLecturesView.sidebar.myCourses",
+      icon: BookOpen,
+      path: `/class/${classId}/subject/${subjectId}`,
+      isStatic: false,
+      isActive: true,
+    },
+    {
+      id: "assessments",
+      labelKey: "subjectLecturesView.sidebar.assessments",
+      icon: ClipboardList,
+      path: `/assessment/1`,
+      isStatic: false,
+      isActive: false,
+    },
+    {
+      id: "past-papers",
+      labelKey: "subjectLecturesView.sidebar.pastPapers",
+      icon: FileText,
+      path: `/class/${classId}/subject/${subjectId}/past-papers`,
+      isStatic: false,
+      isActive: false,
+    },
   ];
 
   return (
     <aside className="hidden lg:flex w-[272px] shrink-0 h-screen sticky top-0 border-r border-slate-200 flex-col bg-white">
       <div className="px-6 pt-7 pb-5 border-b border-slate-100">
-        <p className="text-[#1E3A8A] font-extrabold text-[16px] leading-tight">{t("subjectLecturesView.sidebar.title")}</p>
-        <p className="text-slate-400 text-[12px] mt-0.5">{t("subjectLecturesView.sidebar.subtitle")}</p>
+        <p className="text-[#1E3A8A] font-extrabold text-[16px] leading-tight">
+          {t("subjectLecturesView.sidebar.title")}
+        </p>
+        <p className="text-slate-400 text-[12px] mt-0.5">
+          {t("subjectLecturesView.sidebar.subtitle")}
+        </p>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-1">
@@ -120,14 +269,29 @@ const NewSidebar = ({
             <button
               key={item.id}
               disabled={item.isStatic}
-              onClick={() => { if (item.isStatic || !item.path) return; navigate(item.path, { state: navState }); }}
+              onClick={() => {
+                if (item.isStatic || !item.path) return;
+                navigate(item.path, { state: navState });
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-semibold transition-all duration-150 text-left ${
-                item.isActive ? "bg-blue-50 text-[#1E3A8A]"
-                : item.isStatic ? "text-slate-400 cursor-default"
-                : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
+                item.isActive
+                  ? "bg-blue-50 text-[#1E3A8A]"
+                  : item.isStatic
+                    ? "text-slate-400 cursor-default"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0F172A]"
               }`}
             >
-              <Icon size={18} strokeWidth={1.8} className={item.isActive ? "text-[#1E3A8A]" : item.isStatic ? "text-slate-300" : "text-slate-400"} />
+              <Icon
+                size={18}
+                strokeWidth={1.8}
+                className={
+                  item.isActive
+                    ? "text-[#1E3A8A]"
+                    : item.isStatic
+                      ? "text-slate-300"
+                      : "text-slate-400"
+                }
+              />
               <span>{t(item.labelKey)}</span>
             </button>
           );
@@ -135,27 +299,53 @@ const NewSidebar = ({
 
         {subjectChapters.length > 0 && (
           <div className="mt-3 ml-2 border-l-2 border-slate-100 pl-4 space-y-0.5">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{t("subjectLecturesView.sidebar.chaptersLabel")}</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+              {t("subjectLecturesView.sidebar.chaptersLabel")}
+            </p>
             {subjectChapters.map((ch, i) => {
               const isActive = activeChapterId === ch.id;
-              const chLabel  = isRtl ? ch.urdu_name || ch.name : ch.name;
-              const watched  = ch.videos.filter((v) => watchedSet.has(v.id)).length;
+              const chLabel = isRtl ? ch.urdu_name || ch.name : ch.name;
+              const watched = ch.videos.filter((v) =>
+                watchedSet.has(v.id),
+              ).length;
               return (
                 <button
                   key={ch.id}
-                  onClick={() => { if (isWatchMode) exitWatchMode(); setTimeout(() => scrollToChapter(i), 50); }}
+                  onClick={() => {
+                    if (isWatchMode) exitWatchMode();
+                    setTimeout(() => scrollToChapter(i), 50);
+                  }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 text-left ${
-                    isActive ? "" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                    isActive
+                      ? ""
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                   style={isActive ? { color: meta.accent } : {}}
                 >
-                  <span className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-white text-[9px] font-black" style={{ backgroundColor: isActive ? meta.accent : "#cbd5e1" }}>
+                  <span
+                    className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-white text-[9px] font-black"
+                    style={{
+                      backgroundColor: isActive ? meta.accent : "#cbd5e1",
+                    }}
+                  >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="flex-1 text-[12px] whitespace-normal break-words leading-snug">{chLabel}</span>
-                  {watched > 0 && watched === ch.videos.length && <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />}
+                  <span className="flex-1 text-[12px] whitespace-normal break-words leading-snug">
+                    {chLabel}
+                  </span>
+                  {watched > 0 && watched === ch.videos.length && (
+                    <CheckCircle2
+                      size={13}
+                      className="text-emerald-500 shrink-0"
+                    />
+                  )}
                   {watched > 0 && watched < ch.videos.length && (
-                    <span className="text-[10px] font-bold shrink-0" style={{ color: meta.accent }}>{watched}/{ch.videos.length}</span>
+                    <span
+                      className="text-[10px] font-bold shrink-0"
+                      style={{ color: meta.accent }}
+                    >
+                      {watched}/{ch.videos.length}
+                    </span>
                   )}
                 </button>
               );
@@ -171,25 +361,49 @@ const NewSidebar = ({
    MOBILE TOP NAV
 ══════════════════════════════════════════ */
 interface MobileTopNavProps {
-  classId: string | undefined; subjectId: string | undefined;
-  gradeType: string; selectedSubject: any;
+  classId: string | undefined;
+  subjectId: string | undefined;
+  gradeType: string;
+  selectedSubject: any;
   subjectChapters: ChapterWithVideos[];
-  isWatchMode: boolean; exitWatchMode: () => void;
-  scrollToChapter: (idx: number) => void; isRtl: boolean;
+  isWatchMode: boolean;
+  exitWatchMode: () => void;
+  scrollToChapter: (idx: number) => void;
+  isRtl: boolean;
   t: ReturnType<typeof useT>;
 }
 
 const MobileTopNav = ({
-  classId, subjectId, gradeType, selectedSubject,
-  subjectChapters, isWatchMode, exitWatchMode, scrollToChapter, isRtl, t,
+  classId,
+  subjectId,
+  gradeType,
+  selectedSubject,
+  subjectChapters,
+  isWatchMode,
+  exitWatchMode,
+  scrollToChapter,
+  isRtl,
+  t,
 }: MobileTopNavProps) => {
   const navigate = useNavigate();
   const navState = { gradeType, selectedSubject };
 
   const navItems = [
-    { labelKey: "subjectLecturesView.mobileNav.myCourses",   path: `/class/${classId}/subject/${subjectId}`,             isActive: true  },
-    { labelKey: "subjectLecturesView.mobileNav.assessments", path: `/assessment/1`,                                      isActive: false },
-    { labelKey: "subjectLecturesView.mobileNav.pastPapers",  path: `/class/${classId}/subject/${subjectId}/past-papers`, isActive: false },
+    {
+      labelKey: "subjectLecturesView.mobileNav.myCourses",
+      path: `/class/${classId}/subject/${subjectId}`,
+      isActive: true,
+    },
+    {
+      labelKey: "subjectLecturesView.mobileNav.assessments",
+      path: `/assessment/1`,
+      isActive: false,
+    },
+    {
+      labelKey: "subjectLecturesView.mobileNav.pastPapers",
+      path: `/class/${classId}/subject/${subjectId}/past-papers`,
+      isActive: false,
+    },
   ];
 
   return (
@@ -200,7 +414,9 @@ const MobileTopNav = ({
             key={item.labelKey}
             onClick={() => navigate(item.path, { state: navState })}
             className={`whitespace-nowrap px-4 py-2 rounded-xl text-[13px] font-bold border transition-all shrink-0 ${
-              item.isActive ? "bg-[#1E3A8A] text-white border-[#1E3A8A]" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+              item.isActive
+                ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
             }`}
           >
             {t(item.labelKey)}
@@ -210,11 +426,16 @@ const MobileTopNav = ({
 
       {subjectChapters.length > 0 && (
         <div className="flex items-center gap-2 px-3 pb-3 overflow-x-auto scrollbar-none">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">{t("subjectLecturesView.mobileNav.chapters")}</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+            {t("subjectLecturesView.mobileNav.chapters")}
+          </span>
           {subjectChapters.map((ch, i) => (
             <button
               key={ch.id}
-              onClick={() => { if (isWatchMode) exitWatchMode(); setTimeout(() => scrollToChapter(i), 50); }}
+              onClick={() => {
+                if (isWatchMode) exitWatchMode();
+                setTimeout(() => scrollToChapter(i), 50);
+              }}
               className="whitespace-nowrap px-3 py-1.5 rounded-xl text-[12px] font-bold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 shrink-0 transition-all"
             >
               {t("subjectLecturesView.chapter.label")} {i + 1}
@@ -230,37 +451,62 @@ const MobileTopNav = ({
    SUBJECT HEADER BANNER
 ══════════════════════════════════════════ */
 interface SubjectHeaderProps {
-  gradeName: string; subjectName: string;
+  gradeName: string;
+  subjectName: string;
   meta: ReturnType<typeof getMeta>;
-  isRtl: boolean; gradeType: string;
+  isRtl: boolean;
+  gradeType: string;
   t: ReturnType<typeof useT>;
 }
 
 const getGradeBadgeLabel = (gradeName: string, gradeType: string): string => {
-  if (gradeName) { const m = gradeName.match(/\d+/); if (m) return m[0]; }
+  if (gradeName) {
+    const m = gradeName.match(/\d+/);
+    if (m) return m[0];
+  }
   return gradeType || "SSC";
 };
 
-const SubjectHeader = ({ gradeName, subjectName, meta, isRtl, gradeType, t }: SubjectHeaderProps) => {
-  const Icon       = meta.icon;
+const SubjectHeader = ({
+  gradeName,
+  subjectName,
+  meta,
+  isRtl,
+  gradeType,
+  t,
+}: SubjectHeaderProps) => {
+  const Icon = meta.icon;
   const gradeBadge = getGradeBadgeLabel(gradeName, gradeType);
-  const desc       = t(meta.descKey);
+  const desc = t(meta.descKey);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
       <div className="flex items-center gap-2.5 mb-3">
-        <span className="text-[11px] font-black tracking-widest uppercase text-white px-2.5 py-1 rounded-lg" style={{ backgroundColor: meta.accent }}>
+        <span
+          className="text-[11px] font-black tracking-widest uppercase text-white px-2.5 py-1 rounded-lg"
+          style={{ backgroundColor: meta.accent }}
+        >
           {gradeBadge}
         </span>
         <div className={`${meta.bg} p-1.5 rounded-lg`}>
           <Icon size={14} className={meta.color} strokeWidth={2} />
         </div>
       </div>
-      <h1 className={`text-[28px] sm:text-[32px] font-black text-[#0F172A] leading-tight mb-1 ${isRtl ? "text-right" : ""}`}>
+      <h1
+        className={`text-[28px] sm:text-[32px] font-black text-[#0F172A] leading-tight mb-1 ${isRtl ? "text-right" : ""}`}
+      >
         {subjectName}
       </h1>
-      {gradeName && <p className="text-[13px] font-semibold text-slate-400 mb-2">{gradeName}</p>}
-      <p className={`text-[14px] text-slate-500 leading-relaxed max-w-xl ${isRtl ? "text-right" : ""}`}>{desc}</p>
+      {gradeName && (
+        <p className="text-[13px] font-semibold text-slate-400 mb-2">
+          {gradeName}
+        </p>
+      )}
+      <p
+        className={`text-[14px] text-slate-500 leading-relaxed max-w-xl ${isRtl ? "text-right" : ""}`}
+      >
+        {desc}
+      </p>
     </div>
   );
 };
@@ -269,48 +515,137 @@ const SubjectHeader = ({ gradeName, subjectName, meta, isRtl, gradeType, t }: Su
    LECTURE CARD
 ══════════════════════════════════════════ */
 interface LectureCardProps {
-  video: Video; lectureNumber: number; isSelected: boolean; isWatched: boolean;
-  progress: number; isUpNext: boolean; onClick: () => void;
-  isRtl: boolean; accentColor: string; t: ReturnType<typeof useT>;
+  video: Video;
+  lectureNumber: number;
+  isSelected: boolean;
+  isWatched: boolean;
+  progress: number;
+  isUpNext: boolean;
+  isLocked: boolean;
+  onClick: () => void;
+  isRtl: boolean;
+  accentColor: string;
+  t: ReturnType<typeof useT>;
 }
 
-const LectureCard = ({ video, lectureNumber, isSelected, isWatched, progress, isUpNext, onClick, isRtl, accentColor, t }: LectureCardProps) => {
-  const title     = isRtl ? video.urdu_name || video.name : video.name;
-  const descRaw   = isRtl ? video.urdu_desc || video.desc : video.desc;
+const LectureCard = ({
+  video,
+  lectureNumber,
+  isSelected,
+  isWatched,
+  progress,
+  isUpNext,
+  isLocked,
+  onClick,
+  isRtl,
+  accentColor,
+  t,
+}: LectureCardProps) => {
+  const title = isRtl ? video.urdu_name || video.name : video.name;
+  const descRaw = isRtl ? video.urdu_desc || video.desc : video.desc;
   const shortDesc = descRaw?.split("|")[0]?.trim() || "";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
       onClick={onClick}
       className={`group cursor-pointer rounded-2xl overflow-hidden border transition-all duration-200 bg-white flex flex-col h-[280px] ${
-        isSelected ? "border-2 shadow-lg" : "border-slate-100 hover:shadow-md hover:border-slate-200"
+        isSelected
+          ? "border-2 shadow-lg"
+          : "border-slate-100 hover:shadow-md hover:border-slate-200"
       }`}
-      style={isSelected ? { borderColor: accentColor, boxShadow: `0 4px 20px ${accentColor}22` } : {}}
+      style={
+        isSelected
+          ? {
+              borderColor: accentColor,
+              boxShadow: `0 4px 20px ${accentColor}22`,
+            }
+          : {}
+      }
     >
       <div className="relative h-[155px] shrink-0 overflow-hidden">
-        <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
+        <img
+          src={thumbnail}
+          alt={title}
+          className="w-full h-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        {isUpNext && !isSelected && (
-          <div className="absolute top-3 left-3 z-20 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: accentColor }}>
+
+        {/* Lock badge */}
+        {isLocked && (
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-1 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Login to watch
+          </div>
+        )}
+
+        {!isLocked && isUpNext && !isSelected && (
+          <div
+            className="absolute top-3 left-3 z-20 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg"
+            style={{ backgroundColor: accentColor }}
+          >
             {t("subjectLecturesView.card.upNext")}
           </div>
         )}
-        {isWatched && !isSelected && (
-          <div className="absolute top-3 right-3 z-20"><CheckCircle2 size={20} className="text-emerald-400" /></div>
+        {!isLocked && isWatched && !isSelected && (
+          <div className="absolute top-3 right-3 z-20">
+            <CheckCircle2 size={20} className="text-emerald-400" />
+          </div>
         )}
+
+        {/* Play / lock icon overlay */}
         {isSelected ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5"><PlayCircle size={34} className="text-white" /></div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5">
+              <PlayCircle size={34} className="text-white" />
+            </div>
+          </div>
+        ) : isLocked ? (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/30">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
           </div>
         ) : (
           <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <PlayCircle size={30} className="text-white drop-shadow-lg" />
           </div>
         )}
-        {progress > 0 && progress < 100 && (
+
+        {!isLocked && progress > 0 && progress < 100 && (
           <div className="absolute bottom-0 left-0 right-0 z-20 h-1 bg-white/20">
-            <div className="h-full transition-all" style={{ width: `${progress}%`, backgroundColor: accentColor }} />
+            <div
+              className="h-full transition-all"
+              style={{ width: `${progress}%`, backgroundColor: accentColor }}
+            />
           </div>
         )}
         <div className="absolute bottom-2.5 left-3 z-20">
@@ -321,20 +656,37 @@ const LectureCard = ({ video, lectureNumber, isSelected, isWatched, progress, is
       </div>
       <div className="p-4 flex flex-col flex-1 overflow-hidden">
         <div className="flex items-center justify-between mb-1.5">
-          {isWatched ? (
+          {isLocked ? (
+            <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
+              🔒 Login required
+            </span>
+          ) : isWatched ? (
             <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1">
               <CheckCircle2 size={11} /> {t("subjectLecturesView.card.watched")}
             </span>
           ) : progress > 0 && progress < 100 ? (
-            <span className="text-[11px] font-semibold" style={{ color: accentColor }}>
+            <span
+              className="text-[11px] font-semibold"
+              style={{ color: accentColor }}
+            >
               {Math.round(100 - progress)}% {t("subjectLecturesView.card.left")}
             </span>
           ) : (
-            <span className="text-[11px] text-slate-400 font-medium">{t("subjectLecturesView.card.notStarted")}</span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              {t("subjectLecturesView.card.notStarted")}
+            </span>
           )}
         </div>
-        <h4 className={`text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 ${isRtl ? "text-right" : ""}`}>{title}</h4>
-        {shortDesc && <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">{shortDesc}</p>}
+        <h4
+          className={`text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 ${isRtl ? "text-right" : ""}`}
+        >
+          {title}
+        </h4>
+        {shortDesc && (
+          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+            {shortDesc}
+          </p>
+        )}
       </div>
     </motion.div>
   );
@@ -344,12 +696,30 @@ const LectureCard = ({ video, lectureNumber, isSelected, isWatched, progress, is
    SIDEBAR ROW (watch mode right panel)
 ══════════════════════════════════════════ */
 interface SidebarRowProps {
-  video: Video; lectureNumber: number; isSelected: boolean; isWatched: boolean;
-  progress: number; onClick: () => void; isRtl: boolean; accentColor: string;
+  video: Video;
+  lectureNumber: number;
+  isSelected: boolean;
+  isWatched: boolean;
+  progress: number;
+  isLocked: boolean;
+  onClick: () => void;
+  isRtl: boolean;
+  accentColor: string;
   t: ReturnType<typeof useT>;
 }
 
-const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onClick, isRtl, accentColor, t }: SidebarRowProps) => {
+const SidebarRow = ({
+  video,
+  lectureNumber,
+  isSelected,
+  isWatched,
+  progress,
+  isLocked,
+  onClick,
+  isRtl,
+  accentColor,
+  t,
+}: SidebarRowProps) => {
   const title = isRtl ? video.urdu_name || video.name : video.name;
   return (
     <div
@@ -357,22 +727,56 @@ const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onC
       className={`flex gap-3 p-2 rounded-xl cursor-pointer transition-all duration-150 ${
         isSelected ? "border" : "hover:bg-slate-50 border border-transparent"
       }`}
-      style={isSelected ? { backgroundColor: `${accentColor}11`, borderColor: `${accentColor}44` } : {}}
+      style={
+        isSelected
+          ? {
+              backgroundColor: `${accentColor}11`,
+              borderColor: `${accentColor}44`,
+            }
+          : {}
+      }
     >
       <div className="relative w-[110px] h-[62px] shrink-0 rounded-lg overflow-hidden">
-        <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
-        {progress > 0 && progress < 100 && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-            <div className="h-full" style={{ width: `${progress}%`, backgroundColor: accentColor }} />
+        <img
+          src={thumbnail}
+          alt={title}
+          className="w-full h-full object-cover"
+        />
+        {isLocked && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
           </div>
         )}
-        {isSelected && (
+        {!isLocked && progress > 0 && progress < 100 && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+            <div
+              className="h-full"
+              style={{ width: `${progress}%`, backgroundColor: accentColor }}
+            />
+          </div>
+        )}
+        {!isLocked && isSelected && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
             <PlayCircle size={20} className="text-white" />
           </div>
         )}
-        {isWatched && !isSelected && (
-          <div className="absolute top-1 right-1"><CheckCircle2 size={13} className="text-emerald-400" /></div>
+        {!isLocked && isWatched && !isSelected && (
+          <div className="absolute top-1 right-1">
+            <CheckCircle2 size={13} className="text-emerald-400" />
+          </div>
         )}
       </div>
       <div className="flex-1 min-w-0 py-0.5">
@@ -382,17 +786,25 @@ const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onC
         <h4
           className={`text-[12px] font-bold leading-snug line-clamp-2 ${isRtl ? "text-right" : ""}`}
           style={isSelected ? { color: accentColor } : { color: "#1e293b" }}
-        >{title}</h4>
-        {isWatched && (
+        >
+          {title}
+        </h4>
+        {isLocked ? (
+          <span className="text-[10px] text-slate-400 font-semibold mt-0.5 flex items-center gap-1">
+            🔒 Login required
+          </span>
+        ) : isWatched ? (
           <span className="text-[10px] text-emerald-500 font-semibold mt-0.5 flex items-center gap-1">
             <CheckCircle2 size={10} /> {t("subjectLecturesView.card.watched")}
           </span>
-        )}
-        {!isWatched && progress > 0 && (
-          <span className="text-[10px] font-semibold mt-0.5 block" style={{ color: accentColor }}>
+        ) : progress > 0 ? (
+          <span
+            className="text-[10px] font-semibold mt-0.5 block"
+            style={{ color: accentColor }}
+          >
             {Math.round(100 - progress)}% {t("subjectLecturesView.card.left")}
           </span>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -402,10 +814,17 @@ const SidebarRow = ({ video, lectureNumber, isSelected, isWatched, progress, onC
    CHAPTER SECTION
 ══════════════════════════════════════════ */
 interface ChapterSectionProps {
-  chapter: ChapterWithVideos; chapterIndex: number; globalLectureOffset: number;
-  selectedVideo: Video | null; watchedSet: Set<number>; progressMap: Record<number, number>;
-  currentGlobalIdx: number; onSelect: (video: Video, chapterId: number) => void;
-  isRtl: boolean; accentColor: string;
+  chapter: ChapterWithVideos;
+  chapterIndex: number;
+  globalLectureOffset: number;
+  selectedVideo: Video | null;
+  watchedSet: Set<number>;
+  progressMap: Record<number, number>;
+  currentGlobalIdx: number;
+  isLoggedIn: boolean;
+  onSelect: (video: Video, chapterId: number, globalIdx: number) => void;
+  isRtl: boolean;
+  accentColor: string;
   sidebarRef?: (el: HTMLDivElement | null) => void;
   t: ReturnType<typeof useT>;
 }
@@ -413,47 +832,90 @@ interface ChapterSectionProps {
 const CARDS_PER_PAGE = 4;
 
 const ChapterSection = ({
-  chapter, chapterIndex, globalLectureOffset,
-  selectedVideo, watchedSet, progressMap,
-  currentGlobalIdx, onSelect, isRtl, accentColor, sidebarRef, t,
+  chapter,
+  chapterIndex,
+  globalLectureOffset,
+  selectedVideo,
+  watchedSet,
+  progressMap,
+  currentGlobalIdx,
+  isLoggedIn,
+  onSelect,
+  isRtl,
+  accentColor,
+  sidebarRef,
+  t,
 }: ChapterSectionProps) => {
-  const [page, setPage]  = useState(0);
-  const totalPages       = Math.ceil(chapter.videos.length / CARDS_PER_PAGE);
-  const visible          = chapter.videos.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
-  const watchedInChapter = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
-  const chapterLabel     = isRtl ? chapter.urdu_name || chapter.name : chapter.name;
-  const chapterNum       = String(chapterIndex + 1).padStart(2, "0");
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(chapter.videos.length / CARDS_PER_PAGE);
+  const visible = chapter.videos.slice(
+    page * CARDS_PER_PAGE,
+    page * CARDS_PER_PAGE + CARDS_PER_PAGE,
+  );
+  const watchedInChapter = chapter.videos.filter((v) =>
+    watchedSet.has(v.id),
+  ).length;
+  const chapterLabel = isRtl ? chapter.urdu_name || chapter.name : chapter.name;
+  const chapterNum = String(chapterIndex + 1).padStart(2, "0");
 
-  const lectureWord = chapter.videos.length === 1
-    ? t("subjectLecturesView.chapter.lectures")
-    : t("subjectLecturesView.chapter.lecturesPlural");
+  const lectureWord =
+    chapter.videos.length === 1
+      ? t("subjectLecturesView.chapter.lectures")
+      : t("subjectLecturesView.chapter.lecturesPlural");
 
   return (
-    <div id={`chapter-${chapter.id}`} ref={sidebarRef} className="mb-12 scroll-mt-6">
+    <div
+      id={`chapter-${chapter.id}`}
+      ref={sidebarRef}
+      className="mb-12 scroll-mt-6"
+    >
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[12px] font-black" style={{ backgroundColor: accentColor }}>
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[12px] font-black"
+            style={{ backgroundColor: accentColor }}
+          >
             {chapterNum}
           </div>
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               {t("subjectLecturesView.chapter.label")} {chapterNum}
             </span>
-            <h3 className={`text-[16px] font-black text-slate-900 leading-tight mt-0.5 ${isRtl ? "text-right" : ""}`}>{chapterLabel}</h3>
+            <h3
+              className={`text-[16px] font-black text-slate-900 leading-tight mt-0.5 ${isRtl ? "text-right" : ""}`}
+            >
+              {chapterLabel}
+            </h3>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-[12px] text-slate-400 font-medium hidden sm:block">
             {chapter.videos.length} {lectureWord}
             {watchedInChapter > 0 && (
-              <span className="ml-1.5 text-emerald-500">· {watchedInChapter} {t("subjectLecturesView.chapter.watched")}</span>
+              <span className="ml-1.5 text-emerald-500">
+                · {watchedInChapter} {t("subjectLecturesView.chapter.watched")}
+              </span>
             )}
           </span>
           {totalPages > 1 && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-slate-400 font-medium">{page + 1}/{totalPages}</span>
-              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">{isRtl ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}</button>
-              <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1} className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">{isRtl ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}</button>
+              <span className="text-[11px] text-slate-400 font-medium">
+                {page + 1}/{totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                {isRtl ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1}
+                className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                {isRtl ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+              </button>
             </div>
           )}
         </div>
@@ -462,21 +924,37 @@ const ChapterSection = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={page}
-          initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+          initial={{ opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -8 }}
           transition={{ duration: 0.18 }}
           className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5"
         >
           {visible.map((video, localIdx) => {
-            const globalIdx = globalLectureOffset + page * CARDS_PER_PAGE + localIdx;
+            const globalIdx =
+              globalLectureOffset + page * CARDS_PER_PAGE + localIdx;
+            // globalIdx 0 = first video = free; anything else requires login
+            const isLocked = globalIdx > 0 && !isLoggedIn;
             return (
               <LectureCard
-                key={video.id} video={video} lectureNumber={globalIdx + 1}
+                key={video.id}
+                video={video}
+                lectureNumber={globalIdx + 1}
                 isSelected={selectedVideo?.id === video.id}
                 isWatched={watchedSet.has(video.id)}
-                progress={watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0}
-                isUpNext={selectedVideo?.id !== video.id && !watchedSet.has(video.id) && globalIdx === currentGlobalIdx + 1}
-                onClick={() => onSelect(video, chapter.id)}
-                isRtl={isRtl} accentColor={accentColor} t={t}
+                progress={
+                  watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0
+                }
+                isUpNext={
+                  selectedVideo?.id !== video.id &&
+                  !watchedSet.has(video.id) &&
+                  globalIdx === currentGlobalIdx + 1
+                }
+                isLocked={isLocked}
+                onClick={() => onSelect(video, chapter.id, globalIdx)}
+                isRtl={isRtl}
+                accentColor={accentColor}
+                t={t}
               />
             );
           })}
@@ -493,8 +971,11 @@ const ChapterSection = ({
 ══════════════════════════════════════════ */
 const SubjectLecturesView = () => {
   const { classId, subjectId } = useParams();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ── AUTH GATE ─────────────────────────────────────────────
+  const { isLoggedIn } = useAuth();
 
   /* ── i18n ── */
   const t = useT();
@@ -510,7 +991,7 @@ const SubjectLecturesView = () => {
   }, []);
   const isRtl = lang === "ur";
 
-  const gradeType                = location.state?.gradeType;
+  const gradeType = location.state?.gradeType;
   const selectedSubjectFromState = location.state?.selectedSubject;
 
   const { classInfo, chapters, chapterVideos, subjects, loading } =
@@ -527,7 +1008,6 @@ const SubjectLecturesView = () => {
 
     
     if (selectedSubjectFromState) return selectedSubjectFromState;
-
     return null;
   }, [subjects, subjectId, selectedSubjectFromState]);
 
@@ -536,94 +1016,139 @@ const SubjectLecturesView = () => {
   const classTitle = gradeName;
 
   const subjectRawName = selectedSubject?.name || "";
-  const meta           = getMeta(subjectRawName);
+  const meta = getMeta(subjectRawName);
 
   
   const subjectName = useMemo(() => {
     if (!selectedSubject) return "";
     return isRtl
-      ? (selectedSubject.urdu_name?.trim() || selectedSubject.name || "")
-      : (selectedSubject.name || "");
+      ? selectedSubject.urdu_name?.trim() || selectedSubject.name || ""
+      : selectedSubject.name || "";
   }, [selectedSubject, isRtl]);
 
-  /* ── Grade display name — also reactive to lang changes ── */
   const gradeDisplayName = useMemo(() => {
     if (!classInfo) return "";
     return isRtl
-      ? (classInfo.urdu_name?.trim() || classInfo.name || "")
-      : (classInfo.name || "");
+      ? classInfo.urdu_name?.trim() || classInfo.name || ""
+      : classInfo.name || "";
   }, [classInfo, isRtl]);
 
-  const subjectChapters: ChapterWithVideos[] = useMemo(() =>
-    chapters
-      .filter((c: any) => String(c.subject_id) === String(subjectId))
-      .map((c: any) => ({ ...c, videos: chapterVideos[c.id] || [] })),
-    [chapters, chapterVideos, subjectId]
+  const subjectChapters: ChapterWithVideos[] = useMemo(
+    () =>
+      chapters
+        .filter((c: any) => String(c.subject_id) === String(subjectId))
+        .map((c: any) => ({ ...c, videos: chapterVideos[c.id] || [] })),
+    [chapters, chapterVideos, subjectId],
   );
 
   const allVideos: Video[] = useMemo(
     () => subjectChapters.flatMap((c) => c.videos),
-    [subjectChapters]
+    [subjectChapters],
   );
 
   const chapterOffsets: number[] = useMemo(() => {
     const offsets: number[] = [];
     let acc = 0;
-    subjectChapters.forEach((c) => { offsets.push(acc); acc += c.videos.length; });
+    subjectChapters.forEach((c) => {
+      offsets.push(acc);
+      acc += c.videos.length;
+    });
     return offsets;
   }, [subjectChapters]);
 
-  const [selectedVideo, setSelectedVideo]     = useState<Video | null>(null);
-  const [videoUrl, setVideoUrl]               = useState("");
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null);
-  const [progressMap, setProgressMap]         = useState<Record<number, number>>({});
-  const [watchedSet, setWatchedSet]           = useState<Set<number>>(new Set());
-  const [isWatchMode, setIsWatchMode]         = useState(false);
+  const [progressMap, setProgressMap] = useState<Record<number, number>>({});
+  const [watchedSet, setWatchedSet] = useState<Set<number>>(new Set());
+  const [isWatchMode, setIsWatchMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const currentGlobalIdx = useMemo(
     () => allVideos.findIndex((v) => v.id === selectedVideo?.id),
-    [allVideos, selectedVideo]
+    [allVideos, selectedVideo],
   );
   const totalLectures = allVideos.length;
 
-  const trackEvent = useCallback((eventName: string) => {
-    if (!window.gtag || !selectedVideo) return;
-    window.gtag("event", eventName, { video_id: selectedVideo.id, video_name: selectedVideo.name, page_path: window.location.pathname });
-  }, [selectedVideo]);
+  const trackEvent = useCallback(
+    (eventName: string) => {
+      if (!window.gtag || !selectedVideo) return;
+      window.gtag("event", eventName, {
+        video_id: selectedVideo.id,
+        video_name: selectedVideo.name,
+        page_path: window.location.pathname,
+      });
+    },
+    [selectedVideo],
+  );
 
-  const selectVideo = useCallback((video: Video, chapterId: number) => {
-    setSelectedVideo(video);
-    setActiveChapterId(chapterId);
-    setIsWatchMode(true);
-    if (videoRef.current) {
-      (videoRef.current as any)._tracked50 = false;
-      (videoRef.current as any)._started   = false;
-    }
-    setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  // ── CENTRAL AUTH GATE ─────────────────────────────────────
+  // globalIdx is 0-based. Index 0 = first video = free for everyone.
+  // Any other video requires login.
+  const selectVideo = useCallback(
+    (video: Video, chapterId: number, globalIdx: number) => {
+      if (globalIdx > 0 && !isLoggedIn) {
+        navigate("/login", { state: { from: location.pathname } });
+        return;
+      }
+      setSelectedVideo(video);
+      setActiveChapterId(chapterId);
+      setIsWatchMode(true);
+      if (videoRef.current) {
+        (videoRef.current as any)._tracked50 = false;
+        (videoRef.current as any)._started = false;
+      }
+      setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [isLoggedIn, navigate, location.pathname],
+  );
 
   const goNext = useCallback(() => {
     if (currentGlobalIdx < allVideos.length - 1) {
-      const next    = allVideos[currentGlobalIdx + 1];
-      const chapIdx = subjectChapters.findIndex((c) => c.videos.some((v) => v.id === next.id));
-      selectVideo(next, subjectChapters[chapIdx]?.id ?? 0);
+      const next = allVideos[currentGlobalIdx + 1];
+      const chapIdx = subjectChapters.findIndex((c) =>
+        c.videos.some((v) => v.id === next.id),
+      );
+      selectVideo(
+        next,
+        subjectChapters[chapIdx]?.id ?? 0,
+        currentGlobalIdx + 1,
+      );
     }
   }, [currentGlobalIdx, allVideos, subjectChapters, selectVideo]);
 
   const goPrev = useCallback(() => {
     if (currentGlobalIdx > 0) {
-      const prev    = allVideos[currentGlobalIdx - 1];
-      const chapIdx = subjectChapters.findIndex((c) => c.videos.some((v) => v.id === prev.id));
-      selectVideo(prev, subjectChapters[chapIdx]?.id ?? 0);
+      const prev = allVideos[currentGlobalIdx - 1];
+      const chapIdx = subjectChapters.findIndex((c) =>
+        c.videos.some((v) => v.id === prev.id),
+      );
+      selectVideo(
+        prev,
+        subjectChapters[chapIdx]?.id ?? 0,
+        currentGlobalIdx - 1,
+      );
     }
   }, [currentGlobalIdx, allVideos, subjectChapters, selectVideo]);
 
-  const handleLoaded    = () => { if (!videoRef.current || (videoRef.current as any)._started) return; (videoRef.current as any)._started = true; trackEvent("video_start"); };
-  const handlePlay      = () => { if (!(videoRef.current as any)?._started) { (videoRef.current as any)._started = true; trackEvent("video_start"); } };
-  const handleEnded     = () => {
-    if (selectedVideo) { setWatchedSet((p) => new Set(p).add(selectedVideo.id)); setProgressMap((p) => ({ ...p, [selectedVideo.id]: 100 })); trackEvent("video_complete"); }
+  const handleLoaded = () => {
+    if (!videoRef.current || (videoRef.current as any)._started) return;
+    (videoRef.current as any)._started = true;
+    trackEvent("video_start");
+  };
+  const handlePlay = () => {
+    if (!(videoRef.current as any)?._started) {
+      (videoRef.current as any)._started = true;
+      trackEvent("video_start");
+    }
+  };
+  const handleEnded = () => {
+    if (selectedVideo) {
+      setWatchedSet((p) => new Set(p).add(selectedVideo.id));
+      setProgressMap((p) => ({ ...p, [selectedVideo.id]: 100 }));
+      trackEvent("video_complete");
+    }
     goNext();
   };
   
@@ -632,18 +1157,27 @@ const SubjectLecturesView = () => {
     if (!v.duration || !selectedVideo) return;
     const pct = (v.currentTime / v.duration) * 100;
     setProgressMap((p) => ({ ...p, [selectedVideo.id]: Math.round(pct) }));
-    if (pct > 50 && !(v as any)._tracked50) { (v as any)._tracked50 = true; trackEvent("video_50_percent"); }
+    if (pct > 50 && !(v as any)._tracked50) {
+      (v as any)._tracked50 = true;
+      trackEvent("video_50_percent");
+    }
   };
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "ArrowRight") goNext(); if (e.key === "ArrowLeft") goPrev(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowLeft") goPrev();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [goNext, goPrev]);
 
-  const chapterRefs     = useRef<(HTMLDivElement | null)[]>([]);
+  const chapterRefs = useRef<(HTMLDivElement | null)[]>([]);
   const scrollToChapter = (idx: number) =>
-    chapterRefs.current[idx]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    chapterRefs.current[idx]?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
 
   const exitWatchMode = useCallback(() => {
     setIsWatchMode(false);
@@ -656,45 +1190,64 @@ const SubjectLecturesView = () => {
     if (!video) return null;
     const fullText = isRtl ? video.urdu_desc || video.desc : video.desc;
     if (!fullText) return null;
-    const parts = fullText.split("|").map((p) => p.trim()).filter(Boolean);
+    const parts = fullText
+      .split("|")
+      .map((p) => p.trim())
+      .filter(Boolean);
     return (
       <>
         <p className="text-sm font-semibold text-slate-800">{parts[0]}</p>
         {parts.slice(1).map((line, i) =>
           line.startsWith("-") ? (
-            <p key={i} className="text-sm text-slate-700 mt-1">{line.replace("-", "").trim()}</p>
+            <p key={i} className="text-sm text-slate-700 mt-1">
+              {line.replace("-", "").trim()}
+            </p>
           ) : (
-            <ul key={i} className="text-sm text-slate-500 mt-1 list-disc pl-4"><li>{line}</li></ul>
-          )
+            <ul key={i} className="text-sm text-slate-500 mt-1 list-disc pl-4">
+              <li>{line}</li>
+            </ul>
+          ),
         )}
       </>
     );
   };
 
-  /* ── Breadcrumb uses gradeDisplayName (reactive) instead of the
-        old gradeName/classTitle which was not re-derived on lang change ── */
   const renderBreadcrumb = () => {
     const videoTitle = selectedVideo
-      ? (isRtl ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name)
+      ? isRtl
+        ? selectedVideo.urdu_name || selectedVideo.name
+        : selectedVideo.name
       : null;
 
     return (
       <div className="text-sm text-slate-400 flex items-center gap-1.5 mb-6 flex-wrap min-w-0">
-        <Link to="/" className="hover:text-slate-600 transition-colors shrink-0">
+        <Link
+          to="/"
+          className="hover:text-slate-600 transition-colors shrink-0"
+        >
           {t("subjectLecturesView.breadcrumb.home")}
         </Link>
         <span className="text-slate-300 shrink-0">/</span>
-        <Link to={`/class/${classId}`} state={{ gradeType, selectedSubject }} className="hover:text-slate-600 transition-colors shrink-0">
+        <Link
+          to={`/class/${classId}`}
+          state={{ gradeType, selectedSubject }}
+          className="hover:text-slate-600 transition-colors shrink-0"
+        >
           {gradeDisplayName || `Grade ${classId}`}
         </Link>
         <span className="text-slate-300 shrink-0">/</span>
         {isWatchMode && videoTitle ? (
           <>
-            <button onClick={exitWatchMode} className="hover:text-[#1E3A8A] text-slate-500 font-semibold transition-colors shrink-0 decoration-dotted">
+            <button
+              onClick={exitWatchMode}
+              className="hover:text-[#1E3A8A] text-slate-500 font-semibold transition-colors shrink-0 decoration-dotted"
+            >
               {subjectName}
             </button>
             <span className="text-slate-300 shrink-0">/</span>
-            <span className="text-slate-700 font-semibold break-words">{videoTitle}</span>
+            <span className="text-slate-700 font-semibold break-words">
+              {videoTitle}
+            </span>
           </>
         ) : (
           <span className="text-slate-700 font-semibold">{subjectName}</span>
@@ -705,30 +1258,46 @@ const SubjectLecturesView = () => {
 
   return (
     <section className="bg-[#F8FAFC] min-h-screen flex flex-col lg:flex-row">
-
       <NewSidebar
-        classId={classId} subjectId={subjectId} gradeType={gradeType}
-        selectedSubject={selectedSubject} activeChapterId={activeChapterId}
-        subjectChapters={subjectChapters} watchedSet={watchedSet}
-        isWatchMode={isWatchMode} meta={meta} isRtl={isRtl}
-        exitWatchMode={exitWatchMode} scrollToChapter={scrollToChapter} t={t}
+        classId={classId}
+        subjectId={subjectId}
+        gradeType={gradeType}
+        selectedSubject={selectedSubject}
+        activeChapterId={activeChapterId}
+        subjectChapters={subjectChapters}
+        watchedSet={watchedSet}
+        isWatchMode={isWatchMode}
+        meta={meta}
+        isRtl={isRtl}
+        exitWatchMode={exitWatchMode}
+        scrollToChapter={scrollToChapter}
+        t={t}
       />
 
       <MobileTopNav
-        classId={classId} subjectId={subjectId} gradeType={gradeType}
-        selectedSubject={selectedSubject} subjectChapters={subjectChapters}
-        isWatchMode={isWatchMode} exitWatchMode={exitWatchMode}
-        scrollToChapter={scrollToChapter} isRtl={isRtl} t={t}
+        classId={classId}
+        subjectId={subjectId}
+        gradeType={gradeType}
+        selectedSubject={selectedSubject}
+        subjectChapters={subjectChapters}
+        isWatchMode={isWatchMode}
+        exitWatchMode={exitWatchMode}
+        scrollToChapter={scrollToChapter}
+        isRtl={isRtl}
+        t={t}
       />
 
       <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-10 py-6 overflow-x-hidden">
-
         {renderBreadcrumb()}
 
         {!loading && (
           <SubjectHeader
-            gradeName={gradeDisplayName} subjectName={subjectName}
-            meta={meta} isRtl={isRtl} gradeType={gradeType} t={t}
+            gradeName={gradeDisplayName}
+            subjectName={subjectName}
+            meta={meta}
+            isRtl={isRtl}
+            gradeType={gradeType}
+            t={t}
           />
         )}
 
@@ -751,7 +1320,10 @@ const SubjectLecturesView = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="rounded-2xl overflow-hidden border border-slate-100 bg-white animate-pulse h-[280px]">
+                    <div
+                      key={i}
+                      className="rounded-2xl overflow-hidden border border-slate-100 bg-white animate-pulse h-[280px]"
+                    >
                       <div className="h-[155px] bg-slate-200" />
                       <div className="p-4 space-y-2">
                         <div className="h-3 w-16 bg-slate-200 rounded" />
@@ -763,25 +1335,26 @@ const SubjectLecturesView = () => {
               </div>
             ))}
           </div>
-
         ) : subjectChapters.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">
               <Clock size={38} className="text-slate-400" strokeWidth={1.5} />
             </div>
-            <h2 className="text-2xl font-black text-slate-900 mb-3">{t("subjectLecturesView.empty.title")}</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-3">
+              {t("subjectLecturesView.empty.title")}
+            </h2>
             <p className="text-slate-500 max-w-sm leading-relaxed">
               {t("subjectLecturesView.empty.desc", { subject: subjectName })}
             </p>
           </div>
-
         ) : isWatchMode && selectedVideo ? (
-
           /* ══ WATCH MODE ══ */
           <AnimatePresence mode="wait">
             <motion.div
               key="watch"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="flex flex-col xl:flex-row gap-6"
             >
@@ -789,10 +1362,16 @@ const SubjectLecturesView = () => {
                 <div className="bg-black rounded-2xl overflow-hidden shadow-2xl">
                   <div className="aspect-video">
                     <video
-                      ref={videoRef} key={videoUrl} controls autoPlay className="w-full h-full"
+                      ref={videoRef}
+                      key={videoUrl}
+                      controls
+                      autoPlay
+                      className="w-full h-full"
                       src={videoUrl}
-                      onLoadedData={handleLoaded} onPlay={handlePlay}
-                      onEnded={handleEnded} onTimeUpdate={handleTimeUpdate}
+                      onLoadedData={handleLoaded}
+                      onPlay={handlePlay}
+                      onEnded={handleEnded}
+                      onTimeUpdate={handleTimeUpdate}
                       onError={(e) => console.error("VIDEO ERROR", e)}
                     />
                   </div>
@@ -802,22 +1381,50 @@ const SubjectLecturesView = () => {
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                        {t("subjectLecturesView.player.lectureOf", { current: currentGlobalIdx + 1, total: totalLectures })}
+                        {t("subjectLecturesView.player.lectureOf", {
+                          current: currentGlobalIdx + 1,
+                          total: totalLectures,
+                        })}
                       </p>
-                      <h2 className={`text-lg font-black text-slate-900 leading-snug ${isRtl ? "text-right" : ""}`}>
-                        {isRtl ? selectedVideo.urdu_name || selectedVideo.name : selectedVideo.name}
+                      <h2
+                        className={`text-lg font-black text-slate-900 leading-snug ${isRtl ? "text-right" : ""}`}
+                      >
+                        {isRtl
+                          ? selectedVideo.urdu_name || selectedVideo.name
+                          : selectedVideo.name}
                       </h2>
-                      <div className="mt-2 space-y-1">{renderDesc(selectedVideo)}</div>
+                      <div className="mt-2 space-y-1">
+                        {renderDesc(selectedVideo)}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={exitWatchMode} className="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-[13px] font-semibold hover:bg-slate-50 transition-all">
+                      <button
+                        onClick={exitWatchMode}
+                        className="px-3 py-2 rounded-xl border border-slate-200 text-slate-500 text-[13px] font-semibold hover:bg-slate-50 transition-all"
+                      >
                         {t("subjectLecturesView.player.allLectures")}
                       </button>
-                      <button onClick={goPrev} disabled={currentGlobalIdx === 0} className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                        {isRtl ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                      <button
+                        onClick={goPrev}
+                        disabled={currentGlobalIdx === 0}
+                        className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      >
+                        {isRtl ? (
+                          <ChevronRight size={20} />
+                        ) : (
+                          <ChevronLeft size={20} />
+                        )}
                       </button>
-                      <button onClick={goNext} disabled={currentGlobalIdx >= allVideos.length - 1} className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                        {isRtl ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                      <button
+                        onClick={goNext}
+                        disabled={currentGlobalIdx >= allVideos.length - 1}
+                        className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      >
+                        {isRtl ? (
+                          <ChevronLeft size={20} />
+                        ) : (
+                          <ChevronRight size={20} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -828,28 +1435,47 @@ const SubjectLecturesView = () => {
               <div className="w-full xl:w-[320px] shrink-0">
                 <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden sticky top-6">
                   <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-[14px] font-black text-slate-900">{t("subjectLecturesView.player.allLecturesTitle")}</h3>
-                    <span className="text-[12px] text-slate-400 font-medium">{totalLectures} {t("subjectLecturesView.player.total")}</span>
+                    <h3 className="text-[14px] font-black text-slate-900">
+                      {t("subjectLecturesView.player.allLecturesTitle")}
+                    </h3>
+                    <span className="text-[12px] text-slate-400 font-medium">
+                      {totalLectures} {t("subjectLecturesView.player.total")}
+                    </span>
                   </div>
                   <div className="overflow-y-auto max-h-[75vh] p-2 space-y-1">
                     {subjectChapters.map((chapter, chIdx) => (
                       <div key={chapter.id}>
                         <div className="px-2 pt-3 pb-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                            <span className="w-4 h-4 rounded flex items-center justify-center text-white text-[8px] font-black" style={{ backgroundColor: meta.accent }}>{chIdx + 1}</span>
-                            {isRtl ? chapter.urdu_name || chapter.name : chapter.name}
+                            <span
+                              className="w-4 h-4 rounded flex items-center justify-center text-white text-[8px] font-black"
+                              style={{ backgroundColor: meta.accent }}
+                            >
+                              {chIdx + 1}
+                            </span>
+                            {isRtl
+                              ? chapter.urdu_name || chapter.name
+                              : chapter.name}
                           </p>
                         </div>
                         {chapter.videos.map((video, vidIdx) => {
                           const globalIdx = chapterOffsets[chIdx] + vidIdx;
+                          const isLocked = globalIdx > 0 && !isLoggedIn;
                           return (
                             <SidebarRow
-                              key={video.id} video={video} lectureNumber={globalIdx + 1}
+                              key={video.id}
+                              video={video}
+                              lectureNumber={globalIdx + 1}
                               isSelected={selectedVideo?.id === video.id}
                               isWatched={watchedSet.has(video.id)}
                               progress={progressMap[video.id] || 0}
-                              onClick={() => selectVideo(video, chapter.id)}
-                              isRtl={isRtl} accentColor={meta.accent} t={t}
+                              isLocked={isLocked}
+                              onClick={() =>
+                                selectVideo(video, chapter.id, globalIdx)
+                              }
+                              isRtl={isRtl}
+                              accentColor={meta.accent}
+                              t={t}
                             />
                           );
                         })}
@@ -860,9 +1486,7 @@ const SubjectLecturesView = () => {
               </div>
             </motion.div>
           </AnimatePresence>
-
         ) : (
-
           /* ══ GRID VIEW ══ */
           <div>
             <h2 className="text-[20px] font-black text-slate-900 mb-7">
@@ -871,12 +1495,21 @@ const SubjectLecturesView = () => {
             {subjectChapters.map((chapter, chIdx) => (
               <ChapterSection
                 key={chapter.id}
-                chapter={chapter} chapterIndex={chIdx}
+                chapter={chapter}
+                chapterIndex={chIdx}
                 globalLectureOffset={chapterOffsets[chIdx]}
-                selectedVideo={selectedVideo} watchedSet={watchedSet}
-                progressMap={progressMap} currentGlobalIdx={currentGlobalIdx}
-                onSelect={selectVideo} isRtl={isRtl} accentColor={meta.accent}
-                sidebarRef={(el) => { chapterRefs.current[chIdx] = el; }} t={t}
+                selectedVideo={selectedVideo}
+                watchedSet={watchedSet}
+                progressMap={progressMap}
+                currentGlobalIdx={currentGlobalIdx}
+                isLoggedIn={isLoggedIn}
+                onSelect={selectVideo}
+                isRtl={isRtl}
+                accentColor={meta.accent}
+                sidebarRef={(el) => {
+                  chapterRefs.current[chIdx] = el;
+                }}
+                t={t}
               />
             ))}
           </div>

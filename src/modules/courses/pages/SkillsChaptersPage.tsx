@@ -64,9 +64,18 @@ const useTranslation = () => {
   return { t, tArr, lang };
 };
 
-interface Subject   { id: number; name: string; urdu_name?: string; }
-interface Chapter   { id: number; name: string; urdu_name?: string; }
-interface Lecture   { id: number; name: string; urdu_name?: string; path: string; chapter_id: number; duration?: string; desc?: string; }
+interface Subject { id: number; name: string; urdu_name?: string; }
+interface Chapter { id: number; name: string; urdu_name?: string; }
+interface Lecture {
+  id: number;
+  name: string;
+  urdu_name?: string;
+  path: string;
+  chapter_id: number;
+  duration?: string;
+  desc?: string;
+  urdu_desc?: string;
+}
 interface ClassInfo { class_id: number; name: string; urdu_name?: string; thumbnailUrl?: string; chapterCount?: number; }
 
 const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard];
@@ -140,32 +149,32 @@ const DescriptionBlock = ({
 
 const SkillsChaptersPage = () => {
   const { classId } = useParams();
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
 
   const { t, tArr, lang } = useTranslation();
   const isRtl = lang === "ur";
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, []);
 
-  const [classInfo, setClassInfo]             = useState<ClassInfo | null>(null);
-  const [subjects, setSubjects]               = useState<Subject[]>([]);
+  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [chapterMap, setChapterMap]           = useState<Record<number, Chapter>>({});
-  const [lectures, setLectures]               = useState<Lecture[]>([]);
-  const [loadingClass, setLoadingClass]       = useState(true);
+  const [chapterMap, setChapterMap] = useState<Record<number, Chapter>>({});
+  const [lectures, setLectures] = useState<Lecture[]>([]);
+  const [loadingClass, setLoadingClass] = useState(true);
   const [loadingChapters, setLoadingChapters] = useState(true);
-  const [isWatchMode, setIsWatchMode]         = useState(false);
+  const [isWatchMode, setIsWatchMode] = useState(false);
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
-  const [openChapters, setOpenChapters]       = useState<Set<number>>(new Set());
-  const [watchedSet, setWatchedSet]           = useState<Set<number>>(new Set());
-  const [progressMap, setProgressMap]         = useState<Record<number, number>>({});
+  const [openChapters, setOpenChapters] = useState<Set<number>>(new Set());
+  const [watchedSet, setWatchedSet] = useState<Set<number>>(new Set());
+  const [progressMap, setProgressMap] = useState<Record<number, number>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const currentIdx      = lectures.findIndex((l) => l.id === selectedLecture?.id);
-  const totalLectures   = lectures.length;
-  const totalWatched    = watchedSet.size;
+  const currentIdx = lectures.findIndex((l) => l.id === selectedLecture?.id);
+  const totalLectures = lectures.length;
+  const totalWatched = watchedSet.size;
   const progressPercent = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
-  const courseName      = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
+  const courseName = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
 
   const lecturesByChapter: Record<number, Lecture[]> = {};
   lectures.forEach((l) => {
@@ -178,12 +187,12 @@ const SkillsChaptersPage = () => {
     setLoadingClass(true);
     (async () => {
       try {
-        const res  = await fetch(
+        const res = await fetch(
           `https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3?t=${Date.now()}`,
           { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
         );
         const data = await res.json();
-        const cls  = data.find((c: ClassInfo) => c.class_id === Number(classId));
+        const cls = data.find((c: ClassInfo) => c.class_id === Number(classId));
         setClassInfo(cls ?? null);
       } catch (e) { console.error(e); }
       setLoadingClass(false);
@@ -193,7 +202,7 @@ const SkillsChaptersPage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res  = await fetch(
+        const res = await fetch(
           `https://api.zaheen.com.pk/api/class/${classId}/subjects?ts=${Date.now()}`,
           { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
         );
@@ -239,7 +248,7 @@ const SkillsChaptersPage = () => {
     window.scrollTo({ top: 0, behavior: "auto" });
     if (videoRef.current) {
       (videoRef.current as any)._tracked50 = false;
-      (videoRef.current as any)._started   = false;
+      (videoRef.current as any)._started = false;
     }
     setOpenChapters((prev) => new Set(prev).add(lecture.chapter_id));
   }, []);
@@ -288,8 +297,8 @@ const SkillsChaptersPage = () => {
 
   const lectureName = (l: Lecture) => localName(l.name, l.urdu_name, isRtl);
 
-  const learnPoints     = tArr("skillsChaptersPage.learnSection.points");
-  const requirements    = tArr("skillsChaptersPage.requirements.items");
+  const learnPoints = tArr("skillsChaptersPage.learnSection.points");
+  const requirements = tArr("skillsChaptersPage.requirements.items");
   const descriptionText = t("skillsChaptersPage.description.text");
 
   /* ════════════════════════════════════════
@@ -428,9 +437,9 @@ const SkillsChaptersPage = () => {
 
             <div className="overflow-y-auto flex-1">
               {chapterIds.map((chId, chIdx) => {
-                const chapter      = chapterMap[chId];
-                const vids         = lecturesByChapter[chId] ?? [];
-                const isOpen       = openChapters.has(chId);
+                const chapter = chapterMap[chId];
+                const vids = lecturesByChapter[chId] ?? [];
+                const isOpen = openChapters.has(chId);
                 const globalOffset = chapterIds
                   .slice(0, chIdx)
                   .reduce((acc, id) => acc + (lecturesByChapter[id]?.length ?? 0), 0);
@@ -458,18 +467,17 @@ const SkillsChaptersPage = () => {
                     </button>
 
                     {isOpen && vids.map((lecture, vidIdx) => {
-                      const globalIdx  = globalOffset + vidIdx;
+                      const globalIdx = globalOffset + vidIdx;
                       const isSelected = selectedLecture?.id === lecture.id;
-                      const isWatched  = watchedSet.has(lecture.id);
-                      const progress   = progressMap[lecture.id] ?? 0;
+                      const isWatched = watchedSet.has(lecture.id);
+                      const progress = progressMap[lecture.id] ?? 0;
 
                       return (
                         <div
                           key={lecture.id}
                           onClick={() => selectLecture(lecture)}
-                          className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${
-                            isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
-                          }`}
+                          className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
+                            }`}
                         >
                           <div className="shrink-0 mt-0.5">
                             {isWatched ? (
@@ -483,9 +491,8 @@ const SkillsChaptersPage = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-[13px] font-semibold leading-snug ${
-                              isSelected ? "text-indigo-700" : isWatched ? "text-slate-400" : "text-slate-800"
-                            } ${isRtl ? "text-right" : ""}`}>
+                            <p className={`text-[13px] font-semibold leading-snug ${isSelected ? "text-indigo-700" : isWatched ? "text-slate-400" : "text-slate-800"
+                              } ${isRtl ? "text-right" : ""}`}>
                               {lectureName(lecture)}
                             </p>
                             {lecture.duration && (
@@ -609,17 +616,16 @@ const SkillsChaptersPage = () => {
         <div className="max-w-5xl mx-auto px-6 mb-8">
           <div className="flex flex-wrap gap-2">
             {subjects.map((subject, index) => {
-              const Icon     = subjectIcons[index % subjectIcons.length];
+              const Icon = subjectIcons[index % subjectIcons.length];
               const isActive = selectedSubject?.id === subject.id;
               return (
                 <button
                   key={subject.id}
                   onClick={() => setSelectedSubject(subject)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-all duration-150 ${
-                    isActive
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-all duration-150 ${isActive
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
+                    }`}
                 >
                   <Icon size={15} />
                   {localName(subject.name, subject.urdu_name, isRtl)}
