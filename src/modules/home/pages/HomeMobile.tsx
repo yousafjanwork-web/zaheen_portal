@@ -8,6 +8,7 @@ import BrowseByGrade from "@/modules/home/sections/BrowseByGrade";
 import ProfessionalCourses from "@/modules/home/sections/ProfessionalCourses";
 import Pricing from "@/modules/home/sections/Pricing";
 import CTASection from "@/modules/home/sections/CTASection";
+import MDCATBanner from "../sections/MDCATMobileBanner";
 
 const HomeMobile = () => {
   return (
@@ -21,7 +22,7 @@ const HomeMobile = () => {
       <BrowseByGrade />
 
       <ProfessionalCourses />
-
+      <MDCATBanner/>
       <Pricing />
 
       <CTASection />

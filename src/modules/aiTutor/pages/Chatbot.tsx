@@ -5,16 +5,9 @@ import { getLanguage } from "@/modules/shared/i18n";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
-/* ─────────────────────────────────────────────────────────────
-   TRANSLATION HOOK
-   Reactive — re-renders when language changes via storage or
-   custom "languageChange" event (same pattern as every other page).
-   To add Pashto: import psTranslations, add  ps: psTranslations.
-──────────────────────────────────────────────────────────────── */
 const translations: Record<string, any> = {
   en: enTranslations,
   ur: urTranslations,
-  // ps: psTranslations,
 };
 
 const getNestedValue = (obj: any, key: string): string => {
@@ -41,13 +34,102 @@ const useTranslation = () => {
     (key: string): string => {
       const val = getNestedValue(dict, key);
       if (val !== key) return val;
-      // fallback to English if key missing in current lang
       return getNestedValue(translations.en, key);
     },
     [dict]
   );
 
   return { t, lang };
+};
+
+/* ─────────────────────────────────────────────────────────────
+   CUSTOM DROPDOWN — replaces native <select> to fix mobile overflow
+──────────────────────────────────────────────────────────────── */
+interface DropdownProps {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (val: string) => void;
+}
+
+const CustomDropdown: React.FC<DropdownProps> = ({ value, options, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative", flex: 1 }}>
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        style={{
+          width: "100%",
+          padding: "6px 10px",
+          borderRadius: 6,
+          border: "1px solid #cbd5e1",
+          background: "#fff",
+          fontSize: 14,
+          textAlign: "left",
+          cursor: "pointer",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <span>{selected?.label}</span>
+        <span style={{ fontSize: 10, color: "#94a3b8" }}>{open ? "▲" : "▼"}</span>
+      </button>
+
+      {/* List — absolutely positioned, always inside viewport */}
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            right: 0,
+            background: "#fff",
+            border: "1px solid #cbd5e1",
+            borderRadius: 8,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+            zIndex: 9999,
+            maxHeight: 260,
+            overflowY: "auto",
+          }}
+        >
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                textAlign: "left",
+                border: "none",
+                background: opt.value === value ? "#2563eb" : "#fff",
+                color: opt.value === value ? "#fff" : "#1e293b",
+                fontSize: 14,
+                cursor: "pointer",
+                fontWeight: opt.value === value ? 700 : 400,
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -82,21 +164,17 @@ function formatBotResponse(text: string): string {
    CHATBOT COMPONENT
 ═══════════════════════════════════════════════════════════ */
 const Chatbot: React.FC = () => {
-  /* ── i18n ── */
   const { t, lang } = useTranslation();
   const isUrduLang  = lang === "ur";
 
-  /* ── chat state ── */
   const [messages, setMessages]   = useState<Message[]>([]);
   const [input, setInput]         = useState<string>("");
   const [loading, setLoading]     = useState<boolean>(false);
 
-  /* ── topic & language for API — kept in both state (for UI) and ref (for callbacks) ── */
   const [topic, setTopic]         = useState<string>("Maths");
   const [apiLang, setApiLang]     = useState<string>("English");
   const apiLangRef                = useRef<string>("English");
 
-  /* ── refs ── */
   const chatRef         = useRef<HTMLDivElement | null>(null);
   const recognitionRef  = useRef<any>(null);
   const memoryRef       = useRef<string>("");
@@ -106,35 +184,22 @@ const Chatbot: React.FC = () => {
   const queueRef        = useRef<string[]>([]);
   const isProcessingRef = useRef<boolean>(false);
 
-  /* ── language switch handler ──────────────────────────────
-   * ROOT CAUSE FIX: conversation history carried the old language
-   * as strong context, so the AI kept replying in Urdu even after
-   * switching back to English. Clearing history + memory on switch
-   * gives the AI a clean slate.
-   *────────────────────────────────────────────────────────── */
   const handleApiLangChange = (val: string) => {
     setApiLang(val);
     apiLangRef.current = val;
-
-    // Clear all state that carries the old language's context
     historyRef.current = [];
     memoryRef.current  = "";
     queueRef.current   = [];
-
-    // Show a divider so the user knows a new session started
     const notice = val === "Urdu"
       ? t("chatbot.switchNotice").replace("English", "Urdu")
       : t("chatbot.switchNotice");
-
     setMessages((prev) => [...prev, { text: notice, type: "bot", isHtml: false }]);
   };
 
-  /* ── auto-scroll ── */
   useEffect(() => {
     chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
-  /* ── typing animation ── */
   const typeMessage = useCallback((text: string, onComplete: () => void) => {
     let i    = 0;
     let temp = "";
@@ -158,7 +223,6 @@ const Chatbot: React.FC = () => {
     }, 8);
   }, []);
 
-  /* ── send to API ── */
   const processMessage = useCallback(
     async (textToSend: string) => {
       isProcessingRef.current = true;
@@ -174,8 +238,6 @@ const Chatbot: React.FC = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             topic,
-            // Read from ref (not state) to avoid stale closure — ensures
-            // language is always current even inside memoized callback
             language: apiLangRef.current,
             history: historyRef.current.slice(-10),
             memory:  memoryRef.current,
@@ -228,7 +290,6 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  /* ── voice input ── */
   const startListening = () => {
     if (isListening.current) return;
     const SpeechRecognition =
@@ -252,20 +313,20 @@ const Chatbot: React.FC = () => {
 
   const isUrduText = (text: string) => /[\u0600-\u06FF]/.test(text);
 
-  /* ── topic options — values stay English (sent to API), labels translated ── */
+  /* ── topic options — labels resolved here for CustomDropdown ── */
   const topicOptions = [
-    { value: "Maths",     labelKey: "chatbot.topics.maths"     },
-    { value: "English",   labelKey: "chatbot.topics.english"   },
-    { value: "Urdu",      labelKey: "chatbot.topics.urdu"      },
-    { value: "Chemistry", labelKey: "chatbot.topics.chemistry" },
-    { value: "Physics",   labelKey: "chatbot.topics.physics"   },
-    { value: "Science",   labelKey: "chatbot.topics.science"   },
-    { value: "Computer",  labelKey: "chatbot.topics.computer"  },
+    { value: "Maths",     label: t("chatbot.topics.maths")     },
+    { value: "English",   label: t("chatbot.topics.english")   },
+    { value: "Urdu",      label: t("chatbot.topics.urdu")      },
+    { value: "Chemistry", label: t("chatbot.topics.chemistry") },
+    { value: "Physics",   label: t("chatbot.topics.physics")   },
+    { value: "Science",   label: t("chatbot.topics.science")   },
+    { value: "Computer",  label: t("chatbot.topics.computer")  },
   ];
 
   const langOptions = [
-    { value: "English", labelKey: "chatbot.languages.english" },
-    { value: "Urdu",    labelKey: "chatbot.languages.urdu"    },
+    { value: "English", label: t("chatbot.languages.english") },
+    { value: "Urdu",    label: t("chatbot.languages.urdu")    },
   ];
 
   /* ── render ── */
@@ -274,33 +335,26 @@ const Chatbot: React.FC = () => {
       className="chatbot-container"
       style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}
     >
-      {/* Header */}
+      {/* Header — unchanged */}
       <div className="chatbot-header">
         {t("chatbot.header")}
       </div>
 
-      {/* Topic + Language selectors */}
-      <div className="controls">
-        {/* Topic — value stays in English so the API always receives the correct subject name */}
-        <select value={topic} onChange={(e) => setTopic(e.target.value)}>
-          {topicOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {t(opt.labelKey)}
-            </option>
-          ))}
-        </select>
-
-        {/* Language for API replies */}
-        <select value={apiLang} onChange={(e) => handleApiLangChange(e.target.value)}>
-          {langOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {t(opt.labelKey)}
-            </option>
-          ))}
-        </select>
+      {/* Topic + Language selectors — only this block changed */}
+      <div className="controls" style={{ display: "flex", gap: 8, padding: "8px 12px", position: "relative", zIndex: 100 }}>
+        <CustomDropdown
+          value={topic}
+          options={topicOptions}
+          onChange={setTopic}
+        />
+        <CustomDropdown
+          value={apiLang}
+          options={langOptions}
+          onChange={handleApiLangChange}
+        />
       </div>
 
-      {/* Chat area */}
+      {/* Chat area — unchanged */}
       <div
         className="chat-area"
         ref={chatRef}
@@ -331,14 +385,14 @@ const Chatbot: React.FC = () => {
         )}
       </div>
 
-      {/* Queue notice — only rendered when messages are queued */}
+      {/* Queue notice — unchanged */}
       {queueRef.current.length > 0 && (
         <div className="queue-notice">
           {queueRef.current.length} {t("chatbot.queueNotice")}
         </div>
       )}
 
-      {/* Input form */}
+      {/* Input form — unchanged */}
       <form className="input-box" onSubmit={sendMessage} style={{ flexShrink: 0 }}>
         <input
           ref={inputRef}

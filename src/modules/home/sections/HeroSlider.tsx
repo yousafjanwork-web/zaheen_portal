@@ -21,7 +21,7 @@ const slides = [
   { id: 5, image: kgbanner2, accentColor: "text-primary", bgColor: "bg-primary" },
   { id: 6, image: bannerontofive2, accentColor: "text-secondary", bgColor: "bg-secondary" },
   { id: 7, image: webBanner2, accentColor: "text-secondary", bgColor: "bg-secondary" },
-  // { id: 8, image: mdcat, accentColor: "text-secondary", bgColor: "bg-secondary" }
+  { id: 8, image: mdcat, accentColor: "text-secondary", bgColor: "bg-secondary" }
 
 
 ];

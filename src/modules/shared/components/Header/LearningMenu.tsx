@@ -48,6 +48,17 @@ const LearningMenu: React.FC<LearningMenuProps> = ({ open, onClose }) => {
           </Link>
         </li>
 
+        {/* Yahan MDCAT Prep add kiya hai */}
+        <li>
+          <Link
+            to="/mdcat" 
+            onClick={onClose}
+           className="block px-3 py-2 rounded-md hover:bg-slate-100"
+          >
+            MDCAT Prep
+          </Link>
+        </li>
+
       </ul>
 
     </div>

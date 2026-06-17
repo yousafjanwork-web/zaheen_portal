@@ -8,11 +8,14 @@ import { useSubscribe } from "@/modules/shared/hooks/useSubscribe";
 import banner1 from "@/assets/images/banner1.jpeg";
 import banner2 from "@/assets/images/banner2.jpeg";
 import banner3 from "@/assets/images/banner3.jpeg";
+import banner4 from "@/assets/images//MDCAT.png";
+
 
 const slides = [
   { key: "slide1", image: banner1, plan: "205" },
   { key: "slide2", image: banner2, plan: "206" },
-  { key: "slide3", image: banner3, plan: "207" }
+  { key: "slide3", image: banner3, plan: "207" },
+  { key: "slide4", image: banner4, plan: "208" }
 ];
 
 const HeroMobile = () => {

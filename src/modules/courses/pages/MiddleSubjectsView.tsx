@@ -384,7 +384,7 @@ const MiddleSubjectsView = () => {
       direction: isUrdu ? "rtl" : "ltr",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap');
+       
         @keyframes msPulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
         @keyframes msFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
@@ -547,7 +547,7 @@ const MiddleSubjectsView = () => {
           <button className="ms-qr-btn-solid" onClick={() => navigate("/worksheets/0")}>
             <FileText size={14} /> {isUrdu ? "ورک شیٹس" : "Worksheets"}
           </button>
-          <button className="ms-qr-btn-outline" onClick={() => navigate("/class/${classId}/quiz")}>
+         <button className="ms-qr-btn-outline" onClick={() => navigate(`/class/${classId}/quiz`)}>
             <BookMarked size={14} /> {isUrdu ? "باب کے کوئز" : "Chapter Quizzes"}
           </button>
         </div>

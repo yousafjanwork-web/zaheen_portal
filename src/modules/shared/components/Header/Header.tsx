@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   const { msisdn, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { handleLogin } = useLogin(() => setShowLoginModal(true));
-
+const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [coursesOpen, setCoursesOpen] = useState(false);
   const [learningOpen, setLearningOpen] = useState(false);
@@ -51,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
         setCoursesOpen(false);
         setLearningOpen(false);
         setLanguageOpen(false);
+        setIntelligenceOpen(false);
       }
     };
 
@@ -151,9 +152,45 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                 />
               </div>
 
-              <Link to="/ai" onClick={closeMenus} className="hover:text-white/80">
-                {t("menu.aiTutor")}
-              </Link>
+   <div className="relative">
+  <button
+    onClick={() => {
+      setIntelligenceOpen(!intelligenceOpen);
+      setCoursesOpen(false);
+      setLearningOpen(false);
+    }}
+    className="flex items-center gap-2 hover:text-white/80 transition-colors"
+  >
+    {/* Dynamic Text */}
+    {t("menu.intelligence_engine")}
+    
+    <div className="flex flex-col items-center justify-center -space-y-0.5">
+      <span className="bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-sm uppercase leading-none">
+        AI
+      </span>
+      <ChevronDown size={18} />
+    </div>
+  </button>
+
+  {intelligenceOpen && (
+    <div className="absolute left-0 top-10 w-60 bg-white text-slate-900 shadow-xl border rounded-xl p-2 z-50">
+      <Link 
+        to="/ai" 
+        onClick={() => setIntelligenceOpen(false)} 
+        className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm"
+      >
+        {t("menu.ai_tutor")}
+      </Link>
+      <Link 
+        to="/mdcat?tab=ai-generator" 
+        onClick={() => setIntelligenceOpen(false)} 
+        className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm"
+      >
+        {t("menu.mdcat_command")}
+      </Link>
+    </div>
+  )}
+</div>
 
             </nav>
           </div>

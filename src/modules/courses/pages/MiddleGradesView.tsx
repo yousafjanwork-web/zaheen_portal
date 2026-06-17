@@ -221,7 +221,7 @@ const MiddleGradesView = () => {
       direction: isUrdu ? "rtl" : "ltr",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700;9..40,800&display=swap');
+       
         @keyframes mgPulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
         @keyframes mgFadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 

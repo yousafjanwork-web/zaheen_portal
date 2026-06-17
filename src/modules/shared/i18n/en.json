@@ -3,7 +3,10 @@
     "home": "Home",
     "courses": "Courses",
     "learningHub": "Learning Hub",
-    "aiTutor": "AI Tutor",
+   "intelligence_engine": "Zaheen Intelligence Engine",
+    "ai_tutor": "AI Tutor",
+    "mdcat_command": "MDCAT Command Center",
+
     "practiceCorner": "Practice Corner",
     "boardResults": "Board Results",
     "login": "Login",
@@ -121,7 +124,7 @@
   "highlight": "Master the MDCAT Secure Your Medical Seat",
   "description": "Master the Syllabus. Practice Precision. Achieve Excellence.",
   "button": "Start Preparing",
-  "link": "/skills/mdcat"
+  "link": "/mdcat"
 }
   },
   "browseGrade": {
@@ -252,6 +255,23 @@
     "description": "Access all courses with one subscription.",
     "button": "Subscribe Now"
   },
+  "slide4": {
+    "title": "Crack MDCAT with ",
+    "highlight": "Confidence",
+    "description": "Expert Faculty • Smart Practice • Proven Results",
+    "button": "Subscribe Now"
+    
+  },
+  "promo": {
+  "title": "Explore Learning",
+  "cards": [
+    { "title": "KG to Grade 12", "desc": "Complete school learning with videos, quizzes and tests." },
+    { "title": "Professional Skills", "desc": "Digital Marketing, Web Development and Trading courses." },
+    { "title": "AI Tutor", "desc": "Ask questions and learn instantly with AI assistance." },
+    { "title": "Unlimited Learning", "desc": "Access all courses with one subscription." },
+    { "title": "MDCAT Success, Simplified.", "desc": "Expert Faculty • Smart Practice • Proven Results" }
+  ]
+},
   "mob": {
     "heading1": "Learn Skills from Rs 5/day"
   },
@@ -656,5 +676,17 @@
   "goal": "7 more correct answers to unlock the Magical Chest!",
   "tipLabel": "TUTOR TIP",
   "tipText": "You're doing great, Explorer! Think about the sound of an Apple!"
-}
+},
+
+  "mdcat_banner": {
+    "title_part1": "Your AI-Powered Path to",
+    "title_part2": "Medical Excellence.",
+    "tagline": "Study Smarter, Not Harder – The AI Edge.",
+    "button": "Start Your Preparation Now"
+  },
+  "mdcat_banner_small": {
+    "badge": "New Feature",
+    "title": "AI Featured MDCAT"
+  }
+
 }

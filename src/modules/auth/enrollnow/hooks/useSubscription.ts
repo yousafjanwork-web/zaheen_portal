@@ -165,7 +165,7 @@ export const useSubscription = () => {
       );
 
       if (res.status === "SUCCESS") {
-        setAlert({ type: "success", message: "Subscription successful" });
+        // setAlert({ type: "success", message: "Subscription successful" });
 
         resetForm();
         window.location.href = "/thanks-for-subscribing";

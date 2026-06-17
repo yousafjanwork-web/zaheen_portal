@@ -15,10 +15,13 @@ import BoardResultsPage from "@/modules/results/pages/BoardResultsPage";
 import SubscribePage from "@/modules/auth/pages/SubscribePage";
 import LoginPage from "@/modules/auth/pages/LoginPage";
 import Chatbot from "@/modules/aiTutor/pages/Chatbot";
+import AiTutorMobile from "@/modules/aiTutor/pages/AiTutorMobile";
 import MzaPage from "@/pages/MzaPage";
 import ResourcesPage from "@/modules/courses/pages/ResourcesPage";
 import ResourcePlayer from "@/modules/courses/pages/ResourcesPlayer";
 import { EnrollmentLandingPage } from "@/modules/auth/enrollnow/EnrollNowPage";
+import { MdcatEnrollmentLandingPage } from "@/modules/auth/enrollnow/pages/MdcatEnrollNowPage";
+import { LearningPage }  from "@/modules/auth/enrollnow/pages/LearningPage";
 import SubEnrollNow from "@/modules/auth/enrollnow/pages/SubEnrollNow";
 import SuccessScreen from "@/modules/ThankyouPage/pages/SuccessScreen";
 import GamesPage from "@/modules/games/pages/GamesPage";
@@ -30,6 +33,8 @@ import AllProfessionalCourses from "@/modules/home/sections/AllProfessionalCours
 import ClassSubjectsRouter from "@/modules/courses/pages/ClassSubjectsRouter";
 import SubjectLecturesRouter from "@/modules/courses/pages/SubjectLecturesRouter";
 import PrimaryGradesQuiz from "@/modules/courses/pages/PrimaryGradesQuizz"
+import { MdcatApp } from "../mdcat";
+import { MDCATmobile } from "../mdcat/components/MDCATmobile";
 
 const AppRoutes = () => {
   return (
@@ -76,13 +81,23 @@ const AppRoutes = () => {
           <Route path="/resource-player" element={<ResourcePlayer />} />
           <Route path="/games" element={<GamesPage />} />
           <Route path="/games/play" element={<PlayGamePage />} />
+        
           <Route path="/ai" element={<Chatbot />} />
         </Route>
 
         {/* ── Routes WITHOUT MainLayout ── */}
         <Route path="/enrollnow" element={<EnrollmentLandingPage />} />
+          <Route path="/aitutor-mobile" element={<AiTutorMobile />} />
+        <Route path="/enrollnow-mdcat" element={<MdcatEnrollmentLandingPage />} />
+        <Route path="/learning" element={<LearningPage />} /> 
         <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
         <Route path="thanks-for-subscribing" element={<SuccessScreen />} />
+       {/* // mdcat route */}
+<Route path="/mdcat/*" element={<MdcatApp />} />
+<Route path="/mdcat-mobile/*" element={<MDCATmobile />} />
+
+{/* AppRoutes.tsx mein */}
+
 
       </Routes>
     </BrowserRouter>
