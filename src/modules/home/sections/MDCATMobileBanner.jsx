@@ -22,7 +22,7 @@ const MDCATBanner = () => {
 
         {/* Image Section */}
         <div 
-          onClick={() => navigate("/mdcat?tab=dashboard")}
+          onClick={() => navigate("/mdcat")}
           className="rounded-[2.5rem] overflow-hidden shadow-xl cursor-pointer transition-transform hover:scale-[1.02]"
         >
           <img 

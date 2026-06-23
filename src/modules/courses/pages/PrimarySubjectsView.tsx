@@ -7,7 +7,7 @@ import {
   ArrowRight, X, Star,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { usePrimarySubjects as useClassSubjects } from "@/modules/shared/hooks/usePrimarySubjects";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
@@ -178,6 +178,9 @@ const PrimarySubjectCard = ({
   lectureCount: number; lectureLoading: boolean;
 }) => {
   const meta = getPrimaryMeta(subject.name, isUrdu);
+  const description = isUrdu
+  ? subject.urdu_desc || subject.desc || meta.description
+  : subject.desc || meta.description;
   const Icon = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
 
@@ -214,11 +217,9 @@ const PrimarySubjectCard = ({
           >
             {title}
           </h3>
-          <p
-            className={`text-[13.5px] text-slate-500 leading-relaxed line-clamp-3 ${isUrdu ? "text-right" : ""}`}
-          >
-            {meta.description}
-          </p>
+        <p className={`text-[13.5px] text-slate-500 leading-relaxed line-clamp-3 ${isUrdu ? "text-right" : ""}`}>
+  {description}
+</p>
         </div>
         <div className="flex items-center justify-between mt-2">
           <div className="flex flex-col gap-1">

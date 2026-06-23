@@ -1,60 +1,72 @@
+// import { LayoutDashboard, BookOpen, FileText, FolderOpen, Settings, Gamepad2 } from "lucide-react";
+
+// const Sidebar = ({ isLoggedIn, isUrdu, type, navigate }: any) => {
+//   return (
+//     <aside className="w-full lg:w-64 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row lg:flex-col p-2">
+//             <div className="p-3 rounded-xl bg-primary text-white flex items-center gap-3 flex-shrink-0">
+//               <LayoutDashboard size={18} />
+//               {isUrdu ? "ڈیش بورڈ" : "Dashboardsssss"}
+//             </div>
+
+
+//             {isLoggedIn && (
+//               <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+//                 <BookOpen size={18} />
+//                 {isUrdu ? "میرے کورسز" : "My Courses"}
+//               </div>
+//             )}
+
+//             <div 
+//             onClick={() => {
+//             navigate(`/assessment?type=${type}`);
+//               }}
+//             className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+//               <FileText size={18} />
+//               {isUrdu ? "امتحانات" : "Assessments"}
+//             </div>
+
+//             <div
+//               onClick={() => {
+//                 if (type === "9-12") {
+//                   navigate("/resources?type=9-12");
+//                 } else {
+//                   navigate(`/practice?section=${type}`);
+//                 }
+//               }}
+//               className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
+//             >
+//               <FolderOpen size={18} />
+//               {isUrdu ? "وسائل" : "Resources"}
+//             </div>
+//            <div
+//         onClick={() => {
+//           navigate(`/games?type=${type}`);
+//           }}
+//   className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
+// >
+//   <Gamepad2 size={18} />
+//   {isUrdu ? "گیمز" : "Games"}
+// </div>
+//             {isLoggedIn && (
+//               <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
+//                 <Settings size={18} />
+//                 {isUrdu ? "ترتیبات" : "Settings"}
+//               </div>
+//             )}
+//           </aside>
+//   );
+// };
+
+// export default Sidebar;
+
+
+//////////Remove sidebar //////////
+
 import { LayoutDashboard, BookOpen, FileText, FolderOpen, Settings, Gamepad2 } from "lucide-react";
 
 const Sidebar = ({ isLoggedIn, isUrdu, type, navigate }: any) => {
-  return (
-    <aside className="w-full lg:w-64 flex gap-3 overflow-x-auto lg:overflow-y-auto flex-row lg:flex-col p-2">
-            <div className="p-3 rounded-xl bg-primary text-white flex items-center gap-3 flex-shrink-0">
-              <LayoutDashboard size={18} />
-              {isUrdu ? "ڈیش بورڈ" : "Dashboard"}
-            </div>
-
-
-            {isLoggedIn && (
-              <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
-                <BookOpen size={18} />
-                {isUrdu ? "میرے کورسز" : "My Courses"}
-              </div>
-            )}
-
-            <div 
-            onClick={() => {
-            navigate(`/assessment?type=${type}`);
-              }}
-            className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
-              <FileText size={18} />
-              {isUrdu ? "امتحانات" : "Assessments"}
-            </div>
-
-            <div
-              onClick={() => {
-                if (type === "9-12") {
-                  navigate("/resources?type=9-12");
-                } else {
-                  navigate(`/practice?section=${type}`);
-                }
-              }}
-              className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
-            >
-              <FolderOpen size={18} />
-              {isUrdu ? "وسائل" : "Resources"}
-            </div>
-           <div
-        onClick={() => {
-          navigate(`/games?type=${type}`);
-          }}
-  className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0"
->
-  <Gamepad2 size={18} />
-  {isUrdu ? "گیمز" : "Games"}
-</div>
-            {isLoggedIn && (
-              <div className="p-3 rounded-xl hover:bg-slate-100 flex items-center gap-3 cursor-pointer flex-shrink-0">
-                <Settings size={18} />
-                {isUrdu ? "ترتیبات" : "Settings"}
-              </div>
-            )}
-          </aside>
-  );
+  // Returning null tells React to render absolutely nothing here
+  return null;
 };
 
 export default Sidebar;

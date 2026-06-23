@@ -4,7 +4,9 @@
  */
 
 import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 import {
   BookMarked,
   ArrowRight,
@@ -21,6 +23,9 @@ interface PastPapersProps {
 }
 
 export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [selectedYear, setSelectedYear] = useState<string>("All");
   const [selectedRegion, setSelectedRegion] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -101,6 +106,14 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
     }
   };
 
+  const handleSelectQuiz = (id: number) => {
+    if (!isLoggedIn) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    onSelectQuiz(id);
+  };
+
   const presetDoubts = [
     { text: "Why are transition elements colored?", subj: "Chemistry" },
     { text: "Help me memorize active transport rules", subj: "Biology" },
@@ -150,8 +163,8 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
             timer!
           </p>
         </div>
-        <button
-          onClick={() => onSelectQuiz(1800)}
+       <button
+          onClick={() => handleSelectQuiz(1800)}
           className="px-5 py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase text-[10px] tracking-wider rounded-xl flex items-center gap-1.5 transition shrink-0 card-shadow hover:scale-[1.03] active:scale-95"
         >
           <span>Launch 180-QS Exam</span>
@@ -264,8 +277,8 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => onSelectQuiz(paper.id)}
+                 <button
+                      onClick={() => handleSelectQuiz(paper.id)}
                       className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-[10px] tracking-wider rounded-xl flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-center transition-all card-shadow"
                     >
                       <span>Solve Paper</span>

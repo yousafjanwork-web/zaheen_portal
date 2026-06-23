@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { loginPin, verifyLoginPin } from "@/modules/shared/services/loginService";
-
+import { getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 
 const LoginPage = () => {
@@ -18,6 +18,27 @@ const LoginPage = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  /* HELPER: turn an API status string into a user-facing message.
+     Returns null if the status means "success, proceed". */
+  const getStatusError = (status: string | undefined | null): string | null => {
+
+    if (!status) return "Failed to send PIN";
+
+    const normalized = status.trim().toLowerCase();
+
+    if (normalized === "pin_sent" || normalized === "active") {
+      return null;
+    }
+
+    if (normalized === "not active") {
+      return "You are not subscribed. Please subscribe first.";
+    }
+
+    // Catch-all for any other unexpected status the API might send
+    return "Something went wrong. Please try again.";
+
+  };
 
   /* READ MSISDN FROM HE */
 
@@ -43,7 +64,14 @@ const LoginPage = () => {
       const res = await loginPin(number);
 
       if (res.status === "PIN_SENT") {
+
         setStep("OTP");
+
+      } else {
+
+        const message = getStatusError(res.status);
+        setError(message ?? "Failed to send PIN");
+
       }
 
     } catch {
@@ -66,7 +94,14 @@ const LoginPage = () => {
       const res = await loginPin(msisdn);
 
       if (res.status === "PIN_SENT") {
+
         setStep("OTP");
+
+      } else {
+
+        const message = getStatusError(res.status);
+        setError(message ?? "Failed to send PIN");
+
       }
 
       setLoading(false);
@@ -103,14 +138,16 @@ const LoginPage = () => {
 
       const status = await loginPin(msisdn);
 
-      if (status.status === "ACTIVE") {
+      const statusMessage = getStatusError(status.status);
+
+      if (statusMessage === null) {
 
         login(msisdn);
         navigate("/");
 
       } else {
 
-        setError("You are not subscribed. Please subscribe first.");
+        setError(statusMessage);
 
       }
 

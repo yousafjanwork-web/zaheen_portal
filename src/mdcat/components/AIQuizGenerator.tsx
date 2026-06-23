@@ -4,6 +4,8 @@
  */
 
 import { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 import {
   Plus,
   Sparkles,
@@ -29,6 +31,8 @@ export default function AIQuizGenerator({
   onQuizGenerated,
   onBack,
 }: AIQuizGeneratorProps) {
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [subject, setSubject] = useState<MDCATSubject>("Biology");
   const [subTopic, setSubTopic] = useState("");
   const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">(
@@ -56,8 +60,14 @@ export default function AIQuizGenerator({
     return () => clearInterval(loaderInterval);
   });
 
-  const handleGenerate = async (e: FormEvent) => {
+const handleGenerate = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (!isLoggedIn) {
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
+
     setIsGenerating(true);
     setErrorMsg(null);
 

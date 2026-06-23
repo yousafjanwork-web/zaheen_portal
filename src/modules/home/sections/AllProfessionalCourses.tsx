@@ -13,6 +13,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
+import { getSlugByClassId } from "@/modules/shared/utils/skillsCourseSlugs";
 
 /* ─────────────────────────────────────────
    TYPES
@@ -57,7 +58,10 @@ const AllProfessionalCourses = () => {
   }, []);
 
   const handleCourseClick = (classId: number) => {
-    navigate(`/skills/${classId}`);
+    // Use the friendly slug when we have one for this course;
+    // fall back to the numeric id for any course not yet in the slug map.
+    const slug = getSlugByClassId(classId);
+    navigate(`/skills/${slug ?? classId}`);
   };
 
   /* ────────────────── RENDER ────────────────── */

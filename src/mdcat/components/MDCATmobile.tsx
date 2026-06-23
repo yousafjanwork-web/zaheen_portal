@@ -26,7 +26,7 @@ import QuizSession from "../components/QuizSession";
 import AIQuizGenerator from "../components/AIQuizGenerator";
 import PastPapers from "../components/PastPapers";
 import ZaheenLogo from "../components/ZaheenLogo";
-import FocusTimer from "../components/FocusTimer";
+// import FocusTimer from "../components/FocusTimer";
 import StudyNotes from "../components/StudyNotes";
 
 const mapQuiz = (q: any): Quiz => ({
@@ -242,7 +242,7 @@ export function MDCATmobile() {
             </div>
           </div>
 
-          <FocusTimer onSessionLogged={fetchAllData} />
+          {/* <FocusTimer onSessionLogged={fetchAllData} /> */}
 
           <div className="hidden lg:block bg-white p-6 rounded-3xl border border-sky-100 card-shadow space-y-4">
             <h4 className="text-[10px] uppercase font-black text-sky-400 tracking-widest">

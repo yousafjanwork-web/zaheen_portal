@@ -3,9 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   BookOpen, FileText, FolderOpen, Settings, LayoutDashboard,
   GraduationCap, PlayCircle, ChevronLeft, ChevronRight, ChevronDown,
-  CheckCircle2, Check, Clock, Star, Users, ArrowLeft, Loader2,
+  CheckCircle2, Check, Clock, Star, Users, ArrowLeft, Loader2, Lock,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
+import { useAuth } from "@/modules/shared/context/AuthContext";
+import { resolveClassIdFromParam, getSlugByClassId } from "@/modules/shared/utils/skillsCourseSlugs";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
@@ -83,6 +85,16 @@ const subjectIcons = [BookOpen, FileText, FolderOpen, Settings, LayoutDashboard]
 const localName = (en: string, ur?: string, isRtl?: boolean) =>
   isRtl ? ur || en : en;
 
+/* ─────────────────────────────────────────────
+   Trading course (classId 305) — module grouping
+   by overall lecture position, independent of chapters
+───────────────────────────────────────────── */
+const TRADING_MODULES = [
+  { id: 1, labelEn: "Trading Course Module 1", labelUr: "ٹریڈنگ کورس ماڈیول 1", start: 1, end: 11 },
+  { id: 2, labelEn: "Trading Course Module 2", labelUr: "ٹریڈنگ کورس ماڈیول 2", start: 12, end: 20 },
+  { id: 3, labelEn: "Trading Course Module 3", labelUr: "ٹریڈنگ کورس ماڈیول 3", start: 21, end: 27 },
+];
+
 
 
 const DescriptionBlock = ({
@@ -148,11 +160,28 @@ const DescriptionBlock = ({
 
 
 const SkillsChaptersPage = () => {
-  const { classId } = useParams();
+  const { classId: classIdParam } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
 
   const { t, tArr, lang } = useTranslation();
   const isRtl = lang === "ur";
+
+  // The URL param may be a slug ("how-to-become-a-professional-trader")
+  // or a legacy numeric id ("305"). Resolve it to the real numeric classId
+  // used everywhere else in this component / for API calls.
+  const classId = resolveClassIdFromParam(classIdParam);
+
+  // Legacy numeric link -> redirect to the slug URL once we know the slug.
+  useEffect(() => {
+    if (!classIdParam) return;
+    const isNumericParam = /^\d+$/.test(classIdParam);
+    if (!isNumericParam || classId === null) return;
+    const slug = getSlugByClassId(classId);
+    if (slug && slug !== classIdParam) {
+      navigate(`/skills/${slug}`, { replace: true });
+    }
+  }, [classIdParam, classId, navigate]);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, []);
 
@@ -166,6 +195,7 @@ const SkillsChaptersPage = () => {
   const [isWatchMode, setIsWatchMode] = useState(false);
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
   const [openChapters, setOpenChapters] = useState<Set<number>>(new Set());
+  const [openModules, setOpenModules] = useState<Set<number>>(new Set([1]));
   const [watchedSet, setWatchedSet] = useState<Set<number>>(new Set());
   const [progressMap, setProgressMap] = useState<Record<number, number>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -176,6 +206,25 @@ const SkillsChaptersPage = () => {
   const progressPercent = totalLectures > 0 ? Math.round((totalWatched / totalLectures) * 100) : 0;
   const courseName = localName(classInfo?.name ?? "", classInfo?.urdu_name, isRtl);
 
+  const isTradingCourse = classId === 305;
+
+  const getModuleStartingAt = (globalIdx: number) =>
+    isTradingCourse ? TRADING_MODULES.find((m) => m.start - 1 === globalIdx) ?? null : null;
+
+  const getModuleForIdx = (globalIdx: number) => {
+    const position = globalIdx + 1;
+    return TRADING_MODULES.find((m) => position >= m.start && position <= m.end) ?? null;
+  };
+
+  const toggleModule = (id: number) =>
+    setOpenModules((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+
+  const isLectureLocked = (globalIdx: number) => globalIdx > 0 && !isLoggedIn;
+
   const lecturesByChapter: Record<number, Lecture[]> = {};
   lectures.forEach((l) => {
     if (!lecturesByChapter[l.chapter_id]) lecturesByChapter[l.chapter_id] = [];
@@ -184,6 +233,7 @@ const SkillsChaptersPage = () => {
   const chapterIds = Object.keys(lecturesByChapter).map(Number);
 
   useEffect(() => {
+    if (classId === null) { setLoadingClass(false); return; }
     setLoadingClass(true);
     (async () => {
       try {
@@ -192,7 +242,7 @@ const SkillsChaptersPage = () => {
           { headers: { "Cache-Control": "no-cache", Pragma: "no-cache", Expires: "0" } }
         );
         const data = await res.json();
-        const cls = data.find((c: ClassInfo) => c.class_id === Number(classId));
+        const cls = data.find((c: ClassInfo) => c.class_id === classId);
         setClassInfo(cls ?? null);
       } catch (e) { console.error(e); }
       setLoadingClass(false);
@@ -200,6 +250,7 @@ const SkillsChaptersPage = () => {
   }, [classId]);
 
   useEffect(() => {
+    if (classId === null) return;
     (async () => {
       try {
         const res = await fetch(
@@ -242,7 +293,14 @@ const SkillsChaptersPage = () => {
     })();
   }, [selectedSubject]);
 
+  // ── Access control: UNCHANGED. Clicking a lecture beyond the first one
+  // while logged out still redirects to /login, exactly as before. ──
   const selectLecture = useCallback((lecture: Lecture) => {
+    const globalIdx = lectures.findIndex((l) => l.id === lecture.id);
+    if (globalIdx > 0 && !isLoggedIn) {
+      navigate("/login", { state: { from: window.location.pathname } });
+      return;
+    }
     setSelectedLecture(lecture);
     setIsWatchMode(true);
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -251,7 +309,7 @@ const SkillsChaptersPage = () => {
       (videoRef.current as any)._started = false;
     }
     setOpenChapters((prev) => new Set(prev).add(lecture.chapter_id));
-  }, []);
+  }, [lectures, isLoggedIn, navigate]);
 
   const exitWatchMode = () => {
     setIsWatchMode(false);
@@ -471,42 +529,69 @@ const SkillsChaptersPage = () => {
                       const isSelected = selectedLecture?.id === lecture.id;
                       const isWatched = watchedSet.has(lecture.id);
                       const progress = progressMap[lecture.id] ?? 0;
+                      const locked = isLectureLocked(globalIdx);
+                      const moduleStart = getModuleStartingAt(globalIdx);
+                      const lectureModule = getModuleForIdx(globalIdx);
+                      const moduleIsOpen = lectureModule ? openModules.has(lectureModule.id) : true;
 
                       return (
-                        <div
-                          key={lecture.id}
-                          onClick={() => selectLecture(lecture)}
-                          className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
-                            }`}
-                        >
-                          <div className="shrink-0 mt-0.5">
-                            {isWatched ? (
-                              <CheckCircle2 size={20} className="text-emerald-500" />
-                            ) : isSelected ? (
-                              <PlayCircle size={20} className="text-indigo-600" />
-                            ) : (
-                              <div className="w-[20px] h-[20px] rounded-full border-2 border-slate-300 flex items-center justify-center">
-                                <span className="text-[8px] text-slate-400 font-bold">{globalIdx + 1}</span>
+                        <React.Fragment key={lecture.id}>
+                          {moduleStart && (
+                            <button
+                              onClick={() => toggleModule(moduleStart.id)}
+                              className="w-full flex items-center justify-between px-6 py-3 bg-slate-100/60 hover:bg-slate-100 border-b border-slate-200 transition-colors text-left"
+                            >
+                              <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest">
+                                {isRtl ? moduleStart.labelUr : moduleStart.labelEn}
+                              </p>
+                              <ChevronDown
+                                size={15}
+                                className={`text-indigo-500 shrink-0 transition-transform duration-200 ${moduleIsOpen ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                          )}
+                          {(!lectureModule || moduleIsOpen) && (
+                            <div
+                              onClick={() => selectLecture(lecture)}
+                              className={`flex items-start gap-4 px-6 py-4 cursor-pointer border-b border-slate-100 transition-all ${isSelected ? "bg-indigo-50 border-l-4 border-l-indigo-500" : "hover:bg-slate-50"
+                                }`}
+                            >
+                              <div className="shrink-0 mt-0.5">
+                                {locked ? (
+                                  <Lock size={18} className="text-slate-500" />
+                                ) : isWatched ? (
+                                  <CheckCircle2 size={20} className="text-emerald-500" />
+                                ) : isSelected ? (
+                                  <PlayCircle size={20} className="text-indigo-600" />
+                                ) : (
+                                  <div className="w-[20px] h-[20px] rounded-full border-2 border-slate-300 flex items-center justify-center">
+                                    <span className="text-[8px] text-slate-400 font-bold">{globalIdx + 1}</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[13px] font-semibold leading-snug ${isSelected ? "text-indigo-700" : isWatched ? "text-slate-400" : "text-slate-800"
-                              } ${isRtl ? "text-right" : ""}`}>
-                              {lectureName(lecture)}
-                            </p>
-                            {lecture.duration && (
-                              <span className="text-[11px] text-slate-400 font-medium mt-0.5 block">
-                                {lecture.duration}
-                              </span>
-                            )}
-                            {!isWatched && progress > 0 && progress < 100 && (
-                              <div className="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden w-full">
-                                <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${progress}%` }} />
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-[13px] font-semibold leading-snug ${isSelected ? "text-indigo-700" : locked ? "text-slate-500" : isWatched ? "text-slate-400" : "text-slate-800"
+                                  } ${isRtl ? "text-right" : ""}`}>
+                                  {lectureName(lecture)}
+                                </p>
+                                {locked ? (
+                                  <span className="text-[11px] text-slate-500 font-semibold mt-0.5 flex items-center gap-1">
+                                    <Lock size={10} /> {isRtl ? "مقفل" : "Locked"}
+                                  </span>
+                                ) : lecture.duration ? (
+                                  <span className="text-[11px] text-slate-400 font-medium mt-0.5 block">
+                                    {lecture.duration}
+                                  </span>
+                                ) : null}
+                                {!locked && !isWatched && progress > 0 && progress < 100 && (
+                                  <div className="mt-2 h-1 bg-slate-200 rounded-full overflow-hidden w-full">
+                                    <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${progress}%` }} />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        </div>
+                            </div>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </div>
@@ -665,31 +750,61 @@ const SkillsChaptersPage = () => {
             </div>
 
           ) : lectures.length > 0 ? (
-            lectures.map((lecture, index) => (
-              <div
-                key={lecture.id}
-                onClick={() => selectLecture(lecture)}
-                className="flex items-center justify-between px-6 py-5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-all group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-[14px] group-hover:bg-indigo-600 group-hover:text-white transition-all shrink-0">
-                    {index + 1}
-                  </div>
-                  <div>
-                    <p className={`font-bold text-slate-900 text-[15px] ${isRtl ? "text-right" : ""}`}>
-                      {lectureName(lecture)}
-                    </p>
-                    <p className={`text-xs text-slate-400 mt-0.5 ${isRtl ? "text-right" : ""}`}>
-                      {chapterName(lecture.chapter_id)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm group-hover:gap-3 transition-all shrink-0">
-                  <PlayCircle size={18} />
-                  <span className="hidden sm:block">{t("skillsChaptersPage.content.watch")}</span>
-                </div>
-              </div>
-            ))
+            lectures.map((lecture, index) => {
+              const locked = isLectureLocked(index);
+              const moduleStart = getModuleStartingAt(index);
+              const lectureModule = getModuleForIdx(index);
+              const moduleIsOpen = lectureModule ? openModules.has(lectureModule.id) : true;
+
+              return (
+                <React.Fragment key={lecture.id}>
+                  {moduleStart && (
+                    <button
+                      onClick={() => toggleModule(moduleStart.id)}
+                      className="w-full flex items-center justify-between px-6 py-4 bg-slate-50 hover:bg-slate-100 border-b border-slate-100 transition-colors text-left"
+                    >
+                      <h4 className="text-[13px] font-black text-indigo-600 uppercase tracking-widest">
+                        {isRtl ? moduleStart.labelUr : moduleStart.labelEn}
+                      </h4>
+                      <ChevronDown
+                        size={16}
+                        className={`text-indigo-500 shrink-0 transition-transform duration-200 ${moduleIsOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  )}
+                  {(!lectureModule || moduleIsOpen) && (
+                    <div
+                      onClick={() => selectLecture(lecture)}
+                      className="flex items-center justify-between px-6 py-5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[14px] transition-all shrink-0 ${
+                          locked
+                            ? "bg-slate-200 text-slate-500"
+                            : "bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white"
+                        }`}>
+                          {locked ? <Lock size={16} /> : index + 1}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-[15px] ${locked ? "text-slate-500" : "text-slate-900"} ${isRtl ? "text-right" : ""}`}>
+                            {lectureName(lecture)}
+                          </p>
+                          <p className={`text-xs mt-0.5 text-slate-400 ${isRtl ? "text-right" : ""}`}>
+                            {locked ? (isRtl ? "مقفل" : "Locked") : chapterName(lecture.chapter_id)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className={`flex items-center gap-2 font-semibold text-sm group-hover:gap-3 transition-all shrink-0 ${locked ? "text-slate-400" : "text-indigo-600"}`}>
+                        {locked ? <Lock size={18} /> : <PlayCircle size={18} />}
+                        <span className="hidden sm:block">
+                          {t("skillsChaptersPage.content.watch")}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })
           ) : (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6">

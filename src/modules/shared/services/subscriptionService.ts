@@ -50,13 +50,17 @@ export const sendPin = async (
 
 /* VERIFY PIN */
 
+/* VERIFY PIN */
+
 export const verifyPin = async (
   msisdn: string,
   pin: string,
-  serviceId: string,
-  transactionId: string,
-  subMethod: string // ✅ add this
+  serviceId: string
+  // ✅ removed transactionId & subMethod from params — generated internally
 ) => {
+
+  const transactionId = Date.now(); // ✅ same pattern as subscribeUser
+  const subMethod = "WEB";         // ✅ sir said always WEB for verify-subscribe
 
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/verify-subscribe",

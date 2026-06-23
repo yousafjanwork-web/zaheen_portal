@@ -21,16 +21,17 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useKGSubjects as useClassSubjects } from "@/modules/shared/hooks/useKGSubjects";
+import { fetchKGVideoDetail } from "@/modules/shared/hooks/useKGSubjects";
 import fallbackThumbnail from "../../../assets/images/physics.png";
-// ── AUTH ──────────────────────────────────────────────────────
 import { useAuth } from "@/modules/shared/context/AuthContext";
+import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
 /* ─────────────────────────────────────────────────────────────
-   FONT — "cursive" removed so mobile never shows joined glyphs
+   FONT
 ──────────────────────────────────────────────────────────────── */
 const FONT = "'Nunito', 'Fredoka One', sans-serif";
 
@@ -75,33 +76,28 @@ const useT = () => {
    CDN helpers
 ──────────────────────────────────────────────────────────────── */
 const CDN_VIDEO = "https://cdn.zaheen.com.pk/videos";
-const CDN_THUMB = "https://cdn.zaheen.com.pk";
-const VIDEO_THUMB_FIELD = "thumbnailUrl";
 
 const buildVideoUrl = (path: string) => `${CDN_VIDEO}/${path}`;
-const buildThumbUrl = (raw?: string): string | null => {
-  if (!raw) return null;
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  return `${CDN_THUMB}/${raw.replace(/^\/+/, "")}`;
-};
 
 /* ─────────────────────────────────────────────────────────────
    Types
 ──────────────────────────────────────────────────────────────── */
 interface Video {
   id: number;
+  /** English title — normalised from title_en || title */
   name: string;
+  /** Urdu title — normalised from title_ur */
   urdu_name?: string;
   path: string;
+  /** Plain-text English description — normalised from description_html_en */
   desc?: string;
+  /** Plain-text Urdu description — normalised from description_html_ur */
   urdu_desc?: string;
-  thumbnail?: string;
-  thumb?: string;
-  image?: string;
-  cover?: string;
-  poster?: string;
+  /** Fully-resolved CDN URL, or undefined when no thumbnail was provided */
+  thumbnailUrl?: string;
   [key: string]: any;
 }
+
 interface ChapterWithVideos {
   id: number;
   name: string;
@@ -129,6 +125,9 @@ interface SubjectTheme {
   badgeColor?: string;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   getTheme — unchanged
+──────────────────────────────────────────────────────────────── */
 const getTheme = (name: string): SubjectTheme => {
   const n = name.toLowerCase();
 
@@ -277,13 +276,15 @@ const getTheme = (name: string): SubjectTheme => {
   };
 };
 
+/* ─────────────────────────────────────────────────────────────
+   ProgressBar
+──────────────────────────────────────────────────────────────── */
 const ProgressBar = ({
   pct,
   progressAccent,
 }: {
   pct: number;
   progressAccent: string;
-  variant?: "full" | "compact" | "embedded";
 }) => (
   <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
     <motion.div
@@ -298,11 +299,14 @@ const ProgressBar = ({
 
 /* ═══════════════════════════════════════════════════════════
    HERO — ENGLISH
+   tagline: uses `description_en` from selectedSubject when available,
+   falls back to t() for static subjects (quizzes / games).
 ═══════════════════════════════════════════════════════════ */
 const HeroEnglish = ({
   subjectName,
   gradeName,
   theme,
+  tagline,
   totalVideos,
   watchedCount,
   isRtl,
@@ -313,6 +317,7 @@ const HeroEnglish = ({
   subjectName: string;
   gradeName: string;
   theme: SubjectTheme;
+  tagline: string;
   totalVideos: number;
   watchedCount: number;
   isRtl: boolean;
@@ -323,23 +328,16 @@ const HeroEnglish = ({
   const pct =
     totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
   const completedTxt = `${watchedCount} ${t("kgLectureView.progress.lessonsCompleted")}`;
-  const tagline = t(theme.taglineKey);
   const badgeLabel = theme.badgeKey ? t(theme.badgeKey) : undefined;
 
   return (
     <div className="mb-8 px-4 sm:px-6 lg:px-8 pt-6 max-w-[1070px] mx-auto">
       <p className="text-[13px] font-semibold mb-6 text-slate-500">
-        <span
-          className="cursor-pointer hover:underline hover:text-slate-800 transition-colors"
-          onClick={onBack}
-        >
+        <span className="cursor-pointer hover:underline hover:text-slate-800 transition-colors" onClick={onBack}>
           {t("kgLectureView.home")}
         </span>
         &nbsp;›&nbsp;
-        <span
-          className="cursor-pointer hover:underline hover:text-slate-800 transition-colors"
-          onClick={onBreadcrumbGradeClick}
-        >
+        <span className="cursor-pointer hover:underline hover:text-slate-800 transition-colors" onClick={onBreadcrumbGradeClick}>
           {gradeName || t("kgClassView.defaultGrade")}
         </span>
       </p>
@@ -348,50 +346,26 @@ const HeroEnglish = ({
         className="relative rounded-[32px] overflow-hidden px-8 sm:px-12 py-12 md:py-16 flex flex-col sm:flex-row items-center justify-between gap-8"
         style={{ backgroundColor: theme.heroBgHex, minHeight: 340 }}
       >
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "26px 26px",
-          }}
-        />
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "26px 26px" }} />
 
         <div className="relative z-10 flex-1 flex flex-col justify-center">
           {badgeLabel && (
-            <span
-              className="inline-flex items-center self-start px-4 py-1.5 rounded-full text-[12px] font-black text-white mb-5 shadow-sm"
-              style={{
-                backgroundColor: theme.badgeColor || theme.accentHex,
-                fontFamily: FONT,
-              }}
-            >
+            <span className="inline-flex items-center self-start px-4 py-1.5 rounded-full text-[12px] font-black text-white mb-5 shadow-sm" style={{ backgroundColor: theme.badgeColor || theme.accentHex, fontFamily: FONT }}>
               {badgeLabel}
             </span>
           )}
-          <h1
-            className="text-[36px] sm:text-[46px] md:text-[54px] font-black leading-tight text-slate-900 mb-4"
-            style={{ fontFamily: FONT }}
-          >
+          <h1 className="text-[36px] sm:text-[46px] md:text-[54px] font-black leading-tight text-slate-900 mb-4" style={{ fontFamily: FONT }}>
             {subjectName}
           </h1>
-          <p
-            className={`text-[15px] sm:text-[17px] text-slate-700 leading-relaxed max-w-xl mb-8 ${isRtl ? "text-right" : ""}`}
-          >
+          <p className={`text-[15px] sm:text-[17px] text-slate-700 leading-relaxed max-w-xl mb-8 ${isRtl ? "text-right" : ""}`}>
             {tagline}
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <span
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[14px] font-bold text-slate-700 shadow-sm border border-slate-100"
-              style={{ fontFamily: FONT }}
-            >
+            <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[14px] font-bold text-slate-700 shadow-sm border border-slate-100" style={{ fontFamily: FONT }}>
               <BookOpen size={15} className="text-indigo-500" />
               {totalVideos} {t("kgLectureView.hero.lessons")}
             </span>
-            <span
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[14px] font-bold text-slate-700 shadow-sm border border-slate-100"
-              style={{ fontFamily: FONT }}
-            >
+            <span className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[14px] font-bold text-slate-700 shadow-sm border border-slate-100" style={{ fontFamily: FONT }}>
               <Clock size={15} className="text-indigo-500" />
               {t("kgLectureView.hero.hoursVideo")}
             </span>
@@ -400,21 +374,11 @@ const HeroEnglish = ({
 
         <div className="relative z-10 shrink-0 flex items-center justify-center">
           {theme.heroImage ? (
-            <div
-              className="w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] rounded-[28px] overflow-hidden shadow-xl bg-white"
-              style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-            >
-              <img
-                src={theme.heroImage}
-                alt={subjectName}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:w-[320px] md:h-[320px] rounded-[28px] overflow-hidden shadow-xl bg-white" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>
+              <img src={theme.heroImage} alt={subjectName} className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div
-              className="text-[130px] leading-none select-none"
-              style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-            >
+            <div className="text-[130px] leading-none select-none" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>
               {theme.mascotFallback}
             </div>
           )}
@@ -422,38 +386,15 @@ const HeroEnglish = ({
       </div>
 
       {totalVideos > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-100 px-8 py-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-6 bg-white rounded-2xl shadow-sm border border-slate-100 px-8 py-6">
           <div className="flex items-center justify-between mb-3">
-            <p
-              className="text-[16px] font-black text-slate-800"
-              style={{ fontFamily: FONT }}
-            >
-              {t("kgLectureView.progress.journeyTitle")}
-            </p>
-            <p
-              className="text-[15px] font-black"
-              style={{ color: theme.progressAccent, fontFamily: FONT }}
-            >
-              {pct}% {t("kgLectureView.progress.completed")}
-            </p>
+            <p className="text-[16px] font-black text-slate-800" style={{ fontFamily: FONT }}>{t("kgLectureView.progress.journeyTitle")}</p>
+            <p className="text-[15px] font-black" style={{ color: theme.progressAccent, fontFamily: FONT }}>{pct}% {t("kgLectureView.progress.completed")}</p>
           </div>
           <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${pct}%` }}
-              transition={{ duration: 1.1, ease: "easeOut", delay: 0.5 }}
-              className="h-full rounded-full"
-              style={{ backgroundColor: theme.progressAccent }}
-            />
+            <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.1, ease: "easeOut", delay: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: theme.progressAccent }} />
           </div>
-          <p className="text-[13px] text-slate-400 font-medium mt-2">
-            {completedTxt}
-          </p>
+          <p className="text-[13px] text-slate-400 font-medium mt-2">{completedTxt}</p>
         </motion.div>
       )}
     </div>
@@ -467,6 +408,7 @@ const HeroUrdu = ({
   subjectName,
   gradeName,
   theme,
+  tagline,
   totalVideos,
   watchedCount,
   isRtl,
@@ -477,6 +419,7 @@ const HeroUrdu = ({
   subjectName: string;
   gradeName: string;
   theme: SubjectTheme;
+  tagline: string;
   totalVideos: number;
   watchedCount: number;
   isRtl: boolean;
@@ -487,127 +430,57 @@ const HeroUrdu = ({
   const pct =
     totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
   const completedTxt = `${watchedCount} ${t("kgLectureView.progress.lessonsCompleted")}`;
-  const tagline = t(theme.taglineKey);
 
   return (
     <div className="mb-8 -mx-4 sm:-mx-6 lg:-mx-8">
-      <div
-        className="relative overflow-hidden"
-        style={{ backgroundColor: theme.heroBgHex }}
-      >
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
+      <div className="relative overflow-hidden" style={{ backgroundColor: theme.heroBgHex }}>
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
         <div className="relative z-10 max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 pt-10 pb-28">
           <p className="text-[13px] font-semibold mb-6 text-orange-100">
-            <span
-              className="cursor-pointer hover:underline hover:text-white transition-colors"
-              onClick={onBack}
-            >
-              {t("kgLectureView.home")}
-            </span>
+            <span className="cursor-pointer hover:underline hover:text-white transition-colors" onClick={onBack}>{t("kgLectureView.home")}</span>
             &nbsp;›&nbsp;
-            <span
-              className="cursor-pointer hover:underline hover:text-white transition-colors"
-              onClick={onBreadcrumbGradeClick}
-            >
-              {gradeName || t("kgClassView.defaultGrade")}
-            </span>
+            <span className="cursor-pointer hover:underline hover:text-white transition-colors" onClick={onBreadcrumbGradeClick}>{gradeName || t("kgClassView.defaultGrade")}</span>
           </p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
             <div className="flex-1 min-w-0">
-              <h1
-                className="text-[38px] sm:text-[52px] font-black leading-none tracking-tight mb-4 text-white"
-                style={{ fontFamily: FONT }}
-              >
-                {subjectName}
-              </h1>
-              <p
-                className={`text-[15px] leading-relaxed max-w-md text-white opacity-90 ${isRtl ? "text-right" : ""}`}
-              >
-                {tagline}
-              </p>
+              <h1 className="text-[38px] sm:text-[52px] font-black leading-none tracking-tight mb-4 text-white" style={{ fontFamily: FONT }}>{subjectName}</h1>
+              <p className={`text-[15px] leading-relaxed max-w-md text-white opacity-90 ${isRtl ? "text-right" : ""}`}>{tagline}</p>
             </div>
             <div className="shrink-0">
               {theme.heroImage ? (
-                <div
-                  className="w-[220px] sm:w-[280px] lg:w-[310px] rounded-[20px] overflow-hidden shadow-2xl"
-                  style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-                >
-                  <img
-                    src={theme.heroImage}
-                    alt={subjectName}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-[220px] sm:w-[280px] lg:w-[310px] rounded-[20px] overflow-hidden shadow-2xl" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>
+                  <img src={theme.heroImage} alt={subjectName} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div
-                  className="text-[110px] leading-none select-none"
-                  style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-                >
-                  {theme.mascotFallback}
-                </div>
+                <div className="text-[110px] leading-none select-none" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>{theme.mascotFallback}</div>
               )}
             </div>
           </div>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-none">
-          <svg
-            viewBox="0 0 1440 70"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            className="w-full h-[70px] sm:h-[90px]"
-          >
-            <path
-              d="M0,40 C360,80 1080,0 1440,40 L1440,70 L0,70 Z"
-              fill="#F1F5F9"
-            />
+          <svg viewBox="0 0 1440 70" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[70px] sm:h-[90px]">
+            <path d="M0,40 C360,80 1080,0 1440,40 L1440,70 L0,70 Z" fill="#F1F5F9" />
           </svg>
         </div>
       </div>
 
       {totalVideos > 0 && (
         <div className="max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 -mt-1">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-md border border-slate-100 px-6 py-5"
-          >
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-2xl shadow-md border border-slate-100 px-6 py-5">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${theme.progressAccent}18` }}
-                >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${theme.progressAccent}18` }}>
                   <BookOpen size={18} style={{ color: theme.progressAccent }} />
                 </div>
                 <div>
-                  <p
-                    className="text-[15px] font-black text-slate-800 leading-tight"
-                    style={{ fontFamily: FONT }}
-                  >
-                    {t("kgLectureView.progress.journeyTitle")}
-                  </p>
-                  <p className="text-[12px] text-slate-400 font-medium mt-0.5">
-                    {completedTxt}
-                  </p>
+                  <p className="text-[15px] font-black text-slate-800 leading-tight" style={{ fontFamily: FONT }}>{t("kgLectureView.progress.journeyTitle")}</p>
+                  <p className="text-[12px] text-slate-400 font-medium mt-0.5">{completedTxt}</p>
                 </div>
               </div>
-              <p
-                className="text-[14px] font-black shrink-0"
-                style={{ color: theme.progressAccent, fontFamily: FONT }}
-              >
-                {pct}% {t("kgLectureView.progress.done")}
-              </p>
+              <p className="text-[14px] font-black shrink-0" style={{ color: theme.progressAccent, fontFamily: FONT }}>{pct}% {t("kgLectureView.progress.done")}</p>
             </div>
             <ProgressBar pct={pct} progressAccent={theme.progressAccent} />
           </motion.div>
@@ -624,6 +497,7 @@ const HeroMath = ({
   subjectName,
   gradeName,
   theme,
+  tagline,
   totalVideos,
   watchedCount,
   isRtl,
@@ -634,6 +508,7 @@ const HeroMath = ({
   subjectName: string;
   gradeName: string;
   theme: SubjectTheme;
+  tagline: string;
   totalVideos: number;
   watchedCount: number;
   isRtl: boolean;
@@ -644,91 +519,35 @@ const HeroMath = ({
   const pct =
     totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
   const completedTxt = `${watchedCount} ${t("kgLectureView.progress.activitiesCompleted")}`;
-  const tagline = t(theme.taglineKey);
 
   return (
     <div className="mb-8 -mx-4 sm:-mx-6 lg:-mx-8">
-      <div
-        className="relative overflow-hidden"
-        style={{ backgroundColor: theme.heroBgHex, minHeight: 420 }}
-      >
-        <div
-          className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 70% 50%, rgba(255,255,255,0.6) 0%, transparent 60%)",
-          }}
-        />
+      <div className="relative overflow-hidden" style={{ backgroundColor: theme.heroBgHex, minHeight: 420 }}>
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 70% 50%, rgba(255,255,255,0.6) 0%, transparent 60%)" }} />
 
         <div className="relative z-10 max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 pt-10 pb-12">
           <p className="text-[13px] font-semibold mb-8 text-green-700">
-            <span
-              className="cursor-pointer hover:underline hover:text-green-900 transition-colors"
-              onClick={onBack}
-            >
-              {t("kgLectureView.home")}
-            </span>
+            <span className="cursor-pointer hover:underline hover:text-green-900 transition-colors" onClick={onBack}>{t("kgLectureView.home")}</span>
             &nbsp;›&nbsp;
-            <span
-              className="cursor-pointer hover:underline hover:text-green-900 transition-colors"
-              onClick={onBreadcrumbGradeClick}
-            >
-              {gradeName || t("kgClassView.defaultGrade")}
-            </span>
+            <span className="cursor-pointer hover:underline hover:text-green-900 transition-colors" onClick={onBreadcrumbGradeClick}>{gradeName || t("kgClassView.defaultGrade")}</span>
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-10 sm:gap-6">
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-4">
-                <LayoutGrid
-                  size={16}
-                  style={{ color: theme.accentHex }}
-                  strokeWidth={2.5}
-                />
-                <p
-                  className="text-[11px] font-black uppercase tracking-[0.18em]"
-                  style={{ color: theme.accentHex, fontFamily: FONT }}
-                >
-                  {t("kgLectureView.hero.mathematics")}
-                </p>
+                <LayoutGrid size={16} style={{ color: theme.accentHex }} strokeWidth={2.5} />
+                <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: theme.accentHex, fontFamily: FONT }}>{t("kgLectureView.hero.mathematics")}</p>
               </div>
-              <h1
-                className="text-[36px] sm:text-[48px] font-black leading-tight text-slate-900 mb-4"
-                style={{ fontFamily: FONT }}
-              >
-                {subjectName}
-              </h1>
-              <p
-                className={`text-[15px] text-slate-700 leading-relaxed max-w-sm mb-7 ${isRtl ? "text-right" : ""}`}
-              >
-                {tagline}
-              </p>
+              <h1 className="text-[36px] sm:text-[48px] font-black leading-tight text-slate-900 mb-4" style={{ fontFamily: FONT }}>{subjectName}</h1>
+              <p className={`text-[15px] text-slate-700 leading-relaxed max-w-sm mb-7 ${isRtl ? "text-right" : ""}`}>{tagline}</p>
 
               {totalVideos > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-white rounded-2xl shadow-md border border-slate-100 px-6 py-5 max-w-[380px]"
-                >
+                <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-2xl shadow-md border border-slate-100 px-6 py-5 max-w-[380px]">
                   <div className="flex items-center justify-between mb-2">
-                    <p
-                      className="text-[15px] font-black text-slate-800"
-                      style={{ fontFamily: FONT }}
-                    >
-                      {t("kgLectureView.progress.journeyTitle")}
-                    </p>
-                    <p
-                      className="text-[14px] font-black"
-                      style={{ color: theme.progressAccent, fontFamily: FONT }}
-                    >
-                      {pct}%
-                    </p>
+                    <p className="text-[15px] font-black text-slate-800" style={{ fontFamily: FONT }}>{t("kgLectureView.progress.journeyTitle")}</p>
+                    <p className="text-[14px] font-black" style={{ color: theme.progressAccent, fontFamily: FONT }}>{pct}%</p>
                   </div>
-                  <ProgressBar
-                    pct={pct}
-                    progressAccent={theme.progressAccent}
-                  />
+                  <ProgressBar pct={pct} progressAccent={theme.progressAccent} />
                   <p className="text-[12px] text-slate-500 flex items-center gap-1.5 mt-3">
                     <CheckCircle2 size={13} className="text-emerald-500" />
                     {completedTxt}
@@ -739,35 +558,17 @@ const HeroMath = ({
 
             <div className="shrink-0 flex items-center justify-center">
               {theme.heroImage ? (
-                <div
-                  className="w-[260px] sm:w-[340px] lg:w-[380px] rounded-[24px] overflow-hidden shadow-2xl bg-white/40"
-                  style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-                >
-                  <img
-                    src={theme.heroImage}
-                    alt={subjectName}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-[260px] sm:w-[340px] lg:w-[380px] rounded-[24px] overflow-hidden shadow-2xl bg-white/40" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>
+                  <img src={theme.heroImage} alt={subjectName} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div
-                  className="text-[120px] leading-none select-none"
-                  style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-                >
-                  {theme.mascotFallback}
-                </div>
+                <div className="text-[120px] leading-none select-none" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>{theme.mascotFallback}</div>
               )}
             </div>
           </div>
         </div>
 
-        <div
-          className="absolute bottom-0 left-0 right-0 h-6"
-          style={{
-            background:
-              "linear-gradient(to bottom, transparent, rgba(0,0,0,0.04))",
-          }}
-        />
+        <div className="absolute bottom-0 left-0 right-0 h-6" style={{ background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.04))" }} />
       </div>
     </div>
   );
@@ -780,6 +581,7 @@ const HeroDefault = ({
   subjectName,
   gradeName,
   theme,
+  tagline,
   totalVideos,
   watchedCount,
   isRtl,
@@ -789,6 +591,7 @@ const HeroDefault = ({
   subjectName: string;
   gradeName: string;
   theme: SubjectTheme;
+  tagline: string;
   totalVideos: number;
   watchedCount: number;
   isRtl: boolean;
@@ -798,122 +601,53 @@ const HeroDefault = ({
   const pct =
     totalVideos > 0 ? Math.round((watchedCount / totalVideos) * 100) : 0;
   const completedTxt = `${watchedCount} ${t("kgLectureView.progress.lessonsCompleted")}`;
-  const tagline = t(theme.taglineKey);
 
   return (
     <div className="mb-8 -mx-4 sm:-mx-6 lg:-mx-8">
-      <div
-        className="relative overflow-hidden"
-        style={{ backgroundColor: theme.heroBgHex }}
-      >
-        <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
+      <div className="relative overflow-hidden" style={{ backgroundColor: theme.heroBgHex }}>
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
 
         <div className="relative z-10 max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 pt-10 pb-28 flex flex-col sm:flex-row items-center justify-between gap-8">
           <div className="flex-1 min-w-0">
-            <button
-              onClick={onBack}
-              className={`flex items-center gap-1.5 text-[13px] font-bold mb-5 transition-opacity hover:opacity-70 ${theme.heroBreadcrumb}`}
-            >
+            <button onClick={onBack} className={`flex items-center gap-1.5 text-[13px] font-bold mb-5 transition-opacity hover:opacity-70 ${theme.heroBreadcrumb}`}>
               <ArrowLeft size={15} strokeWidth={2.5} />
               {t("kgLectureView.back.toSubjects")}
             </button>
-            <p
-              className={`text-[13px] font-semibold mb-5 ${theme.heroBreadcrumb}`}
-            >
-              {t("kgLectureView.home")} &nbsp;›&nbsp;{" "}
-              {gradeName || t("kgClassView.defaultGrade")}
-            </p>
-            <h1
-              className={`text-[38px] sm:text-[52px] font-black leading-none tracking-tight mb-5 ${theme.heroTextColor}`}
-              style={{ fontFamily: FONT }}
-            >
-              {subjectName}
-            </h1>
-            <p
-              className={`text-[16px] leading-relaxed max-w-md ${theme.heroTextColor} opacity-90 ${isRtl ? "text-right" : ""}`}
-            >
-              {tagline}
-            </p>
+            <h1 className={`text-[38px] sm:text-[52px] font-black leading-none tracking-tight mb-5 ${theme.heroTextColor}`} style={{ fontFamily: FONT }}>{subjectName}</h1>
+            <p className={`text-[16px] leading-relaxed max-w-md ${theme.heroTextColor} opacity-90 ${isRtl ? "text-right" : ""}`}>{tagline}</p>
           </div>
           <div className="shrink-0">
             {theme.heroImage ? (
-              <div
-                className="w-[240px] sm:w-[300px] lg:w-[320px] rounded-[20px] overflow-hidden shadow-2xl"
-                style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-              >
-                <img
-                  src={theme.heroImage}
-                  alt={subjectName}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-[240px] sm:w-[300px] lg:w-[320px] rounded-[20px] overflow-hidden shadow-2xl" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>
+                <img src={theme.heroImage} alt={subjectName} className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div
-                className="text-[120px] leading-none select-none"
-                style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}
-              >
-                {theme.mascotFallback}
-              </div>
+              <div className="text-[120px] leading-none select-none" style={{ animation: "kgHeroFloat 3.5s ease-in-out infinite" }}>{theme.mascotFallback}</div>
             )}
           </div>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 overflow-hidden leading-none">
-          <svg
-            viewBox="0 0 1440 60"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            className="w-full h-[60px] sm:h-[80px]"
-          >
-            <path
-              d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z"
-              fill="#F1F5F9"
-            />
+          <svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-[60px] sm:h-[80px]">
+            <path d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z" fill="#F1F5F9" />
           </svg>
         </div>
       </div>
 
       {totalVideos > 0 && (
         <div className="max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 -mt-1">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-md border border-slate-100 px-6 py-5"
-          >
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white rounded-2xl shadow-md border border-slate-100 px-6 py-5">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${theme.progressAccent}18` }}
-                >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${theme.progressAccent}18` }}>
                   <BookOpen size={18} style={{ color: theme.progressAccent }} />
                 </div>
                 <div>
-                  <p
-                    className="text-[15px] font-black text-slate-800 leading-tight"
-                    style={{ fontFamily: FONT }}
-                  >
-                    {t("kgLectureView.progress.journeyTitle")}
-                  </p>
-                  <p className="text-[12px] text-slate-400 font-medium mt-0.5">
-                    {completedTxt}
-                  </p>
+                  <p className="text-[15px] font-black text-slate-800 leading-tight" style={{ fontFamily: FONT }}>{t("kgLectureView.progress.journeyTitle")}</p>
+                  <p className="text-[12px] text-slate-400 font-medium mt-0.5">{completedTxt}</p>
                 </div>
               </div>
-              <p
-                className="text-[14px] font-black shrink-0"
-                style={{ color: theme.progressAccent, fontFamily: FONT }}
-              >
-                {pct}% {t("kgLectureView.progress.done")}
-              </p>
+              <p className="text-[14px] font-black shrink-0" style={{ color: theme.progressAccent, fontFamily: FONT }}>{pct}% {t("kgLectureView.progress.done")}</p>
             </div>
             <ProgressBar pct={pct} progressAccent={theme.progressAccent} />
           </motion.div>
@@ -924,7 +658,9 @@ const HeroDefault = ({
 };
 
 /* ─────────────────────────────────────────────────────────────
-   Video Card
+   Video Card — v2 strict
+   Thumbnail: uses video.thumbnailUrl (fully-resolved CDN URL from
+   the normaliser). No legacy field scanning.
 ──────────────────────────────────────────────────────────────── */
 const VideoCard = ({
   video,
@@ -934,6 +670,7 @@ const VideoCard = ({
   isPlaying,
   theme,
   isRtl,
+   isLoggedIn,
   onClick,
   t,
 }: {
@@ -944,26 +681,23 @@ const VideoCard = ({
   isPlaying: boolean;
   theme: SubjectTheme;
   isRtl: boolean;
+    isLoggedIn: boolean;
   onClick: () => void;
   t: ReturnType<typeof useT>;
 }) => {
+  // v2 normalised fields only
   const title = isRtl ? video.urdu_name || video.name : video.name;
-  const descRaw = isRtl ? video.urdu_desc || video.desc : video.desc;
-  const shortDesc = descRaw?.split("|")[0]?.trim() || "";
+  const shortDesc = ((isRtl ? video.urdu_desc || video.desc : video.desc) ?? "")
+    .split("|")[0]
+    .trim();
+
   const pillColor =
     theme.lectureColors[(index - 1) % theme.lectureColors.length];
 
-  const rawThumb =
-    video[VIDEO_THUMB_FIELD] ||
-    video.thumb ||
-    video.image ||
-    video.cover ||
-    video.poster ||
-    null;
-  const thumbSrc = buildThumbUrl(rawThumb) ?? fallbackThumbnail;
+  // thumbnailUrl is the single source of truth from the v2 normaliser
+  const thumbSrc = video.thumbnailUrl ?? fallbackThumbnail;
 
-  // index is 1-based; first video = index 1 = free
-  const isLocked = index > 1;
+   const isLocked = !isLoggedIn && index > 1;
 
   return (
     <motion.div
@@ -979,34 +713,18 @@ const VideoCard = ({
         outlineOffset: isPlaying ? "2px" : undefined,
       }}
     >
-      <div
-        className="relative w-full overflow-hidden bg-slate-200"
-        style={{ aspectRatio: "16/9" }}
-      >
+      <div className="relative w-full overflow-hidden bg-slate-200" style={{ aspectRatio: "16/9" }}>
         <img
           src={thumbSrc}
           alt={title}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = fallbackThumbnail;
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).src = fallbackThumbnail; }}
         />
 
-        {/* Lock overlay for non-free videos when not logged in */}
         {isLocked && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={theme.accentHex}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={theme.accentHex} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -1019,16 +737,10 @@ const VideoCard = ({
             <div className="absolute inset-0 bg-black/15" />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-110">
-                {isWatched ? (
-                  <CheckCircle2 size={32} style={{ color: theme.accentHex }} />
-                ) : (
-                  <Play
-                    size={26}
-                    style={{ color: theme.accentHex }}
-                    fill={theme.accentHex}
-                    strokeWidth={0}
-                  />
-                )}
+                {isWatched
+                  ? <CheckCircle2 size={32} style={{ color: theme.accentHex }} />
+                  : <Play size={26} style={{ color: theme.accentHex }} fill={theme.accentHex} strokeWidth={0} />
+                }
               </div>
             </div>
           </>
@@ -1036,58 +748,31 @@ const VideoCard = ({
 
         {progress > 0 && progress < 100 && !isLocked && (
           <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/30">
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${progress}%`,
-                backgroundColor: theme.accentHex,
-              }}
-            />
+            <div className="h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: theme.accentHex }} />
           </div>
         )}
       </div>
 
       <div className="p-5">
-        <h4
-          className={`text-[18px] font-black text-slate-900 leading-snug mb-2 ${isRtl ? "text-right" : ""}`}
-          style={{ fontFamily: FONT }}
-        >
+        <h4 className={`text-[18px] font-black text-slate-900 leading-snug mb-2 ${isRtl ? "text-right" : ""}`} style={{ fontFamily: FONT }}>
           {title}
         </h4>
         {shortDesc && (
-          <p
-            className={`text-[14px] text-slate-500 leading-relaxed line-clamp-3 mb-4 ${isRtl ? "text-right" : ""}`}
-          >
+          <p className={`text-[14px] text-slate-500 leading-relaxed line-clamp-3 mb-4 ${isRtl ? "text-right" : ""}`}>
             {shortDesc}
           </p>
         )}
         <div className="flex items-center justify-between mt-auto">
-          <span
-            className={`text-[13px] font-black px-4 py-1.5 rounded-full ${pillColor}`}
-            style={{ fontFamily: FONT }}
-          >
+          <span className={`text-[13px] font-black px-4 py-1.5 rounded-full ${pillColor}`} style={{ fontFamily: FONT }}>
             {t("kgLectureView.videoCard.lecture")} {index}
           </span>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick();
-            }}
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-transform hover:scale-110"
             style={{ backgroundColor: theme.accentHex }}
           >
             {isLocked ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -1107,6 +792,7 @@ const VideoCard = ({
 const VideoPlayer = ({
   video,
   videoUrl,
+  resumePosition,
   lectureIndex,
   totalLectures,
   theme,
@@ -1116,8 +802,7 @@ const VideoPlayer = ({
   onBreadcrumbGradeClick,
   onEnded,
   onTimeUpdate,
-  onLoaded,
-  onPlay,
+  onFirstPlay,
   onClose,
   onNext,
   onPrev,
@@ -1126,6 +811,7 @@ const VideoPlayer = ({
 }: {
   video: Video;
   videoUrl: string;
+  resumePosition: number;
   lectureIndex: number;
   totalLectures: number;
   theme: SubjectTheme;
@@ -1135,8 +821,7 @@ const VideoPlayer = ({
   onBreadcrumbGradeClick: () => void;
   onEnded: () => void;
   onTimeUpdate: (e: React.SyntheticEvent<HTMLVideoElement>) => void;
-  onLoaded: () => void;
-  onPlay: () => void;
+  onFirstPlay: () => void;
   onClose: () => void;
   onNext: () => void;
   onPrev: () => void;
@@ -1145,34 +830,35 @@ const VideoPlayer = ({
 }) => {
   const title = isRtl ? video.urdu_name || video.name : video.name;
   const descRaw = isRtl ? video.urdu_desc || video.desc : video.desc;
-  const parts =
-    descRaw
-      ?.split("|")
-      .map((p) => p.trim())
-      .filter(Boolean) || [];
+  const parts = descRaw?.split("|").map((p) => p.trim()).filter(Boolean) || [];
+
+  const hasSeekRef = useRef(false);
+  useEffect(() => { hasSeekRef.current = false; }, [videoUrl]);
+
+  const handleCanPlay = useCallback(() => {
+    if (hasSeekRef.current) return;
+    hasSeekRef.current = true;
+    if (resumePosition > 2 && videoRef.current) {
+      videoRef.current.currentTime = resumePosition;
+    }
+  }, [resumePosition, videoRef]);
+
+  const viewFiredRef = useRef(false);
+  useEffect(() => { viewFiredRef.current = false; }, [videoUrl]);
+
+  const handlePlay = useCallback(() => {
+    if (!viewFiredRef.current) {
+      viewFiredRef.current = true;
+      onFirstPlay();
+    }
+  }, [onFirstPlay]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      transition={{ duration: 0.25 }}
-      className="mb-10 px-0"
-    >
+    <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }} className="mb-10 px-0">
       <p className="text-[13px] font-semibold mb-4 text-slate-500">
-        <span
-          className="cursor-pointer hover:underline hover:text-slate-800 transition-colors"
-          onClick={onBack}
-        >
-          {t("kgLectureView.home")}
-        </span>
+        <span className="cursor-pointer hover:underline hover:text-slate-800 transition-colors" onClick={onBack}>{t("kgLectureView.home")}</span>
         &nbsp;›&nbsp;
-        <span
-          className="cursor-pointer hover:underline hover:text-slate-800 transition-colors"
-          onClick={onBreadcrumbGradeClick}
-        >
-          {gradeName || t("kgClassView.defaultGrade")}
-        </span>
+        <span className="cursor-pointer hover:underline hover:text-slate-800 transition-colors" onClick={onBreadcrumbGradeClick}>{gradeName || t("kgClassView.defaultGrade")}</span>
       </p>
 
       <div className="bg-black rounded-3xl overflow-hidden shadow-2xl">
@@ -1184,8 +870,8 @@ const VideoPlayer = ({
             controls
             autoPlay
             className="w-full h-full"
-            onLoadedData={onLoaded}
-            onPlay={onPlay}
+            onCanPlay={handleCanPlay}
+            onPlay={handlePlay}
             onEnded={onEnded}
             onTimeUpdate={onTimeUpdate}
             onError={(e) => console.error("VIDEO ERROR", e)}
@@ -1196,47 +882,20 @@ const VideoPlayer = ({
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm mt-4 px-6 py-5">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <p
-              className="text-[11px] font-black uppercase tracking-widest mb-1"
-              style={{ color: theme.accentHex, fontFamily: FONT }}
-            >
-              {t("kgLectureView.player.lectureOf", {
-                current: lectureIndex,
-                total: totalLectures,
-              })}
+            <p className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: theme.accentHex, fontFamily: FONT }}>
+              {t("kgLectureView.player.lectureOf", { current: lectureIndex, total: totalLectures })}
             </p>
-            <h2
-              className={`text-[20px] font-black text-slate-900 leading-snug mb-2 ${isRtl ? "text-right" : ""}`}
-              style={{ fontFamily: FONT }}
-            >
-              {title}
-            </h2>
-            {parts[0] && (
-              <p className="text-[13px] text-slate-500 leading-relaxed">
-                {parts[0]}
-              </p>
-            )}
+            <h2 className={`text-[20px] font-black text-slate-900 leading-snug mb-2 ${isRtl ? "text-right" : ""}`} style={{ fontFamily: FONT }}>{title}</h2>
+            {parts[0] && <p className="text-[13px] text-slate-500 leading-relaxed">{parts[0]}</p>}
           </div>
           <div className="flex items-center gap-3" style={{ direction: "ltr" }}>
-            <button
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-full text-[14px] font-bold border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm"
-              style={{ fontFamily: FONT }}
-            >
+            <button onClick={onClose} className="px-5 py-2.5 rounded-full text-[14px] font-bold border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm" style={{ fontFamily: FONT }}>
               {t("kgLectureView.player.allLessons") || "تمام اسباق"}
             </button>
-            <button
-              onClick={onPrev}
-              disabled={lectureIndex <= 1}
-              className="w-11 h-11 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-sm"
-            >
+            <button onClick={onPrev} disabled={lectureIndex <= 1} className="w-11 h-11 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-sm">
               <ChevronLeft size={18} />
             </button>
-            <button
-              onClick={onNext}
-              disabled={lectureIndex >= totalLectures}
-              className="w-11 h-11 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-sm"
-            >
+            <button onClick={onNext} disabled={lectureIndex >= totalLectures} className="w-11 h-11 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors shadow-sm">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -1258,6 +917,7 @@ const ChapterSection = ({
   progressMap,
   theme,
   isRtl,
+   isLoggedIn,
   onSelect,
   sectionRef,
   t,
@@ -1270,6 +930,7 @@ const ChapterSection = ({
   progressMap: Record<number, number>;
   theme: SubjectTheme;
   isRtl: boolean;
+    isLoggedIn: boolean;
   onSelect: (v: Video, globalIdx: number) => void;
   sectionRef: (el: HTMLDivElement | null) => void;
   t: ReturnType<typeof useT>;
@@ -1278,30 +939,17 @@ const ChapterSection = ({
   const watched = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
 
   return (
-    <div
-      ref={sectionRef}
-      id={`chapter-${chapter.id}`}
-      className="mb-12 scroll-mt-4"
-    >
+    <div ref={sectionRef} id={`chapter-${chapter.id}`} className="mb-12 scroll-mt-4">
       {chapter.name && (
         <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[12px] font-black shrink-0"
-            style={{ backgroundColor: theme.accentHex, fontFamily: FONT }}
-          >
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[12px] font-black shrink-0" style={{ backgroundColor: theme.accentHex, fontFamily: FONT }}>
             {String(chapterIndex + 1).padStart(2, "0")}
           </div>
           <div>
-            <p
-              className="text-[10px] font-black text-slate-400 uppercase tracking-widest"
-              style={{ fontFamily: FONT }}
-            >
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest" style={{ fontFamily: FONT }}>
               {t("kgLectureView.chapter.label")} {chapterIndex + 1}
             </p>
-            <h3
-              className={`text-[17px] font-black text-slate-900 leading-tight ${isRtl ? "text-right" : ""}`}
-              style={{ fontFamily: FONT }}
-            >
+            <h3 className={`text-[17px] font-black text-slate-900 leading-tight ${isRtl ? "text-right" : ""}`} style={{ fontFamily: FONT }}>
               {chLabel}
             </h3>
           </div>
@@ -1321,13 +969,11 @@ const ChapterSection = ({
               video={video}
               index={globalIdx + 1}
               isWatched={watchedSet.has(video.id)}
-              progress={
-                watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0
-              }
+              progress={watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0}
               isPlaying={selectedVideo?.id === video.id}
               theme={theme}
               isRtl={isRtl}
-              // ── pass globalIdx so the gate knows if it's the first video ──
+               isLoggedIn={isLoggedIn}
               onClick={() => onSelect(video, globalIdx)}
               t={t}
             />
@@ -1350,10 +996,7 @@ const KGLectureSkeleton = () => (
       <div className="h-7 w-40 bg-slate-200 rounded-full mt-8" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-2xl overflow-hidden border-t-4 border-slate-300 bg-white shadow-sm"
-          >
+          <div key={i} className="rounded-2xl overflow-hidden border-t-4 border-slate-300 bg-white shadow-sm">
             <div className="bg-slate-200" style={{ aspectRatio: "16/9" }} />
             <div className="p-5 space-y-3">
               <div className="h-5 w-3/4 bg-slate-200 rounded" />
@@ -1378,9 +1021,7 @@ const KGLectureView = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ── AUTH GATE ─────────────────────────────────────────────
   const { isLoggedIn } = useAuth();
-
   const t = useT();
 
   const [lang, setLang] = useState<string>(() => getLanguage());
@@ -1403,18 +1044,36 @@ const KGLectureView = () => {
 
   const selectedSubject = useMemo(() => {
     if (selectedSubjectFromState) return selectedSubjectFromState;
-    return (
-      subjects?.find((s: any) => String(s.id) === String(subjectId)) ?? null
-    );
+    return subjects?.find((s: any) => String(s.id) === String(subjectId)) ?? null;
   }, [selectedSubjectFromState, subjects, subjectId]);
 
+  /**
+   * subjectRawName — always the English name so getTheme() keyword
+   * matching works correctly (getTheme reads English names).
+   */
   const subjectRawName = selectedSubject?.name || "";
+
+  /**
+   * subjectName — the localised display name shown in the UI.
+   */
   const subjectName = isRtl
     ? selectedSubject?.urdu_name || subjectRawName
     : subjectRawName;
+
   const theme = getTheme(subjectRawName);
+
   const gradeName =
     (isRtl ? classInfo?.urdu_name : classInfo?.name) || classInfo?.name || "";
+
+  /**
+   * Hero tagline — comes from the v2 subject description fields.
+   * Falls back to the t() translation key only if the API returns nothing,
+   * so legacy-free subjects (Quizzes, Games) can still show a tagline.
+   */
+  const heroTagline =
+    (isRtl
+      ? selectedSubject?.urdu_desc || selectedSubject?.desc
+      : selectedSubject?.desc) || t(theme.taglineKey);
 
   const subjectChapters: ChapterWithVideos[] = useMemo(
     () =>
@@ -1429,6 +1088,8 @@ const KGLectureView = () => {
     [subjectChapters],
   );
 
+  const allVideoIds = useMemo(() => allVideos.map((v) => v.id), [allVideos]);
+
   const chapterOffsets: number[] = useMemo(() => {
     const offsets: number[] = [];
     let acc = 0;
@@ -1439,10 +1100,22 @@ const KGLectureView = () => {
     return offsets;
   }, [subjectChapters]);
 
+  /* useVideoProgress — completely untouched */
+  const {
+    progressMap,
+    watchedSet,
+    lastPositionMap,
+    lastPositionRef,
+    fetchJourneyForVideo,
+    handleTimeUpdate: progressTimeUpdate,
+    handleEnded: progressEnded,
+    handleView,
+    flushBeforeSwitch,
+  } = useVideoProgress(allVideoIds, isLoggedIn);
+
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
-  const [progressMap, setProgressMap] = useState<Record<number, number>>({});
-  const [watchedSet, setWatchedSet] = useState<Set<number>>(new Set());
+  const resumePositionRef = useRef<number>(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const currentGlobalIdx = useMemo(
@@ -1450,78 +1123,64 @@ const KGLectureView = () => {
     [allVideos, selectedVideo],
   );
 
-  const trackEvent = useCallback(
-    (eventName: string) => {
-      if (!window.gtag || !selectedVideo) return;
-      window.gtag("event", eventName, {
-        video_id: selectedVideo.id,
-        video_name: selectedVideo.name,
-      });
-    },
-    [selectedVideo],
-  );
+ // at top of KGLectureView.tsx, alongside the existing useClassSubjects import:
 
-  // ── CENTRAL AUTH GATE ─────────────────────────────────────
-  // globalIdx is 0-based. Index 0 = first video = free for everyone.
-  // Any other video requires login.
-  const selectVideo = useCallback(
-    (video: Video, globalIdx: number) => {
-      if (globalIdx > 0 && !isLoggedIn) {
-        navigate("/login", { state: { from: location.pathname } });
-        return;
-      }
-      setSelectedVideo(video);
-      if (videoRef.current) {
-        (videoRef.current as any)._tracked50 = false;
-        (videoRef.current as any)._started = false;
-      }
-      setVideoUrl(buildVideoUrl(video.path));
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    },
-    [isLoggedIn, navigate, location.pathname],
-  );
+
+// inside selectVideo, right after fetchJourneyForVideo:
+const selectVideo = useCallback(
+  async (video: Video, globalIdx: number) => {
+    if (globalIdx > 0 && !isLoggedIn) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    flushBeforeSwitch();
+    const position = await fetchJourneyForVideo(video.id);
+    resumePositionRef.current = position;
+    setSelectedVideo(video);
+
+    // NEW: fetch the real playable URL — the list endpoint that populated
+    // `video` doesn't include it; only the single-video detail does.
+    try {
+      const detail = await fetchKGVideoDetail(video.id);
+      setVideoUrl(detail.video_url || buildVideoUrl(video.path));
+    } catch {
+      setVideoUrl(buildVideoUrl(video.path)); // fallback, shouldn't normally hit
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  [isLoggedIn, navigate, location.pathname, flushBeforeSwitch, fetchJourneyForVideo],
+);
 
   const goNext = useCallback(() => {
-    if (currentGlobalIdx < allVideos.length - 1) {
+    if (currentGlobalIdx < allVideos.length - 1)
       selectVideo(allVideos[currentGlobalIdx + 1], currentGlobalIdx + 1);
-    }
   }, [currentGlobalIdx, allVideos, selectVideo]);
 
   const goPrev = useCallback(() => {
-    if (currentGlobalIdx > 0) {
+    if (currentGlobalIdx > 0)
       selectVideo(allVideos[currentGlobalIdx - 1], currentGlobalIdx - 1);
-    }
   }, [currentGlobalIdx, allVideos, selectVideo]);
 
-  const handleLoaded = () => {
-    if (!videoRef.current || (videoRef.current as any)._started) return;
-    (videoRef.current as any)._started = true;
-    trackEvent("video_start");
-  };
-  const handlePlay = () => {
-    if (!(videoRef.current as any)?._started) {
-      (videoRef.current as any)._started = true;
-      trackEvent("video_start");
-    }
-  };
-  const handleEnded = () => {
-    if (selectedVideo) {
-      setWatchedSet((p) => new Set(p).add(selectedVideo.id));
-      setProgressMap((p) => ({ ...p, [selectedVideo.id]: 100 }));
-      trackEvent("video_complete");
-    }
+  const handleTimeUpdate = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement>) => {
+      if (!selectedVideo) return;
+      const v = e.target as HTMLVideoElement;
+      progressTimeUpdate(selectedVideo.id, v.currentTime, v.duration);
+    },
+    [selectedVideo, progressTimeUpdate],
+  );
+
+  const handleEnded = useCallback(() => {
+    if (!selectedVideo || !videoRef.current) return;
+    progressEnded(selectedVideo.id, videoRef.current.duration || 0);
     goNext();
-  };
-  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const v = e.target as HTMLVideoElement;
-    if (!v.duration || !selectedVideo) return;
-    const pct = (v.currentTime / v.duration) * 100;
-    setProgressMap((p) => ({ ...p, [selectedVideo.id]: Math.round(pct) }));
-    if (pct > 50 && !(v as any)._tracked50) {
-      (v as any)._tracked50 = true;
-      trackEvent("video_50_percent");
-    }
-  };
+  }, [selectedVideo, progressEnded, goNext]);
+
+  const handleFirstPlay = useCallback(() => {
+    if (!selectedVideo) return;
+    handleView(selectedVideo.id);
+  }, [selectedVideo, handleView]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -1537,75 +1196,56 @@ const KGLectureView = () => {
   const closePlayer = useCallback(() => {
     setSelectedVideo(null);
     setVideoUrl("");
+    resumePositionRef.current = 0;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const handleBackToHome = useCallback(() => {
-    navigate("/");
-  }, [navigate]);
-  const handleBackToGrade = useCallback(() => {
-    navigate(`/class/${classId}`, { state: { gradeType } });
-  }, [navigate, classId, gradeType]);
+  const handleBackToHome  = useCallback(() => navigate("/"), [navigate]);
+  const handleBackToGrade = useCallback(
+    () => navigate(`/class/${classId}`, { state: { gradeType } }),
+    [navigate, classId, gradeType],
+  );
+
+  const heroCommonProps = {
+    subjectName,
+    gradeName,
+    theme,
+    tagline: heroTagline,
+    totalVideos: allVideos.length,
+    watchedCount: watchedSet.size,
+    isRtl,
+    t,
+    onBack: handleBackToHome,
+    onBreadcrumbGradeClick: handleBackToGrade,
+  };
 
   const renderHero = () => {
     if (loading) return null;
-    const commonProps = {
-      subjectName,
-      gradeName,
-      theme,
-      totalVideos: allVideos.length,
-      watchedCount: watchedSet.size,
-      isRtl,
-      t,
-      onBack: handleBackToHome,
-      onBreadcrumbGradeClick: handleBackToGrade,
-    };
     switch (theme.variant) {
-      case "english":
-        return <HeroEnglish {...commonProps} />;
-      case "urdu":
-        return <HeroUrdu {...commonProps} />;
-      case "math":
-        return <HeroMath {...commonProps} />;
-      default:
-        return <HeroDefault {...commonProps} onBack={handleBackToGrade} />;
+      case "english": return <HeroEnglish {...heroCommonProps} />;
+      case "urdu":    return <HeroUrdu    {...heroCommonProps} />;
+      case "math":    return <HeroMath    {...heroCommonProps} />;
+      default:        return <HeroDefault {...heroCommonProps} onBack={handleBackToGrade} />;
     }
   };
 
   const renderVideoLessonsHeading = () => {
     if (loading || subjectChapters.length === 0) return null;
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7 mt-2"
-      >
-        <h2
-          className="text-[28px] font-black text-slate-900"
-          style={{ fontFamily: FONT }}
-        >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7 mt-2">
+        <h2 className="text-[28px] font-black text-slate-900" style={{ fontFamily: FONT }}>
           {t("kgLectureView.videoLessons.title")}
           {theme.variant === "math" && (
-            <div
-              className="h-1 w-16 rounded-full mt-1"
-              style={{ backgroundColor: theme.accentHex }}
-            />
+            <div className="h-1 w-16 rounded-full mt-1" style={{ backgroundColor: theme.accentHex }} />
           )}
         </h2>
         {theme.variant === "math" && (
           <div className="flex items-center gap-3">
-            <span
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold text-white shadow-sm"
-              style={{ backgroundColor: theme.accentHex, fontFamily: FONT }}
-            >
+            <span className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold text-white shadow-sm" style={{ backgroundColor: theme.accentHex, fontFamily: FONT }}>
               <Play size={13} fill="white" strokeWidth={0} />
               {allVideos.length} {t("kgLectureView.videoLessons.lessonsCount")}
             </span>
-            <span
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-slate-200 text-slate-600 bg-white shadow-sm"
-              style={{ fontFamily: FONT }}
-            >
+            <span className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold border border-slate-200 text-slate-600 bg-white shadow-sm" style={{ fontFamily: FONT }}>
               <Clock size={13} />
               {t("kgLectureView.videoLessons.videoLessonsLabel")}
             </span>
@@ -1628,21 +1268,12 @@ const KGLectureView = () => {
       {!selectedVideo && renderHero()}
       {loading && <KGLectureSkeleton />}
 
-      <div
-        className={`max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 pb-12 ${selectedVideo ? "pt-8" : ""}`}
-      >
+      <div className={`max-w-[1100px] mx-auto px-6 sm:px-10 lg:px-14 pb-12 ${selectedVideo ? "pt-8" : ""}`}>
         {!loading && subjectChapters.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <span className="text-6xl mb-4">⏳</span>
-            <h2
-              className="text-2xl font-black text-slate-800 mb-2"
-              style={{ fontFamily: FONT }}
-            >
-              {t("kgLectureView.empty.title")}
-            </h2>
-            <p className="text-slate-500 text-[14px] max-w-sm">
-              {t("kgLectureView.empty.desc", { subject: subjectName })}
-            </p>
+            <h2 className="text-2xl font-black text-slate-800 mb-2" style={{ fontFamily: FONT }}>{t("kgLectureView.empty.title")}</h2>
+            <p className="text-slate-500 text-[14px] max-w-sm">{t("kgLectureView.empty.desc", { subject: subjectName })}</p>
           </div>
         )}
 
@@ -1652,6 +1283,7 @@ const KGLectureView = () => {
               key={selectedVideo.id}
               video={selectedVideo}
               videoUrl={videoUrl}
+              resumePosition={resumePositionRef.current}
               lectureIndex={currentGlobalIdx + 1}
               totalLectures={allVideos.length}
               theme={theme}
@@ -1661,8 +1293,7 @@ const KGLectureView = () => {
               onBreadcrumbGradeClick={handleBackToGrade}
               onEnded={handleEnded}
               onTimeUpdate={handleTimeUpdate}
-              onLoaded={handleLoaded}
-              onPlay={handlePlay}
+              onFirstPlay={handleFirstPlay}
               onClose={closePlayer}
               onNext={goNext}
               onPrev={goPrev}
@@ -1686,11 +1317,10 @@ const KGLectureView = () => {
               progressMap={progressMap}
               theme={theme}
               isRtl={isRtl}
+                isLoggedIn={isLoggedIn}
               onSelect={selectVideo}
               t={t}
-              sectionRef={(el) => {
-                chapterRefs.current[chIdx] = el;
-              }}
+              sectionRef={(el) => { chapterRefs.current[chIdx] = el; }}
             />
           ))}
       </div>

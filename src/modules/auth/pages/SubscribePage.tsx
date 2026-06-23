@@ -11,8 +11,8 @@ const SubscribePage = () => {
 
   const [msisdn, setMsisdn] = useState("");
   const [serviceId, setServiceId] = useState<string>(
-  searchParams.get("plan") ?? "205"
-);
+    searchParams.get("plan") ?? "205"
+  );
 
   const [pin, setPin] = useState("");
   const [step, setStep] = useState<"MSISDN" | "OTP" | "SUCCESS">("MSISDN");
@@ -34,8 +34,7 @@ const SubscribePage = () => {
     if (heMsisdn) {
       setMsisdn(heMsisdn);
       setIsAutoMsisdn(true);
-    }
-    else if (mzaMsisdn) {
+    } else if (mzaMsisdn) {
       setMsisdn(mzaMsisdn);
       setIsAutoMsisdn(true);
     }
@@ -59,38 +58,27 @@ const SubscribePage = () => {
       if (isAutoMsisdn) {
 
         /* Direct subscribe for HE/MZA */
-        console.log("call Subscriber:"+ msisdn +" serviceid "+ serviceId);
+        console.log("call Subscriber:" + msisdn + " serviceid " + serviceId);
         const sub = await subscribeUser(msisdn, serviceId);
 
-        if (sub.status === "1") {
-
+        if (sub.status === "1" || sub.desc?.toLowerCase().includes("already active")) {
           login(msisdn);
-
           localStorage.setItem("activeServiceId", serviceId);
-
-          setStep("SUCCESS");
-
+          window.location.href = "/";
         } else {
-
           setError(sub.desc || "Subscription failed");
-
         }
 
       } else {
 
         /* Manual user → Send PIN */
-
         const res = await sendPin(msisdn, serviceId);
 
         if (res.status === "PIN_SENT") {
-
           setStep("OTP");
           setTimer(30);
-
         } else {
-
           setError("Failed to send PIN");
-
         }
 
       }
@@ -120,23 +108,18 @@ const SubscribePage = () => {
 
         const sub = await subscribeUser(msisdn, serviceId);
 
-        if (sub.status === "1") {
-
+        if (sub.status === "1" || sub.desc?.toLowerCase().includes("already active")) {
           login(msisdn);
-
           localStorage.setItem("activeServiceId", serviceId);
-
-          setStep("SUCCESS");
-
+          window.location.href = "/";
         } else {
-
           setError(sub.desc || "Subscription failed");
-
         }
 
       } else {
 
-        setError("Invalid PIN");
+        // ✅ show actual API message e.g. "Invalid PIN"
+        setError(verify.message || "Invalid PIN. Please try again.");
 
       }
 
@@ -198,7 +181,7 @@ const SubscribePage = () => {
             <input
               type="text"
               value={msisdn}
-              onChange={(e)=>setMsisdn(e.target.value)}
+              onChange={(e) => setMsisdn(e.target.value)}
               disabled={isAutoMsisdn}
               className="border w-full p-3 rounded-lg mb-6"
               placeholder="923XXXXXXXXX"
@@ -214,21 +197,14 @@ const SubscribePage = () => {
 
                 <button
                   key={pkg.id}
-                  onClick={()=>setServiceId(pkg.id)}
+                  onClick={() => setServiceId(pkg.id)}
                   className={`p-3 rounded-xl border text-center transition
                   ${serviceId === pkg.id
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-gray-50 hover:bg-gray-100"}`}
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-gray-50 hover:bg-gray-100"}`}
                 >
-
-                  <div className="font-semibold">
-                    {pkg.name}
-                  </div>
-
-                  <div className="text-sm">
-                    {pkg.price}
-                  </div>
-
+                  <div className="font-semibold">{pkg.name}</div>
+                  <div className="text-sm">{pkg.price}</div>
                 </button>
 
               ))}
@@ -236,9 +212,7 @@ const SubscribePage = () => {
             </div>
 
             {error && (
-              <p className="text-red-500 text-sm mb-3">
-                {error}
-              </p>
+              <p className="text-red-500 text-sm mb-3">{error}</p>
             )}
 
             <button
@@ -248,8 +222,8 @@ const SubscribePage = () => {
               {loading
                 ? "Processing..."
                 : isAutoMsisdn
-                ? "Subscribe Now"
-                : "Send PIN"}
+                  ? "Subscribe Now"
+                  : "Send PIN"}
             </button>
 
           </>
@@ -270,10 +244,14 @@ const SubscribePage = () => {
             <input
               type="text"
               value={pin}
-              onChange={(e)=>setPin(e.target.value)}
+              onChange={(e) => setPin(e.target.value)}
               className="border w-full p-3 text-center text-xl mb-4 rounded-lg"
               placeholder="----"
             />
+
+            {error && (
+              <p className="text-red-500 text-sm mb-3">{error}</p>
+            )}
 
             <button
               onClick={handleVerifyPin}
@@ -303,9 +281,7 @@ const SubscribePage = () => {
 
           <div className="text-center">
 
-            <div className="text-green-500 text-5xl mb-4">
-              ✓
-            </div>
+            <div className="text-green-500 text-5xl mb-4">✓</div>
 
             <h2 className="text-2xl font-bold mb-2">
               Subscription Activated
@@ -316,7 +292,7 @@ const SubscribePage = () => {
             </p>
 
             <button
-              onClick={()=>navigate("/")}
+              onClick={() => navigate("/")}
               className="bg-blue-600 text-white px-6 py-3 rounded-xl"
             >
               Continue

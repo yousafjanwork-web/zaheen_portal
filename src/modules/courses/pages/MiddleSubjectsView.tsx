@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useMiddleSubjects as useClassSubjects } from "@/modules/shared/hooks/useMiddleSubjects";
 import {
   ChevronRight, BookOpen, Zap, FileText, BookMarked,
   BarChart2, Calendar, Play,
@@ -310,7 +310,9 @@ const MiddleSubjectsView = () => {
         </div>
         <h3 className="ms-subj-name">{displayName}</h3>
         {/* FIX 3 — description from API meta (keyword-matched from subject.name) */}
-        <p className="ms-subj-desc">{isUrdu ? meta.desc.ur : meta.desc.en}</p>
+       <p className="ms-subj-desc">
+  {isUrdu ? (subject.urdu_desc || meta.desc.ur) : (subject.desc || meta.desc.en)}
+</p>
         <div>
           <div className="ms-prog-row">
             <span>{isUrdu ? "تکمیل" : "Completion Progress"}</span>
@@ -343,7 +345,9 @@ const MiddleSubjectsView = () => {
               {isUrdu ? ": جدید حساب اور جیومیٹری" : ": Advanced Arithmetic & Geometry"}
             </h3>
             {/* FIX 3 — description from API meta */}
-            <p className="ms-math-desc">{isUrdu ? meta.desc.ur : meta.desc.en}</p>
+          <p className="ms-math-desc">
+  {isUrdu ? (mathSubject.urdu_desc || meta.desc.ur) : (mathSubject.desc || meta.desc.en)}
+</p>
           </div>
         </div>
         {meta.units.length > 0 && (

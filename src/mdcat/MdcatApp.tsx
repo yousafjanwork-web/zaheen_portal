@@ -33,7 +33,7 @@ import QuizSession from "./components/QuizSession";
 import AIQuizGenerator from "./components/AIQuizGenerator";
 import PastPapers from "./components/PastPapers";
 import ZaheenLogo from "./components/ZaheenLogo";
-import FocusTimer from "./components/FocusTimer";
+// import FocusTimer from "./components/FocusTimer";
 import StudyNotes from "./components/StudyNotes";
 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
@@ -61,7 +61,7 @@ const mapQuestion = (q: any) => ({
 
 export default function MdcatApp() {
   const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get("tab") as "dashboard" | "ai-generator" | "past-papers" | "notes") || "ai-generator";
+  const initialTab = (searchParams.get("tab") as "dashboard" | "ai-generator" | "past-papers" | "notes") || "dashboard";
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -298,7 +298,7 @@ const fetchAllData = async () => {
           </div>
 
           {/* Pomodoro Focus Timer */}
-          <FocusTimer onSessionLogged={fetchAllData} />
+          {/* <FocusTimer onSessionLogged={fetchAllData} /> */}
 
           {/* Quick Stats sidebar widget */}
           <div className="hidden lg:block bg-white p-6 rounded-3xl border border-sky-100 card-shadow space-y-4">

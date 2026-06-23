@@ -18,12 +18,8 @@ import {
   Flame,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  PerformanceStats,
-  StudyRecommendation,
-  MDCATSubject,
-} from "../types";
-import { mdcatApi } from "../config";
+import { PerformanceStats, StudyRecommendation, MDCATSubject } from "../types";
+import { mdcatApi, mdcatAiApi } from "../config";
 
 interface DashboardProps {
   stats: PerformanceStats;
@@ -42,6 +38,16 @@ export default function Dashboard({
   availableQuizzes,
   refreshData,
 }: DashboardProps) {
+  stats = {
+    totalAttempts: stats?.totalAttempts || 0,
+    averageScorePercent: stats?.averageScorePercent || 0,
+    subjectBreakdown: stats?.subjectBreakdown || [],
+    attemptHistory: stats?.attemptHistory || [],
+    totalFocusMinutes: stats?.totalFocusMinutes || 0,
+    focusSessions: stats?.focusSessions || [],
+    studyStreak: stats?.studyStreak || 0,
+  } as any;
+
   const [isGeneratingRec, setIsGeneratingRec] = useState(false);
   const [recError, setRecError] = useState<string | null>(null);
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
@@ -53,7 +59,7 @@ export default function Dashboard({
     setRecError(null);
     try {
       const response = await fetch(
-        mdcatApi("/api/mdcat/recommendations/generate"),
+        mdcatAiApi("/api/mdcat/recommendations/generate"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -337,7 +343,7 @@ export default function Dashboard({
                       {latestRec.subject}
                     </span>
                     <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest font-mono-custom">
-                      Confidence: {Number(latestRec.scoreLevel).toFixed(0)}%
+                      Confidence: {Number((latestRec as any).scoreLevel ?? (latestRec as any).score_level ?? 0).toFixed(0)}%
                     </span>
                   </div>
 
@@ -347,7 +353,7 @@ export default function Dashboard({
                       Critical Sub-Topics Needing Review:
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {latestRec.focusTopics.map((topic, idx) => (
+                      {((latestRec as any).focusTopics || (latestRec as any).focus_topics || []).map((topic: string, idx: number) => (
                         <span
                           key={idx}
                           className="px-2.5 py-1 text-xs font-bold text-sky-900 bg-sky-50 border border-sky-100 rounded-md flex items-center gap-1.5"
@@ -365,7 +371,7 @@ export default function Dashboard({
                       <Sparkles className="w-3.5 h-3.5 fill-sky-100 text-sky-650 text-sky-600" />{" "}
                       Actionable Strategy:
                     </div>
-                    {latestRec.notes.split("\n").map(
+                    {((latestRec as any).notes || "").split("\n").map(
                       (para, pIdx) =>
                         para.trim() && (
                           <p key={pIdx} className="mb-1.5">

@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link, } from "react-router-dom";
 import {
   BookOpen,
   FlaskConical,
@@ -28,10 +28,11 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useSeniorSubjects as useClassSubjects, fetchSeniorVideoDetail } from "@/modules/shared/hooks/useSeniorSubjects";
 import thumbnail from "../../../assets/images/physics.png";
 // ── AUTH ──────────────────────────────────────────────────────
 import { useAuth } from "@/modules/shared/context/AuthContext";
+import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";   // ← same hook as KG / Primary / Middle
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
@@ -84,6 +85,13 @@ interface Video {
   path: string;
   desc?: string;
   urdu_desc?: string;
+  thumbnailUrl?: string;
+  thumbnail?: string;
+  thumb?: string;
+  image?: string;
+  cover?: string;
+  poster?: string;
+  [key: string]: any;
 }
 interface ChapterWithVideos {
   id: number;
@@ -92,6 +100,29 @@ interface ChapterWithVideos {
   subject_id: number;
   videos: Video[];
 }
+
+/* ─────────────────────────────────────────────────────────────
+   CDN thumbnail helper (matches KG / Primary / Middle pattern)
+──────────────────────────────────────────────────────────────── */
+const CDN_THUMB = "https://cdn.zaheen.com.pk";
+
+const buildThumbUrl = (raw?: string): string | null => {
+  if (!raw) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  return `${CDN_THUMB}/${raw.replace(/^\/+/, "")}`;
+};
+
+const getThumbUrl = (video: Video): string | null => {
+  const raw =
+    video.thumbnailUrl ||
+    video.thumbnail ||
+    video.thumb ||
+    video.image ||
+    video.cover ||
+    video.poster ||
+    null;
+  return buildThumbUrl(raw);
+};
 
 /* ─────────────────────────────────────────────────────────────
    Subject meta — visual/style only, no text
@@ -453,6 +484,7 @@ const MobileTopNav = ({
 interface SubjectHeaderProps {
   gradeName: string;
   subjectName: string;
+   subject: any; 
   meta: ReturnType<typeof getMeta>;
   isRtl: boolean;
   gradeType: string;
@@ -470,6 +502,7 @@ const getGradeBadgeLabel = (gradeName: string, gradeType: string): string => {
 const SubjectHeader = ({
   gradeName,
   subjectName,
+    subject,  
   meta,
   isRtl,
   gradeType,
@@ -477,7 +510,9 @@ const SubjectHeader = ({
 }: SubjectHeaderProps) => {
   const Icon = meta.icon;
   const gradeBadge = getGradeBadgeLabel(gradeName, gradeType);
-  const desc = t(meta.descKey);
+ const desc = isRtl
+    ? (subject?.urdu_desc || t(meta.descKey))
+    : (subject?.desc || t(meta.descKey));
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
@@ -544,6 +579,7 @@ const LectureCard = ({
   const title = isRtl ? video.urdu_name || video.name : video.name;
   const descRaw = isRtl ? video.urdu_desc || video.desc : video.desc;
   const shortDesc = descRaw?.split("|")[0]?.trim() || "";
+  const thumbSrc = getThumbUrl(video) ?? thumbnail;
 
   return (
     <motion.div
@@ -567,9 +603,12 @@ const LectureCard = ({
     >
       <div className="relative h-[155px] shrink-0 overflow-hidden">
         <img
-          src={thumbnail}
+          src={thumbSrc}
           alt={title}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = thumbnail;
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
@@ -721,6 +760,7 @@ const SidebarRow = ({
   t,
 }: SidebarRowProps) => {
   const title = isRtl ? video.urdu_name || video.name : video.name;
+  const thumbSrc = getThumbUrl(video) ?? thumbnail;
   return (
     <div
       onClick={onClick}
@@ -738,9 +778,12 @@ const SidebarRow = ({
     >
       <div className="relative w-[110px] h-[62px] shrink-0 rounded-lg overflow-hidden">
         <img
-          src={thumbnail}
+          src={thumbSrc}
           alt={title}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = thumbnail;
+          }}
         />
         {isLocked && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -1046,6 +1089,8 @@ const SubjectLecturesView = () => {
     [subjectChapters],
   );
 
+  const allVideoIds = useMemo(() => allVideos.map((v) => v.id), [allVideos]);
+
   const chapterOffsets: number[] = useMemo(() => {
     const offsets: number[] = [];
     let acc = 0;
@@ -1056,13 +1101,37 @@ const SubjectLecturesView = () => {
     return offsets;
   }, [subjectChapters]);
 
+  /* ── v2 progress hook (same as KG / Primary / Middle) ──── */
+  const {
+    progressMap,
+    watchedSet,
+    fetchJourneyForVideo,
+    handleTimeUpdate: progressTimeUpdate,
+    handleEnded: progressEnded,
+    handleView,
+    flushBeforeSwitch,
+  } = useVideoProgress(allVideoIds, isLoggedIn);
+
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null);
-  const [progressMap, setProgressMap] = useState<Record<number, number>>({});
-  const [watchedSet, setWatchedSet] = useState<Set<number>>(new Set());
+  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string>("");
   const [isWatchMode, setIsWatchMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  /**
+   * resumePositionRef holds the position fetched BEFORE the player mounts.
+   * Read directly in onCanPlay — no stale-state risk.
+   */
+  const resumePositionRef = useRef<number>(0);
+  const hasSeekRef        = useRef(false);
+  const viewFiredRef      = useRef(false);
+
+  // Reset seek + view-tracking guards whenever the active video changes
+  useEffect(() => {
+    hasSeekRef.current = false;
+    viewFiredRef.current = false;
+  }, [selectedVideo?.id]);
 
   const currentGlobalIdx = useMemo(
     () => allVideos.findIndex((v) => v.id === selectedVideo?.id),
@@ -1085,25 +1154,33 @@ const SubjectLecturesView = () => {
   // ── CENTRAL AUTH GATE ─────────────────────────────────────
   // globalIdx is 0-based. Index 0 = first video = free for everyone.
   // Any other video requires login.
-  const selectVideo = useCallback(
-    (video: Video, chapterId: number, globalIdx: number) => {
-      if (globalIdx > 0 && !isLoggedIn) {
-        navigate("/login", { state: { from: location.pathname } });
-        return;
-      }
-      setSelectedVideo(video);
-      setActiveChapterId(chapterId);
-      setIsWatchMode(true);
-      if (videoRef.current) {
-        (videoRef.current as any)._tracked50 = false;
-        (videoRef.current as any)._started = false;
-      }
-      setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    },
-    [isLoggedIn, navigate, location.pathname],
-  );
+  // Fetch journey FIRST, then mount player — avoids the resume-position
+  // race where onCanPlay fires before the bulk-fetch resolves.
+const selectVideo = useCallback(
+  async (video: Video, chapterId: number, globalIdx: number) => {
+    if (globalIdx > 0 && !isLoggedIn) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    flushBeforeSwitch();
+    const position = await fetchJourneyForVideo(video.id);
+    resumePositionRef.current = position;
 
+    setSelectedVideo(video);
+    setActiveChapterId(chapterId);
+    setIsWatchMode(true);
+
+    try {
+      const detail = await fetchSeniorVideoDetail(video.id);
+      setVideoUrl(detail.video_url || `https://cdn.zaheen.com.pk/videos/${video.path}`);
+    } catch {
+      setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  [isLoggedIn, navigate, location.pathname, flushBeforeSwitch, fetchJourneyForVideo],
+);
   const goNext = useCallback(() => {
     if (currentGlobalIdx < allVideos.length - 1) {
       const next = allVideos[currentGlobalIdx + 1];
@@ -1132,31 +1209,41 @@ const SubjectLecturesView = () => {
     }
   }, [currentGlobalIdx, allVideos, subjectChapters, selectVideo]);
 
-  const handleLoaded = () => {
-    if (!videoRef.current || (videoRef.current as any)._started) return;
-    (videoRef.current as any)._started = true;
-    trackEvent("video_start");
-  };
-  const handlePlay = () => {
-    if (!(videoRef.current as any)?._started) {
-      (videoRef.current as any)._started = true;
+  /* ── onCanPlay: seek to saved position ──────────────────── */
+  const handleCanPlay = useCallback(() => {
+    if (hasSeekRef.current) return;
+    hasSeekRef.current = true;
+    const pos = resumePositionRef.current;
+    if (pos > 2 && videoRef.current) {
+      videoRef.current.currentTime = pos;
+    }
+  }, []);
+
+  /* ── onPlay: fire view endpoint once + GA tracking ──────── */
+  const handlePlay = useCallback(() => {
+    if (!viewFiredRef.current && selectedVideo) {
+      viewFiredRef.current = true;
+      handleView(selectedVideo.id);
       trackEvent("video_start");
     }
-  };
-  const handleEnded = () => {
-    if (selectedVideo) {
-      setWatchedSet((p) => new Set(p).add(selectedVideo.id));
-      setProgressMap((p) => ({ ...p, [selectedVideo.id]: 100 }));
+  }, [selectedVideo, handleView, trackEvent]);
+
+  /* ── onEnded: delegate to progress hook + GA + auto-advance ── */
+  const handleEnded = useCallback(() => {
+    if (selectedVideo && videoRef.current) {
+      progressEnded(selectedVideo.id, videoRef.current.duration || 0);
       trackEvent("video_complete");
     }
     goNext();
-  };
-  
+  }, [selectedVideo, progressEnded, trackEvent, goNext]);
+
+  /* ── onTimeUpdate: delegate to progress hook + GA 50% mark ── */
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.target as HTMLVideoElement;
     if (!v.duration || !selectedVideo) return;
+    progressTimeUpdate(selectedVideo.id, v.currentTime, v.duration);
+
     const pct = (v.currentTime / v.duration) * 100;
-    setProgressMap((p) => ({ ...p, [selectedVideo.id]: Math.round(pct) }));
     if (pct > 50 && !(v as any)._tracked50) {
       (v as any)._tracked50 = true;
       trackEvent("video_50_percent");
@@ -1180,11 +1267,13 @@ const SubjectLecturesView = () => {
     });
 
   const exitWatchMode = useCallback(() => {
+    flushBeforeSwitch();
     setIsWatchMode(false);
     setSelectedVideo(null);
     setVideoUrl("");
+    resumePositionRef.current = 0;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [flushBeforeSwitch]);
 
   const renderDesc = (video: Video | null) => {
     if (!video) return null;
@@ -1294,6 +1383,7 @@ const SubjectLecturesView = () => {
           <SubjectHeader
             gradeName={gradeDisplayName}
             subjectName={subjectName}
+             subject={selectedSubject} 
             meta={meta}
             isRtl={isRtl}
             gradeType={gradeType}
@@ -1368,7 +1458,7 @@ const SubjectLecturesView = () => {
                       autoPlay
                       className="w-full h-full"
                       src={videoUrl}
-                      onLoadedData={handleLoaded}
+                      onCanPlay={handleCanPlay}
                       onPlay={handlePlay}
                       onEnded={handleEnded}
                       onTimeUpdate={handleTimeUpdate}
@@ -1376,6 +1466,21 @@ const SubjectLecturesView = () => {
                     />
                   </div>
                 </div>
+
+                {/* In-progress bar below the player */}
+                {(() => {
+                  const pctActive = watchedSet.has(selectedVideo.id)
+                    ? 100
+                    : progressMap[selectedVideo.id] || 0;
+                  return pctActive > 0 && pctActive < 100 ? (
+                    <div className="h-1 bg-slate-200 rounded-full mt-3 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pctActive}%`, backgroundColor: meta.accent }}
+                      />
+                    </div>
+                  ) : null;
+                })()}
 
                 <div className="bg-white rounded-2xl border border-slate-100 p-5 mt-4">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -1468,7 +1573,11 @@ const SubjectLecturesView = () => {
                               lectureNumber={globalIdx + 1}
                               isSelected={selectedVideo?.id === video.id}
                               isWatched={watchedSet.has(video.id)}
-                              progress={progressMap[video.id] || 0}
+                              progress={
+                                watchedSet.has(video.id)
+                                  ? 100
+                                  : progressMap[video.id] || 0
+                              }
                               isLocked={isLocked}
                               onClick={() =>
                                 selectVideo(video, chapter.id, globalIdx)

@@ -25,7 +25,7 @@ const MDCATDesktopBanner = () => {
           </div>
 
           <button 
-            onClick={() => navigate("/mdcat?tab=dashboard")}
+            onClick={() => navigate("/mdcat")}
             className="w-fit bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
           >
             {t("mdcat_banner.button")}

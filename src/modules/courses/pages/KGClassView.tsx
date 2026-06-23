@@ -8,16 +8,15 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useKGSubjects as useClassSubjects } from "@/modules/shared/hooks/useKGSubjects";
 
-/* ── Import your existing JSON files directly ── */
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
-const translations: Record<string, any> = {
-  en: enTranslations,
-  ur: urTranslations,
-};
+/* ─────────────────────────────────────────────────────────────
+   i18n — only used for static UI labels, never for API content
+──────────────────────────────────────────────────────────────── */
+const translations: Record<string, any> = { en: enTranslations, ur: urTranslations };
 
 const getNestedValue = (obj: any, key: string): string => {
   const value = key.split(".").reduce((acc, part) => acc?.[part], obj);
@@ -30,12 +29,14 @@ const useT = () => {
   return (key: string) => getNestedValue(dict, key);
 };
 
-/* ─────────────────────────────────────────────────────────────
-   FONT — no "cursive" fallback so mobile never renders
-   joined/Nastaliq glyphs for Latin or Urdu UI text.
-──────────────────────────────────────────────────────────────── */
 const FONT = "'Nunito', 'Fredoka One', sans-serif";
 
+const isUrl = (s?: string): boolean =>
+  !!s && (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("/"));
+
+/* ─────────────────────────────────────────────────────────────
+   Card shape profiles
+──────────────────────────────────────────────────────────────── */
 const SHAPE_PROFILES = [
   { borderRadius: "70px 32px 32px 32px", minHeight: 410, paddingTop: 36, iconFloat: false },
   { borderRadius: "70px 32px 32px 32px", minHeight: 320, paddingTop: 60, iconFloat: false, iconOffset: 52 },
@@ -49,30 +50,45 @@ const SHAPE_PROFILES = [
 ];
 const getProfile = (i: number) => SHAPE_PROFILES[i % SHAPE_PROFILES.length];
 
+/* ─────────────────────────────────────────────────────────────
+   Subject meta (colours, icon, i18n key for UI labels only)
+──────────────────────────────────────────────────────────────── */
 interface KGMeta {
   icon: React.ElementType;
+  /** Used ONLY to build the t() fallback key for tagline/btnLabel */
   subjectKey: string;
   cardBg: string; border: string; iconColor: string;
   titleColor: string; taglineColor: string; btnBg: string;
   accentBar?: string;
 }
 
-const getKGMeta = (name: string): KGMeta => {
-  const n = name.toLowerCase();
-  if (n.includes("english"))       return { icon: BookOpen,     subjectKey: "english",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#2563EB", titleColor: "#1E40AF", taglineColor: "#3B82F6", btnBg: "#2563EB" };
-  if (n.includes("urdu"))          return { icon: Languages,    subjectKey: "urdu",      cardBg: "#FFEDD5", border: "3px solid #FED7AA", iconColor: "#EA580C", titleColor: "#C2410C", taglineColor: "#EA580C", btnBg: "#F97316" };
-  if (n.includes("math"))          return { icon: Sigma,        subjectKey: "math",      cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#16A34A", titleColor: "#15803D", taglineColor: "#16A34A", btnBg: "#16A34A" };
-  if (n.includes("physic"))        return { icon: Atom,         subjectKey: "physics",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#1D4ED8", titleColor: "#1E3A8A", taglineColor: "#3B82F6", btnBg: "#1D4ED8" };
-  if (n.includes("chem"))          return { icon: FlaskConical, subjectKey: "chemistry", cardBg: "#D1FAE5", border: "3px solid #A7F3D0", iconColor: "#059669", titleColor: "#065F46", taglineColor: "#10B981", btnBg: "#059669" };
-  if (n.includes("bio"))           return { icon: Leaf,         subjectKey: "biology",   cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D", accentBar: "#4ADE80" };
-  if (n.includes("islamic"))       return { icon: Landmark,     subjectKey: "islamic",   cardBg: "#CCFBF1", border: "3px solid #99F6E4", iconColor: "#0D9488", titleColor: "#115E59", taglineColor: "#0D9488", btnBg: "#0D9488" };
-  if (n.includes("pakistan"))      return { icon: Globe,        subjectKey: "pakistan",  cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D" };
-  if (n.includes("computer") || n.includes("cs")) return { icon: Cpu,     subjectKey: "computer",  cardBg: "#E0E7FF", border: "3px solid #C7D2FE", iconColor: "#4F46E5", titleColor: "#3730A3", taglineColor: "#6366F1", btnBg: "#4F46E5" };
-  if (n.includes("art") || n.includes("draw"))    return { icon: Palette,  subjectKey: "art",       cardBg: "#FCE7F3", border: "3px solid #FBCFE8", iconColor: "#DB2777", titleColor: "#9D174D", taglineColor: "#EC4899", btnBg: "#DB2777" };
-  if (n.includes("music"))         return { icon: Music,        subjectKey: "music",     cardBg: "#FEF9C3", border: "3px solid #FDE68A", iconColor: "#CA8A04", titleColor: "#713F12", taglineColor: "#D97706", btnBg: "#EAB308" };
-  return { icon: BookOpen, subjectKey: "default", cardBg: "#F1F5F9", border: "3px solid #E2E8F0", iconColor: "#64748B", titleColor: "#1E293B", taglineColor: "#94A3B8", btnBg: "#64748B" };
+/** Maps the v2 `_iconHint` strings (Lucide icon names) to components. */
+const ICON_HINT_MAP: Record<string, React.ElementType> = {
+  BookOpen, Languages, Sigma, Atom, FlaskConical, Leaf,
+  Landmark, Globe, Cpu, Music, Palette, Gamepad2, Bot, Trophy,
 };
 
+const getKGMeta = (name: string, iconHint?: string): KGMeta => {
+  const hintIcon = iconHint ? ICON_HINT_MAP[iconHint] : undefined;
+  const n = name.toLowerCase();
+
+  if (n.includes("english"))  return { icon: hintIcon ?? BookOpen,     subjectKey: "english",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#2563EB", titleColor: "#1E40AF", taglineColor: "#3B82F6", btnBg: "#2563EB" };
+  if (n.includes("urdu"))     return { icon: hintIcon ?? Languages,    subjectKey: "urdu",      cardBg: "#FFEDD5", border: "3px solid #FED7AA", iconColor: "#EA580C", titleColor: "#C2410C", taglineColor: "#EA580C", btnBg: "#F97316" };
+  if (n.includes("math"))     return { icon: hintIcon ?? Sigma,        subjectKey: "math",      cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#16A34A", titleColor: "#15803D", taglineColor: "#16A34A", btnBg: "#16A34A" };
+  if (n.includes("physic"))   return { icon: hintIcon ?? Atom,         subjectKey: "physics",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#1D4ED8", titleColor: "#1E3A8A", taglineColor: "#3B82F6", btnBg: "#1D4ED8" };
+  if (n.includes("chem"))     return { icon: hintIcon ?? FlaskConical, subjectKey: "chemistry", cardBg: "#D1FAE5", border: "3px solid #A7F3D0", iconColor: "#059669", titleColor: "#065F46", taglineColor: "#10B981", btnBg: "#059669" };
+  if (n.includes("bio"))      return { icon: hintIcon ?? Leaf,         subjectKey: "biology",   cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D", accentBar: "#4ADE80" };
+  if (n.includes("islamic"))  return { icon: hintIcon ?? Landmark,     subjectKey: "islamic",   cardBg: "#CCFBF1", border: "3px solid #99F6E4", iconColor: "#0D9488", titleColor: "#115E59", taglineColor: "#0D9488", btnBg: "#0D9488" };
+  if (n.includes("pakistan")) return { icon: hintIcon ?? Globe,        subjectKey: "pakistan",  cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D" };
+  if (n.includes("computer") || n.includes("cs")) return { icon: hintIcon ?? Cpu,     subjectKey: "computer", cardBg: "#E0E7FF", border: "3px solid #C7D2FE", iconColor: "#4F46E5", titleColor: "#3730A3", taglineColor: "#6366F1", btnBg: "#4F46E5" };
+  if (n.includes("art") || n.includes("draw"))    return { icon: hintIcon ?? Palette,  subjectKey: "art",      cardBg: "#FCE7F3", border: "3px solid #FBCFE8", iconColor: "#DB2777", titleColor: "#9D174D", taglineColor: "#EC4899", btnBg: "#DB2777" };
+  if (n.includes("music"))    return { icon: hintIcon ?? Music,        subjectKey: "music",     cardBg: "#FEF9C3", border: "3px solid #FDE68A", iconColor: "#CA8A04", titleColor: "#713F12", taglineColor: "#D97706", btnBg: "#EAB308" };
+  return { icon: hintIcon ?? BookOpen, subjectKey: "default", cardBg: "#F1F5F9", border: "3px solid #E2E8F0", iconColor: "#64748B", titleColor: "#1E293B", taglineColor: "#94A3B8", btnBg: "#64748B" };
+};
+
+/* ─────────────────────────────────────────────────────────────
+   Sub-components (unchanged from original)
+──────────────────────────────────────────────────────────────── */
 const SoonBadge = ({ label }: { label: string }) => (
   <div style={{ position: "absolute", top: 14, right: 14, background: "#FEF3C7", color: "#B45309", fontSize: 10, fontWeight: 900, padding: "4px 10px", borderRadius: 999, zIndex: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.10)" }}>
     {label}
@@ -92,25 +108,41 @@ const PillBtn = ({ bg, label, textColor = "white", icon, onClick }: PillBtnProps
 );
 
 interface SubjectCardProps {
-  meta: KGMeta; index: number;
-  title: string; tagline: string; btnLabel: string;
-  isRtl: boolean; onClick: () => void;
-  badge?: React.ReactNode; customBtn?: React.ReactNode;
+  meta: KGMeta;
+  index: number;
+  title: string;
+  tagline: string;
+  btnLabel: string;
+  isRtl: boolean;
+  onClick: () => void;
+  badge?: React.ReactNode;
+  customBtn?: React.ReactNode;
+  thumbnailUrl?: string;
 }
 
-const SubjectCard = ({ meta, index, title, tagline, btnLabel, isRtl, onClick, badge, customBtn }: SubjectCardProps) => {
+const SubjectCard = ({ meta, index, title, tagline, btnLabel, isRtl, onClick, badge, customBtn, thumbnailUrl }: SubjectCardProps) => {
   const Icon    = meta.icon;
   const profile = getProfile(index);
   const dir     = isRtl ? "rtl" : "ltr";
+  const showImg = isUrl(thumbnailUrl);
 
   const motionProps = {
-    initial: { opacity: 0, y: 30, scale: 0.9 },
-    animate: { opacity: 1, y: 0, scale: 1 },
+    initial:    { opacity: 0, y: 30, scale: 0.9 },
+    animate:    { opacity: 1, y: 0,  scale: 1   },
     transition: { duration: 0.4, delay: index * 0.07, type: "spring" as const, stiffness: 240, damping: 22 },
     whileHover: { y: -8, scale: 1.03, transition: { type: "spring" as const, stiffness: 300, damping: 14 } },
-    whileTap: { scale: 0.97 },
+    whileTap:   { scale: 0.97 },
     onClick,
   };
+
+  const IconCircle = () => (
+    <div style={{ width: 104, height: 104, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px rgba(0,0,0,0.10)", flexShrink: 0, overflow: "hidden" }}>
+      {showImg
+        ? <img src={thumbnailUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        : <Icon size={50} style={{ color: meta.iconColor }} strokeWidth={1.5} />
+      }
+    </div>
+  );
 
   const textBlock = (topMargin: number) => (
     <>
@@ -132,8 +164,11 @@ const SubjectCard = ({ meta, index, title, tagline, btnLabel, isRtl, onClick, ba
   if (profile.iconFloat) {
     return (
       <motion.div {...motionProps} style={{ position: "relative", marginTop: profile.iconOffset, cursor: "pointer" }}>
-        <div style={{ position: "absolute", top: -(profile.iconOffset!), left: "50%", transform: "translateX(-50%)", zIndex: 2, width: 104, height: 104, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}>
-          <Icon size={50} style={{ color: meta.iconColor }} strokeWidth={1.5} />
+        <div style={{ position: "absolute", top: -(profile.iconOffset!), left: "50%", transform: "translateX(-50%)", zIndex: 2, width: 104, height: 104, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", overflow: "hidden" }}>
+          {showImg
+            ? <img src={thumbnailUrl} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <Icon size={50} style={{ color: meta.iconColor }} strokeWidth={1.5} />
+          }
         </div>
         <div style={{ background: meta.cardBg, border: meta.border, borderRadius: profile.borderRadius, minHeight: profile.minHeight, paddingTop: profile.paddingTop + (profile.iconOffset || 0), paddingBottom: 36, paddingLeft: 28, paddingRight: 28, display: "flex", flexDirection: "column", alignItems: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.07)", position: "relative", overflow: "hidden" }}>
           {meta.accentBar && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 6, background: meta.accentBar }} />}
@@ -145,11 +180,11 @@ const SubjectCard = ({ meta, index, title, tagline, btnLabel, isRtl, onClick, ba
 
   return (
     <motion.div {...motionProps} style={{ background: meta.cardBg, border: meta.border, borderRadius: profile.borderRadius, minHeight: profile.minHeight, paddingTop: profile.paddingTop, paddingBottom: 36, paddingLeft: 28, paddingRight: 28, display: "flex", flexDirection: "column", alignItems: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.07)", cursor: "pointer", position: "relative", overflow: "hidden" }}>
-      {meta.accentBar && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 6, background: meta.accentBar, borderRadius: `${profile.borderRadius.split(" ")[0]} ${profile.borderRadius.split(" ")[1]} 0 0` }} />}
+      {meta.accentBar && (
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 6, background: meta.accentBar, borderRadius: `${profile.borderRadius.split(" ")[0]} ${profile.borderRadius.split(" ")[1]} 0 0` }} />
+      )}
       {badge}
-      <div style={{ width: 104, height: 104, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 12px rgba(0,0,0,0.10)", flexShrink: 0 }}>
-        <Icon size={50} style={{ color: meta.iconColor }} strokeWidth={1.5} />
-      </div>
+      <IconCircle />
       {textBlock(20)}
     </motion.div>
   );
@@ -182,7 +217,11 @@ const ComingSoonModal = ({ title, emoji, description, comingSoonLabel, onTheWayL
         <p className="text-slate-500 text-[14px] leading-relaxed">{description}</p>
       </div>
       <div className="flex gap-1">
-        {[...Array(5)].map((_, i) => (<motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 + i * 0.07, type: "spring", stiffness: 400 }}><Star size={18} className="text-yellow-400 fill-yellow-400" /></motion.div>))}
+        {[...Array(5)].map((_, i) => (
+          <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 + i * 0.07, type: "spring", stiffness: 400 }}>
+            <Star size={18} className="text-yellow-400 fill-yellow-400" />
+          </motion.div>
+        ))}
       </div>
       <div className="w-full border-t border-slate-100" />
       <button onClick={onClose} className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-black text-[15px] py-3.5 rounded-2xl transition-colors" style={{ fontFamily: FONT }}>{gotItLabel}</button>
@@ -193,7 +232,7 @@ const ComingSoonModal = ({ title, emoji, description, comingSoonLabel, onTheWayL
 const FloatingBubbles = () => (
   <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
     {[
-      { size: 90, top: "6%",   left: "2%",   color: "rgba(254,240,138,0.22)", delay: "0s"   },
+      { size: 90, top: "6%",  left: "2%",   color: "rgba(254,240,138,0.22)", delay: "0s"   },
       { size: 55, top: "18%", right: "4%",  color: "rgba(249,168,212,0.22)", delay: "0.6s" },
       { size: 70, top: "52%", left: "1%",   color: "rgba(147,197,253,0.22)", delay: "1.1s" },
       { size: 45, top: "72%", right: "7%",  color: "rgba(134,239,172,0.22)", delay: "1.7s" },
@@ -233,6 +272,7 @@ const CTABanner = ({ badge, title, desc, btnLessons, btnApp, isRtl, onNavigate }
 ═══════════════════════════════════════════════════════════ */
 const KGClassView = () => {
   const { classId } = useParams();
+  console.log("Current Class ID:", classId); // Yeh check karein console mein
   const navigate    = useNavigate();
   const location    = useLocation();
   const gradeType   = location.state?.gradeType;
@@ -243,6 +283,7 @@ const KGClassView = () => {
 
   const { classInfo, subjects, loading } = useClassSubjects(Number(classId));
 
+  // UI label — uses t() because it's a static string, not API content
   const gradeName =
     (isRtl ? classInfo?.urdu_name : classInfo?.name)
     || classInfo?.name
@@ -250,14 +291,14 @@ const KGClassView = () => {
 
   const [modal, setModal] = useState<null | "quizzes">(null);
 
-  const handleSubjectClick = (subject: any) => {
+  const handleSubjectClick = (subject: NormalizedSubject) => {
     navigate(`/class/${classInfo?.id}/subject/${subject.id}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
   };
 
   const handleSeeAllLessons = () => {
-    const eng = subjects.find((s: any) => s.name.toLowerCase().includes("english"));
+    const eng = subjects.find((s) => s.name.toLowerCase().includes("english"));
     if (eng) {
       navigate(`/class/${classInfo?.id}/subject/${eng.id}`, {
         state: { gradeType, selectedSubject: eng, classTitle: classInfo?.name },
@@ -270,7 +311,7 @@ const KGClassView = () => {
   const subjectCount = subjects.length;
 
   return (
-   <section className="min-h-screen relative z-0 overflow-x-hidden" style={{ background: "#EFF6FF" }}>
+    <section className="min-h-screen relative z-0 overflow-x-hidden" style={{ background: "#EFF6FF" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
         @keyframes kgFloat  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
@@ -283,9 +324,9 @@ const KGClassView = () => {
       <div className="pointer-events-none fixed top-8 right-8 z-0 opacity-25 select-none" style={{ fontSize: 28, animation: "kgSpin 7s linear infinite" }}>✦</div>
       <div className="pointer-events-none fixed bottom-14 right-14 z-0 opacity-20 select-none" style={{ fontSize: 22, animation: "kgSpin 9s linear infinite reverse" }}>✦</div>
 
-     <div className="relative z-10 max-w-[1160px] mx-auto px-4 pt-24 sm:pt-16 pb-10 flex flex-col items-center">
+      <div className="relative z-10 max-w-[1160px] mx-auto px-4 pt-24 sm:pt-16 pb-10 flex flex-col items-center">
 
-        {/* ── Breadcrumb ── */}
+        {/* ── Breadcrumb — static UI label ── */}
         <div className="flex items-center justify-center gap-2 mb-5" style={{ fontSize: 14, color: "#94A3B8", direction: isRtl ? "rtl" : "ltr" }}>
           <Link to="/" className="hover:text-slate-600 transition-colors font-semibold">
             {t("kgClassView.home")}
@@ -294,7 +335,7 @@ const KGClassView = () => {
           <span style={{ color: "#334155", fontWeight: 700 }}>{gradeName}</span>
         </div>
 
-        {/* ── Heading ── */}
+        {/* ── Heading — static UI labels ── */}
         <motion.div initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="text-center mb-16">
           <h1 style={{ fontSize: "clamp(28px, 6vw, 68px)", fontFamily: FONT, fontWeight: 900, color: "#1E40AF", lineHeight: 1.2, letterSpacing: "-0.02em", direction: isRtl ? "rtl" : "ltr" }}>
             {t("kgClassView.pageTitle")}{" "}
@@ -311,24 +352,40 @@ const KGClassView = () => {
             ? Array.from({ length: 6 }).map((_, i) => <KGCardSkeleton key={i} index={i} />)
             : (
               <>
-                {subjects.map((subject: any, i: number) => {
-                  const meta     = getKGMeta(subject.name);
-                  const sk       = `kgClassView.subjects.${meta.subjectKey}`;
-                  const title    = (isRtl ? subject.urdu_name : subject.name) || subject.name;
-                  const tagline  = t(`${sk}.tagline`);
-                  const btnLabel = t(`${sk}.btnLabel`);
+                {subjects.map((subject, i) => {
+                  const meta = getKGMeta(subject.name, subject._iconHint);
+
+                  // Display title: prefer localised API field, normalizer already handled this
+                  const title = isRtl
+                    ? subject.urdu_name || subject.name
+                    : subject.name;
+
+                  /**
+                   * Tagline priority:
+                   *   1. API description (normalised by useClassSubjects)
+                   *   2. Static translation file fallback
+                   *
+                   * t() is used ONLY as a last resort — not as the primary source.
+                   */
+                const apiDesc = isRtl ? subject.urdu_desc : subject.desc;
+const btnLabel = t(`kgClassView.subjects.${meta.subjectKey}.btnLabel`);
+const tagline = apiDesc || t(`kgClassView.subjects.${meta.subjectKey}.tagline`);
                   return (
-                    <SubjectCard
-                      key={subject.id}
-                      meta={meta} index={i}
-                      title={title} tagline={tagline} btnLabel={btnLabel}
-                      isRtl={isRtl}
-                      onClick={() => handleSubjectClick(subject)}
-                    />
+                  <SubjectCard
+      key={subject.id}
+      meta={meta}
+      index={i}
+      title={title}
+      tagline={tagline}
+      btnLabel={t(`kgClassView.subjects.${meta.subjectKey}.btnLabel`)}
+      isRtl={isRtl}
+      onClick={() => handleSubjectClick(subject)}
+      thumbnailUrl={subject.thumbnail_url}
+    />
                   );
                 })}
 
-                {/* Quizzes */}
+                {/* ── Quizzes — static card (no API data) ── */}
                 <SubjectCard
                   meta={{ icon: Trophy, subjectKey: "quizzes", cardBg: "#FFE4E6", border: "3px solid #FECDD3", iconColor: "#F43F5E", titleColor: "#BE123C", taglineColor: "#E11D48", btnBg: "#F43F5E" }}
                   index={subjectCount}
@@ -348,7 +405,7 @@ const KGClassView = () => {
                   }
                 />
 
-                {/* Fun Games */}
+                {/* ── Fun Games — static card ── */}
                 <SubjectCard
                   meta={{ icon: Gamepad2, subjectKey: "funGames", cardBg: "#EDE9FE", border: "3px solid #DDD6FE", iconColor: "#7C3AED", titleColor: "#5B21B6", taglineColor: "#7C3AED", btnBg: "#7C3AED" }}
                   index={subjectCount + 1}
@@ -367,7 +424,7 @@ const KGClassView = () => {
                   }
                 />
 
-                {/* AI Bestie */}
+                {/* ── AI Bestie — static card ── */}
                 <SubjectCard
                   meta={{ icon: Bot, subjectKey: "aiBestie", cardBg: "#6D28D9", border: "3px solid #7C3AED", iconColor: "#6D28D9", titleColor: "white", taglineColor: "#DDD6FE", btnBg: "white" }}
                   index={subjectCount + 2}

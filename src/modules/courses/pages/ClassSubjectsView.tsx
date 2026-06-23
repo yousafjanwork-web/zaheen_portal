@@ -7,11 +7,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useSeniorSubjects as useClassSubjects } from "@/modules/shared/hooks/useSeniorSubjects";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
 const BASE_URL = "https://api.zaheen.com.pk/api";
+
 
 /* ─────────────────────────────────────────────────────────────
    useTranslation  — REACTIVE (same pattern as SubjectLecturesView)
@@ -237,7 +238,9 @@ const FeaturedPhysicsCard = ({
           </div>
           <h3 className={`text-[24px] font-bold text-[#0F172A] leading-none mt-1 ${isUrdu ? "font-urdu" : ""}`}>{title}</h3>
         </div>
-        <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>{meta.description}</p>
+       <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
+  {isUrdu ? (subject.urdu_desc || meta.description) : (subject.desc || meta.description)}
+</p>
         <div className="border-t border-slate-100 mt-auto" />
         <StatsRow
           lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
@@ -292,7 +295,9 @@ const SubjectCard = ({
       </div>
       <div>
         <h3 className={`text-[21px] font-bold text-[#0F172A] leading-tight mb-1.5 ${isUrdu ? "text-right" : ""}`}>{title}</h3>
-        <p className={`text-[14px] text-slate-500 leading-relaxed line-clamp-2 ${isUrdu ? "text-right" : ""}`}>{meta.description}</p>
+    <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
+  {isUrdu ? (subject.urdu_desc || meta.description) : (subject.desc || meta.description)}
+</p>
       </div>
       <div className="border-t border-slate-100" />
       <StatsRow
@@ -522,13 +527,19 @@ const ClassSubjectsView = () => {
             </div>
           </div>
 
-          {/* Breadcrumb — also uses reactive gradeName */}
-          <div className="text-sm text-slate-400 flex items-center gap-2 mb-7">
+        {/* Breadcrumb — also uses reactive gradeName */}
+          <div className="text-sm text-slate-400 flex items-center gap-2 mb-7 flex-wrap">
             <Link to="/" className="hover:text-slate-600 transition-colors">{t("home")}</Link>
             <span>/</span>
+            
+            {/* ADDED 9-12 BREADCRUMB HERE */}
+            <Link to="/grade-view/9-12" className="hover:text-slate-600 transition-colors">
+             Grades 9-12
+            </Link>
+            <span>/</span>
+
             <span className="text-slate-700 font-semibold">{gradeName}</span>
           </div>
-
           {/* Heading — also uses reactive gradeName */}
           <div className="mb-9">
             <h1 className="text-[34px] font-black text-[#0F172A] tracking-tight leading-none mb-2">

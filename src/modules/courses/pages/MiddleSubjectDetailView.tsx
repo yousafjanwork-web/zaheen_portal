@@ -9,7 +9,9 @@ import {
   Sigma, Atom, Leaf, FlaskConical, Languages, Globe, Cpu, Landmark,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useMiddleSubjects as useClassSubjects, fetchMiddleVideoDetail } from "@/modules/shared/hooks/useMiddleSubjects";
+import { useAuth } from "@/modules/shared/context/AuthContext";
+import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";   // ← same hook as KG / Primary
 
 import heroDefault from "../../../assets/images/owls.png";
 
@@ -86,6 +88,8 @@ const MiddleSubjectDetailView = () => {
   const lang     = useLang();
   const isUrdu   = lang === "ur";
 
+  const { isLoggedIn } = useAuth();
+
   const gradeType    = location.state?.gradeType as string | undefined;
   const stateSubject = location.state?.selectedSubject;
 
@@ -97,7 +101,7 @@ const MiddleSubjectDetailView = () => {
   const ThemeIcon   = theme.icon;
 
   const heroTitle = isUrdu ? theme.heroTitle.ur : theme.heroTitle.en;
-  const tagline   = isUrdu ? theme.tagline.ur   : theme.tagline.en;
+const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.desc || theme.tagline.en);
 
   const subjectChapters: Chapter[] = useMemo(() =>
     chapters
@@ -107,20 +111,38 @@ const MiddleSubjectDetailView = () => {
   );
 
   const allVideos: Video[] = useMemo(() => subjectChapters.flatMap((c) => c.videos), [subjectChapters]);
-  const totalLessons  = allVideos.length;
-  const totalChapters = subjectChapters.length;
+  const allVideoIds        = useMemo(() => allVideos.map((v) => v.id), [allVideos]);
+  const totalLessons       = allVideos.length;
+  const totalChapters      = subjectChapters.length;
+
+  /* ── v2 progress hook (same as KG / Primary) ────────────── */
+  const {
+    progressMap,
+    watchedSet,
+    fetchJourneyForVideo,
+    handleTimeUpdate: progressTimeUpdate,
+    handleEnded: progressEnded,
+    handleView,
+    flushBeforeSwitch,
+  } = useVideoProgress(allVideoIds, isLoggedIn);
 
   /* ── All hooks must be declared before any early return ── */
   const [openChapterId,     setOpenChapterId]     = useState<number | null>(null);
   const [activeVideo,       setActiveVideo]       = useState<Video | null>(null);
   const [activeChapter,     setActiveChapter]     = useState<Chapter | null>(null);
-  const [watchedSet,        setWatchedSet]        = useState<Set<number>>(new Set());
-  const [progressMap,       setProgressMap]       = useState<Record<number, number>>({});
+  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string>("");
   const [notes,             setNotes]             = useState("");
   const [filter,            setFilter]            = useState<"all" | "inprogress">("all");
-  const [isLoggedIn]                              = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  /**
+   * resumePositionRef holds the position fetched BEFORE the player mounts.
+   * Read directly in onCanPlay — no stale-state risk.
+   */
+  const resumePositionRef = useRef<number>(0);
+  const hasSeekRef        = useRef(false);
+  const viewFiredRef      = useRef(false);
 
   useEffect(() => {
     if (subjectChapters.length > 0 && openChapterId === null)
@@ -128,6 +150,12 @@ const MiddleSubjectDetailView = () => {
   }, [subjectChapters]);
 
   useEffect(() => { setMobileSidebarOpen(false); }, [activeVideo]);
+
+  // Reset seek + view-tracking guards whenever the active video changes
+  useEffect(() => {
+    hasSeekRef.current = false;
+    viewFiredRef.current = false;
+  }, [activeVideo?.id]);
 
   const watchedCount = watchedSet.size;
   const progressPct  = totalLessons > 0 ? Math.round((watchedCount / totalLessons) * 100) : 0;
@@ -149,50 +177,84 @@ const MiddleSubjectDetailView = () => {
     return m ? `جماعت ${m[0]}` : classInfo.name || `Class ${classId}`;
   }, [classInfo, isUrdu, classId]);
 
-  const playVideo = useCallback((video: Video, chapter: Chapter) => {
-    setActiveVideo(video);
-    setActiveChapter(chapter);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
+  const chapterIdx = subjectChapters.findIndex((c) => c.id === chapter.id);
+  if (!isChapterUnlocked(chapterIdx)) {
+    navigate("/login", { state: { from: location.pathname } });
+    return;
+  }
+  flushBeforeSwitch();
+  const position = await fetchJourneyForVideo(video.id);
+  resumePositionRef.current = position;
+
+  setActiveVideo(video);
+  setActiveChapter(chapter);
+
+  try {
+    const detail = await fetchMiddleVideoDetail(video.id);
+    setResolvedVideoUrl(detail.video_url || `${CDN}${video.path}`);
+  } catch {
+    setResolvedVideoUrl(`${CDN}${video.path}`);
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, [flushBeforeSwitch, fetchJourneyForVideo, subjectChapters, isChapterUnlocked, navigate, location.pathname]);
 
   const exitPlayer = useCallback(() => {
+    flushBeforeSwitch();
     setActiveVideo(null);
     setActiveChapter(null);
     setMobileSidebarOpen(false);
+    resumePositionRef.current = 0;
+  }, [flushBeforeSwitch]);
+
+  /* ── onCanPlay: seek to saved position ──────────────────── */
+  const handleCanPlay = useCallback(() => {
+    if (hasSeekRef.current) return;
+    hasSeekRef.current = true;
+    const pos = resumePositionRef.current;
+    if (pos > 2 && videoRef.current) {
+      videoRef.current.currentTime = pos;
+    }
   }, []);
 
+  /* ── onPlay: fire view endpoint once per video open ─────── */
+  const handlePlay = useCallback(() => {
+    if (!viewFiredRef.current && activeVideo) {
+      viewFiredRef.current = true;
+      handleView(activeVideo.id);
+    }
+  }, [activeVideo, handleView]);
+
+  /* ── onEnded: delegate to progress hook + auto-advance ──── */
   const handleVideoEnded = useCallback(() => {
-    setActiveVideo((curVideo) => {
-      if (curVideo) {
-        setWatchedSet((p) => new Set(p).add(curVideo.id));
-        setProgressMap((p) => ({ ...p, [curVideo.id]: 100 }));
-        setActiveChapter((curChapter) => {
-          if (curChapter) {
-            const idx = curChapter.videos.findIndex((v) => v.id === curVideo.id);
-            if (idx < curChapter.videos.length - 1) {
-              const nextVideo = curChapter.videos[idx + 1];
-              setTimeout(() => playVideo(nextVideo, curChapter), 0);
-            }
-          }
-          return curChapter;
-        });
-      }
-      return curVideo;
-    });
-  }, [playVideo]);
+    if (!activeVideo || !activeChapter || !videoRef.current) return;
+    progressEnded(activeVideo.id, videoRef.current.duration || 0);
 
+    const idx = activeChapter.videos.findIndex((v) => v.id === activeVideo.id);
+    if (idx < activeChapter.videos.length - 1) {
+      playVideo(activeChapter.videos[idx + 1], activeChapter);
+    }
+  }, [activeVideo, activeChapter, progressEnded, playVideo]);
+
+  /* ── onTimeUpdate: delegate to progress hook ────────────── */
   const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (!activeVideo) return;
     const v = e.target as HTMLVideoElement;
-    if (!v.duration) return;
-    const pct = (v.currentTime / v.duration) * 100;
-    setActiveVideo((curVideo) => {
-      if (curVideo) {
-        setProgressMap((p) => ({ ...p, [curVideo.id]: Math.round(pct) }));
-        if (pct >= 90) setWatchedSet((p) => new Set(p).add(curVideo.id));
-      }
-      return curVideo;
-    });
-  }, []);
+    progressTimeUpdate(activeVideo.id, v.currentTime, v.duration);
+  }, [activeVideo, progressTimeUpdate]);
+
+  /* ── Manual "Mark as Complete" toggle ───────────────────── */
+  const handleMarkComplete = useCallback(() => {
+    if (!activeVideo || !videoRef.current) return;
+    if (watchedSet.has(activeVideo.id)) {
+      // Already watched — v2 has no "unwatch" endpoint, so this is a no-op
+      // once marked complete (button is also disabled in that state).
+      return;
+    }
+    const duration = videoRef.current.duration || 0;
+    progressEnded(activeVideo.id, duration);
+  }, [activeVideo, watchedSet, progressEnded]);
 
   /* ── Resources data ── */
   const RESOURCES = useMemo(() => [
@@ -222,15 +284,23 @@ const MiddleSubjectDetailView = () => {
               const watched   = watchedSet.has(video.id);
               const isActive  = activeVideo?.id === video.id;
               const vt        = isUrdu ? video.urdu_name || video.name : video.name;
+              const vidPct    = watched ? 100 : progressMap[video.id] || 0;
               return (
                 <div
                   key={video.id}
-                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px", borderRadius: 10, cursor: locked ? "default" : "pointer", opacity: locked ? .45 : 1, background: isActive ? theme.light : "transparent", border: `1.5px solid ${isActive ? theme.color + "33" : "transparent"}`, marginBottom: 2, transition: "background .14s" }}
-                  onClick={() => { if (!locked) { playVideo(video, chapter); setMobileSidebarOpen(false); } }}
+style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px", borderRadius: 10, cursor: "pointer", background: isActive ? theme.light : locked ? "#F8FAFC" : "transparent", border: `1.5px solid ${isActive ? theme.color + "33" : "transparent"}`, marginBottom: 2, transition: "background .14s" }}
+                onClick={() => {
+                    if (locked) {
+                      navigate("/login", { state: { from: location.pathname } });
+                      return;
+                    }
+                    playVideo(video, chapter);
+                    setMobileSidebarOpen(false);
+                  }}
                 >
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: isActive ? theme.color : locked ? "#E2E8F0" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: isActive ? theme.color : locked ? "#CBD5E1" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {locked
-                      ? <Lock size={14} style={{ color: "#94A3B8" }} />
+                      ? <Lock size={14} style={{ color: "#334155" }} />
                       : watched
                         ? <CheckCircle2 size={14} style={{ color: "#22C55E" }} />
                         : isActive
@@ -238,15 +308,19 @@ const MiddleSubjectDetailView = () => {
                           : <ThemeIcon size={14} style={{ color: theme.color }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: ".82rem", fontWeight: isActive ? 800 : 600, color: isActive ? theme.color : locked ? "#94A3B8" : "#0F172A", margin: "0 0 2px", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <p style={{ fontSize: ".82rem", fontWeight: isActive ? 800 : 600, color: isActive ? theme.color : locked ? "#475569" : "#0F172A", margin: "0 0 2px", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {globalIdx + 1}.{vidIdx + 1} {vt}
                     </p>
                     <p style={{ fontSize: ".7rem", color: "#94A3B8", margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
-                      {locked
-                        ? <><Lock size={9} /> {isUrdu ? "مقفل" : "Locked"}</>
+                     {locked
+                        ? <span style={{ color: "#475569", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}><Lock size={9} /> {isUrdu ? "مقفل" : "Locked"}</span>
                         : isActive
                           ? <span style={{ color: theme.color, fontWeight: 700 }}>{isUrdu ? "موجودہ" : "Current"}</span>
-                          : <><Clock size={9} /> 15–20 {isUrdu ? "منٹ" : "mins"}</>}
+                          : watched
+                            ? <span style={{ color: "#22C55E", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}><CheckCircle2 size={9} /> {isUrdu ? "مکمل" : "Done"}</span>
+                            : vidPct > 0
+                              ? <span style={{ color: theme.color, fontWeight: 700 }}>{vidPct}% {isUrdu ? "دیکھا" : "watched"}</span>
+                              : <><Clock size={9} /> 15–20 {isUrdu ? "منٹ" : "mins"}</>}
                     </p>
                   </div>
                 </div>
@@ -423,9 +497,10 @@ const MiddleSubjectDetailView = () => {
     const vid      = activeVideo;
     const chap     = activeChapter;
     const vTitle   = isUrdu ? vid.urdu_name || vid.name : vid.name;
-    const vUrl     = `${CDN}${vid.path}`;
+   const vUrl = resolvedVideoUrl;
     const chLabel  = isUrdu ? chap.urdu_name || chap.name : chap.name;
     const isWatched = watchedSet.has(vid.id);
+    const pctActive = isWatched ? 100 : progressMap[vid.id] || 0;
 
     return (
       <div style={{ minHeight: "100vh", background: "#F8FAFC", fontFamily: "'Nunito','Segoe UI',sans-serif", direction: isUrdu ? "rtl" : "ltr" }}>
@@ -482,7 +557,7 @@ const MiddleSubjectDetailView = () => {
             </div>
 
             {/* Video player */}
-            <div style={{ background: "#000", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.22)", marginBottom: 20 }}>
+            <div style={{ background: "#000", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,.22)", marginBottom: 6 }}>
               <div style={{ aspectRatio: "16/9" }}>
                 <video
                   ref={videoRef}
@@ -491,6 +566,8 @@ const MiddleSubjectDetailView = () => {
                   controls
                   autoPlay
                   style={{ width: "100%", height: "100%", display: "block" }}
+                  onCanPlay={handleCanPlay}
+                  onPlay={handlePlay}
                   onEnded={handleVideoEnded}
                   onTimeUpdate={handleTimeUpdate}
                   onError={(e) => console.error("Video error", e)}
@@ -498,8 +575,15 @@ const MiddleSubjectDetailView = () => {
               </div>
             </div>
 
+            {/* In-progress bar below the player */}
+            {pctActive > 0 && pctActive < 100 && (
+              <div style={{ height: 4, background: "#E5E7EB", borderRadius: 4, marginBottom: 14, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pctActive}%`, background: theme.color, borderRadius: 4, transition: "width .4s ease" }} />
+              </div>
+            )}
+
             {/* Video title + description */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginTop: pctActive > 0 && pctActive < 100 ? 0 : 14, marginBottom: 20 }}>
               <p style={{ fontSize: ".72rem", fontWeight: 800, color: theme.color, textTransform: "uppercase", letterSpacing: 1, margin: "0 0 4px" }}>{chLabel}</p>
               <h2 style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)", fontWeight: 900, color: "#0F172A", margin: "0 0 6px", lineHeight: 1.25 }}>{vTitle}</h2>
               {vid.desc && (
@@ -551,10 +635,11 @@ const MiddleSubjectDetailView = () => {
                   ))}
                 </div>
 
-                {/* Mark as Complete */}
+                {/* Mark as Complete — now backed by the v2 progress endpoint */}
                 <button
-                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#fff", border: `2px solid ${isWatched ? "#22C55E" : "#E2E8F0"}`, borderRadius: 12, padding: "12px 16px", fontWeight: 800, fontSize: ".88rem", color: isWatched ? "#22C55E" : "#374151", cursor: "pointer", fontFamily: "'Nunito',sans-serif", transition: "all .15s" }}
-                  onClick={() => setWatchedSet((p) => { const n = new Set(p); n.has(vid.id) ? n.delete(vid.id) : n.add(vid.id); return n; })}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#fff", border: `2px solid ${isWatched ? "#22C55E" : "#E2E8F0"}`, borderRadius: 12, padding: "12px 16px", fontWeight: 800, fontSize: ".88rem", color: isWatched ? "#22C55E" : "#374151", cursor: isWatched ? "default" : "pointer", fontFamily: "'Nunito',sans-serif", transition: "all .15s" }}
+                  onClick={handleMarkComplete}
+                  disabled={isWatched}
                 >
                   <CheckCircle2 size={17} style={{ color: isWatched ? "#22C55E" : "#94A3B8" }} />
                   {isWatched
@@ -593,7 +678,10 @@ const MiddleSubjectDetailView = () => {
   const filteredVideos = (() => {
     if (!activeChapterData) return [];
     if (filter === "inprogress")
-      return activeChapterData.videos.filter((v) => progressMap[v.id] > 0 && progressMap[v.id] < 100);
+      return activeChapterData.videos.filter((v) => {
+        const pct = watchedSet.has(v.id) ? 100 : progressMap[v.id] || 0;
+        return pct > 0 && pct < 100;
+      });
     return activeChapterData.videos;
   })();
 
@@ -627,6 +715,12 @@ const MiddleSubjectDetailView = () => {
                   <Gamepad2 size={14} style={{ color: "#065F46" }} />
                   {isUrdu ? "۸ کھیل" : "8 Games"}
                 </span>
+                {watchedCount > 0 && (
+                  <span className="msv-pill" style={{ color: "#16A34A" }}>
+                    <CheckCircle2 size={14} style={{ color: "#16A34A" }} />
+                    {progressPct}% {isUrdu ? "مکمل" : "Done"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -682,10 +776,16 @@ const MiddleSubjectDetailView = () => {
                   const chLabel   = isUrdu ? chapter.urdu_name || chapter.name : chapter.name;
                   return (
                     <div key={chapter.id} className="msv-ch-row">
-                      <button
+                     <button
                         className={`msv-ch-btn${isOpen ? " active" : ""}`}
-                        onClick={() => { if (!unlocked) return; setOpenChapterId(isOpen ? null : chapter.id); }}
-                        style={{ cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.55 }}
+                        onClick={() => {
+                          if (!unlocked) {
+                            navigate("/login", { state: { from: location.pathname } });
+                            return;
+                          }
+                          setOpenChapterId(isOpen ? null : chapter.id);
+                        }}
+                        style={{ cursor: "pointer", opacity: unlocked ? 1 : 0.7 }}
                       >
                         <div className="msv-ch-icon" style={{ background: chDone ? "#DCFCE7" : isOpen ? theme.pill : "#F1F5F9", color: chDone ? "#16A34A" : isOpen ? theme.color : "#6B7280" }}>
                           {chDone ? <CheckCircle2 size={16} /> : unlocked ? (isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />) : <Lock size={14} />}
@@ -696,9 +796,10 @@ const MiddleSubjectDetailView = () => {
                           </p>
                           <p className="msv-ch-name">{chLabel}</p>
                         </div>
+                        {/* per-chapter progress badge */}
                         {unlocked && chapter.videos.length > 0 && (
-                          <span style={{ fontSize: ".72rem", fontWeight: 800, color: isOpen ? "#fff" : "#9CA3AF", background: isOpen ? theme.color : "#F1F5F9", padding: "2px 8px", borderRadius: 100, flexShrink: 0 }}>
-                            {chapter.videos.length}
+                          <span style={{ fontSize: ".72rem", fontWeight: 800, color: chDone ? "#16A34A" : isOpen ? "#fff" : "#9CA3AF", background: chDone ? "#DCFCE7" : isOpen ? theme.color : "#F1F5F9", padding: "2px 8px", borderRadius: 100, flexShrink: 0 }}>
+                            {chDone ? "✓" : `${chWatched}/${chapter.videos.length}`}
                           </span>
                         )}
                       </button>
