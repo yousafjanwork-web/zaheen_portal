@@ -9,6 +9,8 @@ import ProfessionalCourses from "@/modules/home/sections/ProfessionalCourses";
 import Pricing from "@/modules/home/sections/Pricing";
 import CTASection from "@/modules/home/sections/CTASection";
 import MDCATBanner from "../sections/MDCATMobileBanner";
+import SummerCampBanner from "../sections/SummerCampMobile";
+import OrigamiCampMobile from "../sections/OrigamiMobile";
 
 const HomeMobile = () => {
   return (
@@ -20,7 +22,8 @@ const HomeMobile = () => {
       <HeroMobile />
       <PromoSlider />
       <BrowseByGrade />
-
+      <SummerCampBanner/>
+      {/* <OrigamiCampMobile/> */}
       <ProfessionalCourses />
       <MDCATBanner/>
       <Pricing />

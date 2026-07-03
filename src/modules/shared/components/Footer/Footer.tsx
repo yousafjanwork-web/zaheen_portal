@@ -153,6 +153,11 @@ const Footer: React.FC = () => {
                   {t("footer.terms")}
                 </Link>
               </li>
+              <li>
+      <Link to="/faqzaheen" className="hover:text-white">
+        {t("footer.faq")} 
+      </Link>
+    </li>
 
             </ul>
 

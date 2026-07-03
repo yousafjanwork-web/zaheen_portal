@@ -105,7 +105,7 @@ async function postProgress(payload: {
     const res = await fetch(`${BASE}/api/videos/progress`, {
       method: "POST",
       headers: getAuthHeaders(),
-      credentials: "include",
+      // credentials: "include",
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
@@ -140,7 +140,7 @@ function beaconProgress(payload: {
     xhr.open("POST", url, false); // synchronous on unload
     const headers = getAuthHeaders();
     Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
-    xhr.withCredentials = true;
+    // xhr.withCredentials = true;
     xhr.send(body);
   } catch { /* ignore — page is unloading */ }
 }
@@ -154,7 +154,7 @@ async function postView(videoId: number) {
     const res = await fetch(`${BASE}/api/videos/view`, {
       method: "POST",
       headers: getAuthHeaders(),
-      credentials: "include",
+      // credentials: "include",
       body: JSON.stringify({ video_id: videoId }),
     });
     if (!res.ok) {
@@ -173,7 +173,7 @@ async function fetchJourney(videoId: number): Promise<VideoProgress | null> {
   try {
     const res = await fetch(
       `${BASE}/api/videos/learning-journey/${videoId}`,
-      { headers: getAuthHeaders(), credentials: "include" }
+      { headers: getAuthHeaders() }
     );
     if (!res.ok) return null;
     const json: JourneyResponse = await res.json();

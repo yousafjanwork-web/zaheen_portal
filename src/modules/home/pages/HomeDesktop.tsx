@@ -4,15 +4,19 @@ import ProfessionalCourses from "../sections/ProfessionalCourses";
 import Pricing from "../sections/Pricing";
 import CTASection from "../sections/CTASection";
 import MDCATDesktopBanner from "../sections/MDCATDesktopBanner";
-
+import SummerCampBanner from "../sections/SummerCampDesktop";
+import OrigamiCampBanner from "../sections/OrigamiDesktop";
 
 const HomeDesktop = () => {
   return (
     <>
       <HeroSlider />
       <BrowseByGrade />
+      <SummerCampBanner/>
+          {/* <OrigamiCampBanner/> */}
       <ProfessionalCourses />
       <MDCATDesktopBanner/>
+      
 
       <Pricing />
       <CTASection />

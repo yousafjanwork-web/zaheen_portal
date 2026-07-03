@@ -4,8 +4,6 @@
  */
 
 import { useState, useEffect } from "react";
-// Ye line confirm karein
-import { useSearchParams } from "react-router-dom";
 import {
   Database,
   Sparkles,
@@ -35,6 +33,7 @@ import PastPapers from "./components/PastPapers";
 import ZaheenLogo from "./components/ZaheenLogo";
 // import FocusTimer from "./components/FocusTimer";
 import StudyNotes from "./components/StudyNotes";
+import FAQ from "./components/FAQ";
 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
@@ -60,10 +59,9 @@ const mapQuestion = (q: any) => ({
 });
 
 export default function MdcatApp() {
-  const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get("tab") as "dashboard" | "ai-generator" | "past-papers" | "notes") || "dashboard";
-  
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<
+    "dashboard" | "ai-generator" | "past-papers" | "notes" | "faq"
+  >("dashboard");
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -87,50 +85,60 @@ export default function MdcatApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Load all foundational data on startup
-const fetchAllData = async () => {
-  try {
-    const [quizzesRes, statsRes, recsRes] = await Promise.all([
-      fetch(mdcatApi("/api/mdcat/quizzes")),
-      fetch(mdcatApi("/api/mdcat/performance")),
-      fetch(mdcatApi("/api/mdcat/recommendations")),
-    ]);
- 
-    // Quizzes
-    if (quizzesRes.ok) {
-      const quizzesData = await quizzesRes.json();
-      const rawQuizzes = Array.isArray(quizzesData.data) ? quizzesData.data : [];
-      setQuizzes(rawQuizzes.map(mapQuiz));
-    }
- 
-    // Performance
-    if (statsRes.ok) {
-      const statsData = await statsRes.json();
-      setPerformanceStats(statsData);
-    }
- 
-    // Recommendations — safe, won't break others if it fails
-    if (recsRes.ok) {
-      try {
-        const recsData = await recsRes.json();
-        if (recsData.success) {
-          setRecommendations(Array.isArray(recsData.data) ? recsData.data : []);
-        } else {
+  const fetchAllData = async () => {
+    try {
+      const [quizzesRes, statsRes, recsRes] = await Promise.all([
+        fetch(mdcatApi("/api/mdcat/quizzes")),
+        fetch(mdcatApi("/api/mdcat/performance")),
+        fetch(mdcatApi("/api/mdcat/recommendations")),
+      ]);
+
+      // Quizzes
+      if (quizzesRes.ok) {
+        const quizzesData = await quizzesRes.json();
+        const rawQuizzes = Array.isArray(quizzesData.data)
+          ? quizzesData.data
+          : [];
+        setQuizzes(rawQuizzes.map(mapQuiz));
+      }
+
+      // Performance
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setPerformanceStats({
+          totalAttempts: statsData.totalAttempts || 0,
+          averageScorePercent: statsData.averageScorePercent || 0,
+          subjectBreakdown: statsData.subjectBreakdown || [],
+          subTopicList: statsData.subTopicList || [],
+          attemptHistory: statsData.attemptHistory || [],
+          totalFocusMinutes: statsData.totalFocusMinutes || 0,
+          focusSessions: statsData.focusSessions || [],
+          studyStreak: statsData.studyStreak || 0,
+        });
+      }
+      // Recommendations — safe, won't break others if it fails
+      if (recsRes.ok) {
+        try {
+          const recsData = await recsRes.json();
+          if (recsData.success) {
+            setRecommendations(
+              Array.isArray(recsData.data) ? recsData.data : [],
+            );
+          } else {
+            setRecommendations([]);
+          }
+        } catch {
           setRecommendations([]);
         }
-      } catch {
+      } else {
         setRecommendations([]);
       }
-    } else {
-      setRecommendations([]);
+    } catch (e) {
+      console.error("[App] Failed to prefetch full-stack parameters:", e);
+    } finally {
+      setLoading(false);
     }
- 
-  } catch (e) {
-    console.error("[App] Failed to prefetch full-stack parameters:", e);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
   useEffect(() => {
     fetchAllData();
   }, []);
@@ -294,6 +302,21 @@ const fetchAllData = async () => {
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 opacity-60" />
               </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab("faq");
+                  setSelectedQuizId(null);
+                  setActiveQuiz(null);
+                }}
+                className={`w-full flex items-center justify-between gap-3 p-3 text-xs rounded-xl transition-all ${activeTab === "faq" && !selectedQuizId ? "bg-sky-600 text-white font-black uppercase tracking-wider card-shadow" : "text-sky-950 font-black uppercase tracking-wider hover:bg-sky-50/50"}`}
+              >
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4" />
+                  <span>FAQ</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+              </button>
             </div>
           </div>
 
@@ -409,7 +432,7 @@ const fetchAllData = async () => {
               >
                 <PastPapers quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
               </motion.div>
-            ) : (
+            ) : activeTab === "notes" ? (
               <motion.div
                 key="study-notes-frame"
                 initial={{ opacity: 0, y: 10 }}
@@ -420,6 +443,15 @@ const fetchAllData = async () => {
                   onSelectQuiz={handleSelectQuiz}
                   onBack={() => setActiveTab("dashboard")}
                 />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="faq-frame"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <FAQ onBack={() => setActiveTab("dashboard")} />
               </motion.div>
             )}
           </AnimatePresence>

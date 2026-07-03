@@ -111,11 +111,10 @@ const GradeCard = ({ grade, index, isUrdu, onExplore }: GradeCardProps) => {
         <div className="mg-badge">{isUrdu ? "تجویز کردہ" : "RECOMMENDED"}</div>
       )}
 
-      <div className="mg-g-icon">{icon}</div>
-      <p className="mg-g-lbl">{displayLabel}</p>
-      <p className="mg-g-track">{track}</p>
-      <p className="mg-g-desc">{desc}</p>
-
+     <div className="mg-g-icon">{icon}</div>
+<p className="mg-g-track">{track}</p>
+<p className="mg-g-lbl">{displayLabel}</p>
+<p className="mg-g-desc">{desc}</p>
       {/* ── Real subject count from API ── */}
       <div className="mg-g-subj">
         <CheckCircle size={14} style={{ color: "#22C55E", flexShrink: 0 }} />
@@ -192,6 +191,7 @@ const MiddleGradesView = () => {
   const navigate = useNavigate();
   const lang     = useLang();
   const isUrdu   = lang === "ur";
+ 
 
   const { grades: grades68 = [], loading: l1 }  = useGrades("6-8")    as { grades: any[]; loading: boolean };
   const { grades: gradesMid = [], loading: l2 } = useGrades("middle") as { grades: any[]; loading: boolean };
@@ -211,7 +211,7 @@ const MiddleGradesView = () => {
   const handleExplore = (grade: any) =>
     navigate(`/class/${grade.id}`, { state: { gradeType: grade.name, classTitle: grade.name } });
 
-  const analytics = { pct: 75, weekly: "4.2 hrs/day", streak: "12 Days" };
+ const analytics = { pct: 0, weekly: "0 hrs/day", streak: "0 Days" };
 
   return (
     <div style={{
@@ -253,8 +253,8 @@ const MiddleGradesView = () => {
         .mg-grade-card.rec  { border-color:#1E40AF; }
         .mg-badge  { position:absolute;top:0;right:0;background:#1E40AF;color:#fff;font-size:.6rem;font-weight:800;letter-spacing:1.5px;padding:5px 12px;border-radius:0 16px 0 12px; }
         .mg-g-icon { width:36px;height:36px;border-radius:8px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;color:#64748B;flex-shrink:0; }
-        .mg-g-lbl  { font-size:.8rem;font-weight:700;color:#2563EB;margin:0; }
-        .mg-g-track{ font-size:1.1rem;font-weight:800;color:#0F172A;margin:0;line-height:1.2; }
+        .mg-g-lbl  { font-size:1.4rem;font-weight:700;color:#2563EB;margin:0; }
+        .mg-g-track{ font-size:.9rem;font-weight:800;color:#0F172A;margin:0;line-height:1.2; }
         .mg-g-desc { font-size:.8rem;color:#64748B;line-height:1.6;margin:0;flex:1; }
         .mg-g-subj { display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:#2563EB; }
         .mg-g-prog { height:3px;background:#E2E8F0;border-radius:100px;overflow:hidden;margin-top:2px; }

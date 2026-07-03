@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { sendPin, verifyPin, subscribeUser } from "@/modules/shared/services/subscriptionService";
+import {
+  sendPin,
+  verifyPin,
+  subscribeUser,
+  makeJazzCashPayment
+} from "@/modules/shared/services/subscriptionService";
 import { useAuth } from "@/modules/shared/context/AuthContext";
+
+type SubscriptionType = "ZONG" | "OTHER";
 
 const SubscribePage = () => {
 
@@ -9,7 +16,15 @@ const SubscribePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [msisdn, setMsisdn] = useState("");
+  const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("ZONG");
+
+  const [zongMsisdn, setZongMsisdn] = useState("");
+  const [otherMsisdn, setOtherMsisdn] = useState("");
+  const [cnic, setCnic] = useState("");
+
+  // Whichever field is relevant for the currently selected toggle
+  const msisdn = subscriptionType === "ZONG" ? zongMsisdn : otherMsisdn;
+  const setMsisdn = subscriptionType === "ZONG" ? setZongMsisdn : setOtherMsisdn;
   const [serviceId, setServiceId] = useState<string>(
     searchParams.get("plan") ?? "205"
   );
@@ -41,9 +56,19 @@ const SubscribePage = () => {
 
   }, []);
 
-  /* Subscribe or Send PIN */
+  /* Packages — "amount" is the numeric value sent to JazzCash payment API */
 
-  const handleSubscribe = async () => {
+  const packages = [
+    { id: "205", name: "Daily", price: "Rs 5+Tax", amount: 5 },
+    { id: "206", name: "Weekly", price: "Rs 15+Tax", amount: 15 },
+    { id: "207", name: "Monthly", price: "Rs 50+Tax", amount: 50 }
+  ];
+
+  const selectedPackage = packages.find(pkg => pkg.id === serviceId);
+
+  /* Subscribe or Send PIN (Zong flow) */
+
+  const handleZongSubscribe = async () => {
 
     if (!msisdn) {
       setError("Please enter mobile number");
@@ -57,7 +82,6 @@ const SubscribePage = () => {
 
       if (isAutoMsisdn) {
 
-        /* Direct subscribe for HE/MZA */
         console.log("call Subscriber:" + msisdn + " serviceid " + serviceId);
         const sub = await subscribeUser(msisdn, serviceId);
 
@@ -71,7 +95,6 @@ const SubscribePage = () => {
 
       } else {
 
-        /* Manual user → Send PIN */
         const res = await sendPin(msisdn, serviceId);
 
         if (res.status === "PIN_SENT") {
@@ -93,7 +116,69 @@ const SubscribePage = () => {
 
   };
 
-  /* Verify PIN */
+  /* Pay via JazzCash ("Other Subscription" flow) */
+
+  const handleJazzCashSubscribe = async () => {
+
+    if (!msisdn) {
+      setError("Please enter mobile number");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(cnic)) {
+      setError("Please enter the last 6 digits of your CNIC");
+      return;
+    }
+
+    if (!selectedPackage) {
+      setError("Please select a package");
+      return;
+    }
+
+    try {
+
+      setLoading(true);
+      setError("");
+
+      const result = await makeJazzCashPayment(msisdn, selectedPackage.amount, cnic);
+
+      // NOTE: adjust this success check to match the real JazzCash/Zaheen
+      // response shape once you can see a live response — this is a
+      // reasonable default (success flag OR status "success"/1).
+      const isSuccess =
+        result?.success === true ||
+        result?.status === "success" ||
+        result?.status === 1 ||
+        result?.status === "1";
+
+      if (isSuccess) {
+        login(msisdn);
+        localStorage.setItem("activeServiceId", serviceId);
+        setStep("SUCCESS");
+      } else {
+        setError(result?.message || result?.desc || "Payment failed");
+      }
+
+    } catch (err) {
+
+      console.error("JazzCash payment failed:", err);
+      setError("Payment failed. Please try again.");
+
+    }
+
+    setLoading(false);
+
+  };
+
+  const handleSubscribe = () => {
+    if (subscriptionType === "ZONG") {
+      handleZongSubscribe();
+    } else {
+      handleJazzCashSubscribe();
+    }
+  };
+
+  /* Verify PIN (Zong flow only) */
 
   const handleVerifyPin = async () => {
 
@@ -118,7 +203,6 @@ const SubscribePage = () => {
 
       } else {
 
-        // ✅ show actual API message e.g. "Invalid PIN"
         setError(verify.message || "Invalid PIN. Please try again.");
 
       }
@@ -155,12 +239,6 @@ const SubscribePage = () => {
 
   };
 
-  const packages = [
-    { id: "205", name: "Daily", price: "Rs 5+Tax" },
-    { id: "206", name: "Weekly", price: "Rs 15+Tax" },
-    { id: "207", name: "Monthly", price: "Rs 50+Tax" }
-  ];
-
   return (
 
     <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-900 flex items-center justify-center px-4">
@@ -174,6 +252,38 @@ const SubscribePage = () => {
               Subscribe to Zaheen
             </h2>
 
+            {/* Subscription type toggle */}
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+
+              <button
+                onClick={() => {
+                  setSubscriptionType("ZONG");
+                  setError("");
+                }}
+                className={`p-3 rounded-xl border text-center font-semibold transition
+                ${subscriptionType === "ZONG"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-gray-50 hover:bg-gray-100"}`}
+              >
+                Zong
+              </button>
+
+              <button
+                onClick={() => {
+                  setSubscriptionType("OTHER");
+                  setError("");
+                }}
+                className={`p-3 rounded-xl border text-center font-semibold transition
+                ${subscriptionType === "OTHER"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-gray-50 hover:bg-gray-100"}`}
+              >
+                Other Subscription
+              </button>
+
+            </div>
+
             <label className="text-sm font-semibold mb-2 block">
               Mobile Number
             </label>
@@ -186,6 +296,27 @@ const SubscribePage = () => {
               className="border w-full p-3 rounded-lg mb-6"
               placeholder="923XXXXXXXXX"
             />
+
+            {subscriptionType === "OTHER" && (
+
+              <>
+                <label className="text-sm font-semibold mb-2 block">
+                  CNIC (last 6 digits) <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={cnic}
+                  onChange={(e) => setCnic(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                  className="border w-full p-3 rounded-lg mb-6"
+                  placeholder="XXXXXX"
+                />
+              </>
+
+            )}
 
             <label className="text-sm font-semibold mb-3 block">
               Choose Package
@@ -221,9 +352,11 @@ const SubscribePage = () => {
             >
               {loading
                 ? "Processing..."
-                : isAutoMsisdn
-                  ? "Subscribe Now"
-                  : "Send PIN"}
+                : subscriptionType === "OTHER"
+                  ? "Pay via JazzCash"
+                  : isAutoMsisdn
+                    ? "Subscribe Now"
+                    : "Send PIN"}
             </button>
 
           </>

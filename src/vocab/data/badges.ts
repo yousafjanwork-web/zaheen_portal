@@ -1,0 +1,88 @@
+import { Badge } from '../types';
+
+export const allBadges: Badge[] = [
+  {
+    id: 'first-lesson',
+    name: 'First Lesson',
+    description: 'Complete your very first vocabulary lesson!',
+    icon: '🌟',
+    criteria: 'Complete 1 lesson',
+  },
+  {
+    id: 'vocabulary-explorer',
+    name: 'Vocabulary Explorer',
+    description: 'Learn 25 new vocabulary words',
+    icon: '🔍',
+    criteria: 'Learn 25 words',
+  },
+  {
+    id: 'creative-writer',
+    name: 'Creative Writer',
+    description: 'Complete 5 writing challenges with excellent scores',
+    icon: '✍️',
+    criteria: 'Score 80%+ on 5 challenges',
+  },
+  {
+    id: 'fifty-words',
+    name: '50 Words Learned',
+    description: 'Master 50 vocabulary words',
+    icon: '📚',
+    criteria: 'Learn 50 words',
+  },
+  {
+    id: 'seven-day-streak',
+    name: '7-Day Streak',
+    description: 'Maintain a 7-day learning streak',
+    icon: '🔥',
+    criteria: '7-day streak',
+  },
+  {
+    id: 'vocabulary-champion',
+    name: 'Vocabulary Champion',
+    description: 'Score 100% on 10 quizzes',
+    icon: '🏆',
+    criteria: 'Perfect score on 10 quizzes',
+  },
+  {
+    id: 'story-master',
+    name: 'Story Master',
+    description: 'Write 3 amazing mini-stories using vocabulary words',
+    icon: '📖',
+    criteria: 'Complete 3 story challenges',
+  },
+  {
+    id: 'perfect-week',
+    name: 'Perfect Week',
+    description: 'Complete every lesson for a full week',
+    icon: '💎',
+    criteria: '7 lessons in 7 days',
+  },
+  {
+    id: 'speed-learner',
+    name: 'Speed Learner',
+    description: 'Complete a lesson in under 5 minutes with perfect scores',
+    icon: '⚡',
+    criteria: 'Fast perfect lesson',
+  },
+  {
+    id: 'word-collector',
+    name: 'Word Collector',
+    description: 'Build a collection of 100 vocabulary words',
+    icon: '🎯',
+    criteria: 'Learn 100 words',
+  },
+  {
+    id: 'quiz-whiz',
+    name: 'Quiz Whiz',
+    description: 'Get perfect scores on 5 quizzes in a row',
+    icon: '🧠',
+    criteria: '5 perfect quizzes in a row',
+  },
+  {
+    id: 'daily-devotion',
+    name: 'Daily Devotion',
+    description: 'Complete 30 consecutive days of learning',
+    icon: '📅',
+    criteria: '30-day streak',
+  },
+];

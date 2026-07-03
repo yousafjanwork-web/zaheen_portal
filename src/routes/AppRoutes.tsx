@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import Home from "../modules/home/pages/Home";
 import TermsOfService from "@/pages/TermsOfService";
+import FAQ from "@/pages/FaqZaheen";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ScrollToTop from "@/modules/shared/components/ScrollToTop";
 import GradesView from "@/modules/courses/pages/GradesView";
@@ -34,7 +35,11 @@ import ClassSubjectsRouter from "@/modules/courses/pages/ClassSubjectsRouter";
 import SubjectLecturesRouter from "@/modules/courses/pages/SubjectLecturesRouter";
 import PrimaryGradesQuiz from "@/modules/courses/pages/PrimaryGradesQuizz"
 import { MdcatApp } from "../mdcat";
+import { CosmokidApp } from "../cosmokid";
+import { VocabApp } from "../vocab";
+
 import { MDCATmobile } from "../mdcat/components/MDCATmobile";
+
 
 const AppRoutes = () => {
   return (
@@ -47,6 +52,7 @@ const AppRoutes = () => {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/faqzaheen" element={<FAQ />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/grade-view/:type" element={<GradesView />} />
           <Route path="/all-professional-courses" element={<AllProfessionalCourses />} />
@@ -95,6 +101,11 @@ const AppRoutes = () => {
        {/* // mdcat route */}
 <Route path="/mdcat/*" element={<MdcatApp />} />
 <Route path="/mdcat-mobile/*" element={<MDCATmobile />} />
+
+      {/* existing Zaheen routes */}
+      <Route path="/cosmokid/*" element={<CosmokidApp />} />
+       <Route path="/vocab/*" element={<VocabApp />} />
+  
 
 {/* AppRoutes.tsx mein */}
 

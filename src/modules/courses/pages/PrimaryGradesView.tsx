@@ -3,8 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useGrades } from "@/modules/shared/hooks/useGrade";
 
-import CourseImage1 from "../../../assets/images/maths.avif";
-import CourseImage2 from "../../../assets/images/turtle.avif";
+import CourseImage1 from "../../../assets/images/vocabulary.png";
+import CourseImage2 from "../../../assets/images/Solar.png";
 
 /* ── Reactive language hook ── */
 const useLang = () => {
@@ -144,15 +144,18 @@ const extractNum = (name: string) => {
 const FEATURED_COURSES = [
   {
     id: 1,
-    title: { en: "Magic Math Wizards", ur: "جادوئی ریاضی" },
-    desc:  { en: "Master numbers with magic tricks!", ur: "جادوئی چالوں سے اعداد میں مہارت حاصل کریں!" },
+    title: { en: "📚 Vocabulary Building", ur: "📚 ذخیرۂ الفاظ میں اضافہ" },
+    desc:  { en: "Expand your vocabulary with fun lessons, exciting activities, and new words that boost your confidence in speaking, reading, and writing.", ur: "دلچسپ اسباق، پرلطف سرگرمیوں اور نئے الفاظ کے ذریعے اپنی لغت (الفاظ کے ذخیرے) میں اضافہ کریں، تاکہ بولنے، پڑھنے اور لکھنے میں آپ کا اعتماد مزید مضبوط ہو۔" },
     src: CourseImage1,
+    path: "/vocab", // not wired up yet
+    
   },
   {
     id: 2,
-    title: { en: "Animal Kingdom Hub", ur: "حیوانی دنیا" },
-    desc:  { en: "Meet your furry friends in the wild.", ur: "جنگل میں اپنے جانور دوستوں سے ملیں۔" },
+    title: { en: "🌌 Explore the Universe", ur: "🌌 کائنات کی سیر کریں" },
+    desc:  { en: "Learn about the solar system, astronauts, galaxies, and incredible space adventures through fun activities.", ur: "نظامِ شمسی، خلا بازوں، کہکشاؤں اور خلا کی حیرت انگیز مہمات کے بارے میں دلچسپ اور تفریحی سرگرمیوں کے ذریعے سیکھیں۔" },
     src: CourseImage2,
+    path: "/cosmokid",
   },
 ];
 
@@ -169,6 +172,7 @@ const GradeSkeleton = () => (
 
 const PrimaryGradesView = () => {
   const navigate = useNavigate();
+   const [navigating, setNavigating] = useState(false);  // add this
   const lang     = useLang();
   const isUrdu   = lang === "ur";
 
@@ -189,7 +193,24 @@ const PrimaryGradesView = () => {
 
   const handleExplore = (grade: any) =>
     navigate(`/class/${grade.id}`, { state: { gradeType: grade.name, classTitle: grade.name } });
-
+if (navigating) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "#ECEEF5",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}>
+      <div style={{
+        width: 48, height: 48, borderRadius: "50%",
+        border: "4px solid #E0E7FF",
+        borderTopColor: "#2563EB",
+        animation: "pgPulse 0.8s linear infinite",
+      }} />
+    </div>
+  );
+}
   return (
     <div style={{ minHeight:"100vh", background:"#ECEEF5", fontFamily:"'Nunito','Segoe UI',sans-serif", direction: isUrdu ? "rtl" : "ltr", overflowX:"hidden" }}>
 
@@ -265,8 +286,27 @@ const PrimaryGradesView = () => {
         .pg-course-card      { background:#FFF; border-radius:20px; overflow:hidden; border:1.5px solid #EEF0F8; box-shadow:0 2px 14px rgba(100,120,180,.07); cursor:pointer; transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease; display:flex; flex-direction:column; }
         .pg-course-card:hover{ transform:translateY(-5px); box-shadow:0 18px 44px rgba(100,120,180,.14); }
         
-        .pg-course-img-wrap { width: 100%; height: 146px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; padding: 12px 12px 0px 12px; box-sizing: border-box; background: #FFFFFF !important; }
-        .pg-course-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; border-radius: 14px; border: 1px solid #F1F3F9; }
+       .pg-course-img-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;   /* match your images' actual ratio */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;              /* remove the 12px side padding causing the gutters */
+  box-sizing: border-box;
+  background: #FFFFFF !important;
+}
+
+      .pg-course-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;   /* anchors crop to the top, revealing top-of-image text */
+  display: block;
+  transition: transform .35s ease;
+  border-radius: 14px 14px 0 0;
+}
         .pg-course-card:hover .pg-course-img-wrap img { transform:scale(1.04); }
         
         .pg-course-body  { padding: 18px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
@@ -450,7 +490,18 @@ const PrimaryGradesView = () => {
 
           <div className="pg-featured-grid">
             {FEATURED_COURSES.map((course) => (
-              <div key={course.id} className="pg-course-card">
+              <div
+    key={course.id}
+    className="pg-course-card"
+    onClick={() => {
+      if (course.path) {
+         setNavigating(true);  
+        navigate(course.path);
+        window.scrollTo(0, 0);
+      }
+    }}
+    style={{ cursor: course.path ? "pointer" : "default" }}
+  >
                 <div className="pg-course-img-wrap">
                   {course.src
                     ? <img src={course.src} alt={course.title.en} />

@@ -4,127 +4,104 @@ import { t } from "@/modules/shared/i18n";
 const PrivacyPolicy: React.FC = () => {
   return (
     <div className="min-h-screen bg-white py-20 px-6">
-
       <div className="max-w-4xl mx-auto">
 
         <h1 className="text-4xl font-bold mb-8 text-slate-900">
           {t("privacy.title")}
         </h1>
 
-        <p className="mb-6 text-slate-600">
+        <p className="mb-10 text-slate-600">
           {t("privacy.intro")}
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.infoCollect")}
+          {t("privacy.collectTitle")}
         </h2>
-
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.personalInfo")}
-        </h3>
-
         <p className="mb-6 text-slate-600">
-          {t("privacy.personalInfoText")}
+          {t("privacy.collectText")}
         </p>
 
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.usageInfo")}
-        </h3>
-
+        <h2 className="text-2xl font-semibold mt-10 mb-4">
+          {t("privacy.useTitle")}
+        </h2>
         <p className="mb-6 text-slate-600">
-          {t("privacy.usageInfoText")}
+          {t("privacy.useText")}
         </p>
 
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.cookies")}
-        </h3>
+        <h2 className="text-2xl font-semibold mt-10 mb-4">
+          {t("privacy.zongTitle")}
+        </h2>
+        <p className="mb-6 text-slate-600">
+          {t("privacy.zongText")}
+        </p>
 
+        <h2 className="text-2xl font-semibold mt-10 mb-4">
+          {t("privacy.cookiesTitle")}
+        </h2>
         <p className="mb-6 text-slate-600">
           {t("privacy.cookiesText")}
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.useInfo")}
+          {t("privacy.sharingTitle")}
         </h2>
-
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.provideServices")}
-        </h3>
-
-        <p className="mb-6 text-slate-600">
-          {t("privacy.provideServicesText")}
-        </p>
-
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.communication")}
-        </h3>
-
-        <p className="mb-6 text-slate-600">
-          {t("privacy.communicationText")}
-        </p>
-
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.improveSite")}
-        </h3>
-
-        <p className="mb-6 text-slate-600">
-          {t("privacy.improveSiteText")}
-        </p>
-
-        <h3 className="text-xl font-semibold mt-6 mb-2">
-          {t("privacy.marketing")}
-        </h3>
-
-        <p className="mb-6 text-slate-600">
-          {t("privacy.marketingText")}
-        </p>
-
-        <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.sharing")}
-        </h2>
-
         <p className="mb-6 text-slate-600">
           {t("privacy.sharingText")}
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.security")}
+          {t("privacy.securityTitle")}
         </h2>
-
         <p className="mb-6 text-slate-600">
           {t("privacy.securityText")}
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.thirdParty")}
+          {t("privacy.retentionTitle")}
         </h2>
+        <p className="mb-6 text-slate-600">
+          {t("privacy.retentionText")}
+        </p>
 
+        <h2 className="text-2xl font-semibold mt-10 mb-4">
+          {t("privacy.rightsTitle")}
+        </h2>
+        <p className="mb-6 text-slate-600">
+          {t("privacy.rightsText")}
+        </p>
+
+        <h2 className="text-2xl font-semibold mt-10 mb-4">
+          {t("privacy.childrenTitle")}
+        </h2>
+        <p className="mb-6 text-slate-600">
+          {t("privacy.childrenText")}
+        </p>
+
+        <h2 className="text-2xl font-semibold mt-10 mb-4">
+          {t("privacy.thirdPartyTitle")}
+        </h2>
         <p className="mb-6 text-slate-600">
           {t("privacy.thirdPartyText")}
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.changes")}
+          {t("privacy.updatesTitle")}
         </h2>
-
         <p className="mb-6 text-slate-600">
-          {t("privacy.changesText")}
+          {t("privacy.updatesText")}
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">
-          {t("privacy.contact")}
+          {t("privacy.contactTitle")}
         </h2>
-
         <p className="text-slate-600">
-          {t("privacy.contactText")}
+          {t("privacy.contactEmail")}
         </p>
-
-        <p className="mt-2 font-semibold">
-          info@zaheen.com.pk
+        <p className="text-slate-600">
+          {t("privacy.contactPhone")}
         </p>
 
       </div>
-
     </div>
   );
 };
