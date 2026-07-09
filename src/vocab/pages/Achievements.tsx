@@ -1,11 +1,19 @@
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { allBadges } from '../data/badges';
+import { useBadgesData } from '../hooks/useBadgesData';
 import { Trophy, Lock, Award } from 'lucide-react';
 
 export default function Achievements() {
   const { user, badges } = useAuth();
+  const { badges: allBadges, isLoading, error } = useBadgesData();
   if (!user) return null;
+
+  if (isLoading) {
+    return <div className="text-center py-20 text-slate-500 dark:text-slate-400">Loading achievements…</div>;
+  }
+  if (error) {
+    return <div className="text-center py-20 text-rose-500">{error}</div>;
+  }
 
   const earnedBadgeIds = new Set(badges.map(b => b.id));
 

@@ -137,8 +137,8 @@ export const useSubscription = () => {
     }
   };
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerify = async (e?: React.FormEvent) => {
+  e?.preventDefault();
 
     const fullPin = pin.join("");
 
@@ -181,7 +181,7 @@ export const useSubscription = () => {
 
   const handleResend = async () => {
     setTimer(30);
-    await sendPin(msisdn, serviceId);
+   await sendPin(normalizeMsisdn(msisdn), serviceId);
   };
 
   return {

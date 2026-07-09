@@ -30,7 +30,7 @@ const OrigamiCampBanner = () => {
             onClick={() => {
               window.scrollTo(0, 0);
               setNavigating(true); // instantly wipes current page
-              navigate("/vocab");
+              navigate("/origami");
             }}
             className="w-fit bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
           >

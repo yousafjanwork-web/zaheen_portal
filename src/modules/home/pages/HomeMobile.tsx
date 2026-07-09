@@ -9,20 +9,19 @@ import ProfessionalCourses from "@/modules/home/sections/ProfessionalCourses";
 import Pricing from "@/modules/home/sections/Pricing";
 import CTASection from "@/modules/home/sections/CTASection";
 import MDCATBanner from "../sections/MDCATMobileBanner";
-import SummerCampBanner from "../sections/SummerCampMobile";
-import OrigamiCampMobile from "../sections/OrigamiMobile";
-
+// import SummerCampBanner from "../sections/SummerCampMobile";
+// import OrigamiCampMobile from "../sections/OrigamiMobile";
+import SummerBreak from "../sections/SummerbreakSlider"
 const HomeMobile = () => {
   return (
     <>
       {/* <MobileMarketingBanner /> */}
-
       {/* <MobileHeader /> */}
-
       <HeroMobile />
       <PromoSlider />
       <BrowseByGrade />
-      <SummerCampBanner/>
+      <SummerBreak/>
+       {/* <SummerCampBanner/> */}
       {/* <OrigamiCampMobile/> */}
       <ProfessionalCourses />
       <MDCATBanner/>

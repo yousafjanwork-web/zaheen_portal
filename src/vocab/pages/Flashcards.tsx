@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { lessons } from '../data/lessons';
+import { useLessonsData } from '../context/LessonsContext';
 import { speech, SpeechManager } from '../utils/speech';
 import { Volume2, RotateCcw, Check, X, Shuffle, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -21,6 +21,7 @@ interface Card {
 
 export default function Flashcards() {
   const { user, addXP, addCoins, updateQuestProgress, updateChallengeProgress } = useAuth();
+  const { lessons, isLoading, error } = useLessonsData();
   const [deck, setDeck] = useState<Card[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -40,14 +41,23 @@ export default function Flashcards() {
       theme: l.theme,
     })));
     return all;
-  }, []);
+  }, [lessons]);
 
   useEffect(() => {
+    if (cards.length === 0) return;
     const shuffled = [...cards].sort(() => Math.random() - 0.5).slice(0, 12);
     setDeck(shuffled);
-  }, []);
+  }, [cards]);
 
-  if (!user || deck.length === 0) return null;
+  if (!user) return null;
+
+  if (isLoading) {
+    return <div className="text-center py-20 text-slate-500 dark:text-slate-400">Shuffling your flashcard deck…</div>;
+  }
+  if (error) {
+    return <div className="text-center py-20 text-rose-500">{error}</div>;
+  }
+  if (deck.length === 0) return null;
 
   const current = deck[index];
 

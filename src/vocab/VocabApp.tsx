@@ -1,5 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { LessonsProvider } from "./context/LessonsContext";
+// ─── UNCOMMENT when handing to frontend developer (Zaheen's shared auth) ─────
+ import { useAuth as useZaheenAuth } from "@/modules/shared/context/AuthContext";
+// ─────────────────────────────────────────────────────────────────────────────
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
@@ -14,11 +18,6 @@ import StoryStudio from "./pages/StoryStudio";
 import Quests from "./pages/Quests";
 import Flashcards from "./pages/Flashcards";
 
-/**
- * No login/sign-up here — Zaheen's own auth already gated access before this
- * module ever mounts. `user.role` still drives which dashboard/home a person
- * sees; it's just no longer guarded behind a local sign-in flow.
- */
 function VocabRoutes() {
   const { user } = useAuth();
   return (
@@ -64,15 +63,21 @@ function VocabRoutes() {
   );
 }
 
-/**
- * VocabApp — drop this inside a <Route path="/vocab/*"> in Zaheen's router.
- * It wraps everything in its own AuthProvider (localStorage-based, no API,
- * no login screen — the signed-in Zaheen user is assumed already).
- */
 export default function VocabApp() {
+  // ─── LOCAL DEV: no Zaheen auth available, run as guest ───────────────────
+  // Dashboard and lesson-complete API calls are simply skipped when token
+  // is null — the UI shows zeros, which is exactly the intended behaviour.
+  // const token: string | null = null;
+
+  // ─── UNCOMMENT these two lines when handing to frontend developer ─────────
+   const { token } = useZaheenAuth() as { token?: string | null };
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
-    <AuthProvider>
-      <VocabRoutes />
-    </AuthProvider>
+    <LessonsProvider>
+      <AuthProvider token={token}>
+        <VocabRoutes />
+      </AuthProvider>
+    </LessonsProvider>
   );
 }

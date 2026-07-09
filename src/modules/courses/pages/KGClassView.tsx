@@ -41,12 +41,12 @@ const SHAPE_PROFILES = [
   { borderRadius: "70px 32px 32px 32px", minHeight: 410, paddingTop: 36, iconFloat: false },
   { borderRadius: "70px 32px 32px 32px", minHeight: 320, paddingTop: 60, iconFloat: false, iconOffset: 52 },
   { borderRadius: "70px 32px 32px 32px", minHeight: 400, paddingTop: 36, iconFloat: false },
-  { borderRadius: "32px 8px 32px 32px",  minHeight: 370, paddingTop: 36, iconFloat: false },
-  { borderRadius: "70px 32px 32px 8px",  minHeight: 350, paddingTop: 36, iconFloat: false },
-  { borderRadius: "8px 32px 8px 32px",   minHeight: 380, paddingTop: 36, iconFloat: false },
-  { borderRadius: "32px 8px 32px 8px",   minHeight: 360, paddingTop: 36, iconFloat: false },
-  { borderRadius: "8px 8px 32px 32px",   minHeight: 390, paddingTop: 36, iconFloat: false },
-  { borderRadius: "32px 32px 8px 8px",   minHeight: 370, paddingTop: 36, iconFloat: false },
+  { borderRadius: "32px 8px 32px 32px",   minHeight: 370, paddingTop: 36, iconFloat: false },
+  { borderRadius: "70px 32px 32px 8px",   minHeight: 350, paddingTop: 36, iconFloat: false },
+  { borderRadius: "8px 32px 8px 32px",    minHeight: 380, paddingTop: 36, iconFloat: false },
+  { borderRadius: "32px 8px 32px 8px",    minHeight: 360, paddingTop: 36, iconFloat: false },
+  { borderRadius: "8px 8px 32px 32px",    minHeight: 390, paddingTop: 36, iconFloat: false },
+  { borderRadius: "32px 32px 8px 8px",    minHeight: 370, paddingTop: 36, iconFloat: false },
 ];
 const getProfile = (i: number) => SHAPE_PROFILES[i % SHAPE_PROFILES.length];
 
@@ -72,17 +72,17 @@ const getKGMeta = (name: string, iconHint?: string): KGMeta => {
   const hintIcon = iconHint ? ICON_HINT_MAP[iconHint] : undefined;
   const n = name.toLowerCase();
 
-  if (n.includes("english"))  return { icon: hintIcon ?? BookOpen,     subjectKey: "english",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#2563EB", titleColor: "#1E40AF", taglineColor: "#3B82F6", btnBg: "#2563EB" };
-  if (n.includes("urdu"))     return { icon: hintIcon ?? Languages,    subjectKey: "urdu",      cardBg: "#FFEDD5", border: "3px solid #FED7AA", iconColor: "#EA580C", titleColor: "#C2410C", taglineColor: "#EA580C", btnBg: "#F97316" };
-  if (n.includes("math"))     return { icon: hintIcon ?? Sigma,        subjectKey: "math",      cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#16A34A", titleColor: "#15803D", taglineColor: "#16A34A", btnBg: "#16A34A" };
-  if (n.includes("physic"))   return { icon: hintIcon ?? Atom,         subjectKey: "physics",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#1D4ED8", titleColor: "#1E3A8A", taglineColor: "#3B82F6", btnBg: "#1D4ED8" };
+  if (n.includes("english"))  return { icon: hintIcon ?? BookOpen,      subjectKey: "english",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#2563EB", titleColor: "#1E40AF", taglineColor: "#3B82F6", btnBg: "#2563EB" };
+  if (n.includes("urdu"))     return { icon: hintIcon ?? Languages,     subjectKey: "urdu",      cardBg: "#FFEDD5", border: "3px solid #FED7AA", iconColor: "#EA580C", titleColor: "#C2410C", taglineColor: "#EA580C", btnBg: "#F97316" };
+  if (n.includes("math"))     return { icon: hintIcon ?? Sigma,         subjectKey: "math",      cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#16A34A", titleColor: "#15803D", taglineColor: "#16A34A", btnBg: "#16A34A" };
+  if (n.includes("physic"))   return { icon: hintIcon ?? Atom,          subjectKey: "physics",   cardBg: "#DBEAFE", border: "3px solid #BFDBFE", iconColor: "#1D4ED8", titleColor: "#1E3A8A", taglineColor: "#3B82F6", btnBg: "#1D4ED8" };
   if (n.includes("chem"))     return { icon: hintIcon ?? FlaskConical, subjectKey: "chemistry", cardBg: "#D1FAE5", border: "3px solid #A7F3D0", iconColor: "#059669", titleColor: "#065F46", taglineColor: "#10B981", btnBg: "#059669" };
   if (n.includes("bio"))      return { icon: hintIcon ?? Leaf,         subjectKey: "biology",   cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D", accentBar: "#4ADE80" };
-  if (n.includes("islamic"))  return { icon: hintIcon ?? Landmark,     subjectKey: "islamic",   cardBg: "#CCFBF1", border: "3px solid #99F6E4", iconColor: "#0D9488", titleColor: "#115E59", taglineColor: "#0D9488", btnBg: "#0D9488" };
-  if (n.includes("pakistan")) return { icon: hintIcon ?? Globe,        subjectKey: "pakistan",  cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D" };
-  if (n.includes("computer") || n.includes("cs")) return { icon: hintIcon ?? Cpu,     subjectKey: "computer", cardBg: "#E0E7FF", border: "3px solid #C7D2FE", iconColor: "#4F46E5", titleColor: "#3730A3", taglineColor: "#6366F1", btnBg: "#4F46E5" };
-  if (n.includes("art") || n.includes("draw"))    return { icon: hintIcon ?? Palette,  subjectKey: "art",      cardBg: "#FCE7F3", border: "3px solid #FBCFE8", iconColor: "#DB2777", titleColor: "#9D174D", taglineColor: "#EC4899", btnBg: "#DB2777" };
-  if (n.includes("music"))    return { icon: hintIcon ?? Music,        subjectKey: "music",     cardBg: "#FEF9C3", border: "3px solid #FDE68A", iconColor: "#CA8A04", titleColor: "#713F12", taglineColor: "#D97706", btnBg: "#EAB308" };
+  if (n.includes("islamic"))  return { icon: hintIcon ?? Landmark,      subjectKey: "islamic",   cardBg: "#CCFBF1", border: "3px solid #99F6E4", iconColor: "#0D9488", titleColor: "#115E59", taglineColor: "#0D9488", btnBg: "#0D9488" };
+  if (n.includes("pakistan")) return { icon: hintIcon ?? Globe,         subjectKey: "pakistan",  cardBg: "#DCFCE7", border: "3px solid #BBF7D0", iconColor: "#15803D", titleColor: "#14532D", taglineColor: "#16A34A", btnBg: "#15803D" };
+  if (n.includes("computer") || n.includes("cs")) return { icon: hintIcon ?? Cpu,      subjectKey: "computer", cardBg: "#E0E7FF", border: "3px solid #C7D2FE", iconColor: "#4F46E5", titleColor: "#3730A3", taglineColor: "#6366F1", btnBg: "#4F46E5" };
+  if (n.includes("art") || n.includes("draw"))    return { icon: hintIcon ?? Palette,  subjectKey: "art",       cardBg: "#FCE7F3", border: "3px solid #FBCFE8", iconColor: "#DB2777", titleColor: "#9D174D", taglineColor: "#EC4899", btnBg: "#DB2777" };
+  if (n.includes("music"))    return { icon: hintIcon ?? Music,         subjectKey: "music",     cardBg: "#FEF9C3", border: "3px solid #FDE68A", iconColor: "#CA8A04", titleColor: "#713F12", taglineColor: "#D97706", btnBg: "#EAB308" };
   return { icon: hintIcon ?? BookOpen, subjectKey: "default", cardBg: "#F1F5F9", border: "3px solid #E2E8F0", iconColor: "#64748B", titleColor: "#1E293B", taglineColor: "#94A3B8", btnBg: "#64748B" };
 };
 
@@ -202,37 +202,10 @@ const KGCardSkeleton = ({ index }: { index: number }) => {
   );
 };
 
-interface ModalProps { title: string; emoji: string; description: string; comingSoonLabel: string; onTheWayLabel: string; gotItLabel: string; onClose: () => void; }
-const ComingSoonModal = ({ title, emoji, description, comingSoonLabel, onTheWayLabel, gotItLabel, onClose }: ModalProps) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
-    <motion.div initial={{ opacity: 0, scale: 0.85, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.85, y: 24 }} transition={{ type: "spring", stiffness: 340, damping: 26 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-sm p-8 flex flex-col items-center text-center gap-5 relative">
-      <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"><X size={16} /></button>
-      <motion.div initial={{ scale: 0.5, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.08 }} className="relative">
-        <div className="text-[72px] leading-none select-none">{emoji}</div>
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} className="absolute -top-2 -right-2 text-yellow-400 text-xl">✦</motion.div>
-      </motion.div>
-      <span className="text-[11px] font-black tracking-widest uppercase bg-amber-50 text-amber-600 border border-amber-100 px-3 py-1.5 rounded-full" style={{ fontFamily: FONT }}>{comingSoonLabel}</span>
-      <div className="space-y-2">
-        <h2 className="text-[24px] font-black text-slate-900 leading-tight" style={{ fontFamily: FONT }}>{title} {onTheWayLabel}</h2>
-        <p className="text-slate-500 text-[14px] leading-relaxed">{description}</p>
-      </div>
-      <div className="flex gap-1">
-        {[...Array(5)].map((_, i) => (
-          <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2 + i * 0.07, type: "spring", stiffness: 400 }}>
-            <Star size={18} className="text-yellow-400 fill-yellow-400" />
-          </motion.div>
-        ))}
-      </div>
-      <div className="w-full border-t border-slate-100" />
-      <button onClick={onClose} className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-black text-[15px] py-3.5 rounded-2xl transition-colors" style={{ fontFamily: FONT }}>{gotItLabel}</button>
-    </motion.div>
-  </motion.div>
-);
-
 const FloatingBubbles = () => (
   <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
     {[
-      { size: 90, top: "6%",  left: "2%",   color: "rgba(254,240,138,0.22)", delay: "0s"   },
+      { size: 90, top: "6%",   left: "2%",   color: "rgba(254,240,138,0.22)", delay: "0s"   },
       { size: 55, top: "18%", right: "4%",  color: "rgba(249,168,212,0.22)", delay: "0.6s" },
       { size: 70, top: "52%", left: "1%",   color: "rgba(147,197,253,0.22)", delay: "1.1s" },
       { size: 45, top: "72%", right: "7%",  color: "rgba(134,239,172,0.22)", delay: "1.7s" },
@@ -272,7 +245,7 @@ const CTABanner = ({ badge, title, desc, btnLessons, btnApp, isRtl, onNavigate }
 ═══════════════════════════════════════════════════════════ */
 const KGClassView = () => {
   const { classId } = useParams();
-  console.log("Current Class ID:", classId); // Yeh check karein console mein
+  console.log("Current Class ID:", classId); 
   const navigate    = useNavigate();
   const location    = useLocation();
   const gradeType   = location.state?.gradeType;
@@ -283,13 +256,10 @@ const KGClassView = () => {
 
   const { classInfo, subjects, loading } = useClassSubjects(Number(classId));
 
-  // UI label — uses t() because it's a static string, not API content
   const gradeName =
     (isRtl ? classInfo?.urdu_name : classInfo?.name)
     || classInfo?.name
     || t("kgClassView.defaultGrade");
-
-  const [modal, setModal] = useState<null | "quizzes">(null);
 
   const handleSubjectClick = (subject: NormalizedSubject) => {
     navigate(`/class/${classInfo?.id}/subject/${subject.id}`, {
@@ -326,7 +296,7 @@ const KGClassView = () => {
 
       <div className="relative z-10 max-w-[1160px] mx-auto px-4 pt-24 sm:pt-16 pb-10 flex flex-col items-center">
 
-        {/* ── Breadcrumb — static UI label ── */}
+        {/* ── Breadcrumb ── */}
         <div className="flex items-center justify-center gap-2 mb-5" style={{ fontSize: 14, color: "#94A3B8", direction: isRtl ? "rtl" : "ltr" }}>
           <Link to="/" className="hover:text-slate-600 transition-colors font-semibold">
             {t("kgClassView.home")}
@@ -335,7 +305,7 @@ const KGClassView = () => {
           <span style={{ color: "#334155", fontWeight: 700 }}>{gradeName}</span>
         </div>
 
-        {/* ── Heading — static UI labels ── */}
+        {/* ── Heading ── */}
         <motion.div initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="text-center mb-16">
           <h1 style={{ fontSize: "clamp(28px, 6vw, 68px)", fontFamily: FONT, fontWeight: 900, color: "#1E40AF", lineHeight: 1.2, letterSpacing: "-0.02em", direction: isRtl ? "rtl" : "ltr" }}>
             {t("kgClassView.pageTitle")}{" "}
@@ -354,38 +324,26 @@ const KGClassView = () => {
               <>
                 {subjects.map((subject, i) => {
                   const meta = getKGMeta(subject.name, subject._iconHint);
+                  const title = isRtl ? subject.urdu_name || subject.name : subject.name;
+                  const apiDesc = isRtl ? subject.urdu_desc : subject.desc;
+                  const tagline = apiDesc || t(`kgClassView.subjects.${meta.subjectKey}.tagline`);
 
-                  // Display title: prefer localised API field, normalizer already handled this
-                  const title = isRtl
-                    ? subject.urdu_name || subject.name
-                    : subject.name;
-
-                  /**
-                   * Tagline priority:
-                   *   1. API description (normalised by useClassSubjects)
-                   *   2. Static translation file fallback
-                   *
-                   * t() is used ONLY as a last resort — not as the primary source.
-                   */
-                const apiDesc = isRtl ? subject.urdu_desc : subject.desc;
-const btnLabel = t(`kgClassView.subjects.${meta.subjectKey}.btnLabel`);
-const tagline = apiDesc || t(`kgClassView.subjects.${meta.subjectKey}.tagline`);
                   return (
-                  <SubjectCard
-      key={subject.id}
-      meta={meta}
-      index={i}
-      title={title}
-      tagline={tagline}
-      btnLabel={t(`kgClassView.subjects.${meta.subjectKey}.btnLabel`)}
-      isRtl={isRtl}
-      onClick={() => handleSubjectClick(subject)}
-      thumbnailUrl={subject.thumbnail_url}
-    />
+                    <SubjectCard
+                      key={subject.id}
+                      meta={meta}
+                      index={i}
+                      title={title}
+                      tagline={tagline}
+                      btnLabel={t(`kgClassView.subjects.${meta.subjectKey}.btnLabel`)}
+                      isRtl={isRtl}
+                      onClick={() => handleSubjectClick(subject)}
+                      thumbnailUrl={subject.thumbnail_url}
+                    />
                   );
                 })}
 
-                {/* ── Quizzes — static card (no API data) ── */}
+                {/* ── Quizzes Card (Now navigates straight to /mdcat) ── */}
                 <SubjectCard
                   meta={{ icon: Trophy, subjectKey: "quizzes", cardBg: "#FFE4E6", border: "3px solid #FECDD3", iconColor: "#F43F5E", titleColor: "#BE123C", taglineColor: "#E11D48", btnBg: "#F43F5E" }}
                   index={subjectCount}
@@ -393,19 +351,19 @@ const tagline = apiDesc || t(`kgClassView.subjects.${meta.subjectKey}.tagline`);
                   tagline={t("kgClassView.quizzes.tagline")}
                   btnLabel={t("kgClassView.quizzes.btnLabel")}
                   isRtl={isRtl}
-                  onClick={() => setModal("quizzes")}
-                  badge={<SoonBadge label={t("kgClassView.soonBadge")} />}
+                  onClick={() => navigate("/class/2/quiz")}
+                  // badge={<SoonBadge label={t("kgClassView.soonBadge")} />}
                   customBtn={
                     <PillBtn
                       bg="#F43F5E"
                       label={t("kgClassView.quizzes.btnLabel")}
                       icon={<Star size={15} className="fill-white" strokeWidth={0} />}
-                      onClick={(e) => { e.stopPropagation(); setModal("quizzes"); }}
+                      onClick={(e) => { e.stopPropagation(); navigate("/class/2/quiz"); }}
                     />
                   }
                 />
 
-                {/* ── Fun Games — static card ── */}
+                {/* ── Fun Games ── */}
                 <SubjectCard
                   meta={{ icon: Gamepad2, subjectKey: "funGames", cardBg: "#EDE9FE", border: "3px solid #DDD6FE", iconColor: "#7C3AED", titleColor: "#5B21B6", taglineColor: "#7C3AED", btnBg: "#7C3AED" }}
                   index={subjectCount + 1}
@@ -424,7 +382,7 @@ const tagline = apiDesc || t(`kgClassView.subjects.${meta.subjectKey}.tagline`);
                   }
                 />
 
-                {/* ── AI Bestie — static card ── */}
+                {/* ── AI Bestie ── */}
                 <SubjectCard
                   meta={{ icon: Bot, subjectKey: "aiBestie", cardBg: "#6D28D9", border: "3px solid #7C3AED", iconColor: "#6D28D9", titleColor: "white", taglineColor: "#DDD6FE", btnBg: "white" }}
                   index={subjectCount + 2}
@@ -458,21 +416,6 @@ const tagline = apiDesc || t(`kgClassView.subjects.${meta.subjectKey}.tagline`);
           onNavigate={handleSeeAllLessons}
         />
       </div>
-
-      {/* ── Quizzes Modal ── */}
-      <AnimatePresence>
-        {modal === "quizzes" && (
-          <ComingSoonModal
-            title={t("kgClassView.quizzes.modalTitle")}
-            emoji="🏆"
-            description={t("kgClassView.quizzes.modalDesc")}
-            comingSoonLabel={t("kgClassView.modal.comingSoon")}
-            onTheWayLabel={t("kgClassView.modal.onTheWay")}
-            gotItLabel={t("kgClassView.modal.gotIt")}
-            onClose={() => setModal(null)}
-          />
-        )}
-      </AnimatePresence>
     </section>
   );
 };

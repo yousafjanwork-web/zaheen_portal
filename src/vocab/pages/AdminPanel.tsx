@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { lessons } from '../data/lessons';
+import { useLessonsData } from '../context/LessonsContext';
 import {
   BarChart3, Users, BookOpen, Settings, Plus, Edit, Trash2,
   TrendingUp, Star, Sparkles, Brain,
@@ -12,6 +12,7 @@ type AdminTab = 'overview' | 'lessons' | 'users' | 'analytics' | 'ai-generate';
 
 export default function AdminPanel() {
   const { user } = useAuth();
+  const { lessons, isLoading, error } = useLessonsData();
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [showNewLesson, setShowNewLesson] = useState(false);
 
@@ -22,6 +23,13 @@ export default function AdminPanel() {
         <p className="text-slate-500 mt-2">Admin access required.</p>
       </div>
     );
+  }
+
+  if (isLoading) {
+    return <div className="text-center py-20 text-slate-500 dark:text-slate-400">Loading lessons…</div>;
+  }
+  if (error) {
+    return <div className="text-center py-20 text-rose-500">{error}</div>;
   }
 
   const tabs: { id: AdminTab; label: string; icon: React.ElementType }[] = [

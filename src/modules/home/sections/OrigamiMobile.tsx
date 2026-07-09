@@ -26,7 +26,7 @@ const OrigamiCampMobile = () => {
           onClick={() => {
             window.scrollTo(0, 0);
             setNavigating(true);
-            navigate("/vocab");
+            navigate("/origami");
           }}
           className="rounded-[2.5rem] overflow-hidden shadow-xl cursor-pointer transition-transform hover:scale-[1.02]"
         >

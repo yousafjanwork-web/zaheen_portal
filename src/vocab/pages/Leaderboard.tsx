@@ -1,30 +1,25 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useLeaderboardData } from '../hooks/useLeaderboardData';
 import { LeaderboardEntry } from '../types';
 import { Crown, Medal, Trophy, Flame, Star, Sparkles } from 'lucide-react';
-
-const MOCK_LEADERS: Omit<LeaderboardEntry, 'rank' | 'isCurrentUser'>[] = [
-  { id: 'l1', name: 'Sophie Wonder', avatar: '🦄', xp: 4250, level: 9, streak: 21, badgeCount: 12, weeklyXp: 320 },
-  { id: 'l2', name: 'Liam Lionheart', avatar: '🦁', xp: 3800, level: 8, streak: 14, badgeCount: 10, weeklyXp: 280 },
-  { id: 'l3', name: 'Zara Starlight', avatar: '🌟', xp: 3450, level: 7, streak: 19, badgeCount: 11, weeklyXp: 410 },
-  { id: 'l4', name: 'Owen Bookworm', avatar: '📚', xp: 3100, level: 7, streak: 8, badgeCount: 9, weeklyXp: 150 },
-  { id: 'l5', name: 'Maya Bright', avatar: '✨', xp: 2750, level: 6, streak: 12, badgeCount: 8, weeklyXp: 200 },
-  { id: 'l6', name: 'Noah Explorer', avatar: '🚀', xp: 2400, level: 5, streak: 6, badgeCount: 7, weeklyXp: 180 },
-  { id: 'l7', name: 'Emma Sunshine', avatar: '🌻', xp: 2050, level: 5, streak: 9, badgeCount: 6, weeklyXp: 90 },
-  { id: 'l8', name: 'Ethan Wise', avatar: '🦉', xp: 1800, level: 4, streak: 4, badgeCount: 5, weeklyXp: 70 },
-  { id: 'l9', name: 'Ava Dreamer', avatar: '🌙', xp: 1500, level: 4, streak: 5, badgeCount: 4, weeklyXp: 50 },
-  { id: 'l10', name: 'Lucas Brave', avatar: '⚔️', xp: 1200, level: 3, streak: 2, badgeCount: 3, weeklyXp: 40 },
-  { id: 'l11', name: 'Mia Kind', avatar: '🌷', xp: 950, level: 2, streak: 1, badgeCount: 2, weeklyXp: 30 },
-];
 
 type Tab = 'all-time' | 'weekly';
 
 export default function Leaderboard() {
   const { user } = useAuth();
+  const { entries: leaders, isLoading, error } = useLeaderboardData();
+  const [tab, setTab] = useState<Tab>('all-time');
+
   if (!user) return null;
 
-  const [tab, setTab] = useState<Tab>('all-time');
+  if (isLoading) {
+    return <div className="text-center py-20 text-slate-500 dark:text-slate-400">Loading leaderboard…</div>;
+  }
+  if (error) {
+    return <div className="text-center py-20 text-rose-500">{error}</div>;
+  }
 
   const userEntry: Omit<LeaderboardEntry, 'rank'> = {
     id: user.id,
@@ -38,7 +33,14 @@ export default function Leaderboard() {
     isCurrentUser: true,
   };
 
-  const all: LeaderboardEntry[] = [...MOCK_LEADERS, userEntry]
+  // If the current user is already in the top-20 the API returned,
+  // don't duplicate them — just flag the existing row instead.
+  const alreadyInList = leaders.some(l => l.id === user.id);
+  const combined: Omit<LeaderboardEntry, 'rank'>[] = alreadyInList
+    ? leaders.map(l => (l.id === user.id ? { ...l, isCurrentUser: true } : l))
+    : [...leaders, userEntry];
+
+  const all: LeaderboardEntry[] = combined
     .sort((a, b) => tab === 'all-time' ? b.xp - a.xp : (b.weeklyXp || 0) - (a.weeklyXp || 0))
     .map((entry, i) => ({ ...entry, rank: i + 1 }));
 

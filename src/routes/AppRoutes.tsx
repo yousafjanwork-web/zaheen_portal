@@ -36,8 +36,9 @@ import SubjectLecturesRouter from "@/modules/courses/pages/SubjectLecturesRouter
 import PrimaryGradesQuiz from "@/modules/courses/pages/PrimaryGradesQuizz"
 import { MdcatApp } from "../mdcat";
 import { CosmokidApp } from "../cosmokid";
+import CosmoKidMobile from "../cosmokid/Cosmokidmobile";
 import { VocabApp } from "../vocab";
-
+import { OrigamiApp } from "../origami";
 import { MDCATmobile } from "../mdcat/components/MDCATmobile";
 
 
@@ -104,8 +105,9 @@ const AppRoutes = () => {
 
       {/* existing Zaheen routes */}
       <Route path="/cosmokid/*" element={<CosmokidApp />} />
+      <Route path="/cosmokid_mobile" element={<CosmoKidMobile />} />
        <Route path="/vocab/*" element={<VocabApp />} />
-  
+     <Route path="/origami/*" element={<OrigamiApp />} />
 
 {/* AppRoutes.tsx mein */}
 

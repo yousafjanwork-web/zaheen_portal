@@ -42,7 +42,7 @@ import { cosmoApi } from "./config";
 // Views
 type View = "home" | "explorer" | "quiz" | "timeline" | "academy" | "objects";
 
-export default function CosmokidApp() {
+export default function CosmokidApp({ hideLogo = false }: { hideLogo?: boolean }) {
   const [currentView, setCurrentView] = useState<View>("home");
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
   const [hoveredPlanet, setHoveredPlanet] = useState<string | null>(null);
@@ -122,20 +122,22 @@ const navigate = useNavigate();
       ══════════════════════════════════════ */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 md:px-7 py-6 md:pt-8 bg-gradient-to-b from-[#020410] to-transparent">
         {/* Logo */}
-       <div
-  className="flex items-center gap-3 cursor-pointer group"
-  onClick={() => {
-    setCurrentView("home");
-    setSelectedPlanet(null);
-    setShowMobileMenu(false);
-    navigate("/");
-  }}
->
-  <div className="w-20 h-12 md:w-40 md:h-12 flex items-center justify-center">
-    <img src={logo} alt="" />
-  </div>
-</div>
-
+{/* Logo */}
+        {!hideLogo && (
+          <div
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => {
+              setCurrentView("home");
+              setSelectedPlanet(null);
+              setShowMobileMenu(false);
+              navigate("/");
+            }}
+          >
+            <div className="w-20 h-12 md:w-40 md:h-12 flex items-center justify-center">
+              <img src={logo} alt="" />
+            </div>
+          </div>
+        )}
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-6 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 font-bold text-sm">
           <NavItem

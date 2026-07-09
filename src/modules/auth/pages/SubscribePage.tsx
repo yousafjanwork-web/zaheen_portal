@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
@@ -162,7 +163,17 @@ const SubscribePage = () => {
     } catch (err) {
 
       console.error("JazzCash payment failed:", err);
-      setError("Payment failed. Please try again.");
+
+      if (axios.isAxiosError(err)) {
+        // Server rejected the request (e.g. bad msisdn/cnic combo, invalid amount, etc.)
+        const serverMessage = err.response?.data?.message || err.response?.data?.desc;
+        setError(serverMessage || "Invalid mobile number or CNIC. Please check and try again.");
+      } else if (err instanceof Error) {
+        // e.g. our own normalizeMsisdn validation error
+        setError(err.message);
+      } else {
+        setError("Payment failed. Please try again.");
+      }
 
     }
 

@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+.origami-module {
+  --color-primary:       #8b5cf6;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark:  #7c3aed;
+  --color-amber:         #f59e0b;
+  --color-green:         #22c55e;
+  --color-pink:          #ec4899;
+  --color-sky:           #0ea5e9;
+ 
+  --font-fredoka: "Fredoka", sans-serif;
+  --font-nunito:  "Nunito", sans-serif;
+}
+ 
+.origami-module .text-primary       { color: var(--color-primary); }
+.origami-module .text-primary-light { color: var(--color-primary-light); }
+.origami-module .text-primary-dark  { color: var(--color-primary-dark); }
+.origami-module .text-amber         { color: var(--color-amber); }
+.origami-module .text-green         { color: var(--color-green); }
+.origami-module .text-pink          { color: var(--color-pink); }
+.origami-module .text-sky           { color: var(--color-sky); }
+ 
+.origami-module .bg-primary       { background-color: var(--color-primary); }
+.origami-module .bg-amber         { background-color: var(--color-amber); }
+.origami-module .bg-green         { background-color: var(--color-green); }
+.origami-module .bg-pink          { background-color: var(--color-pink); }
+ 
+.origami-module .font-fredoka { font-family: var(--font-fredoka); }
+.origami-module .font-nunito  { font-family: var(--font-nunito); }
+ 
+.origami-module .gradient-text {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+ 
+.origami-module .progress-bar {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-pink));
+}

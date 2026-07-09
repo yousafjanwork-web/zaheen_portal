@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
-import { getLessonById } from "../data/lessons";
+import { useLessonsData } from "../context/LessonsContext";
 import XPCelebration from "../components/XPCelebration";
 import Mascot from "../components/Mascot";
 import SpeakButton from "../components/SpeakButton";
@@ -43,6 +43,7 @@ export default function LessonPlayer() {
     updateQuestProgress,
     updateChallengeProgress,
   } = useAuth();
+  const { getLessonById, isLoading: lessonsLoading, error: lessonsError } = useLessonsData();
   const lesson = getLessonById(lessonId || "");
 
   const [step, setStep] = useState<Step>("intro");
@@ -76,32 +77,26 @@ export default function LessonPlayer() {
   const [mascotAutoSpeak, setMascotAutoSpeak] = useState(true);
   const [mascotDismissed, setMascotDismissed] = useState(false);
 
-  if (!lesson) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-          Lesson not found
-        </h2>
-        <Link
-          to="/vocab/courses"
-          className="mt-4 inline-flex items-center gap-2 text-violet-600 font-semibold"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Courses
-        </Link>
-      </div>
-    );
-  }
-
-  const currentWord = lesson.words[currentWordIndex];
+  // NOTE ON HOOK ORDER: `lesson` now comes from an API fetch instead
+  // of a static in-memory array, so it can legitimately be undefined
+  // on the very first render (while the fetch is still in flight),
+  // not just when the lessonId is wrong. All hooks below MUST stay
+  // above any conditional `return` — each effect below guards itself
+  // internally with `if (!lesson) return;` instead. Previously the
+  // "lesson not found" return sat ABOVE these useEffects, which meant
+  // React called a different number of hooks on the loading render
+  // vs. the loaded render — that mismatch is what caused the crash
+  // mentioned in this module's known issues. Keep the guard clauses
+  // for "loading" / "not found" AFTER this hook block, not before it.
 
   // Update mascot messages based on step
   useEffect(() => {
-    if (mascotDismissed) return;
+    if (!lesson || mascotDismissed) return;
 
     const messages: Record<Step, string> = {
       intro: `Hi there! 🤖 Welcome to "${lesson.title}"! I'm Sparky, your learning buddy! We have ${lesson.words.length} amazing new words to learn today. Ready? Let's go!`,
       video: `Watch the video carefully! 🎬 It will help you understand today's words much better!`,
-      words: `Let's learn the word "${lesson.words[currentWordIndex].word}"! ${lesson.words[currentWordIndex].funFact || ""}`,
+      words: `Let's learn the word "${lesson.words[currentWordIndex]?.word}"! ${lesson.words[currentWordIndex]?.funFact || ""}`,
       activity: `Great job learning all the words! Now let's test your memory with a fun activity. ${lesson.activity.instructions}`,
       quiz: `You're doing amazing! Time for the quiz! Don't worry, you've got this! Just pick the best answer.`,
       challenge: `Almost done! Now it's time to be creative! Use the words you learned to write something wonderful!`,
@@ -127,12 +122,14 @@ export default function LessonPlayer() {
 
   // Speak on word change (only during words step)
   useEffect(() => {
-    if (step === "words" && mascotAutoSpeak && SpeechManager.isAvailable()) {
+    if (!lesson) return;
+    const currentWord = lesson.words[currentWordIndex];
+    if (step === "words" && mascotAutoSpeak && currentWord && SpeechManager.isAvailable()) {
       setMascotMessage(
         `Let's learn the word "${currentWord.word}"! ${currentWord.funFact || ""}`,
       );
     }
-  }, [currentWordIndex, step]);
+  }, [currentWordIndex, step, lesson]);
 
   // Cleanup speech on unmount
   useEffect(() => {
@@ -147,6 +144,38 @@ export default function LessonPlayer() {
       setCurrentWordIndex(0);
     }
   }, [step]);
+
+  if (lessonsLoading) {
+    return (
+      <div className="text-center py-20 text-slate-500 dark:text-slate-400">
+        Loading lesson…
+      </div>
+    );
+  }
+
+  if (lessonsError) {
+    return (
+      <div className="text-center py-20 text-rose-500">{lessonsError}</div>
+    );
+  }
+
+  if (!lesson) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+          Lesson not found
+        </h2>
+        <Link
+          to="/vocab/courses"
+          className="mt-4 inline-flex items-center gap-2 text-violet-600 font-semibold"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Courses
+        </Link>
+      </div>
+    );
+  }
+
+  const currentWord = lesson.words[currentWordIndex];
 
   const handleVideoComplete = () => {
     addXP(lesson.xpRewards.video, "Watched video lesson");
@@ -254,7 +283,15 @@ export default function LessonPlayer() {
       reason: "Challenge completed! ✍️",
     });
 
-    markLessonComplete(lesson.id);
+    markLessonComplete(lesson.id, {
+      score: Math.round((activityScore + quizScore + total) / 3),
+      xpEarned:
+        lesson.xpRewards.video +
+        lesson.xpRewards.activity +
+        lesson.xpRewards.quiz +
+        lesson.xpRewards.challenge,
+      wordsCount: lesson.words.length,
+    });
     addWordsLearned(lesson.words.map((w) => w.id));
     addCoins(15);
     updateQuestProgress("q-weekly-1", 1);

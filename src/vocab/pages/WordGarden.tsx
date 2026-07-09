@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { lessons } from '../data/lessons';
+import { useLessonsData } from '../context/LessonsContext';
 import { VocabularyWord, WordCollection } from '../types';
 import { Search, Sparkles, Star, Volume2, X, Plus } from 'lucide-react';
 import { speech, SpeechManager } from '../utils/speech';
@@ -16,14 +16,22 @@ const masteryColors: Record<WordCollection['mastery'], { bg: string; text: strin
 
 export default function WordGarden() {
   const { user, wordCollection, addToCollection, addXP, addCoins, updateQuestProgress, updateChallengeProgress } = useAuth();
+  const { lessons, isLoading, error } = useLessonsData();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | WordCollection['mastery']>('all');
   const [detailWord, setDetailWord] = useState<VocabularyWord | null>(null);
 
+  const allWords = useMemo(() => lessons.flatMap(l => l.words.map(w => ({ ...w, theme: l.theme, lessonId: l.id }))), [lessons]);
+
   if (!user) return null;
 
-  const allWords = useMemo(() => lessons.flatMap(l => l.words.map(w => ({ ...w, theme: l.theme, lessonId: l.id }))), []);
+  if (isLoading) {
+    return <div className="text-center py-20 text-slate-500 dark:text-slate-400">Loading your word garden…</div>;
+  }
+  if (error) {
+    return <div className="text-center py-20 text-rose-500">{error}</div>;
+  }
   const collectedIds = new Set(wordCollection.map(w => w.wordId));
   const uncollected = allWords.filter(w => !collectedIds.has(w.id));
 

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useLessonsData } from '../context/LessonsContext';
 import { Send, Heart, BookOpen, Star, Wand2, Trash2, Trophy } from 'lucide-react';
-import { lessons } from '../data/lessons';
 
 const STORY_PROMPTS = [
   { id: 'p1', emoji: '🚀', title: 'A Space Adventure', prompt: 'You wake up in a rocket ship heading to Mars. What happens next?', theme: 'Space' },
@@ -18,6 +18,7 @@ const STORY_PROMPTS = [
 
 export default function StoryStudio() {
   const { user, stories, publishStory, likeStory, addXP, addCoins, updateQuestProgress, updateChallengeProgress } = useAuth();
+  const { lessons, isLoading, error } = useLessonsData();
   const [selectedPrompt, setSelectedPrompt] = useState<typeof STORY_PROMPTS[0] | null>(null);
   const [story, setStory] = useState('');
   const [published, setPublished] = useState(false);
@@ -25,6 +26,13 @@ export default function StoryStudio() {
   const [title, setTitle] = useState('');
 
   if (!user) return null;
+
+  if (isLoading) {
+    return <div className="text-center py-20 text-slate-500 dark:text-slate-400">Gathering vocabulary words for your story…</div>;
+  }
+  if (error) {
+    return <div className="text-center py-20 text-rose-500">{error}</div>;
+  }
 
   const allWords = lessons.flatMap(l => l.words);
 

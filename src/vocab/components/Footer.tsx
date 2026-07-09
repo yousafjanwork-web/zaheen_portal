@@ -35,7 +35,7 @@ export default function Footer() {
                 </li>
                 {/* <li>
                   <Link to="/origami" className="hover:text-blue-600 transition-colors">
-                    Origami
+                    origami
                   </Link>
                   
                 </li> */}

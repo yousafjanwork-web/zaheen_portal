@@ -688,19 +688,23 @@
   }
 },
 "quiz": {
-  "title": "Chapter 1 Quiz: The Magic Alphabet!",
-  "progress": "QUEST PROGRESS",
-  "earned": "3 of 10 stars earned!",
-  "question": "Which letter makes the 'Ah' sound like in Apple?",
-  "select": "Selected",
-  "prev": "Previous",
-  "next": "Next Question",
-  "rewards": "Your Rewards",
-  "locked": "LOCKED",
-  "goal": "7 more correct answers to unlock the Magical Chest!",
-  "tipLabel": "TUTOR TIP",
-  "tipText": "You're doing great, Explorer! Think about the sound of an Apple!"
-},
+    "title": "Chapter 1 Quiz: The Magic Alphabet!",
+    "progress": "Progress",
+    "earned": "Earned",
+    "loading": "Loading questions...",
+    "retry": "Retry",
+    "empty": "No questions found.",
+    "results": "Quiz Complete!",
+    "retryQuiz": "Try Again",
+    "prev": "Previous",
+    "next": "Next",
+    "finish": "Finish",
+    "rewards": "Rewards",
+    "locked": "Locked",
+    "goal": "Answer more questions to unlock!",
+    "tipLabel": "Tip",
+    "tipText": "Take your time and read each question carefully before answering."
+  },
 
   "mdcat_banner": {
     "title_part1": "Your AI-Powered Path to",
@@ -731,6 +735,10 @@
   "origami_camp_banner_mob": {
     "badge": "SUMMER CAMP",
     "title": "Fold Paper into Amazing Creations!"
-  }
+  },
+  "summerBreak": {
+  "title": "Summer Break",
+  "subtitle": "Learn, Play, Grow"
+}
 
 }

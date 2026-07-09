@@ -209,20 +209,42 @@ export const handleSubscribe = async (
 /* =========================================================
    JAZZCASH / "OTHER SUBSCRIPTION" INTEGRATION (Zaheen API)
    =========================================================
-   ⚠️ SECURITY NOTE:
-   The x-api-key below is exposed in frontend code, which means
-   anyone can view it via browser dev tools (Network tab / bundle).
-   Ideally this token-fetch step should happen on a backend/proxy
-   route so the key never reaches the browser. Ask your teacher
-   if a backend endpoint can be provided. Keeping it here for now
-   so the feature works end-to-end.
+   This uses the new /auth/payment-token endpoint, which does NOT
+   require the x-api-key secret — only a user_id. That means it's
+   safe to call directly from the frontend (no secret is exposed).
    ========================================================= */
 
-const ZAHEEN_API_KEY = "zaheen_pk"; // TODO: confirm exact key with teacher; move server-side when possible
 const ZAHEEN_BASE_URL = "https://api.zaheen.com.pk/v2/api";
 
 const TOKEN_STORAGE_KEY = "zaheen_access_token";
 const TOKEN_EXPIRY_KEY = "zaheen_access_token_expiry";
+
+/* Normalize any of the accepted mobile number formats into 03XXXXXXXXX,
+   which is the format the JazzCash/Zaheen payment API expects.
+   Accepted inputs: 03123456789 | 923123456789 | 3123456789 */
+
+export const normalizeMsisdn = (raw: string): string => {
+
+  const digits = raw.replace(/\D/g, "");
+
+  // e.g. 923123456789 → strip leading "92", prepend "0"
+  if (digits.length === 12 && digits.startsWith("92")) {
+    return "0" + digits.slice(2);
+  }
+
+  // e.g. 03123456789 → already correct
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return digits;
+  }
+
+  // e.g. 3123456789 → prepend "0"
+  if (digits.length === 10 && digits.startsWith("3")) {
+    return "0" + digits;
+  }
+
+  throw new Error("Please enter a valid mobile number");
+
+};
 
 /* STEP 1 — Get (or reuse cached) access token. Token is valid 7 days. */
 
@@ -235,17 +257,15 @@ export const getZaheenToken = async (): Promise<string> => {
     return cachedToken;
   }
 
-  // TODO: replace user_id/name/email with the actual logged-in user's info
+  // TODO: replace user_id with the actual logged-in user's ID from your auth system
   const res = await axios.post(
-    `${ZAHEEN_BASE_URL}/auth/token`,
+    `${ZAHEEN_BASE_URL}/auth/payment-token`,
     {
-      user_id: 1,
-      name: "Zaheen User",
-      email: "user@zaheen.com"
+      user_id: 1
     },
     {
       headers: {
-        "x-api-key": ZAHEEN_API_KEY
+        "Content-Type": "application/json"
       }
     }
   );
@@ -273,11 +293,13 @@ export const makeJazzCashPayment = async (
   cnic: string
 ) => {
 
+  const normalizedMsisdn = normalizeMsisdn(msisdn);
+
   const token = await getZaheenToken();
 
   const res = await axios.post(
     `${ZAHEEN_BASE_URL}/payment`,
-    { msisdn, amount, cnic },
+    { msisdn: normalizedMsisdn, amount, cnic },
     {
       headers: {
         Authorization: `Bearer ${token}`

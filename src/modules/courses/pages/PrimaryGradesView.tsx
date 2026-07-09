@@ -3,8 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useGrades } from "@/modules/shared/hooks/useGrade";
 
-import CourseImage1 from "../../../assets/images/vocabulary.png";
-import CourseImage2 from "../../../assets/images/Solar.png";
+import CourseImage1 from "../../../assets/images/vocab1.png";
+import CourseImage2 from "../../../assets/images/solar2.png";
 
 /* ── Reactive language hook ── */
 const useLang = () => {

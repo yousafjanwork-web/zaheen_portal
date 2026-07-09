@@ -6,11 +6,20 @@
   --font-display: "Inter", "Noto Sans Arabic", sans-serif;
 
   --color-primary: #3273dc;
+
   --color-secondary: #92d02a;
   --color-background-light: #f8fafc;
   --color-background-dark: #0f172a;
 
   --radius-default: 12px;
+  
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #7c3aed;
+  --color-amber: #f59e0b;
+  --color-green: #22c55e;
+  --color-pink: #ec4899;
+  --color-sky: #0ea5e9;
+ 
 }
 
 @layer base {
@@ -57,3 +66,4 @@
 .animate-slideUp{
   animation: slideUp 0.4s ease;
 }
+

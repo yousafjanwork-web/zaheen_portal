@@ -30,6 +30,15 @@ const useLang = () => {
   return lang;
 };
 
+/* ─── Daily-goal constants & helpers ───
+   There is no "minutes learned today" field coming from the API yet,
+   so we track it locally: each newly-completed lesson adds a fixed
+   chunk of minutes, capped at the goal, and it resets automatically
+   on a new calendar day (via the date-stamped storage key). ─── */
+const DAILY_GOAL_MINUTES = 20;
+const MINUTES_PER_LESSON = 15;
+const todayKey = () => `msv-daily-progress:${new Date().toISOString().slice(0, 10)}`;
+
 /* ─── Subject theme ─── */
 const getSubjectTheme = (name: string) => {
   const n = name?.toLowerCase() || "";
@@ -101,7 +110,7 @@ const MiddleSubjectDetailView = () => {
   const ThemeIcon   = theme.icon;
 
   const heroTitle = isUrdu ? theme.heroTitle.ur : theme.heroTitle.en;
-const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.desc || theme.tagline.en);
+  const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.desc || theme.tagline.en);
 
   const subjectChapters: Chapter[] = useMemo(() =>
     chapters
@@ -114,6 +123,7 @@ const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.de
   const allVideoIds        = useMemo(() => allVideos.map((v) => v.id), [allVideos]);
   const totalLessons       = allVideos.length;
   const totalChapters      = subjectChapters.length;
+  const hasLessons         = totalLessons > 0;
 
   /* ── v2 progress hook (same as KG / Primary) ────────────── */
   const {
@@ -135,6 +145,24 @@ const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.de
   const [filter,            setFilter]            = useState<"all" | "inprogress">("all");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  /* ── Daily-goal minutes state (persisted per calendar day) ── */
+  const [todayMinutes, setTodayMinutes] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(todayKey());
+      return saved ? Math.min(parseInt(saved, 10) || 0, DAILY_GOAL_MINUTES) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const recordLessonCompleted = useCallback(() => {
+    setTodayMinutes((prev) => {
+      const next = Math.min(prev + MINUTES_PER_LESSON, DAILY_GOAL_MINUTES);
+      try { localStorage.setItem(todayKey(), String(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   /**
    * resumePositionRef holds the position fetched BEFORE the player mounts.
@@ -177,28 +205,28 @@ const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.de
     return m ? `جماعت ${m[0]}` : classInfo.name || `Class ${classId}`;
   }, [classInfo, isUrdu, classId]);
 
-const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
-  const chapterIdx = subjectChapters.findIndex((c) => c.id === chapter.id);
-  if (!isChapterUnlocked(chapterIdx)) {
-    navigate("/login", { state: { from: location.pathname } });
-    return;
-  }
-  flushBeforeSwitch();
-  const position = await fetchJourneyForVideo(video.id);
-  resumePositionRef.current = position;
+  const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
+    const chapterIdx = subjectChapters.findIndex((c) => c.id === chapter.id);
+    if (!isChapterUnlocked(chapterIdx)) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    flushBeforeSwitch();
+    const position = await fetchJourneyForVideo(video.id);
+    resumePositionRef.current = position;
 
-  setActiveVideo(video);
-  setActiveChapter(chapter);
+    setActiveVideo(video);
+    setActiveChapter(chapter);
 
-  try {
-    const detail = await fetchMiddleVideoDetail(video.id);
-    setResolvedVideoUrl(detail.video_url || `${CDN}${video.path}`);
-  } catch {
-    setResolvedVideoUrl(`${CDN}${video.path}`);
-  }
+    try {
+      const detail = await fetchMiddleVideoDetail(video.id);
+      setResolvedVideoUrl(detail.video_url || `${CDN}${video.path}`);
+    } catch {
+      setResolvedVideoUrl(`${CDN}${video.path}`);
+    }
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, [flushBeforeSwitch, fetchJourneyForVideo, subjectChapters, isChapterUnlocked, navigate, location.pathname]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [flushBeforeSwitch, fetchJourneyForVideo, subjectChapters, isChapterUnlocked, navigate, location.pathname]);
 
   const exitPlayer = useCallback(() => {
     flushBeforeSwitch();
@@ -229,13 +257,15 @@ const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
   /* ── onEnded: delegate to progress hook + auto-advance ──── */
   const handleVideoEnded = useCallback(() => {
     if (!activeVideo || !activeChapter || !videoRef.current) return;
+    const alreadyWatched = watchedSet.has(activeVideo.id);
     progressEnded(activeVideo.id, videoRef.current.duration || 0);
+    if (!alreadyWatched) recordLessonCompleted();
 
     const idx = activeChapter.videos.findIndex((v) => v.id === activeVideo.id);
     if (idx < activeChapter.videos.length - 1) {
       playVideo(activeChapter.videos[idx + 1], activeChapter);
     }
-  }, [activeVideo, activeChapter, progressEnded, playVideo]);
+  }, [activeVideo, activeChapter, progressEnded, playVideo, watchedSet, recordLessonCompleted]);
 
   /* ── onTimeUpdate: delegate to progress hook ────────────── */
   const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
@@ -254,7 +284,8 @@ const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
     }
     const duration = videoRef.current.duration || 0;
     progressEnded(activeVideo.id, duration);
-  }, [activeVideo, watchedSet, progressEnded]);
+    recordLessonCompleted();
+  }, [activeVideo, watchedSet, progressEnded, recordLessonCompleted]);
 
   /* ── Resources data ── */
   const RESOURCES = useMemo(() => [
@@ -288,8 +319,8 @@ const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
               return (
                 <div
                   key={video.id}
-style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px", borderRadius: 10, cursor: "pointer", background: isActive ? theme.light : locked ? "#F8FAFC" : "transparent", border: `1.5px solid ${isActive ? theme.color + "33" : "transparent"}`, marginBottom: 2, transition: "background .14s" }}
-                onClick={() => {
+                  style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px", borderRadius: 10, cursor: "pointer", background: isActive ? theme.light : locked ? "#F8FAFC" : "transparent", border: `1.5px solid ${isActive ? theme.color + "33" : "transparent"}`, marginBottom: 2, transition: "background .14s" }}
+                  onClick={() => {
                     if (locked) {
                       navigate("/login", { state: { from: location.pathname } });
                       return;
@@ -298,7 +329,7 @@ style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px
                     setMobileSidebarOpen(false);
                   }}
                 >
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: isActive ? theme.color : locked ? "#CBD5E1" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: isActive ? theme.color : locked ? "#CBD5E1" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {locked
                       ? <Lock size={14} style={{ color: "#334155" }} />
                       : watched
@@ -308,7 +339,7 @@ style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px
                           : <ThemeIcon size={14} style={{ color: theme.color }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: ".82rem", fontWeight: isActive ? 800 : 600, color: isActive ? theme.color : locked ? "#475569" : "#0F172A", margin: "0 0 2px", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p style={{ fontSize: ".82rem", fontWeight: isActive ? 800 : 600, color: isActive ? theme.color : locked ? "#475569" : "#0F172A", margin: "0 0 2px", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {globalIdx + 1}.{vidIdx + 1} {vt}
                     </p>
                     <p style={{ fontSize: ".7rem", color: "#94A3B8", margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
@@ -497,7 +528,7 @@ style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px
     const vid      = activeVideo;
     const chap     = activeChapter;
     const vTitle   = isUrdu ? vid.urdu_name || vid.name : vid.name;
-   const vUrl = resolvedVideoUrl;
+    const vUrl = resolvedVideoUrl;
     const chLabel  = isUrdu ? chap.urdu_name || chap.name : chap.name;
     const isWatched = watchedSet.has(vid.id);
     const pctActive = isWatched ? 100 : progressMap[vid.id] || 0;
@@ -685,6 +716,9 @@ style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px
     return activeChapterData.videos;
   })();
 
+  // Lessons remaining for this subject — drives the "keep going" banner
+  const remainingLessons = Math.max(0, totalLessons - watchedCount);
+
   return (
     <div style={{ minHeight: "100vh", background: "#F0F4FA", fontFamily: "'Nunito','Segoe UI',sans-serif", direction: isUrdu ? "rtl" : "ltr", overflowX: "hidden" }}>
       <style>{globalStyles}</style>
@@ -740,118 +774,146 @@ style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px
 
           {/* ── SIDEBAR ── */}
           <aside className="msv-sidebar">
-            <div className="msv-prog-box">
-              <div className="msv-prog-label">
-                <span style={{ fontWeight: 900, fontSize: ".95rem", color: "#111827" }}>{isUrdu ? "میری پیشرفت" : "My Progress"}</span>
-                <span style={{ fontWeight: 900, fontSize: ".95rem", color: theme.color }}>{progressPct}%</span>
-              </div>
-              <div className="msv-prog-bg">
-                <div className="msv-prog-fill" style={{ width: `${progressPct}%`, background: theme.color }} />
-              </div>
-              <p style={{ fontSize: ".78rem", color: "#6B7280", margin: 0, fontWeight: 700 }}>
-                {watchedCount} {isUrdu ? "میں سے" : "of"} {totalLessons} {isUrdu ? "اسباق مکمل!" : "lessons finished!"}
-              </p>
-            </div>
 
-            <div style={{ padding: "12px 18px", borderBottom: "1.5px solid #F1F5F9", display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: theme.pill, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Zap size={15} style={{ color: theme.color }} />
-              </div>
-              <p style={{ fontSize: ".78rem", fontWeight: 800, color: theme.color, margin: 0 }}>
-                {isUrdu ? "اس ہفتے ۳ اسباق باقی ہیں۔ جاری رہو!" : "3 lessons left this week. Keep going!"}
-              </p>
-            </div>
-
-            <p className="msv-ch-label">{isUrdu ? "تمام ابواب" : "All Chapters"}</p>
-
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} style={{ height: 60, background: "#F1F5F9", margin: "2px 14px", borderRadius: 12, animation: "msvPulse 1.4s ease-in-out infinite" }} />
-                ))
-              : subjectChapters.map((chapter, idx) => {
-                  const unlocked  = isChapterUnlocked(idx);
-                  const isOpen    = openChapterId === chapter.id;
-                  const chWatched = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
-                  const chDone    = chapter.videos.length > 0 && chWatched === chapter.videos.length;
-                  const chLabel   = isUrdu ? chapter.urdu_name || chapter.name : chapter.name;
-                  return (
-                    <div key={chapter.id} className="msv-ch-row">
-                     <button
-                        className={`msv-ch-btn${isOpen ? " active" : ""}`}
-                        onClick={() => {
-                          if (!unlocked) {
-                            navigate("/login", { state: { from: location.pathname } });
-                            return;
-                          }
-                          setOpenChapterId(isOpen ? null : chapter.id);
-                        }}
-                        style={{ cursor: "pointer", opacity: unlocked ? 1 : 0.7 }}
-                      >
-                        <div className="msv-ch-icon" style={{ background: chDone ? "#DCFCE7" : isOpen ? theme.pill : "#F1F5F9", color: chDone ? "#16A34A" : isOpen ? theme.color : "#6B7280" }}>
-                          {chDone ? <CheckCircle2 size={16} /> : unlocked ? (isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />) : <Lock size={14} />}
-                        </div>
-                        <div className="msv-ch-info">
-                          <p className="msv-ch-num" style={{ color: isOpen ? theme.color : "#9CA3AF" }}>
-                            {isUrdu ? `باب ${idx + 1}` : `CHAPTER ${idx + 1}`}
-                          </p>
-                          <p className="msv-ch-name">{chLabel}</p>
-                        </div>
-                        {/* per-chapter progress badge */}
-                        {unlocked && chapter.videos.length > 0 && (
-                          <span style={{ fontSize: ".72rem", fontWeight: 800, color: chDone ? "#16A34A" : isOpen ? "#fff" : "#9CA3AF", background: chDone ? "#DCFCE7" : isOpen ? theme.color : "#F1F5F9", padding: "2px 8px", borderRadius: 100, flexShrink: 0 }}>
-                            {chDone ? "✓" : `${chWatched}/${chapter.videos.length}`}
-                          </span>
-                        )}
-                      </button>
-                      <AnimatePresence>
-                        {isOpen && unlocked && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .2 }} style={{ overflow: "hidden" }}>
-                            {chapter.videos.map((video) => {
-                              const watched = watchedSet.has(video.id);
-                              const vTitle  = isUrdu ? video.urdu_name || video.name : video.name;
-                              const isCur   = activeVideo?.id === video.id;
-                              return (
-                                <button key={video.id} className="msv-lec-sub" onClick={() => playVideo(video, chapter)} style={{ background: isCur ? theme.light : "none", borderLeft: `3px solid ${isCur ? theme.color : "transparent"}` }}>
-                                  <span style={{ color: watched ? "#22C55E" : theme.color, flexShrink: 0 }}>
-                                    {watched ? <CheckCircle2 size={13} /> : <span style={{ width: 8, height: 8, borderRadius: "50%", border: `2px solid ${theme.color}`, display: "inline-block" }} />}
-                                  </span>
-                                  <span style={{ fontSize: ".82rem", fontWeight: 600, color: isCur ? theme.color : "#374151", lineHeight: 1.3, textAlign: "left" }}>{vTitle}</span>
-                                  {isCur && (
-                                    <span style={{ marginLeft: "auto", fontSize: ".62rem", fontWeight: 800, color: theme.color, background: theme.pill, padding: "2px 7px", borderRadius: 100, flexShrink: 0 }}>
-                                      {isUrdu ? "اب" : "NOW"}
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-
-            <div style={{ padding: "14px 18px", borderTop: "1px solid #F1F5F9" }}>
-              <button onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })} style={{ color: theme.color, fontWeight: 700, fontSize: ".84rem", background: "none", border: "none", cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0 }}>
-                {isUrdu ? "→" : "←"} {isUrdu ? "مضامین پر واپس" : "Back to Subjects"}
-              </button>
-            </div>
-
-            <div style={{ margin: "0 14px 14px", background: theme.light, borderRadius: 14, padding: "14px 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: theme.pill, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Target size={15} style={{ color: theme.color }} />
+            {!loading && !hasLessons ? (
+              /* Nothing to teach yet for this subject — keep the sidebar
+                 simple instead of showing 0% progress / 0 of 0 lessons */
+              <div style={{ padding: "36px 22px", textAlign: "center" }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: "50%", background: theme.light,
+                  display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px",
+                }}>
+                  <Clock size={24} style={{ color: theme.color }} />
                 </div>
-                <span style={{ fontWeight: 900, fontSize: ".9rem", color: "#111827" }}>{isUrdu ? "روزانہ ہدف" : "Daily Goal"}</span>
+                <p style={{ fontWeight: 800, color: "#111827", margin: "0 0 6px" }}>
+                  {isUrdu ? "جلد آرہا ہے" : "Coming Soon"}
+                </p>
+                <p style={{ fontSize: ".8rem", color: "#94A3B8", margin: 0 }}>
+                  {isUrdu ? "کوئی باب دستیاب نہیں" : "No chapters available yet"}
+                </p>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".78rem", color: "#6B7280", marginBottom: 5 }}>
-                <span>{isUrdu ? "سیکھنے کا وقت" : "Learning Time"}</span>
-                <span style={{ fontWeight: 800, color: theme.color }}>15/20 min</span>
-              </div>
-              <div style={{ background: "#E5E7EB", borderRadius: 100, height: 7, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: "75%", background: theme.color, borderRadius: 100 }} />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="msv-prog-box">
+                  <div className="msv-prog-label">
+                    <span style={{ fontWeight: 900, fontSize: ".95rem", color: "#111827" }}>{isUrdu ? "میری پیشرفت" : "My Progress"}</span>
+                    <span style={{ fontWeight: 900, fontSize: ".95rem", color: theme.color }}>{progressPct}%</span>
+                  </div>
+                  <div className="msv-prog-bg">
+                    <div className="msv-prog-fill" style={{ width: `${progressPct}%`, background: theme.color }} />
+                  </div>
+                  <p style={{ fontSize: ".78rem", color: "#6B7280", margin: 0, fontWeight: 700 }}>
+                    {watchedCount} {isUrdu ? "میں سے" : "of"} {totalLessons} {isUrdu ? "اسباق مکمل!" : "lessons finished!"}
+                  </p>
+                </div>
+
+                {/* "Keep going" banner — only shown when there are actually
+                    lessons left to watch for this subject */}
+                {remainingLessons > 0 && (
+                  <div style={{ padding: "12px 18px", borderBottom: "1.5px solid #F1F5F9", display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 9, background: theme.pill, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Zap size={15} style={{ color: theme.color }} />
+                    </div>
+                    <p style={{ fontSize: ".78rem", fontWeight: 800, color: theme.color, margin: 0 }}>
+                      {isUrdu
+                        ? `${remainingLessons} اسباق باقی ہیں۔ جاری رہو!`
+                        : `${remainingLessons} lesson${remainingLessons !== 1 ? "s" : ""} left. Keep going!`}
+                    </p>
+                  </div>
+                )}
+
+                <p className="msv-ch-label">{isUrdu ? "تمام ابواب" : "All Chapters"}</p>
+
+                {loading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} style={{ height: 60, background: "#F1F5F9", margin: "2px 14px", borderRadius: 12, animation: "msvPulse 1.4s ease-in-out infinite" }} />
+                    ))
+                  : subjectChapters.map((chapter, idx) => {
+                      const unlocked  = isChapterUnlocked(idx);
+                      const isOpen    = openChapterId === chapter.id;
+                      const chWatched = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
+                      const chDone    = chapter.videos.length > 0 && chWatched === chapter.videos.length;
+                      const chLabel   = isUrdu ? chapter.urdu_name || chapter.name : chapter.name;
+                      return (
+                        <div key={chapter.id} className="msv-ch-row">
+                         <button
+                            className={`msv-ch-btn${isOpen ? " active" : ""}`}
+                            onClick={() => {
+                              if (!unlocked) {
+                                navigate("/login", { state: { from: location.pathname } });
+                                return;
+                              }
+                              setOpenChapterId(isOpen ? null : chapter.id);
+                            }}
+                            style={{ cursor: "pointer", opacity: unlocked ? 1 : 0.7 }}
+                          >
+                            <div className="msv-ch-icon" style={{ background: chDone ? "#DCFCE7" : isOpen ? theme.pill : "#F1F5F9", color: chDone ? "#16A34A" : isOpen ? theme.color : "#6B7280" }}>
+                              {chDone ? <CheckCircle2 size={16} /> : unlocked ? (isOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />) : <Lock size={14} />}
+                            </div>
+                            <div className="msv-ch-info">
+                              <p className="msv-ch-num" style={{ color: isOpen ? theme.color : "#9CA3AF" }}>
+                                {isUrdu ? `باب ${idx + 1}` : `CHAPTER ${idx + 1}`}
+                              </p>
+                              <p className="msv-ch-name">{chLabel}</p>
+                            </div>
+                            {/* per-chapter progress badge */}
+                            {unlocked && chapter.videos.length > 0 && (
+                              <span style={{ fontSize: ".72rem", fontWeight: 800, color: chDone ? "#16A34A" : isOpen ? "#fff" : "#9CA3AF", background: chDone ? "#DCFCE7" : isOpen ? theme.color : "#F1F5F9", padding: "2px 8px", borderRadius: 100, flexShrink: 0 }}>
+                                {chDone ? "✓" : `${chWatched}/${chapter.videos.length}`}
+                              </span>
+                            )}
+                          </button>
+                          <AnimatePresence>
+                            {isOpen && unlocked && (
+                              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .2 }} style={{ overflow: "hidden" }}>
+                                {chapter.videos.map((video) => {
+                                  const watched = watchedSet.has(video.id);
+                                  const vTitle  = isUrdu ? video.urdu_name || video.name : video.name;
+                                  const isCur   = activeVideo?.id === video.id;
+                                  return (
+                                    <button key={video.id} className="msv-lec-sub" onClick={() => playVideo(video, chapter)} style={{ background: isCur ? theme.light : "none", borderLeft: `3px solid ${isCur ? theme.color : "transparent"}` }}>
+                                      <span style={{ color: watched ? "#22C55E" : theme.color, flexShrink: 0 }}>
+                                        {watched ? <CheckCircle2 size={13} /> : <span style={{ width: 8, height: 8, borderRadius: "50%", border: `2px solid ${theme.color}`, display: "inline-block" }} />}
+                                      </span>
+                                      <span style={{ fontSize: ".82rem", fontWeight: 600, color: isCur ? theme.color : "#374151", lineHeight: 1.3, textAlign: "left" }}>{vTitle}</span>
+                                      {isCur && (
+                                        <span style={{ marginLeft: "auto", fontSize: ".62rem", fontWeight: 800, color: theme.color, background: theme.pill, padding: "2px 7px", borderRadius: 100, flexShrink: 0 }}>
+                                          {isUrdu ? "اب" : "NOW"}
+                                        </span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+
+                <div style={{ padding: "14px 18px", borderTop: "1px solid #F1F5F9" }}>
+                  <button onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })} style={{ color: theme.color, fontWeight: 700, fontSize: ".84rem", background: "none", border: "none", cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0 }}>
+                    {isUrdu ? "→" : "←"} {isUrdu ? "مضامین پر واپس" : "Back to Subjects"}
+                  </button>
+                </div>
+
+                <div style={{ margin: "0 14px 14px", background: theme.light, borderRadius: 14, padding: "14px 16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 9, background: theme.pill, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Target size={15} style={{ color: theme.color }} />
+                    </div>
+                    <span style={{ fontWeight: 900, fontSize: ".9rem", color: "#111827" }}>{isUrdu ? "روزانہ ہدف" : "Daily Goal"}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".78rem", color: "#6B7280", marginBottom: 5 }}>
+                    <span>{isUrdu ? "سیکھنے کا وقت" : "Learning Time"}</span>
+                    <span style={{ fontWeight: 800, color: theme.color }}>{todayMinutes}/{DAILY_GOAL_MINUTES} min</span>
+                  </div>
+                  <div style={{ background: "#E5E7EB", borderRadius: 100, height: 7, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${Math.min(100, (todayMinutes / DAILY_GOAL_MINUTES) * 100)}%`, background: theme.color, borderRadius: 100, transition: "width .4s ease" }} />
+                  </div>
+                </div>
+              </>
+            )}
           </aside>
 
           {/* ── MAIN CONTENT ── */}
@@ -861,6 +923,37 @@ style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} style={{ borderRadius: 18, background: "#fff", height: 220, animation: "msvPulse 1.4s ease-in-out infinite" }} />
                 ))}
+              </div>
+            ) : !hasLessons ? (
+              <div style={{
+                background: "#fff", borderRadius: 20, border: "2px dashed #E2E8F0",
+                padding: "72px 24px", textAlign: "center",
+              }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%", background: theme.light,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 20px",
+                }}>
+                  <BookOpen size={32} style={{ color: theme.color }} />
+                </div>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", margin: "0 0 8px" }}>
+                  {isUrdu ? "جلد آرہا ہے" : "Coming Soon"}
+                </h3>
+                <p style={{ fontSize: ".88rem", color: "#6B7280", margin: "0 auto", maxWidth: 380, lineHeight: 1.6 }}>
+                  {isUrdu
+                    ? `${subjectName} کے اسباق ابھی تیار کیے جا رہے ہیں۔ جلد ہی دستیاب ہوں گے!`
+                    : `Lessons for ${subjectName} are being prepared and will be available soon!`}
+                </p>
+                <button
+                  onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })}
+                  style={{
+                    marginTop: 22, background: theme.color, color: "#fff", border: "none",
+                    borderRadius: 10, padding: "10px 22px", fontWeight: 800, fontSize: ".85rem",
+                    cursor: "pointer", fontFamily: "'Nunito',sans-serif",
+                  }}
+                >
+                  {isUrdu ? "مضامین پر واپس" : "Back to Subjects"}
+                </button>
               </div>
             ) : activeChapterData ? (
               <>
