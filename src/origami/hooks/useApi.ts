@@ -1,9 +1,3 @@
-/**
- * Generic hook for API calls with loading / error state.
- * Usage:
- *   const { data, loading, error } = useApi(() => fetchCategories(), []);
- */
-
 import { useState, useEffect, useRef } from 'react';
 
 interface ApiState<T> {
@@ -12,22 +6,36 @@ interface ApiState<T> {
   error: string | null;
 }
 
+interface ApiOptions {
+  enabled?: boolean;
+}
+
 export function useApi<T>(
   fetcher: () => Promise<T>,
   deps: React.DependencyList = [],
+  options: ApiOptions = {},
 ): ApiState<T> {
+  const { enabled = true } = options;
+
   const [state, setState] = useState<ApiState<T>>({
     data: null,
-    loading: true,
+    loading: enabled,
     error: null,
   });
 
-  // Keep a stable ref to the fetcher so the effect doesn't re-run when an
-  // inline arrow function is passed (identity changes on every render).
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
   useEffect(() => {
+    if (!enabled) {
+      // Not ready to fetch yet (e.g. waiting on realId). Stay in a clean
+      // "waiting" state — do NOT leave a stale error/data from a previous
+      // fetch sitting around, or callers relying on `error` will briefly
+      // render a false error state.
+      setState({ data: null, loading: true, error: null });
+      return;
+    }
+
     let cancelled = false;
     setState({ data: null, loading: true, error: null });
 
@@ -47,7 +55,7 @@ export function useApi<T>(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [...deps, enabled]);
 
   return state;
 }

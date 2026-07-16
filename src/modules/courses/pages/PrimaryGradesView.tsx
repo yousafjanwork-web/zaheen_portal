@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { getLanguage } from "@/modules/shared/i18n";
+import { classSlugFromId } from "@/config/classSlugs";
 import { useGrades } from "@/modules/shared/hooks/useGrade";
 
 import CourseImage1 from "../../../assets/images/vocab1.png";
@@ -191,8 +192,8 @@ const PrimaryGradesView = () => {
 
   const displayGrades = primaryGrades.length > 0 ? primaryGrades : safeGrades;
 
-  const handleExplore = (grade: any) =>
-    navigate(`/class/${grade.id}`, { state: { gradeType: grade.name, classTitle: grade.name } });
+ const handleExplore = (grade: any) =>
+    navigate(`/${classSlugFromId(grade.id)}`, { state: { gradeType: grade.name, classTitle: grade.name } });
 if (navigating) {
   return (
     <div style={{

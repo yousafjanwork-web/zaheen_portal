@@ -7,3 +7,4 @@
 export const COSMO_AI_API = "http://localhost:2023";
 
 export const cosmoApi = (path: string) => `${COSMO_AI_API}${path}`;
+// 

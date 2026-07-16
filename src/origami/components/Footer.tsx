@@ -86,7 +86,7 @@ const Footer = ({ darkMode }: FooterProps) => {
           <div>
             <h4 className="font-fredoka font-bold text-lg mb-4">Categories</h4>
             <ul className="space-y-2.5">
-              {['🐦 Birds', '🐶 Animals', '🌸 Flowers', '⭐ Stars', '❤️ Hearts', '🎁 Gifts'].map((cat) => (
+              {['🐦 Birds', '🐶 Animals', '🌸 Flowers', '⭐ Stars', '❤️ Hearts', '🎁 Boxes'].map((cat) => (
                 <li key={cat}>
                   <Link
                     to="/origami/library"

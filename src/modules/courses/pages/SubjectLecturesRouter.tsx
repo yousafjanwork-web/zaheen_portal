@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { classIdFromSlug } from "@/config/classSlugs";
 import SubjectLecturesView from "./SubjectLecturesView";
 import PrimarySubjectDetailView from "./PrimarySubjectDetailView";
 import MiddleSubjectDetailView from "./MiddleSubjectDetailView";
@@ -137,12 +138,12 @@ const resolveTarget = (gradeType?: string, className?: string): RouteTarget => {
   if (gradeType || className)                     return "legacy";
   return null; // unknown — need more info
 };
-
 const SubjectLecturesRouter = () => {
-  const { classId } = useParams<{ classId: string }>();
+  const { classSlug } = useParams<{ classSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
 
   // SPECIFIC CHANGE 1: Purani fastTarget aur skipFetch wali saari lines hata kar sirf yeh call rakhein
-  const { classInfo, loading } = useClassSubjects(Number(classId));
+  const { classInfo, loading } = useClassSubjects(classId ?? 0);
 
   // SPECIFIC CHANGE 2: Jab tak loading chal rahi hai YA classInfo ka data sahi se nahi aaya, skeleton dikha kar block rakhein
   if (loading || !classInfo || !classInfo.name) {

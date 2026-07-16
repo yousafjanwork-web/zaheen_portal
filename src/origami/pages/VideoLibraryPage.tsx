@@ -1,16 +1,19 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, Clock, Heart, Search, Grid3X3, LayoutList, Star } from 'lucide-react';
+import { Play, Clock, Heart, Search, Grid3X3, LayoutList, Star, CheckCircle2 } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { fetchAllCrafts, fetchCategories } from '../services/origamiApi';
 import { slugify } from '../utils/slugify';
+import { getWatchedCraftIds } from '../utils/progressTracking';
+import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
 
 interface VideoLibraryPageProps {
   darkMode: boolean;
 }
 
 const VideoLibraryPage = ({ darkMode }: VideoLibraryPageProps) => {
+  const { isLoggedIn } = useZaheenAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
@@ -19,6 +22,25 @@ const VideoLibraryPage = ({ darkMode }: VideoLibraryPageProps) => {
 
   const { data: allCrafts, loading: craftsLoading } = useApi(fetchAllCrafts, []);
   const { data: categories, loading: catsLoading } = useApi(fetchCategories, []);
+
+  // Which crafts the logged-in user has already watched. progressTracking
+  // itself is scoped to whoever's currently logged in (see progressTracking.ts),
+  // but we also gate on isLoggedIn directly here so that logging out instantly
+  // clears the indicators from this page without waiting on a storage read.
+  const [watchedIds, setWatchedIds] = useState<Set<string>>(() =>
+    isLoggedIn ? getWatchedCraftIds() : new Set(),
+  );
+
+  useEffect(() => {
+    const refresh = () => setWatchedIds(isLoggedIn ? getWatchedCraftIds() : new Set());
+    refresh();
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [isLoggedIn]);
 
   const filteredCrafts = useMemo(() => {
     let result = [...(allCrafts ?? [])];
@@ -170,98 +192,122 @@ const VideoLibraryPage = ({ darkMode }: VideoLibraryPageProps) => {
 
             {viewMode === 'grid' ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCrafts.map((craft, index) => (
-                  <motion.div
-                    key={craft.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.04 }}
-                  >
-                <Link to={`/origami/craft/${slugify(craft.title)}`}>
-                      <div className={`card-hover rounded-[1.5rem] overflow-hidden ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md`}>
-                        <div className="relative aspect-video overflow-hidden">
-                          <img src={craft.thumbnail || undefined} alt={craft.title} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                            <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                              <Play size={24} className="text-primary ml-1" fill="currentColor" />
+                {filteredCrafts.map((craft, index) => {
+                  const watched = watchedIds.has(craft.id);
+                  return (
+                    <motion.div
+                      key={craft.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.04 }}
+                    >
+                      <Link to={`/origami/craft/${slugify(craft.title)}`}>
+                        <div
+                          className={`card-hover rounded-[1.5rem] overflow-hidden ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md border-2 ${
+                            watched ? 'border-green' : 'border-transparent'
+                          }`}
+                        >
+                          <div className="relative aspect-video overflow-hidden">
+                            <img src={craft.thumbnail || undefined} alt={craft.title} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                              <div className="w-14 h-14 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                                <Play size={24} className="text-primary ml-1" fill="currentColor" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-3 right-3 bg-black/70 text-white px-3 py-1 rounded-lg text-sm font-nunito font-semibold flex items-center gap-1">
+                              <Clock size={12} /> {craft.duration}
+                            </div>
+                            <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-sm font-nunito font-bold ${
+                              craft.difficulty === 'Beginner' ? 'bg-green text-white' :
+                              craft.difficulty === 'Intermediate' ? 'bg-amber text-white' :
+                              'bg-pink text-white'
+                            }`}>
+                              {craft.difficulty}
+                            </div>
+                            {craft.featured && (
+                              <div className={`absolute right-3 bg-amber text-white px-2 py-1 rounded-lg text-xs font-nunito font-bold flex items-center gap-1 ${watched ? 'top-12' : 'top-3'}`}>
+                                <Star size={10} fill="white" /> Featured
+                              </div>
+                            )}
+                            {watched && (
+                              <div className="absolute top-3 right-3 bg-green text-white px-2 py-1 rounded-lg text-xs font-nunito font-bold flex items-center gap-1">
+                                <CheckCircle2 size={12} /> Watched
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-5">
+                            <h3 className="font-fredoka font-bold text-lg mb-2">{craft.title}</h3>
+                            <div className="flex items-center justify-between">
+                              <span className={`flex items-center gap-1 text-sm font-nunito ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <Heart size={14} className="text-pink" /> {(craft.likes ?? 0).toLocaleString()}
+                              </span>
+                              <span className={`text-sm font-nunito font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                Ages {craft.ageRange}
+                              </span>
                             </div>
                           </div>
-                          <div className="absolute bottom-3 right-3 bg-black/70 text-white px-3 py-1 rounded-lg text-sm font-nunito font-semibold flex items-center gap-1">
-                            <Clock size={12} /> {craft.duration}
-                          </div>
-                          <div className={`absolute top-3 left-3 px-3 py-1 rounded-lg text-sm font-nunito font-bold ${
-                            craft.difficulty === 'Beginner' ? 'bg-green text-white' :
-                            craft.difficulty === 'Intermediate' ? 'bg-amber text-white' :
-                            'bg-pink text-white'
-                          }`}>
-                            {craft.difficulty}
-                          </div>
-                          {craft.featured && (
-                            <div className="absolute top-3 right-3 bg-amber text-white px-2 py-1 rounded-lg text-xs font-nunito font-bold flex items-center gap-1">
-                              <Star size={10} fill="white" /> Featured
-                            </div>
-                          )}
                         </div>
-                        <div className="p-5">
-                          <h3 className="font-fredoka font-bold text-lg mb-2">{craft.title}</h3>
-                          <div className="flex items-center justify-between">
-                            <span className={`flex items-center gap-1 text-sm font-nunito ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              <Heart size={14} className="text-pink" /> {(craft.likes ?? 0).toLocaleString()}
-                            </span>
-                            <span className={`text-sm font-nunito font-semibold ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Ages {craft.ageRange}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredCrafts.map((craft, index) => (
-                  <motion.div
-                    key={craft.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    <Link to={`/origami/craft/${craft.id}`}>
-                      <div className={`card-hover flex gap-4 p-4 rounded-2xl ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md`}>
-                        <div className="relative w-32 sm:w-48 aspect-video rounded-xl overflow-hidden flex-shrink-0">
-                          <img src={craft.thumbnail || undefined} alt={craft.title} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center">
-                              <Play size={16} className="text-primary ml-0.5" fill="currentColor" />
+                {filteredCrafts.map((craft, index) => {
+                  const watched = watchedIds.has(craft.id);
+                  return (
+                    <motion.div
+                      key={craft.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <Link to={`/origami/craft/${craft.id}`}>
+                        <div
+                          className={`card-hover flex gap-4 p-4 rounded-2xl ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md border-2 ${
+                            watched ? 'border-green' : 'border-transparent'
+                          }`}
+                        >
+                          <div className="relative w-32 sm:w-48 aspect-video rounded-xl overflow-hidden flex-shrink-0">
+                            <img src={craft.thumbnail || undefined} alt={craft.title} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center">
+                                <Play size={16} className="text-primary ml-0.5" fill="currentColor" />
+                              </div>
+                            </div>
+                            {watched && (
+                              <div className="absolute top-2 right-2 bg-green text-white px-2 py-0.5 rounded-md text-[10px] font-nunito font-bold flex items-center gap-1">
+                                <CheckCircle2 size={10} /> Watched
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 flex flex-col justify-center min-w-0">
+                            <h3 className="font-fredoka font-bold text-lg mb-1 truncate">{craft.title}</h3>
+                            <div className="flex flex-wrap items-center gap-2 text-sm font-nunito">
+                              <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                                craft.difficulty === 'Beginner' ? 'bg-green/10 text-green' :
+                                craft.difficulty === 'Intermediate' ? 'bg-amber/10 text-amber' :
+                                'bg-pink/10 text-pink'
+                              }`}>
+                                {craft.difficulty}
+                              </span>
+                              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                                <Clock size={12} className="inline mr-1" />{craft.duration}
+                              </span>
+                              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                                <Heart size={12} className="inline mr-1 text-pink" />{(craft.likes ?? 0).toLocaleString()}
+                              </span>
+                              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                                Ages {craft.ageRange}
+                              </span>
                             </div>
                           </div>
                         </div>
-                        <div className="flex-1 flex flex-col justify-center min-w-0">
-                          <h3 className="font-fredoka font-bold text-lg mb-1 truncate">{craft.title}</h3>
-                          <div className="flex flex-wrap items-center gap-2 text-sm font-nunito">
-                            <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
-                              craft.difficulty === 'Beginner' ? 'bg-green/10 text-green' :
-                              craft.difficulty === 'Intermediate' ? 'bg-amber/10 text-amber' :
-                              'bg-pink/10 text-pink'
-                            }`}>
-                              {craft.difficulty}
-                            </span>
-                            <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                              <Clock size={12} className="inline mr-1" />{craft.duration}
-                            </span>
-                            <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                              <Heart size={12} className="inline mr-1 text-pink" />{(craft.likes ?? 0).toLocaleString()}
-                            </span>
-                            <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                              Ages {craft.ageRange}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
 

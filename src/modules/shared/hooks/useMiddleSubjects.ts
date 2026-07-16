@@ -169,9 +169,13 @@ export const useMiddleSubjects = (classId: number): UseMiddleSubjectsResult => {
   useEffect(() => {
     if (!classId || isNaN(classId)) return;
 
-    let cancelled = false;
+ let cancelled = false;
     setLoading(true);
     setError(null);
+    setClassInfo(null);
+    setSubjects([]);
+    setChapters([]);
+    setChapterVideos({});
 
     const load = async () => {
       try {

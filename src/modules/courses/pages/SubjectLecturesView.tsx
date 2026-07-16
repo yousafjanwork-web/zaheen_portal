@@ -5,6 +5,9 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { findSubjectBySlug } from "../../../config/subjectSlug";
+
 import { useParams, useNavigate, useLocation, Link, } from "react-router-dom";
 import {
   BookOpen,
@@ -28,11 +31,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useSeniorSubjects as useClassSubjects, fetchSeniorVideoDetail } from "@/modules/shared/hooks/useSeniorSubjects";
+import { useClassSubjects, fetchVideoDetail } from "@/modules/shared/hooks/useClassSubjects";
 import thumbnail from "../../../assets/images/physics.png";
-// ── AUTH ──────────────────────────────────────────────────────
 import { useAuth } from "@/modules/shared/context/AuthContext";
-import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";   // ← same hook as KG / Primary / Middle
+import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
@@ -85,6 +87,7 @@ interface Video {
   path: string;
   desc?: string;
   urdu_desc?: string;
+  thumbnail_url?: string;
   thumbnailUrl?: string;
   thumbnail?: string;
   thumb?: string;
@@ -102,18 +105,30 @@ interface ChapterWithVideos {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   CDN thumbnail helper (matches KG / Primary / Middle pattern)
+   CDN thumbnail helper
 ──────────────────────────────────────────────────────────────── */
-const CDN_THUMB = "https://cdn.zaheen.com.pk";
+const CDN_BASE = "https://cdn.zaheen.com.pk";
+//"Hum wahan old API use nahi kar rahe — woh line API call hi nahi kar rahi.
+
+// API_BASE = "https://api.zaheen.com.pk" sirf image URLs ka domain check karne ke liye use ho raha hai jo v2 API already send karti hai,
+
+const API_BASE = "https://api.zaheen.com.pk";
 
 const buildThumbUrl = (raw?: string): string | null => {
   if (!raw) return null;
+  // Already correct CDN URL — return as-is
+  if (raw.startsWith(CDN_BASE)) return raw;
+  // API domain — swap to CDN domain
+  if (raw.startsWith(API_BASE)) return raw.replace(API_BASE, CDN_BASE);
+  // Any other absolute URL — return as-is
   if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  return `${CDN_THUMB}/${raw.replace(/^\/+/, "")}`;
+  // Relative path — prepend CDN base
+  return `${CDN_BASE}/${raw.replace(/^\/+/, "")}`;
 };
 
 const getThumbUrl = (video: Video): string | null => {
-  const raw =
+  const explicit =
+    video.thumbnail_url ||
     video.thumbnailUrl ||
     video.thumbnail ||
     video.thumb ||
@@ -121,7 +136,9 @@ const getThumbUrl = (video: Video): string | null => {
     video.cover ||
     video.poster ||
     null;
-  return buildThumbUrl(raw);
+
+  if (explicit) return buildThumbUrl(explicit);
+  return null;
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -256,11 +273,11 @@ const NewSidebar = ({
       isStatic: true,
       isActive: false,
     },
-    {
+   {
       id: "my-courses",
       labelKey: "subjectLecturesView.sidebar.myCourses",
       icon: BookOpen,
-      path: `/class/${classId}/subject/${subjectId}`,
+      path: `/${classId}/${subjectId}`,
       isStatic: false,
       isActive: true,
     },
@@ -272,11 +289,11 @@ const NewSidebar = ({
       isStatic: false,
       isActive: false,
     },
-    {
+   {
       id: "past-papers",
       labelKey: "subjectLecturesView.sidebar.pastPapers",
       icon: FileText,
-      path: `/class/${classId}/subject/${subjectId}/past-papers`,
+      path: `/${classId}/${subjectId}/past-papers`,
       isStatic: false,
       isActive: false,
     },
@@ -420,9 +437,9 @@ const MobileTopNav = ({
   const navState = { gradeType, selectedSubject };
 
   const navItems = [
-    {
+   {
       labelKey: "subjectLecturesView.mobileNav.myCourses",
-      path: `/class/${classId}/subject/${subjectId}`,
+      path: `/${classId}/${subjectId}`,
       isActive: true,
     },
     {
@@ -432,7 +449,7 @@ const MobileTopNav = ({
     },
     {
       labelKey: "subjectLecturesView.mobileNav.pastPapers",
-      path: `/class/${classId}/subject/${subjectId}/past-papers`,
+      path: `/${classId}/${subjectId}/past-papers`,
       isActive: false,
     },
   ];
@@ -484,7 +501,7 @@ const MobileTopNav = ({
 interface SubjectHeaderProps {
   gradeName: string;
   subjectName: string;
-   subject: any; 
+  subject: any;
   meta: ReturnType<typeof getMeta>;
   isRtl: boolean;
   gradeType: string;
@@ -502,7 +519,7 @@ const getGradeBadgeLabel = (gradeName: string, gradeType: string): string => {
 const SubjectHeader = ({
   gradeName,
   subjectName,
-    subject,  
+  subject,
   meta,
   isRtl,
   gradeType,
@@ -510,7 +527,7 @@ const SubjectHeader = ({
 }: SubjectHeaderProps) => {
   const Icon = meta.icon;
   const gradeBadge = getGradeBadgeLabel(gradeName, gradeType);
- const desc = isRtl
+  const desc = isRtl
     ? (subject?.urdu_desc || t(meta.descKey))
     : (subject?.desc || t(meta.descKey));
 
@@ -612,7 +629,6 @@ const LectureCard = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        {/* Lock badge */}
         {isLocked && (
           <div className="absolute top-3 left-3 z-20 flex items-center gap-1 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
             <svg
@@ -647,7 +663,6 @@ const LectureCard = ({
           </div>
         )}
 
-        {/* Play / lock icon overlay */}
         {isSelected ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center">
             <div className="bg-white/20 backdrop-blur-sm rounded-full p-2.5">
@@ -976,7 +991,6 @@ const ChapterSection = ({
           {visible.map((video, localIdx) => {
             const globalIdx =
               globalLectureOffset + page * CARDS_PER_PAGE + localIdx;
-            // globalIdx 0 = first video = free; anything else requires login
             const isLocked = globalIdx > 0 && !isLoggedIn;
             return (
               <LectureCard
@@ -1013,14 +1027,13 @@ const ChapterSection = ({
    MAIN PAGE
 ══════════════════════════════════════════ */
 const SubjectLecturesView = () => {
-  const { classId, subjectId } = useParams();
+  const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ── AUTH GATE ─────────────────────────────────────────────
   const { isLoggedIn } = useAuth();
 
-  /* ── i18n ── */
   const t = useT();
   const [lang, setLang] = useState<string>(() => getLanguage());
   useEffect(() => {
@@ -1037,31 +1050,20 @@ const SubjectLecturesView = () => {
   const gradeType = location.state?.gradeType;
   const selectedSubjectFromState = location.state?.selectedSubject;
 
-  const { classInfo, chapters, chapterVideos, subjects, loading } =
-    useClassSubjects(Number(classId));
-    
+const { classInfo, chapters, chapterVideos, subjects, loading } =
+    useClassSubjects(classId ?? 0);
 
   const selectedSubject = useMemo(() => {
-  
-    const fromApi = subjects?.find(
-      (s: any) => String(s.id) === String(subjectId)
-    ) ?? null;
-
+    const fromApi = findSubjectBySlug(subjects, subjectSlug ?? "");
     if (fromApi) return fromApi;
-
-    
     if (selectedSubjectFromState) return selectedSubjectFromState;
     return null;
-  }, [subjects, subjectId, selectedSubjectFromState]);
+  }, [subjects, subjectSlug, selectedSubjectFromState]);
 
- 
-  const gradeName  = (isRtl ? classInfo?.urdu_name : classInfo?.name) || classInfo?.name || "";
-  const classTitle = gradeName;
-
+  const gradeName = (isRtl ? classInfo?.urdu_name : classInfo?.name) || classInfo?.name || "";
   const subjectRawName = selectedSubject?.name || "";
   const meta = getMeta(subjectRawName);
 
-  
   const subjectName = useMemo(() => {
     if (!selectedSubject) return "";
     return isRtl
@@ -1076,12 +1078,12 @@ const SubjectLecturesView = () => {
       : classInfo.name || "";
   }, [classInfo, isRtl]);
 
-  const subjectChapters: ChapterWithVideos[] = useMemo(
+const subjectChapters: ChapterWithVideos[] = useMemo(
     () =>
       chapters
-        .filter((c: any) => String(c.subject_id) === String(subjectId))
+        .filter((c: any) => String(c.subject_id) === String(selectedSubject?.id))
         .map((c: any) => ({ ...c, videos: chapterVideos[c.id] || [] })),
-    [chapters, chapterVideos, subjectId],
+    [chapters, chapterVideos, selectedSubject],
   );
 
   const allVideos: Video[] = useMemo(
@@ -1101,7 +1103,6 @@ const SubjectLecturesView = () => {
     return offsets;
   }, [subjectChapters]);
 
-  /* ── v2 progress hook (same as KG / Primary / Middle) ──── */
   const {
     progressMap,
     watchedSet,
@@ -1115,19 +1116,13 @@ const SubjectLecturesView = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [activeChapterId, setActiveChapterId] = useState<number | null>(null);
-  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string>("");
   const [isWatchMode, setIsWatchMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  /**
-   * resumePositionRef holds the position fetched BEFORE the player mounts.
-   * Read directly in onCanPlay — no stale-state risk.
-   */
   const resumePositionRef = useRef<number>(0);
-  const hasSeekRef        = useRef(false);
-  const viewFiredRef      = useRef(false);
+  const hasSeekRef = useRef(false);
+  const viewFiredRef = useRef(false);
 
-  // Reset seek + view-tracking guards whenever the active video changes
   useEffect(() => {
     hasSeekRef.current = false;
     viewFiredRef.current = false;
@@ -1151,47 +1146,39 @@ const SubjectLecturesView = () => {
     [selectedVideo],
   );
 
-  // ── CENTRAL AUTH GATE ─────────────────────────────────────
-  // globalIdx is 0-based. Index 0 = first video = free for everyone.
-  // Any other video requires login.
-  // Fetch journey FIRST, then mount player — avoids the resume-position
-  // race where onCanPlay fires before the bulk-fetch resolves.
-const selectVideo = useCallback(
-  async (video: Video, chapterId: number, globalIdx: number) => {
-    if (globalIdx > 0 && !isLoggedIn) {
-      navigate("/login", { state: { from: location.pathname } });
-      return;
-    }
-    flushBeforeSwitch();
-    const position = await fetchJourneyForVideo(video.id);
-    resumePositionRef.current = position;
+  const selectVideo = useCallback(
+    async (video: Video, chapterId: number, globalIdx: number) => {
+      if (globalIdx > 0 && !isLoggedIn) {
+        navigate("/login", { state: { from: location.pathname } });
+        return;
+      }
+      flushBeforeSwitch();
+      const position = await fetchJourneyForVideo(video.id);
+      resumePositionRef.current = position;
 
-    setSelectedVideo(video);
-    setActiveChapterId(chapterId);
-    setIsWatchMode(true);
+      setSelectedVideo(video);
+      setActiveChapterId(chapterId);
+      setIsWatchMode(true);
 
-    try {
-      const detail = await fetchSeniorVideoDetail(video.id);
-      setVideoUrl(detail.video_url || `https://cdn.zaheen.com.pk/videos/${video.path}`);
-    } catch {
-      setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
-    }
+      try {
+     const detail = await fetchVideoDetail(video.id);
+        setVideoUrl(detail.video_url || `https://cdn.zaheen.com.pk/videos/${video.path}`);
+      } catch {
+        setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
+      }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  },
-  [isLoggedIn, navigate, location.pathname, flushBeforeSwitch, fetchJourneyForVideo],
-);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [isLoggedIn, navigate, location.pathname, flushBeforeSwitch, fetchJourneyForVideo],
+  );
+
   const goNext = useCallback(() => {
     if (currentGlobalIdx < allVideos.length - 1) {
       const next = allVideos[currentGlobalIdx + 1];
       const chapIdx = subjectChapters.findIndex((c) =>
         c.videos.some((v) => v.id === next.id),
       );
-      selectVideo(
-        next,
-        subjectChapters[chapIdx]?.id ?? 0,
-        currentGlobalIdx + 1,
-      );
+      selectVideo(next, subjectChapters[chapIdx]?.id ?? 0, currentGlobalIdx + 1);
     }
   }, [currentGlobalIdx, allVideos, subjectChapters, selectVideo]);
 
@@ -1201,15 +1188,10 @@ const selectVideo = useCallback(
       const chapIdx = subjectChapters.findIndex((c) =>
         c.videos.some((v) => v.id === prev.id),
       );
-      selectVideo(
-        prev,
-        subjectChapters[chapIdx]?.id ?? 0,
-        currentGlobalIdx - 1,
-      );
+      selectVideo(prev, subjectChapters[chapIdx]?.id ?? 0, currentGlobalIdx - 1);
     }
   }, [currentGlobalIdx, allVideos, subjectChapters, selectVideo]);
 
-  /* ── onCanPlay: seek to saved position ──────────────────── */
   const handleCanPlay = useCallback(() => {
     if (hasSeekRef.current) return;
     hasSeekRef.current = true;
@@ -1219,7 +1201,6 @@ const selectVideo = useCallback(
     }
   }, []);
 
-  /* ── onPlay: fire view endpoint once + GA tracking ──────── */
   const handlePlay = useCallback(() => {
     if (!viewFiredRef.current && selectedVideo) {
       viewFiredRef.current = true;
@@ -1228,7 +1209,6 @@ const selectVideo = useCallback(
     }
   }, [selectedVideo, handleView, trackEvent]);
 
-  /* ── onEnded: delegate to progress hook + GA + auto-advance ── */
   const handleEnded = useCallback(() => {
     if (selectedVideo && videoRef.current) {
       progressEnded(selectedVideo.id, videoRef.current.duration || 0);
@@ -1237,12 +1217,10 @@ const selectVideo = useCallback(
     goNext();
   }, [selectedVideo, progressEnded, trackEvent, goNext]);
 
-  /* ── onTimeUpdate: delegate to progress hook + GA 50% mark ── */
   const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const v = e.target as HTMLVideoElement;
     if (!v.duration || !selectedVideo) return;
     progressTimeUpdate(selectedVideo.id, v.currentTime, v.duration);
-
     const pct = (v.currentTime / v.duration) * 100;
     if (pct > 50 && !(v as any)._tracked50) {
       (v as any)._tracked50 = true;
@@ -1261,10 +1239,7 @@ const selectVideo = useCallback(
 
   const chapterRefs = useRef<(HTMLDivElement | null)[]>([]);
   const scrollToChapter = (idx: number) =>
-    chapterRefs.current[idx]?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    chapterRefs.current[idx]?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const exitWatchMode = useCallback(() => {
     flushBeforeSwitch();
@@ -1279,10 +1254,7 @@ const selectVideo = useCallback(
     if (!video) return null;
     const fullText = isRtl ? video.urdu_desc || video.desc : video.desc;
     if (!fullText) return null;
-    const parts = fullText
-      .split("|")
-      .map((p) => p.trim())
-      .filter(Boolean);
+    const parts = fullText.split("|").map((p) => p.trim()).filter(Boolean);
     return (
       <>
         <p className="text-sm font-semibold text-slate-800">{parts[0]}</p>
@@ -1310,15 +1282,12 @@ const selectVideo = useCallback(
 
     return (
       <div className="text-sm text-slate-400 flex items-center gap-1.5 mb-6 flex-wrap min-w-0">
-        <Link
-          to="/"
-          className="hover:text-slate-600 transition-colors shrink-0"
-        >
+        <Link to="/" className="hover:text-slate-600 transition-colors shrink-0">
           {t("subjectLecturesView.breadcrumb.home")}
         </Link>
         <span className="text-slate-300 shrink-0">/</span>
-        <Link
-          to={`/class/${classId}`}
+       <Link
+          to={`/${classSlug}`}
           state={{ gradeType, selectedSubject }}
           className="hover:text-slate-600 transition-colors shrink-0"
         >
@@ -1334,9 +1303,7 @@ const selectVideo = useCallback(
               {subjectName}
             </button>
             <span className="text-slate-300 shrink-0">/</span>
-            <span className="text-slate-700 font-semibold break-words">
-              {videoTitle}
-            </span>
+            <span className="text-slate-700 font-semibold break-words">{videoTitle}</span>
           </>
         ) : (
           <span className="text-slate-700 font-semibold">{subjectName}</span>
@@ -1348,8 +1315,8 @@ const selectVideo = useCallback(
   return (
     <section className="bg-[#F8FAFC] min-h-screen flex flex-col lg:flex-row">
       <NewSidebar
-        classId={classId}
-        subjectId={subjectId}
+        classId={classSlug}
+        subjectId={subjectSlug}
         gradeType={gradeType}
         selectedSubject={selectedSubject}
         activeChapterId={activeChapterId}
@@ -1364,8 +1331,8 @@ const selectVideo = useCallback(
       />
 
       <MobileTopNav
-        classId={classId}
-        subjectId={subjectId}
+        classId={classSlug}
+        subjectId={subjectSlug}
         gradeType={gradeType}
         selectedSubject={selectedSubject}
         subjectChapters={subjectChapters}
@@ -1383,7 +1350,7 @@ const selectVideo = useCallback(
           <SubjectHeader
             gradeName={gradeDisplayName}
             subjectName={subjectName}
-             subject={selectedSubject} 
+            subject={selectedSubject}
             meta={meta}
             isRtl={isRtl}
             gradeType={gradeType}
@@ -1391,7 +1358,6 @@ const selectVideo = useCallback(
           />
         )}
 
-        {/* Loading skeleton */}
         {loading ? (
           <div className="space-y-10">
             <div className="bg-white rounded-2xl border border-slate-200 p-6 animate-pulse">
@@ -1438,7 +1404,6 @@ const selectVideo = useCallback(
             </p>
           </div>
         ) : isWatchMode && selectedVideo ? (
-          /* ══ WATCH MODE ══ */
           <AnimatePresence mode="wait">
             <motion.div
               key="watch"
@@ -1467,7 +1432,6 @@ const selectVideo = useCallback(
                   </div>
                 </div>
 
-                {/* In-progress bar below the player */}
                 {(() => {
                   const pctActive = watchedSet.has(selectedVideo.id)
                     ? 100
@@ -1498,9 +1462,7 @@ const selectVideo = useCallback(
                           ? selectedVideo.urdu_name || selectedVideo.name
                           : selectedVideo.name}
                       </h2>
-                      <div className="mt-2 space-y-1">
-                        {renderDesc(selectedVideo)}
-                      </div>
+                      <div className="mt-2 space-y-1">{renderDesc(selectedVideo)}</div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
@@ -1514,29 +1476,20 @@ const selectVideo = useCallback(
                         disabled={currentGlobalIdx === 0}
                         className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                       >
-                        {isRtl ? (
-                          <ChevronRight size={20} />
-                        ) : (
-                          <ChevronLeft size={20} />
-                        )}
+                        {isRtl ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
                       </button>
                       <button
                         onClick={goNext}
                         disabled={currentGlobalIdx >= allVideos.length - 1}
                         className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                       >
-                        {isRtl ? (
-                          <ChevronLeft size={20} />
-                        ) : (
-                          <ChevronRight size={20} />
-                        )}
+                        {isRtl ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right panel */}
               <div className="w-full xl:w-[320px] shrink-0">
                 <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden sticky top-6">
                   <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
@@ -1558,9 +1511,7 @@ const selectVideo = useCallback(
                             >
                               {chIdx + 1}
                             </span>
-                            {isRtl
-                              ? chapter.urdu_name || chapter.name
-                              : chapter.name}
+                            {isRtl ? chapter.urdu_name || chapter.name : chapter.name}
                           </p>
                         </div>
                         {chapter.videos.map((video, vidIdx) => {
@@ -1579,9 +1530,7 @@ const selectVideo = useCallback(
                                   : progressMap[video.id] || 0
                               }
                               isLocked={isLocked}
-                              onClick={() =>
-                                selectVideo(video, chapter.id, globalIdx)
-                              }
+                              onClick={() => selectVideo(video, chapter.id, globalIdx)}
                               isRtl={isRtl}
                               accentColor={meta.accent}
                               t={t}
@@ -1596,7 +1545,6 @@ const selectVideo = useCallback(
             </motion.div>
           </AnimatePresence>
         ) : (
-          /* ══ GRID VIEW ══ */
           <div>
             <h2 className="text-[20px] font-black text-slate-900 mb-7">
               {t("subjectLecturesView.grid.title")}

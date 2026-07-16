@@ -14,6 +14,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import physicsBanner from "../../../assets/images/physics.png";
 
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { findSubjectBySlug } from "../../../config/subjectSlug";
+import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
@@ -400,19 +404,32 @@ interface SidebarContentProps {
   activePath: string;
   onNavClick?: () => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
+  classSlug?: string;
+  subjectSlug?: string;
 }
 
-const SidebarContent = ({ activePath, onNavClick, t }: SidebarContentProps) => {
+const SidebarContent = ({ activePath, onNavClick, t, classSlug, subjectSlug }: SidebarContentProps) => {
   const navigate = useNavigate();
 
   const NAV_ITEMS = [
-    { labelKey: "pastPapersPage.sidebar.home",          icon: Home,        path: "/"            },
-    { labelKey: "pastPapersPage.sidebar.videoLectures", icon: MonitorPlay, path: "/class/10/subject/27"    },
+    { labelKey: "pastPapersPage.sidebar.home",          icon: Home,        path: "/" },
+    {
+      labelKey: "pastPapersPage.sidebar.videoLectures",
+      icon: MonitorPlay,
+      path: classSlug && subjectSlug ? `/${classSlug}/${subjectSlug}` : "/",
+    },
     { labelKey: "pastPapersPage.sidebar.assessments",   icon: Clipboard,   path: "/assessment/1" },
-    { labelKey: "pastPapersPage.sidebar.pastPapers",    icon: BookMarked,  path: "/class/10/subject/27/past-papers" },
+    {
+      labelKey: "pastPapersPage.sidebar.pastPapers",
+      icon: BookMarked,
+      path: classSlug && subjectSlug ? `/${classSlug}/${subjectSlug}/past-papers` : "/",
+    },
   ];
 
-  const nav = (path: string) => { navigate(path); onNavClick?.(); };
+  const nav = (path: string) => {
+  navigate(path, { state: { classSlug, subjectSlug, gradeType } });
+  onNavClick?.();
+};
 
   return (
     <div className="flex flex-col h-full">
@@ -447,15 +464,25 @@ const SidebarContent = ({ activePath, onNavClick, t }: SidebarContentProps) => {
   );
 };
 
-interface DesktopSidebarProps { activePath: string; t: (key: string, vars?: Record<string, string | number>) => string; }
-const DesktopSidebar = ({ activePath, t }: DesktopSidebarProps) => (
+interface DesktopSidebarProps {
+  activePath: string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  classSlug?: string;
+  subjectSlug?: string;
+}
+const DesktopSidebar = ({ activePath, t, classSlug, subjectSlug }: DesktopSidebarProps) => (
   <aside className="hidden lg:flex w-[280px] shrink-0 h-screen sticky top-0 bg-[#EEF2F7] border-r border-slate-200/80 flex-col">
-    <SidebarContent activePath={activePath} t={t} />
+    <SidebarContent activePath={activePath} t={t} classSlug={classSlug} subjectSlug={subjectSlug} />
   </aside>
 );
 
-interface MobileNavProps { activePath: string; t: (key: string, vars?: Record<string, string | number>) => string; }
-const MobileNav = ({ activePath, t }: MobileNavProps) => {
+interface MobileNavProps {
+  activePath: string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  classSlug?: string;
+  subjectSlug?: string;
+}
+const MobileNav = ({ activePath, t, classSlug, subjectSlug }: MobileNavProps) => {
   const [open, setOpen] = useState(false);
   useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [open]);
   return (
@@ -475,7 +502,7 @@ const MobileNav = ({ activePath, t }: MobileNavProps) => {
             <motion.div key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
             <motion.div key="drawer" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 320, damping: 32 }} className="lg:hidden fixed top-0 left-0 z-50 h-full w-[280px] bg-[#EEF2F7] border-r border-slate-200 shadow-2xl flex flex-col">
               <button onClick={() => setOpen(false)} className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors z-10"><X size={18} /></button>
-              <SidebarContent activePath={activePath} onNavClick={() => setOpen(false)} t={t} />
+              <SidebarContent activePath={activePath} onNavClick={() => setOpen(false)} t={t} classSlug={classSlug} subjectSlug={subjectSlug} />
             </motion.div>
           </>
         )}
@@ -719,9 +746,18 @@ const CompactSkeleton = () => (
 
 /* ═══════════════════════════════════════════════════════
    MAIN PAGE
+   ROUTE FIX: This page now reads SLUGS from the URL
+   (:classSlug / :subjectSlug), matching the pattern used
+   everywhere else in the app (ClassSubjectsView,
+   SubjectLecturesView). Previously it expected numeric
+   :classId / :subjectId params, which never matched the
+   actual route (`/${classSlug}/${slug}/past-papers`) that
+   the rest of the app navigates to — so classId/subjectId
+   were always undefined and the fetch effect silently
+   bailed out, leaving the page stuck on the loading state.
 ═══════════════════════════════════════════════════════ */
 const PastPapersPage = () => {
-  const { classId, subjectId } = useParams<{ classId: string; subjectId: string }>();
+  const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: string }>();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -729,30 +765,53 @@ const PastPapersPage = () => {
 
   const gradeType = location.state?.gradeType;
 
+  // Resolve the numeric classId from the slug (same helper used elsewhere)
+  const classId = classIdFromSlug(classSlug ?? "");
+
+  // Pull subjects for this class so we can resolve subjectSlug -> real subject/id
+  const { classInfo, subjects } = useClassSubjects(classId ?? 0);
+
+  const selectedSubject = useMemo(() => {
+    const fromApi = findSubjectBySlug(subjects, subjectSlug ?? "");
+    if (fromApi) return fromApi;
+    if (location.state?.selectedSubject) return location.state.selectedSubject;
+    return null;
+  }, [subjects, subjectSlug, location.state]);
+
+  const subjectId = selectedSubject?.id;
+
   // ── Class title ──────────────────────────────────────────────────────
-  // English: prefer router state (most accurate), fall back to URL param
-  const classTitle = location.state?.classTitle
+  // Prefer classInfo from the API (now that we can actually resolve it),
+  // then router state, then a numeric fallback derived from classId.
+  const classTitle =
+    classInfo?.name
+    || location.state?.classTitle
     || location.state?.selectedSubject?.class_name
-    || `Grade ${classId}`;
+    || `Grade ${classId ?? ""}`;
 
   // ── Urdu class title ─────────────────────────────────────────────────
-  // Strategy: extract the grade NUMBER from the English classTitle string
-  // (e.g. "Grade 9" → "9", "Class 9" → "9") and look it up in our map.
-  // This is the most reliable source because classTitle comes from the
-  // previous page's navigation state and correctly says "Grade 9" even
-  // when the URL param classId might be "10" due to a routing mismatch.
-  // Priority: extracted number from classTitle → URL classId → state fields → English fallback
+  // Priority: API urdu_name → extracted number from classTitle → classId
+  // lookup → state fields → English fallback.
   const _gradeNumFromTitle = classTitle.match(/\d+/)?.[0] ?? "";
   const urduClassTitle =
-    (_gradeNumFromTitle && CLASS_TITLE_UR[_gradeNumFromTitle])
-    || (classId && CLASS_TITLE_UR[classId])
+    classInfo?.urdu_name?.trim()
+    || (_gradeNumFromTitle && CLASS_TITLE_UR[_gradeNumFromTitle])
+    || (classId != null && CLASS_TITLE_UR[String(classId)])
     || location.state?.urduClassTitle
     || location.state?.selectedSubject?.urdu_class_name
     || classTitle;
 
   // ── Subject title ────────────────────────────────────────────────────
-  const subjectName     = location.state?.subjectName     || location.state?.selectedSubject?.name      || "Subject";
-  const urduSubjectName = location.state?.urduSubjectName || location.state?.selectedSubject?.urdu_name || subjectName;
+  const subjectName =
+    selectedSubject?.name
+    || location.state?.subjectName
+    || location.state?.selectedSubject?.name
+    || "Subject";
+  const urduSubjectName =
+    selectedSubject?.urdu_name
+    || location.state?.urduSubjectName
+    || location.state?.selectedSubject?.urdu_name
+    || subjectName;
 
   const displayClassTitle   = pick(classTitle,   urduClassTitle,   isRtl);
   const displaySubjectLabel = pick(subjectName,  urduSubjectName,  isRtl);
@@ -769,6 +828,7 @@ const PastPapersPage = () => {
   const [activeVideo, setActiveVideo] = useState<Paper | null>(null);
 
   useEffect(() => {
+    // Wait until both the class and subject have resolved to real IDs.
     if (!classId || !subjectId) return;
     let cancelled = false;
     (async () => {
@@ -866,8 +926,8 @@ const PastPapersPage = () => {
 
   return (
     <section className={`bg-[#EEF2F7] min-h-screen flex flex-col lg:flex-row ${isRtl ? "dir-rtl" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
-      <DesktopSidebar activePath={location.pathname} t={t} />
-      <MobileNav activePath={location.pathname} t={t} />
+      <DesktopSidebar activePath={location.pathname} t={t} classSlug={classSlug} subjectSlug={subjectSlug} />
+      <MobileNav activePath={location.pathname} t={t} classSlug={classSlug} subjectSlug={subjectSlug} />
 
       <main className="flex-1 min-w-0 overflow-x-hidden">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 py-8">
@@ -879,7 +939,7 @@ const PastPapersPage = () => {
             </Link>
             {chevronSep}
             <Link
-              to={`/class/${classId}`}
+              to={`/${classSlug}`}
               state={{ gradeType }}
               className="hover:text-slate-600 transition-colors"
             >
@@ -887,8 +947,8 @@ const PastPapersPage = () => {
             </Link>
             {chevronSep}
             <Link
-              to={`/class/${classId}/subject/${subjectId}`}
-              state={{ gradeType, selectedSubject: location.state?.selectedSubject, classTitle }}
+              to={`/${classSlug}/${subjectSlug}`}
+              state={{ gradeType, selectedSubject, classTitle }}
               className="hover:text-slate-600 transition-colors"
             >
               {displaySubjectLabel}

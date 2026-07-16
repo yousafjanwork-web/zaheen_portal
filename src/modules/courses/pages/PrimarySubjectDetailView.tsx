@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { findSubjectBySlug } from "../../../config/subjectSlug";
+import { gradeNumberFromSlug } from "../../../config/classSlugs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Lock, CheckCircle2, PlayCircle,
@@ -7,7 +10,7 @@ import {
   ChevronRight, Target, Play, Zap, FileText, BookMarked,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-import { usePrimarySubjects as useClassSubjects, fetchPrimaryVideoDetail } from "@/modules/shared/hooks/usePrimarySubjects"
+import { useClassSubjects, fetchVideoDetail } from "@/modules/shared/hooks/useClassSubjects";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";   // ← same hook as KG
 
@@ -99,7 +102,8 @@ const getThumbUrl = (video: Video): string | null => {
    COMPONENT
 ═══════════════════════════════════════════════════════════ */
 const PrimarySubjectDetailView = () => {
-  const { classId, subjectId } = useParams<{ classId: string; subjectId: string }>();
+const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate    = useNavigate();
   const location    = useLocation();
   const lang        = useLang();
@@ -110,12 +114,12 @@ const PrimarySubjectDetailView = () => {
   const gradeType    = location.state?.gradeType as string | undefined;
   const stateSubject = location.state?.selectedSubject;
 
-  const { classInfo, subjects, chapters, chapterVideos, loading } =
-    useClassSubjects(Number(classId));
+const { classInfo, subjects, chapters, chapterVideos, loading } =
+    useClassSubjects(classId ?? 0);
 
   const subject     = useMemo(() =>
-    subjects?.find((s: any) => String(s.id) === String(subjectId)) ?? stateSubject ?? null,
-    [subjects, subjectId, stateSubject]);
+    findSubjectBySlug(subjects, subjectSlug ?? "") ?? stateSubject ?? null,
+    [subjects, subjectSlug, stateSubject]);
 
   const subjectName = isUrdu
     ? subject?.urdu_name?.trim() || subject?.name || ""
@@ -125,11 +129,11 @@ const PrimarySubjectDetailView = () => {
   const heroTitle = isUrdu ? theme.heroTitle.ur : theme.heroTitle.en;
 const tagline = isUrdu ? subject?.urdu_desc || "" : subject?.desc || "";
 
-  const subjectChapters: Chapter[] = useMemo(() =>
+const subjectChapters: Chapter[] = useMemo(() =>
     chapters
-      .filter((c: any) => String(c.subject_id) === String(subjectId))
+      .filter((c: any) => String(c.subject_id) === String(subject?.id))
       .map((c: any) => ({ ...c, videos: chapterVideos[c.id] || [] })),
-    [chapters, chapterVideos, subjectId]);
+    [chapters, chapterVideos, subject]);
 
   const allVideos: Video[]  = useMemo(() => subjectChapters.flatMap((c) => c.videos), [subjectChapters]);
   const allVideoIds         = useMemo(() => allVideos.map((v) => v.id), [allVideos]);
@@ -171,9 +175,8 @@ const tagline = isUrdu ? subject?.urdu_desc || "" : subject?.desc || "";
 
   const watchedCount = watchedSet.size;
   const progressPct  = totalLessons > 0 ? Math.round((watchedCount / totalLessons) * 100) : 0;
-
-  const gradeName = useMemo(() => {
-    if (!classInfo) return `Class ${classId}`;
+const gradeName = useMemo(() => {
+    if (!classInfo) return `Class ${gradeNumberFromSlug(classSlug ?? "") ?? classId}`;
     if (!isUrdu) return classInfo.name || `Class ${classId}`;
     const u = classInfo.urdu_name?.trim();
     if (u) return u;
@@ -200,7 +203,7 @@ const playVideo = useCallback(async (video: Video, chapter: Chapter) => {
 
   // NEW: fetch the real playable URL — the list endpoint doesn't include it.
   try {
-    const detail = await fetchPrimaryVideoDetail(video.id);
+    const detail = await fetchVideoDetail(video.id);
     setResolvedVideoUrl(detail.video_url || `${CDN}${video.path}`);
   } catch {
     setResolvedVideoUrl(`${CDN}${video.path}`); // fallback
@@ -587,7 +590,7 @@ const exitPlayer = useCallback(() => {
               <div className="psv-bc" style={{ color: theme.color }}>
                 <Link to="/" style={{ color: theme.color }}>{isUrdu ? "ہوم" : "Home"}</Link>
                 <ChevronRight size={13} />
-                <Link to={`/class/${classId}`} state={{ gradeType }} style={{ color: theme.color }}>{gradeName}</Link>
+               <Link to={`/${classSlug}`} state={{ gradeType }} style={{ color: theme.color }}>{gradeName}</Link>
                 <ChevronRight size={13} />
                 <span style={{ color: "#374151" }}>{subjectName}</span>
               </div>
@@ -639,7 +642,7 @@ const exitPlayer = useCallback(() => {
               <FileText size={20} style={{ color: theme.color }} />
               {isUrdu ? "ورک شیٹس" : "Worksheets"}
             </button>
-            <button onClick={() => navigate(`/class/${classId}/quiz`)}
+          <button onClick={() => navigate(`/${classSlug}/quiz`)}
               style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, borderRadius: 14, border: "1.5px solid #E9EEF6", background: "#F0FDF4", cursor: "pointer", transition: "all 0.2s", fontWeight: 800, fontSize: ".9rem", color: "#065F46", fontFamily: "'Nunito',sans-serif" }}
               onMouseOver={(e) => (e.currentTarget.style.borderColor = "#22C55E")}
               onMouseOut={(e)  => (e.currentTarget.style.borderColor = "#E9EEF6")}>
@@ -753,7 +756,7 @@ const exitPlayer = useCallback(() => {
                 })}
 
             <div style={{ padding: "14px 18px", borderTop: "1px solid #F1F5F9" }}>
-              <button onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })}
+        <button onClick={() => navigate(`/${classSlug}`, { state: { gradeType } })}
                 style={{ color: theme.color, fontWeight: 700, fontSize: ".84rem", background: "none", border: "none", cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0 }}>
                 {isUrdu ? "→" : "←"} {isUrdu ? "مضامین پر واپس" : "Back to Subjects"}
               </button>

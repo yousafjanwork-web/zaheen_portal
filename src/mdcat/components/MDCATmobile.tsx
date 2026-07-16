@@ -110,8 +110,12 @@ export function MDCATmobile() {
       const res = await fetch(mdcatApi(`/api/mdcat/quizzes/${id}`));
       if (res.ok) {
         const json = await res.json();
-        const quizData: Quiz = json.data ?? json;
-        setActiveQuiz(quizData);
+      const raw = json.data ?? json;
+const quizData: Quiz = {
+  ...mapQuiz(raw),
+  questions: (raw.questions || []).map(mapQuestion),
+};
+setActiveQuiz(quizData);
         setSelectedQuizId(id);
       }
     } catch (e) {

@@ -1,78 +1,133 @@
 /**
- * useVideoProgress.ts  — v4
+ * useVideoProgress.ts  — v6
  *
- * Fixes vs v3:
+ * What changed from v5:
  *
- *  BUG 1 — POST /view → 400
- *    The backend JWT middleware expects an "Authorization: Bearer <token>"
- *    header.  credentials:"include" only sends cookies; if your backend
- *    uses token-based auth the cookie alone is ignored and the request
- *    arrives unauthenticated → 400/401.
- *    Fix: getAuthHeaders() reads the token from localStorage (adjust the
- *    key name to match wherever YOUR app stores the JWT) and merges it
- *    into every POST and GET header.
+ *  FIX — resolveUserId() now also saves the user's display name.
+ *    After calling GET /api/users?msisdn=… we read data.name and
+ *    data.username from the response.  If either exists we write it
+ *    to localStorage as "user_name" and dispatch a "userResolved"
+ *    CustomEvent on window so the navbar can update immediately
+ *    without a page reload.
  *
- *  BUG 2 — POST /progress → 400
- *    Two sub-causes:
- *    a) content_type:"video" — the v2 backend does NOT have this field in
- *       its validated schema.  Sending an unexpected required-field-style
- *       value can trip strict validation.  Removed.
- *    b) total_duration was sometimes 0 (sent before <video> metadata
- *       loaded, or when handleEnded fires on a stream whose duration is
- *       Infinity/NaN).  Now guarded: we skip the POST when duration is
- *       unknown, and clamp NaN/Infinity to 0.
+ *    Priority:  data.name  →  data.username  →  nothing saved
+ *    Fallback in the navbar: if "user_name" is empty, show msisdn
+ *    (handled by useUserDisplayName hook — see that file).
  *
- *  BUG 3 — empty src="" warning
- *    Not fixed here (it lives in the page components) — see the note in
- *    each page's selectVideo: setVideoUrl must only be called AFTER
- *    fetchJourneyForVideo resolves, and the <video> element must not
- *    render until videoUrl is non-empty.  This hook adds no new state
- *    for that; the guard belongs in the component.
+ *  Everything else (throttle, beacon, safeDuration, bulk pre-load,
+ *  per-video fetch, flush-on-unload) is UNCHANGED from v5.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const BASE = "https://api.zaheen.com.pk/v2";
-const THROTTLE_MS = 10_000;
+const BASE         = "https://api.zaheen.com.pk/v2";
+const THROTTLE_MS  = 10_000;
 
 /* ─────────────────────────────────────────────────────────────
-   Auth helper
-   Reads the JWT from localStorage.  Change "token" to whatever
-   key your app uses (e.g. "authToken", "access_token", "jwt").
-   If your app stores it in a cookie instead, remove the
-   Authorization header — credentials:"include" will handle it.
+   User ID helper
+   Step 1: read msisdn from localStorage (saved at login).
+   Step 2: if we already resolved user_id once, return it instantly.
+   Step 3: otherwise call GET /api/users?msisdn=… and cache the result.
 ──────────────────────────────────────────────────────────────── */
-function getAuthHeaders(): Record<string, string> {
-  const token =
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("access_token") ||
-    "";
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
+let _cachedUserId: number | null = null;
+
+// ↓ exported so useUserDisplayName can call it directly from the navbar
+export async function resolveUserId(): Promise<number | null> {
+  // Already resolved this session
+  if (_cachedUserId !== null) return _cachedUserId;
+
+  const stored      = localStorage.getItem("user_id");
+  const nameIsSaved = !!localStorage.getItem("user_name");
+
+  // If we already have BOTH the id AND the name cached, return instantly.
+  // Bug fix: previously we returned as soon as user_id was found, which
+  // skipped the name fetch entirely on sessions after the first login.
+  if (stored && nameIsSaved) {
+    _cachedUserId = Number(stored);
+    return _cachedUserId;
+  }
+
+  // We need the API — either to get the id for the first time,
+  // or because we have the id but the name was never fetched yet.
+  const msisdn = localStorage.getItem("msisdn");
+  if (!msisdn) {
+    if (stored) { _cachedUserId = Number(stored); return _cachedUserId; }
+    return null;
+  }
+
+  try {
+    const res = await fetch(
+      `${BASE}/api/users?msisdn=${encodeURIComponent(msisdn)}`,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    if (!res.ok) {
+      if (stored) { _cachedUserId = Number(stored); return _cachedUserId; }
+      return null;
+    }
+    const json = await res.json();
+
+    // ── v5 had: const id = json?.data?.id
+    // ── v6 reads the whole data object so we can also grab the name
+    const data = json?.data;
+    const id: number | undefined = data?.id;
+    if (!id) return null;
+
+    _cachedUserId = id;
+    localStorage.setItem("user_id", String(id));
+
+    // ── NEW in v6: save display name ──────────────────────────
+    // Priority: real name ("Fits Testing") → username → nothing
+    // If nothing, navbar falls back to msisdn via useUserDisplayName
+    const displayName: string =
+      data?.name?.trim() ||
+      data?.username?.trim() ||
+      "";
+    if (displayName) {
+      localStorage.setItem("user_name", displayName);
+    }
+
+    // ── NEW in v6: notify the navbar in the same browser tab ──
+    // window "storage" event only fires in OTHER tabs, so we
+    // dispatch a custom event that useUserDisplayName listens for.
+    window.dispatchEvent(
+      new CustomEvent("userResolved", {
+        detail: { id, name: displayName || msisdn },
+      })
+    );
+
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/** Synchronous read — only works after resolveUserId() has been called once */
+function getUserIdSync(): number | null {
+  if (_cachedUserId !== null) return _cachedUserId;
+  const stored = localStorage.getItem("user_id");
+  if (stored) {
+    _cachedUserId = Number(stored);
+    return _cachedUserId;
+  }
+  return null;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Auth headers — Content-Type only (no token in this app)
+──────────────────────────────────────────────────────────────── */
+function getHeaders(): Record<string, string> {
+  return { "Content-Type": "application/json" };
 }
 
 /* ─────────────────────────────────────────────────────────────
    Types
 ──────────────────────────────────────────────────────────────── */
 export interface VideoProgress {
-  video_id: number;
+  video_id:        number;
   watched_seconds: number;
-  last_position: number;
-  total_duration: number;
-  is_completed: boolean;
-}
-
-interface JourneyResponse {
-  data?: {
-    watched_seconds?: number;
-    last_position?: number;
-    total_duration?: number;
-    is_completed?: boolean;
-  };
+  last_position:   number;
+  total_duration:  number;
+  is_completed:    boolean;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -84,78 +139,70 @@ function safeDuration(d: number): number {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   API helpers
+   API — POST /api/videos/progress
+   Body: { user_id, video_id, watched_seconds, last_position, total_duration }
 ──────────────────────────────────────────────────────────────── */
-
-/**
- * POST /api/videos/progress
- * Payload: { video_id, watched_seconds, last_position, total_duration }
- * NOTE: content_type removed — not part of the v2 schema.
- */
 async function postProgress(payload: {
-  video_id: number;
+  video_id:        number;
   watched_seconds: number;
-  last_position: number;
-  total_duration: number;
+  last_position:   number;
+  total_duration:  number;
 }) {
-  // Skip if duration is unknown — a 0-second POST is meaningless and
-  // may fail backend validation.
   if (payload.total_duration <= 0) return;
+
+  const user_id = getUserIdSync();
+  if (!user_id) return; // not logged in / not resolved yet
+
   try {
     const res = await fetch(`${BASE}/api/videos/progress`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      // credentials: "include",
-      body: JSON.stringify(payload),
+      method:  "POST",
+      headers: getHeaders(),
+      body:    JSON.stringify({ user_id, ...payload }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       console.warn(`[progress] ${res.status}`, text);
     }
   } catch (err) {
-    // network hiccup — next tick will retry via throttle
     console.warn("[progress] network error", err);
   }
 }
 
-/**
- * Beacon version for tab-close / page-unload.
- * sendBeacon cannot set custom headers, so we fall back to a
- * synchronous XHR that CAN carry the Authorization header.
- */
+/* ─────────────────────────────────────────────────────────────
+   API — beacon on tab-close / unload (sync XHR)
+──────────────────────────────────────────────────────────────── */
 function beaconProgress(payload: {
-  video_id: number;
+  video_id:        number;
   watched_seconds: number;
-  last_position: number;
-  total_duration: number;
+  last_position:   number;
+  total_duration:  number;
 }) {
   if (payload.total_duration <= 0) return;
-  const body = JSON.stringify(payload);
-  const url  = `${BASE}/api/videos/progress`;
 
-  // sendBeacon cannot set Authorization — use sync XHR as the only
-  // reliable unload-safe mechanism when a token is required.
+  const user_id = getUserIdSync();
+  if (!user_id) return;
+
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", url, false); // synchronous on unload
-    const headers = getAuthHeaders();
-    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
-    // xhr.withCredentials = true;
-    xhr.send(body);
-  } catch { /* ignore — page is unloading */ }
+    xhr.open("POST", `${BASE}/api/videos/progress`, false); // sync on unload
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({ user_id, ...payload }));
+  } catch { /* page is unloading — ignore */ }
 }
 
-/**
- * POST /api/videos/view
- * Payload: { video_id }
- */
+/* ─────────────────────────────────────────────────────────────
+   API — POST /api/videos/view
+   Body: { user_id, video_id, watched_seconds }
+──────────────────────────────────────────────────────────────── */
 async function postView(videoId: number) {
+  const user_id = getUserIdSync();
+  if (!user_id) return;
+
   try {
     const res = await fetch(`${BASE}/api/videos/view`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      // credentials: "include",
-      body: JSON.stringify({ video_id: videoId }),
+      method:  "POST",
+      headers: getHeaders(),
+      body:    JSON.stringify({ user_id, video_id: videoId, watched_seconds: 0 }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -166,25 +213,47 @@ async function postView(videoId: number) {
   }
 }
 
-/**
- * GET /api/videos/learning-journey/:videoId
- */
+/* ─────────────────────────────────────────────────────────────
+   API — GET /api/videos/learning-journey/:videoId?user_id=…
+   Response shape (v2):
+   {
+     data: {
+       current_video: {
+         duration_seconds: number,
+         progress: {
+           watched_seconds: number,
+           last_position:   number,
+           percentage_watched: number,
+           completed: 0 | 1
+         }
+       }
+     }
+   }
+──────────────────────────────────────────────────────────────── */
 async function fetchJourney(videoId: number): Promise<VideoProgress | null> {
+  const user_id = getUserIdSync();
+  if (!user_id) return null;
+
   try {
     const res = await fetch(
-      `${BASE}/api/videos/learning-journey/${videoId}`,
-      { headers: getAuthHeaders() }
+      `${BASE}/api/videos/learning-journey/${videoId}?user_id=${user_id}`,
+      { headers: getHeaders() }
     );
     if (!res.ok) return null;
-    const json: JourneyResponse = await res.json();
-    const d = json.data;
-    if (!d) return null;
+
+    const json = await res.json();
+    const cv   = json?.data?.current_video;
+    if (!cv) return null;
+
+    const progress       = cv.progress ?? {};
+    const total_duration = safeDuration(cv.duration_seconds ?? 0);
+
     return {
-      video_id: videoId,
-      watched_seconds: d.watched_seconds ?? 0,
-      last_position:   d.last_position   ?? 0,
-      total_duration:  d.total_duration  ?? 0,
-      is_completed:    d.is_completed    ?? false,
+      video_id:        videoId,
+      watched_seconds: progress.watched_seconds ?? 0,
+      last_position:   progress.last_position   ?? 0,
+      total_duration,
+      is_completed:    Boolean(progress.completed),
     };
   } catch {
     return null;
@@ -195,23 +264,26 @@ async function fetchJourney(videoId: number): Promise<VideoProgress | null> {
    Hook
 ──────────────────────────────────────────────────────────────── */
 export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
-  const [progressMap,    setProgressMap]    = useState<Record<number, number>>({});
-  const [watchedSet,     setWatchedSet]     = useState<Set<number>>(new Set());
-  const [lastPositionMap,setLastPositionMap]= useState<Record<number, number>>({});
+  const [progressMap,     setProgressMap]     = useState<Record<number, number>>({});
+  const [watchedSet,      setWatchedSet]      = useState<Set<number>>(new Set());
+  const [lastPositionMap, setLastPositionMap] = useState<Record<number, number>>({});
 
   const lastPositionRef = useRef<Record<number, number>>({});
-
-  const pendingRef  = useRef<{
-    video_id: number;
+  const pendingRef      = useRef<{
+    video_id:        number;
     watched_seconds: number;
-    last_position: number;
-    total_duration: number;
+    last_position:   number;
+    total_duration:  number;
   } | null>(null);
-
   const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* ── helpers ─────────────────────────────────────────────── */
+  /* ── Resolve user_id as soon as the user is logged in ───── */
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    resolveUserId(); // fire-and-forget; caches result for all subsequent calls
+  }, [isLoggedIn]);
 
+  /* ── helpers ─────────────────────────────────────────────── */
   const setPosition = useCallback((videoId: number, pos: number) => {
     lastPositionRef.current = { ...lastPositionRef.current, [videoId]: pos };
     setLastPositionMap((p) => ({ ...p, [videoId]: pos }));
@@ -227,17 +299,21 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
     pendingRef.current = null;
   }, [isLoggedIn]);
 
-  /* ── Bulk pre-load ───────────────────────────────────────── */
+  /* ── Bulk pre-load when the subject page opens ───────────── */
   useEffect(() => {
     if (!isLoggedIn || allVideoIds.length === 0) return;
     let cancelled = false;
 
     async function load() {
+      // Make sure user_id is resolved before firing 20+ requests
+      await resolveUserId();
+      if (cancelled) return;
+
       const results = await Promise.all(allVideoIds.map(fetchJourney));
       if (cancelled) return;
 
       const newProgress:  Record<number, number> = {};
-      const newWatched  = new Set<number>();
+      const newWatched    = new Set<number>();
       const newPositions: Record<number, number> = {};
 
       results.forEach((r) => {
@@ -262,10 +338,11 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, allVideoIds.join(",")]);
 
-  /* ── Per-video fetch at selection time ───────────────────── */
+  /* ── Per-video fetch when user clicks a video ────────────── */
   const fetchJourneyForVideo = useCallback(
     async (videoId: number): Promise<number> => {
       if (!isLoggedIn) return 0;
+      await resolveUserId(); // ensure id is ready
       const r = await fetchJourney(videoId);
       if (!r) return 0;
 
@@ -273,13 +350,13 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
         r.total_duration > 0
           ? Math.min(100, Math.round((r.watched_seconds / r.total_duration) * 100))
           : 0;
+
       setProgressMap((p) => ({ ...p, [videoId]: pct }));
       if (r.is_completed || pct >= 95) setWatchedSet((s) => new Set(s).add(videoId));
-
       lastPositionRef.current = { ...lastPositionRef.current, [videoId]: r.last_position };
       setLastPositionMap((p) => ({ ...p, [videoId]: r.last_position }));
 
-      return r.last_position;
+      return r.last_position; // ← used by selectVideo to seek the <video>
     },
     [isLoggedIn]
   );
@@ -306,11 +383,11 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
     [flushPending]
   );
 
-  /* ── onTimeUpdate ────────────────────────────────────────── */
+  /* ── onTimeUpdate (called every ~250 ms by the <video>) ──── */
   const handleTimeUpdate = useCallback(
     (videoId: number, currentTime: number, duration: number) => {
       const dur = safeDuration(duration);
-      if (!dur) return; // no duration yet — skip
+      if (!dur) return; // metadata not loaded yet
 
       const pct = Math.min(100, Math.round((currentTime / dur) * 100));
       setProgressMap((p) => ({ ...p, [videoId]: pct }));
@@ -318,6 +395,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
 
       if (!isLoggedIn) return;
 
+      // Accumulate the latest state; the throttle will flush it
       pendingRef.current = {
         video_id:        videoId,
         watched_seconds: Math.round(currentTime),
@@ -350,7 +428,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
       setPosition(videoId, dur);
       setWatchedSet((s) => new Set(s).add(videoId));
 
-      if (!isLoggedIn || !dur) return; // skip POST if duration unknown
+      if (!isLoggedIn || !dur) return;
       postProgress({
         video_id:        videoId,
         watched_seconds: dur,
@@ -361,7 +439,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
     [isLoggedIn, setPosition]
   );
 
-  /* ── View tracking ───────────────────────────────────────── */
+  /* ── View tracking (fires once per video on first play) ──── */
   const handleView = useCallback(
     (videoId: number) => {
       if (!isLoggedIn) return;

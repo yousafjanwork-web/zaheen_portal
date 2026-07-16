@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import logo from "../assets/images/ZaheenLogo.png";
+import logo from "../assets/logo/space-logo-zaheen1.png";
 import { useNavigate } from "react-router-dom";
 import {
   Rocket,
@@ -121,22 +121,52 @@ const navigate = useNavigate();
           NAVIGATION
       ══════════════════════════════════════ */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 md:px-7 py-6 md:pt-8 bg-gradient-to-b from-[#020410] to-transparent">
-        {/* Logo */}
+    
 {/* Logo */}
         {!hideLogo && (
-          <div
-            className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => {
-              setCurrentView("home");
-              setSelectedPlanet(null);
-              setShowMobileMenu(false);
-              navigate("/");
-            }}
-          >
-            <div className="w-20 h-12 md:w-40 md:h-12 flex items-center justify-center">
-              <img src={logo} alt="" />
-            </div>
-          </div>
+         <div
+  className="flex items-center gap-3 cursor-pointer group"
+  onClick={() => {
+    setCurrentView("home");
+    setSelectedPlanet(null);
+    setShowMobileMenu(false);
+    navigate("/");
+  }}
+>
+  <div
+  className="flex items-center gap-3 cursor-pointer group"
+  onClick={() => {
+    setCurrentView("home");
+    setSelectedPlanet(null);
+    setShowMobileMenu(false);
+    navigate("/");
+  }}
+>
+  <div
+  className="flex items-center gap-3 cursor-pointer group"
+  onClick={() => {
+    setCurrentView("home");
+    setSelectedPlanet(null);
+    setShowMobileMenu(false);
+    navigate("/");
+  }}
+>
+  <div className="relative w-14 h-9 md:w-20 md:h-8 flex items-center justify-center">
+    {/* Outer orbit ring */}
+    <div className="absolute inset-0 rounded-full  border-indigo-300/0 group-hover:border-indigo-300/40 scale-100 group-hover:scale-150 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
+
+    {/* Soft starlight glow */}
+    <div className="absolute inset-0 rounded-full bg-indigo-300/0 group-hover:bg-indigo-300/25 blur-lg scale-75 group-hover:scale-125 transition-all duration-500 ease-out" />
+
+    <img
+      src={logo}
+      alt=""
+      className="relative z-10 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-rotate-6 group-hover:drop-shadow-[0_0_14px_rgba(165,180,252,0.7)]"
+    />
+  </div>
+</div>
+</div>
+</div>
         )}
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-6 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 font-bold text-sm">

@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
 import physicsSection from "../../../assets/images/physics.png";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { gradeNumberFromSlug } from "../../../config/classSlugs";
+import { fetchSeniorPastPapers } from "../../shared/services/seniorService";
+import { slugifySubject } from "../../../config/subjectSlug";
 import {
   BookOpen, FlaskConical, Atom, Leaf, Languages, Sigma, Landmark, Globe,
   Calculator, Cpu, Download, GraduationCap, X, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useSeniorSubjects as useClassSubjects } from "@/modules/shared/hooks/useSeniorSubjects";
+ import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
-const BASE_URL = "https://api.zaheen.com.pk/api";
 
 
 /* ─────────────────────────────────────────────────────────────
@@ -200,7 +203,7 @@ const StatsRow = ({
    FEATURED Physics card
 ═══════════════════════════════════════════════════════════ */
 const FeaturedPhysicsCard = ({
-  subject, classInfo, gradeType, navigate, isUrdu,
+  subject, classInfo, classSlug, gradeType, navigate, isUrdu,
   lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, onQuizzesClick, t,
 }: {
   subject: any; classInfo: any; gradeType: string;
@@ -213,8 +216,8 @@ const FeaturedPhysicsCard = ({
   const Icon  = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
 
-  const goToLectures = () =>
-    navigate(`/class/${classInfo?.id}/subject/${subject.id}`, {
+const goToLectures = () =>
+    navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
 
@@ -248,9 +251,9 @@ const FeaturedPhysicsCard = ({
           iconColor={meta.iconColor}
           onLecturesClick={(e) => { e.stopPropagation(); goToLectures(); }}
           onQuizzesClick={(e) => { e.stopPropagation(); onQuizzesClick(); }}
-          onPastPapersClick={(e) => {
+         onPastPapersClick={(e) => {
             e.stopPropagation();
-            navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
+            navigate(`/${classSlug}/${slugifySubject(subject.name)}/past-papers`, {
               state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
             });
           }}
@@ -265,7 +268,7 @@ const FeaturedPhysicsCard = ({
    Regular Subject Card
 ═══════════════════════════════════════════════════════════ */
 const SubjectCard = ({
-  subject, classInfo, gradeType, navigate, isUrdu, index,
+  subject, classInfo, classSlug, gradeType, navigate, isUrdu, index,
   lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, onQuizzesClick, t,
 }: {
   subject: any; classInfo: any; gradeType: string;
@@ -277,12 +280,10 @@ const SubjectCard = ({
   const meta  = getMeta(subject.name, t);
   const Icon  = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
-
-  const goToLectures = () =>
-    navigate(`/class/${classInfo?.id}/subject/${subject.id}`, {
+const goToLectures = () =>
+    navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -306,12 +307,12 @@ const SubjectCard = ({
         iconColor={meta.iconColor}
         onLecturesClick={(e) => { e.stopPropagation(); goToLectures(); }}
         onQuizzesClick={(e) => { e.stopPropagation(); onQuizzesClick(); }}
-        onPastPapersClick={(e) => {
-          e.stopPropagation();
-          navigate(`/class/${classInfo?.id}/subject/${subject.id}/past-papers`, {
-            state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
-          });
-        }}
+       onPastPapersClick={(e) => {
+            e.stopPropagation();
+            navigate(`/${classSlug}/${slugifySubject(subject.name)}/past-papers`, {
+              state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
+            });
+          }}
         t={t}
       />
     </motion.div>
@@ -348,7 +349,8 @@ const CardSkeleton = ({ wide = false }: { wide?: boolean }) => (
    Main Page
 ═══════════════════════════════════════════════════════════ */
 const ClassSubjectsView = () => {
-  const { classId } = useParams();
+  const { classSlug } = useParams<{ classSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate    = useNavigate();
   const location    = useLocation();
   const gradeType   = location.state?.gradeType;
@@ -356,9 +358,8 @@ const ClassSubjectsView = () => {
   // ── i18n — now fully reactive ──────────────────────────────
   const { t, lang } = useTranslation();
   const isUrdu      = lang === "ur";
-
-  const { classInfo, subjects, chapterVideos, chapters, loading } =
-    useClassSubjects(Number(classId));
+const { classInfo, subjects, chapterVideos, chapters, loading } =
+    useClassSubjects(classId ?? 0);
 
   /* ─────────────────────────────────────────────────────────────
      FIX: gradeName is now derived reactively from both classInfo
@@ -374,8 +375,8 @@ const ClassSubjectsView = () => {
        3. Wrapped in useMemo so it reacts to both classInfo loading
           AND language switching without any extra state.
   ──────────────────────────────────────────────────────────────── */
-  const gradeName = useMemo(() => {
-    if (!classInfo) return `Grade ${classId}`;
+const gradeName = useMemo(() => {
+    if (!classInfo) return `Grade ${gradeNumberFromSlug(classSlug ?? "") ?? classId}`;
     if (!isUrdu) return classInfo.name || `Grade ${classId}`;
 
     // Prefer the API-supplied Urdu name when it exists
@@ -397,34 +398,33 @@ const ClassSubjectsView = () => {
   const [ppLoading, setPpLoading]             = useState(true);
   const [ppFetched, setPpFetched]             = useState(false);
 
-  useEffect(() => {
-    if (!classId || subjects.length === 0) return;
-    let cancelled = false;
-    const fetchAllCounts = async () => {
-      setPpLoading(true);
-      try {
-        const results = await Promise.allSettled(
-          subjects.map(async (subject: any) => {
-            const res  = await fetch(`${BASE_URL}/pastpapers?class_id=${classId}&subject_id=${subject.id}`);
-            const json = await res.json();
-            const list: any[] = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [];
-            return { subjectId: subject.id as number, count: list.length };
-          })
-        );
-        if (!cancelled) {
-          const counts: Record<number, number> = {};
-          results.forEach((r) => { if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count; });
-          setPastPaperCounts(counts);
-        }
-      } catch (err) {
-        console.error("Failed to fetch past paper counts:", err);
-      } finally {
-        if (!cancelled) { setPpLoading(false); setPpFetched(true); }
+useEffect(() => {
+  if (!classId || subjects.length === 0) return;
+  let cancelled = false;
+  const fetchAllCounts = async () => {
+    setPpLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        subjects.map(async (subject: any) => {
+          const json = await fetchSeniorPastPapers(classId, subject.id);
+          const list: any[] = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [];
+          return { subjectId: subject.id as number, count: list.length };
+        })
+      );
+      if (!cancelled) {
+        const counts: Record<number, number> = {};
+        results.forEach((r) => { if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count; });
+        setPastPaperCounts(counts);
       }
-    };
-    fetchAllCounts();
-    return () => { cancelled = true; };
-  }, [classId, subjects]);
+    } catch (err) {
+      console.error("Failed to fetch past paper counts:", err);
+    } finally {
+      if (!cancelled) { setPpLoading(false); setPpFetched(true); }
+    }
+  };
+  fetchAllCounts();
+  return () => { cancelled = true; };
+}, [classId, subjects]);
 
   const getSubjectStats = (subjectId: number) => {
     const subjectChapters = chapters.filter((c: any) => c.subject_id === subjectId);
@@ -459,7 +459,7 @@ const ClassSubjectsView = () => {
     const stats = getSubjectStats(mathsSubject.id);
     return (
       <SubjectCard key={mathsSubject.id} subject={mathsSubject} classInfo={classInfo}
-        gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={index}
+        classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={index}
         {...stats} onQuizzesClick={() => setShowQuizModal(true)} t={t}
       />
     );
@@ -579,9 +579,9 @@ const ClassSubjectsView = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     {(() => {
                       const stats = getSubjectStats(physicsSubject.id);
-                      return (
+                   return (
                         <FeaturedPhysicsCard key={physicsSubject.id} subject={physicsSubject}
-                          classInfo={classInfo} gradeType={gradeType} navigate={navigate}
+                          classInfo={classInfo} classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate}
                           isUrdu={isUrdu} {...stats}
                           onQuizzesClick={() => setShowQuizModal(true)} t={t}
                         />
@@ -596,9 +596,9 @@ const ClassSubjectsView = () => {
                     {!physicsSubject && mathsSubject && renderMathCard(0)}
                     {restSubjects.map((subject: any, i: number) => {
                       const stats = getSubjectStats(subject.id);
-                      return (
+                   return (
                         <SubjectCard key={subject.id} subject={subject} classInfo={classInfo}
-                          gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={i}
+                          classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={i}
                           {...stats} onQuizzesClick={() => setShowQuizModal(true)} t={t}
                         />
                       );

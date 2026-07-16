@@ -1,94 +1,149 @@
-import { useEffect, useState } from "react";
+/**
+ * useClassSubjects.ts — SHARED hook for ALL classes (KG through Grade 9-12).
+ *
+ * CONSOLIDATED 2026-07-16 — see the large comment block at the top of
+ * classService.ts for the full history and migration checklist. In short:
+ * the per-age-band duplicate hooks (useKGSubjects, usePrimarySubjects,
+ * useMiddleSubjects, useSeniorSubjects) existed because of a suspected
+ * backend bug that has since been confirmed fixed. This hook now carries
+ * the same field normalization useKGSubjects.ts already had, so every
+ * view gets consistent .name/.urdu_name/.desc/.urdu_desc/.thumbnailUrl
+ * fields regardless of which class/age-band it's rendering.
+ */
+import { useEffect, useState, useRef } from "react";
 import {
   fetchClasses,
   fetchSubjects,
   fetchChapters,
   fetchVideos,
+  fetchVideoDetail,
+  normalizeClass,
+  normalizeSubject,
+  normalizeChapter,
+  normalizeVideo,
+  NormalizedClass,
+  NormalizedSubject,
+  NormalizedChapter,
+  NormalizedVideo,
 } from "@/modules/shared/services/classService";
+
+/**
+ * Re-exported so views can fetch the real playable video_url at
+ * selection time (the list endpoint does not include it).
+ */
+export { fetchVideoDetail };
+
+interface UseClassSubjectsResult {
+  classInfo: NormalizedClass | null;
+  subjects: NormalizedSubject[];
+  selectedSubject: NormalizedSubject | null;
+  setSelectedSubject: (s: NormalizedSubject) => void;
+  chapters: NormalizedChapter[];
+  chapterVideos: Record<number, NormalizedVideo[]>;
+  loading: boolean;
+  error: string | null;
+}
 
 export const useClassSubjects = (
   classId: number,
   selectedSubjectId?: number
-) => {
-  const [classInfo, setClassInfo]       = useState<any>(null);
-  const [subjects, setSubjects]         = useState<any[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<any>(null);
-  const [chapters, setChapters]         = useState<any[]>([]);
-  const [chapterVideos, setChapterVideos] = useState<Record<number, any[]>>({});
-  const [loading, setLoading]           = useState(true);
+): UseClassSubjectsResult => {
+  const [classInfo, setClassInfo] = useState<NormalizedClass | null>(null);
+  const [subjects, setSubjects] = useState<NormalizedSubject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<NormalizedSubject | null>(null);
+  const [chapters, setChapters] = useState<NormalizedChapter[]>([]);
+  const [chapterVideos, setChapterVideos] = useState<Record<number, NormalizedVideo[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
-    if (!classId) return;
+    if (!classId || isNaN(classId)) return;
+
     let cancelled = false;
+    setLoading(true);
+    setError(null);
 
     const load = async () => {
-      setLoading(true);
       try {
-        // ── 1. classes + subjects ──────────────────────────────
-        const [classes, subs] = await Promise.all([
+        /* ── 1. Classes + subjects ── */
+        const [classesRaw, subjectsRaw] = await Promise.all([
           fetchClasses(),
           fetchSubjects(classId),
         ]);
 
-        if (cancelled) return;
+        if (cancelled || !mountedRef.current) return;
 
-        const cls = classes.find((c: any) => c.id === Number(classId));
-        const selected = subs.find((s: any) => s.id === selectedSubjectId) || subs[0];
+        const normalizedClasses = (classesRaw || []).map(normalizeClass);
+        const normalizedClassInfo =
+          normalizedClasses.find((c: any) => c.id === Number(classId)) || null;
+        const normalizedSubjects = (subjectsRaw || []).map(normalizeSubject);
+        const selected =
+          normalizedSubjects.find((s: any) => s.id === selectedSubjectId) ||
+          normalizedSubjects[0] ||
+          null;
 
-        setClassInfo(cls);
-        setSubjects(subs);
+        setClassInfo(normalizedClassInfo);
+        setSubjects(normalizedSubjects);
         setSelectedSubject(selected);
 
-        // ── 2. chapters for EVERY subject (not just selected) ──
-        //    This is the key fix: we need counts for all subjects
-        //    so the subject overview cards can show real numbers.
-        const allChaptersArrays = await Promise.all(
-          subs.map((s: any) =>
-            fetchChapters(s.id).catch(() => [] as any[])
-          )
-        );
-
-        if (cancelled) return;
-
-        // Flatten into one array, each chapter already carries subject_id
-        // from the API. If the API doesn't include subject_id, we tag it here.
-        const allChapters: any[] = [];
-        subs.forEach((s: any, i: number) => {
-          (allChaptersArrays[i] || []).forEach((ch: any) => {
-            allChapters.push({ ...ch, subject_id: ch.subject_id ?? s.id });
-          });
-        });
-
-        setChapters(allChapters);
-
-        // ── 3. videos for every chapter ────────────────────────
-        const videoMap: Record<number, any[]> = {};
+        /* ── 2. Chapters for EVERY subject (not just selected) ──
+           Needed so subject overview cards can show real lecture counts. */
+        const allChapters: NormalizedChapter[] = [];
+        const videoMap: Record<number, NormalizedVideo[]> = {};
 
         await Promise.all(
-          allChapters.map(async (ch: any) => {
+          normalizedSubjects.map(async (subject: NormalizedSubject) => {
             try {
-              videoMap[ch.id] = await fetchVideos(ch.id);
+              const chaptersRaw = await fetchChapters(subject.id);
+              const normalizedChaps = (chaptersRaw || []).map((ch: any) =>
+                normalizeChapter(ch, subject.id)
+              );
+              allChapters.push(...normalizedChaps);
+
+              /* ── 3. Videos for every chapter ── */
+              await Promise.all(
+                normalizedChaps.map(async (chapter: NormalizedChapter) => {
+                  try {
+                    const videosRaw = await fetchVideos(chapter.id);
+                    videoMap[chapter.id] = (videosRaw || []).map(normalizeVideo);
+                  } catch {
+                    videoMap[chapter.id] = [];
+                  }
+                })
+              );
             } catch {
-              videoMap[ch.id] = [];
+              /* subject has no chapters yet — skip silently */
             }
           })
         );
 
-        if (cancelled) return;
-        setChapterVideos(videoMap);
+        if (cancelled || !mountedRef.current) return;
 
-      } catch (err) {
+        setChapters(allChapters);
+        setChapterVideos(videoMap);
+      } catch (err: any) {
+        if (cancelled || !mountedRef.current) return;
+        setError(err?.message ?? "Unknown error");
         console.error("useClassSubjects load error:", err);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && mountedRef.current) setLoading(false);
       }
     };
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [classId, selectedSubjectId]);
 
-  // Allow the view to switch the selected subject without re-fetching everything
   return {
     classInfo,
     subjects,
@@ -97,5 +152,6 @@ export const useClassSubjects = (
     chapters,
     chapterVideos,
     loading,
+    error,
   };
 };

@@ -15,16 +15,93 @@ import {
 import { getLanguage } from "@/modules/shared/i18n";
 import { getSlugByClassId } from "@/modules/shared/utils/skillsCourseSlugs";
 
+// Same local card images used on the homepage slider (ProfessionalCourses.tsx)
+import sliderImg1 from "../../../assets/images/web-development-s.png";
+import sliderImg2 from "../../../assets/images/auto-cad-s.png";
+import sliderImg3 from "../../../assets/images/excel-s.png";
+import sliderImg4 from "../../../assets/images/video-editing-s.png";
+import sliderImg5 from "../../../assets/images/makeup-s.png";
+import sliderImg6 from "../../../assets/images/trading-professional-skill-banner-ss.jpeg";
+
 /* ─────────────────────────────────────────
-   TYPES
+   v2 Courses API
+   GET /v2/api/courses → returns all 6 courses at once.
+   course.id is guaranteed to equal the parent_id used by
+   /v2/api/videos?content_type=COURSE (confirmed by backend team,
+   see SkillsChaptersPage.tsx / ProfessionalCourses.tsx), so every
+   mapping table below is keyed off that same id (1-6).
 ───────────────────────────────────────── */
-interface ClassInfo {
-  class_id: number;
-  name: string;
-  urdu_name?: string;
-  thumbnailUrl?: string;
-  chapterCount?: number;
+const V2_BASE = "https://api.zaheen.com.pk/v2/api";
+
+interface V2Course {
+  id: number; // == parent_id
+  title_en: string;
+  title_ur?: string;
+  total_lectures?: number;
+  total_duration?: number;
+  level?: string;
 }
+
+// v2 course.id (== parent_id) → local card image
+// Matches COURSE_IMAGES in ProfessionalCourses.tsx / CLASS_TO_PARENT_ID in SkillsChaptersPage
+const COURSE_IMAGES: Record<number, string> = {
+  1: sliderImg6, // Trading (parent_id 1)
+  2: sliderImg1, // Web Development (parent_id 2)
+  3: sliderImg2, // AutoCAD (parent_id 3)
+  4: sliderImg3, // Excel (parent_id 4)
+  5: sliderImg4, // Video Editing (parent_id 5)
+  6: sliderImg5, // Makeup (parent_id 6)
+};
+
+// v2 course.id → classId (for navigation)
+// Inverse of CLASS_TO_PARENT_ID in SkillsChaptersPage
+const PARENT_ID_TO_CLASS_ID: Record<number, number> = {
+  1: 305, // Trading
+  2: 300, // Web Development
+  3: 301, // AutoCAD
+  4: 302, // Excel
+  5: 303, // Video Editing
+  6: 304, // Makeup
+};
+
+// Display order: Trading first, Web Dev second, rest after
+// Kept identical to ProfessionalCourses.tsx / CoursesMenu.tsx
+const DISPLAY_ORDER: Record<number, number> = {
+  1: 0, // Trading
+  2: 1, // Web Development
+  3: 2, // AutoCAD
+  4: 3, // Excel
+  5: 4, // Video Editing
+  6: 5, // Makeup
+};
+
+// The /v2/api/courses endpoint's total_lectures field isn't reliable, so the
+// true lecture count is fetched from the same videos endpoint the course
+// sidebar (SkillsChaptersPage.tsx) and homepage slider (ProfessionalCourses.tsx) use.
+const fetchLectureCount = async (parentId: number): Promise<number> => {
+  try {
+    const res = await fetch(
+      `${V2_BASE}/videos?content_type=COURSE&parent_id=${parentId}`
+    );
+    if (!res.ok) return 0;
+    const json = await res.json();
+    return Array.isArray(json?.data) ? json.data.length : 0;
+  } catch (err) {
+    console.error(err);
+    return 0;
+  }
+};
+
+const fetchAllCourses = async (): Promise<V2Course[]> => {
+  const res = await fetch(`${V2_BASE}/courses`);
+  if (!res.ok) throw new Error("Courses fetch failed");
+  const json = await res.json();
+  const data: V2Course[] = Array.isArray(json?.data) ? json.data : [];
+
+  return [...data].sort(
+    (a, b) => (DISPLAY_ORDER[a.id] ?? 99) - (DISPLAY_ORDER[b.id] ?? 99)
+  );
+};
 
 /* ─────────────────────────────────────────
    BADGE LABELS — rotate through these
@@ -39,16 +116,26 @@ const AllProfessionalCourses = () => {
   const lang      = getLanguage();
   const isUrdu    = lang === "ur";
 
-  const [courses, setCourses] = useState<ClassInfo[]>([]);
+  const [courses, setCourses] = useState<V2Course[]>([]);
+  const [lectureCounts, setLectureCounts] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
     (async () => {
       try {
-        const res  = await fetch("https://api.zaheen.com.pk/api/get-subjects-with-course-type-id/3");
-        const data = await res.json();
-        setCourses(data);
+        const sorted = await fetchAllCourses();
+        setCourses(sorted);
+
+        // Fetch real lecture counts per course in parallel, keyed by course.id.
+        const counts = await Promise.all(
+          sorted.map((course) => fetchLectureCount(course.id))
+        );
+        const countMap: Record<number, number> = {};
+        sorted.forEach((course, i) => {
+          countMap[course.id] = counts[i];
+        });
+        setLectureCounts(countMap);
       } catch (err) {
         console.error(err);
       } finally {
@@ -57,11 +144,12 @@ const AllProfessionalCourses = () => {
     })();
   }, []);
 
-  const handleCourseClick = (classId: number) => {
+  const handleCourseClick = (courseId: number) => {
     // Use the friendly slug when we have one for this course;
-    // fall back to the numeric id for any course not yet in the slug map.
-    const slug = getSlugByClassId(classId);
-    navigate(`/skills/${slug ?? classId}`);
+    // fall back to the numeric classId for any course not yet in the slug map.
+    const classId = PARENT_ID_TO_CLASS_ID[courseId];
+    const slug = classId ? getSlugByClassId(classId) : null;
+    navigate(`/skills/${slug ?? classId ?? courseId}`);
   };
 
   /* ────────────────── RENDER ────────────────── */
@@ -176,13 +264,15 @@ const AllProfessionalCourses = () => {
             {/* ── FIRST ROW: first 3 courses ── */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
               {courses.slice(0, 3).map((course, i) => {
-                const badge      = BADGES[i % BADGES.length];
-                const courseName = isUrdu ? course.urdu_name || course.name : course.name;
+                const badge       = BADGES[i % BADGES.length];
+                const courseName  = isUrdu ? course.title_ur || course.title_en : course.title_en;
+                const image       = COURSE_IMAGES[course.id];
+                const lectureCount = lectureCounts[course.id] ?? course.total_lectures ?? 0;
 
                 return (
                   <div
-                    key={course.class_id}
-                    onClick={() => handleCourseClick(course.class_id)}
+                    key={course.id}
+                    onClick={() => handleCourseClick(course.id)}
                     className="group bg-white rounded-2xl overflow-hidden border border-slate-200
                                shadow-sm hover:shadow-xl cursor-pointer
                                transition-all duration-300 hover:-translate-y-1 flex flex-col"
@@ -190,16 +280,16 @@ const AllProfessionalCourses = () => {
                     {/* Thumbnail */}
                     <div className="relative h-52 overflow-hidden flex-shrink-0">
                       <img
-                        src={course.thumbnailUrl || `https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(courseName)}`}
+                        src={image}
                         alt={courseName}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       {/* Badge */}
-                      <div className="absolute top-3 left-3">
+                      {/* <div className="absolute top-3 left-3">
                         <span className="bg-[#1633c0] text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-sm">
                           {badge}
                         </span>
-                      </div>
+                      </div> */}
                       {/* Dark overlay on hover */}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-300" />
                     </div>
@@ -211,33 +301,18 @@ const AllProfessionalCourses = () => {
                         {courseName}
                       </h3>
 
-                      {/* Instructor placeholder */}
-                      <p className="text-slate-500 text-[13px] mb-3">
-                        {isUrdu ? "پیشہ ور انسٹرکٹر" : "Professional Instructor"}
+                      {/* Lecture count */}
+                      <p className="text-slate-500 text-[13px] mb-3 flex items-center gap-1.5">
+                        <Users size={13} />
+                        {lectureCount} {isUrdu ? "لیکچرز" : "Lectures"}
                       </p>
 
-                      {/* Rating */}
-                      <div className="flex items-center gap-1.5 mb-4">
-                        <span className="text-amber-500 font-black text-[14px]">4.8</span>
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, si) => (
-                            <Star
-                              key={si}
-                              size={13}
-                              className={si < 5 ? "text-amber-400" : "text-slate-300"}
-                              fill={si < 5 ? "currentColor" : "none"}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-slate-400 text-[12px]">
-                          ({((i + 1) * 1240).toLocaleString()})
-                        </span>
-                      </div>
+                
 
                       {/* CTA button — pushed to bottom */}
                       <div className="mt-auto">
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleCourseClick(course.class_id); }}
+                          onClick={(e) => { e.stopPropagation(); handleCourseClick(course.id); }}
                           className="w-full bg-[#1633c0] hover:bg-[#122ba8] text-white font-bold
                                      py-3 rounded-xl transition-all duration-200 text-[14px]
                                      flex items-center justify-center gap-2 group-hover:gap-3"
@@ -324,13 +399,15 @@ const AllProfessionalCourses = () => {
             {courses.length > 3 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
                 {courses.slice(3).map((course, i) => {
-                  const badge      = BADGES[(i + 3) % BADGES.length];
-                  const courseName = isUrdu ? course.urdu_name || course.name : course.name;
+                  const badge       = BADGES[(i + 3) % BADGES.length];
+                  const courseName  = isUrdu ? course.title_ur || course.title_en : course.title_en;
+                  const image       = COURSE_IMAGES[course.id];
+                  const lectureCount = lectureCounts[course.id] ?? course.total_lectures ?? 0;
 
                   return (
                     <div
-                      key={course.class_id}
-                      onClick={() => handleCourseClick(course.class_id)}
+                      key={course.id}
+                      onClick={() => handleCourseClick(course.id)}
                       className="group bg-white rounded-2xl overflow-hidden border border-slate-200
                                  shadow-sm hover:shadow-xl cursor-pointer
                                  transition-all duration-300 hover:-translate-y-1 flex flex-col"
@@ -338,16 +415,16 @@ const AllProfessionalCourses = () => {
                       {/* Thumbnail */}
                       <div className="relative h-52 overflow-hidden flex-shrink-0">
                         <img
-                          src={course.thumbnailUrl || `https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(courseName)}`}
+                          src={image}
                           alt={courseName}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                         {/* Badge */}
-                        <div className="absolute top-3 left-3">
+                        {/* <div className="absolute top-3 left-3">
                           <span className="bg-[#1633c0] text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-sm">
                             {badge}
                           </span>
-                        </div>
+                        </div> */}
                         {/* Dark overlay on hover */}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-300" />
                       </div>
@@ -359,33 +436,19 @@ const AllProfessionalCourses = () => {
                           {courseName}
                         </h3>
 
-                        {/* Instructor placeholder */}
-                        <p className="text-slate-500 text-[13px] mb-3">
-                          {isUrdu ? "پیشہ ور انسٹرکٹر" : "Professional Instructor"}
+                        {/* Lecture count */}
+                        <p className="text-slate-500 text-[13px] mb-3 flex items-center gap-1.5">
+                          <Users size={13} />
+                          {lectureCount} {isUrdu ? "لیکچرز" : "Lectures"}
                         </p>
 
-                        {/* Rating */}
-                        <div className="flex items-center gap-1.5 mb-4">
-                          <span className="text-amber-500 font-black text-[14px]">4.8</span>
-                          <div className="flex items-center gap-0.5">
-                            {Array.from({ length: 5 }).map((_, si) => (
-                              <Star
-                                key={si}
-                                size={13}
-                                className={si < 5 ? "text-amber-400" : "text-slate-300"}
-                                fill={si < 5 ? "currentColor" : "none"}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-slate-400 text-[12px]">
-                            ({((i + 4) * 1240).toLocaleString()})
-                          </span>
-                        </div>
+                     
+                      
 
                         {/* CTA button — pushed to bottom */}
                         <div className="mt-auto">
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleCourseClick(course.class_id); }}
+                            onClick={(e) => { e.stopPropagation(); handleCourseClick(course.id); }}
                             className="w-full bg-[#1633c0] hover:bg-[#122ba8] text-white font-bold
                                        py-3 rounded-xl transition-all duration-200 text-[14px]
                                        flex items-center justify-center gap-2 group-hover:gap-3"

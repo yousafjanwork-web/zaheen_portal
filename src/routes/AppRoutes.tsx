@@ -3,6 +3,7 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../modules/home/pages/Home";
 import TermsOfService from "@/pages/TermsOfService";
 import FAQ from "@/pages/FaqZaheen";
+import ThankYouPage from "@/pages/ThankYouPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ScrollToTop from "@/modules/shared/components/ScrollToTop";
 import GradesView from "@/modules/courses/pages/GradesView";
@@ -54,29 +55,24 @@ const AppRoutes = () => {
           <Route path="/" element={<Home />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/faqzaheen" element={<FAQ />} />
+          <Route path="/thankyou" element={<ThankYouPage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/grade-view/:type" element={<GradesView />} />
           <Route path="/all-professional-courses" element={<AllProfessionalCourses />} />
 
          
-          <Route path="/class/:classId" element={<ClassSubjectsRouter />} />
+         <Route path="/:classSlug" element={<ClassSubjectsRouter />} />
 
          
-          <Route
-            path="/class/:classId/subject/:subjectId"
-            element={<SubjectLecturesRouter />}
-          />
-          <Route path="/class/:classId/quiz" element={<PrimaryGradesQuiz />} />
+         <Route path="/:classSlug/:subjectSlug" element={<SubjectLecturesRouter />} />
+          <Route path="/:classSlug/quiz" element={<PrimaryGradesQuiz />} />
           <Route path="/assessment/" element={<Assessment />} />
           <Route path="/assessment/:skillId" element={<AssessmentQuiz />} />
           <Route
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}
           />
-          <Route
-            path="/class/:classId/subject/:subjectId/past-papers"
-            element={<PastPapersPage />}
-          />
+         <Route path="/:classSlug/:subjectSlug/past-papers" element={<PastPapersPage />} />
           <Route path="/skills/:classId" element={<SkillsChaptersPage />} />
           <Route path="/practice" element={<PracticeCornerPage />} />
           <Route path="/worksheets/:subjectId" element={<WorksheetsPage />} />

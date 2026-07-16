@@ -25,15 +25,15 @@ const lang = localStorage.getItem("lang") || "en";
 // "path" is where the card navigates to on click.
 const modules = [
     {
-    name: "📚 Word Builder",
-    urdu_name: " 📚 الفاظ سیکھیں",
+    name: "📚 Grammar Adventure ",
+    urdu_name: " 📚 گرامر کی مہم ",
     path: "/vocab",
     image: vocabImg,
   },
   
   {
-    name: "✂️ Origami Fun", 
-    urdu_name: "✂️ اوریگامی کا مزہ", 
+    name: "✂️ Creative Adventure", 
+    urdu_name: "✂️تخلیقی مہمات ", 
     path: "/origami", 
     image: origami,
   },

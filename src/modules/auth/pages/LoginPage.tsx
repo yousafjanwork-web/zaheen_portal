@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate,useLocation  } from "react-router-dom";
 import { loginPin, verifyLoginPin } from "@/modules/shared/services/loginService";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
@@ -8,6 +8,7 @@ const LoginPage = () => {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+   const location = useLocation(); 
 
   const { login } = useAuth();
 
@@ -143,7 +144,8 @@ const LoginPage = () => {
       if (statusMessage === null) {
 
         login(msisdn);
-        navigate("/");
+        const from = location.state?.from || "/";
+  navigate(from, { replace: true });
 
       } else {
 

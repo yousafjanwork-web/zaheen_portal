@@ -158,6 +158,7 @@ const Footer: React.FC = () => {
         {t("footer.faq")} 
       </Link>
     </li>
+    
 
             </ul>
 

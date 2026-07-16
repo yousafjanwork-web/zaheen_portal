@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { slugifySubject } from "../../../config/subjectSlug";
+import { gradeNumberFromSlug } from "../../../config/classSlugs";
 import { motion } from "framer-motion";
 import {
   BookOpen, Languages, Calculator, Leaf, FlaskConical, Globe,
@@ -7,7 +10,7 @@ import {
   ArrowRight, X, Star,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-import { usePrimarySubjects as useClassSubjects } from "@/modules/shared/hooks/usePrimarySubjects";
+import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
@@ -171,9 +174,9 @@ const getLectureCount = (
 
 /* ── Subject Card ── */
 const PrimarySubjectCard = ({
-  subject, classInfo, gradeType, navigate, isUrdu, index, lectureCount, lectureLoading,
+  subject, classInfo, classSlug, gradeType, navigate, isUrdu, index, lectureCount, lectureLoading,
 }: {
-  subject: any; classInfo: any; gradeType: string;
+  subject: any; classInfo: any; classSlug: string; gradeType: string;
   navigate: ReturnType<typeof useNavigate>; isUrdu: boolean; index: number;
   lectureCount: number; lectureLoading: boolean;
 }) => {
@@ -184,11 +187,10 @@ const PrimarySubjectCard = ({
   const Icon = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
 
-  const goToSubject = () =>
-    navigate(`/class/${classInfo?.id}/subject/${subject.id}`, {
+const goToSubject = () =>
+    navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
-
   const lessonLabel = lectureLoading
     ? "Loading..."
     : lectureCount > 0
@@ -317,7 +319,7 @@ const DailyQuizzesCard = ({
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.35, delay: index * 0.06 }}
-    onClick={() => navigate(`/class/${classId}/quiz`, { state: { gradeType } })}
+  onClick={() => navigate(`/${classId}/quiz`, { state: { gradeType } })}
     className="group cursor-pointer rounded-3xl overflow-hidden flex flex-col"
     style={{
       background: "linear-gradient(145deg,#FFF1F2 0%,#FFE4E6 100%)",
@@ -358,7 +360,7 @@ const DailyQuizzesCard = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/class/${classId}/quiz`, { state: { gradeType } });
+           navigate(`/${classId}/quiz`, { state: { gradeType } });
           }}
           className="w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-110"
           style={{ background: "#BE123C" }}
@@ -469,7 +471,8 @@ const PageSkeleton = ({ isUrdu }: { isUrdu: boolean }) => (
    MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
 const PrimarySubjectsView = () => {
-  const { classId } = useParams<{ classId: string }>();
+  const { classSlug } = useParams<{ classSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate = useNavigate();
   const location = useLocation();
   const gradeType = location.state?.gradeType as string | undefined;
@@ -477,7 +480,7 @@ const PrimarySubjectsView = () => {
   const { t, lang } = useTranslation();
   const isUrdu = lang === "ur";
 
-  const { classInfo, subjects, chapterVideos, chapters, loading } =
+ const { classInfo, subjects, chapterVideos, chapters, loading } =
     useClassSubjects(Number(classId));
 
   // ✅ FIX 1: Track whether we've ever finished loading.
@@ -494,9 +497,8 @@ const PrimarySubjectsView = () => {
       return () => clearTimeout(t);
     }
   }, [loading]);
-
-  const gradeName = useMemo(() => {
-    if (!classInfo) return `Class ${classId}`;
+const gradeName = useMemo(() => {
+    if (!classInfo) return `Class ${gradeNumberFromSlug(classSlug ?? "") ?? classId}`;
     if (!isUrdu) return classInfo.name || `Class ${classId}`;
     const apiUrdu = classInfo.urdu_name?.trim();
     if (apiUrdu) return apiUrdu;
@@ -589,10 +591,11 @@ const PrimarySubjectsView = () => {
                 loading
               );
               return (
-                <PrimarySubjectCard
+           <PrimarySubjectCard
                   key={subject.id}
                   subject={subject}
                   classInfo={classInfo}
+                  classSlug={classSlug ?? ""}
                   gradeType={gradeType || "1-5"}
                   navigate={navigate}
                   isUrdu={isUrdu}
@@ -608,10 +611,10 @@ const PrimarySubjectsView = () => {
               isUrdu={isUrdu}
               index={sortedSubjects.length}
             />
-            <DailyQuizzesCard
+           <DailyQuizzesCard
               navigate={navigate}
               isUrdu={isUrdu}
-              classId={classId}
+              classId={classSlug}
               gradeType={gradeType}
               index={sortedSubjects.length + 1}
             />

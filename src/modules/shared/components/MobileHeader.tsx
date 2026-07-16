@@ -6,11 +6,13 @@ import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useSubscribe } from "@/modules/shared/hooks/useSubscribe";
+import { useUserDisplayName } from "@/modules/shared/hooks/useUserDisplayName"; // ← ADD THIS
 
 const MobileHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const { msisdn, isLoggedIn, logout } = useAuth();
+  const displayName = useUserDisplayName(); // ← ADD THIS
   const navigate = useNavigate();
 
   const { handleSubscribe } = useSubscribe();
@@ -116,8 +118,9 @@ const MobileHeader = () => {
                   {t("auth.loggedInAs")}
                 </div>
 
+                {/* ↓ ONLY CHANGE: was {msisdn}, now shows name when available */}
                 <div className="font-semibold">
-                  {msisdn}
+                  {displayName}
                 </div>
 
                 <button

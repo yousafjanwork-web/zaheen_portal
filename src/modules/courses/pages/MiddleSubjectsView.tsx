@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { gradeNumberFromSlug } from "../../../config/classSlugs";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useMiddleSubjects as useClassSubjects } from "@/modules/shared/hooks/useMiddleSubjects";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { slugifySubject } from "../../../config/subjectSlug";
+ import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useAuth } from "@/modules/shared/context/AuthContext";
+import { useVideoProgress } from "../../shared/hooks/Usevideoprogress"; // ← same hook as MiddleSubjectDetailView
 import {
   ChevronRight, BookOpen, Zap, FileText, BookMarked,
   BarChart2, Calendar, Play,
@@ -220,16 +225,20 @@ const SubjectSkeleton = () => (
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════ */
 const MiddleSubjectsView = () => {
-  const { classId } = useParams();
+  const { classSlug } = useParams<{ classSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate    = useNavigate();
   const location    = useLocation();
   const lang        = useLang();
   const isUrdu      = lang === "ur";
 
-  const classTitle = location.state?.classTitle || location.state?.gradeType || `Grade ${classId}`;
+  const { isLoggedIn } = useAuth();
 
-  // Fetch subjects from API
-  const { classInfo, subjects, loading } = useClassSubjects(Number(classId));
+const classTitle = location.state?.classTitle || location.state?.gradeType || `Grade ${gradeNumberFromSlug(classSlug ?? "") ?? classId}`;
+
+  // Fetch subjects + chapters + chapterVideos from API (chapters/chapterVideos are
+  // needed here too, so we can compute real per-subject / overall progress).
+const { classInfo, subjects, chapters, chapterVideos, loading } = useClassSubjects(classId ?? 0);
 
   /* ─────────────────────────────────────────────────────────────
      FIX 1 — Grade number & display name
@@ -238,25 +247,25 @@ const MiddleSubjectsView = () => {
      the raw URL classId param (which may be offset by 1 on the
      backend).
   ──────────────────────────────────────────────────────────────── */
-  const gradeNum = useMemo(() => {
-    // Prefer the API name since the classId param may be offset
-    const source = classInfo?.name || classTitle || "";
-    const m = source.match(/\d+/);
-    return m ? parseInt(m[0], 10) : parseInt(classId || "6", 10);
-  }, [classInfo, classTitle, classId]);
+const gradeNum = useMemo(() => {
+    // Always use the slug — it's the only source guaranteed to be correct.
+    // classInfo.name comes from the API with a database-ID offset, so
+    // "Grade 7" in the API actually means Grade 6 in the URL. Never trust it
+    // for GRADE_COPY lookup.
+    return gradeNumberFromSlug(classSlug ?? "") ?? 6;
+  }, [classSlug]);
 
   const copy = GRADE_COPY[gradeNum] || GRADE_COPY[6];
 
   /* Reactive grade display name — same pattern as ClassSubjectsView */
-  const gradeName = useMemo(() => {
-    if (!classInfo) return classTitle || `Grade ${classId}`;
-    if (!isUrdu) return classInfo.name || classTitle;
+ const gradeName = useMemo(() => {
+    const gradeNum = gradeNumberFromSlug(classSlug ?? "");
+    if (!classInfo) return gradeNum ? `Grade ${gradeNum}` : classTitle || "";
+    if (!isUrdu) return gradeNum ? `Grade ${gradeNum}` : classInfo.name || classTitle;
     const apiUrdu = classInfo.urdu_name?.trim();
     if (apiUrdu) return apiUrdu;
-    const numMatch = (classInfo.name || "").match(/\d+/);
-    if (numMatch) return `جماعت ${numMatch[0]}`;
-    return classInfo.name || classTitle;
-  }, [classInfo, isUrdu, classId, classTitle]);
+    return gradeNum ? `جماعت ${gradeNum}` : classInfo.name || classTitle;
+  }, [classInfo, isUrdu, classSlug, classTitle]);
 
   /* ─────────────────────────────────────────────────────────────
      Navigation helper
@@ -266,11 +275,10 @@ const MiddleSubjectsView = () => {
   ──────────────────────────────────────────────────────────────── */
   const resolvedClassId = classInfo?.id ?? classId;
 
-  const handleSubject = (subject: any) =>
-    navigate(`/class/${resolvedClassId}/subject/${subject.id}`, {
+const handleSubject = (subject: any) =>
+    navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType: gradeName, selectedSubject: subject, classTitle: gradeName },
     });
-
   /* ─────────────────────────────────────────────────────────────
      FIX 2 — Subject ordering
      Desired layout:
@@ -294,10 +302,50 @@ const MiddleSubjectsView = () => {
   const firstTwoNonMath = nonMathSubjects.slice(0, 2);
   const remainingNonMath = nonMathSubjects.slice(2);
 
+  /* ─────────────────────────────────────────────────────────────
+     PROGRESS — real, persisted data
+     We feed every video id across every chapter/subject in this
+     class into the SAME useVideoProgress hook used by
+     MiddleSubjectDetailView. That hook resolves user_id, bulk
+     pre-loads /learning-journey for all ids, and returns a
+     watchedSet that stays correct whether the user watched a
+     lesson here, on the detail page, or on a previous session.
+  ──────────────────────────────────────────────────────────────── */
+  const allVideoIds = useMemo(() => {
+    if (!chapters || !chapterVideos) return [];
+    return chapters.flatMap((c: any) => (chapterVideos[c.id] || []).map((v: any) => v.id));
+  }, [chapters, chapterVideos]);
+
+  const { watchedSet } = useVideoProgress(allVideoIds, isLoggedIn);
+
+  /* Per-subject completion: total lessons vs. watched lessons */
+  const subjectProgress = useMemo(() => {
+    const map: Record<string, { pct: number; watched: number; total: number }> = {};
+    if (!subjects || !chapters) return map;
+    subjects.forEach((s: any) => {
+      const subjChapters = chapters.filter((c: any) => String(c.subject_id) === String(s.id));
+      const videos = subjChapters.flatMap((c: any) => chapterVideos?.[c.id] || []);
+      const total = videos.length;
+      const watched = videos.filter((v: any) => watchedSet.has(v.id)).length;
+      const pct = total > 0 ? Math.round((watched / total) * 100) : 0;
+      map[String(s.id)] = { pct, watched, total };
+    });
+    return map;
+  }, [subjects, chapters, chapterVideos, watchedSet]);
+
+  /* Class-wide totals for the Study Analytics sidebar */
+  const overallStats = useMemo(() => {
+    const total = allVideoIds.length;
+    const watched = allVideoIds.filter((id) => watchedSet.has(id)).length;
+    const pct = total > 0 ? Math.round((watched / total) * 100) : 0;
+    return { pct, watched, total };
+  }, [allVideoIds, watchedSet]);
+
   /* ─── Subject card renderer (keeps JSX DRY) ─── */
   const renderSubjectCard = (subject: any) => {
     const meta = getSubjectMeta(subject.name);
     const displayName = isUrdu ? (subject.urdu_name?.trim() || subject.name) : subject.name;
+    const prog = subjectProgress[String(subject.id)] || { pct: 0, watched: 0, total: 0 };
     return (
       <div key={subject.id} className="ms-subj-card" onClick={() => handleSubject(subject)}>
         <div className="ms-subj-card-top">
@@ -316,9 +364,9 @@ const MiddleSubjectsView = () => {
         <div>
           <div className="ms-prog-row">
             <span>{isUrdu ? "تکمیل" : "Completion Progress"}</span>
-            <span>0%</span>
+            <span>{prog.pct}%</span>
           </div>
-          <div className="ms-prog-bar"><div className="ms-prog-fill" style={{ width: "0%" }} /></div>
+          <div className="ms-prog-bar"><div className="ms-prog-fill" style={{ width: `${prog.pct}%` }} /></div>
         </div>
         <button
           className="ms-continue-btn"
@@ -335,6 +383,7 @@ const MiddleSubjectsView = () => {
     if (!mathSubject) return null;
     const meta = getSubjectMeta(mathSubject.name);
     const displayName = isUrdu ? (mathSubject.urdu_name?.trim() || mathSubject.name) : mathSubject.name;
+    const prog = subjectProgress[String(mathSubject.id)] || { pct: 0, watched: 0, total: 0 };
     return (
       <div className="ms-math-card" onClick={() => handleSubject(mathSubject)}>
         <div className="ms-math-top">
@@ -364,10 +413,10 @@ const MiddleSubjectsView = () => {
           <div className="ms-math-prog-wrap">
             <div className="ms-math-prog-row">
               <span>{isUrdu ? "کورس کی پیشرفت" : "Course Progress"}</span>
-              <span>0%</span>
+              <span>{prog.pct}%</span>
             </div>
             <div className="ms-math-prog-bar">
-              <div className="ms-math-prog-fill" style={{ width: "0%" }} />
+              <div className="ms-math-prog-fill" style={{ width: `${prog.pct}%` }} />
             </div>
           </div>
           <button
@@ -435,7 +484,7 @@ const MiddleSubjectsView = () => {
         .ms-subj-desc       { font-size:.78rem;color:#64748B;line-height:1.55;margin:0;flex:1; }
         .ms-prog-row        { display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:#94A3B8;font-weight:600; }
         .ms-prog-bar        { height:3px;background:#F1F5F9;border-radius:100px;overflow:hidden;margin:2px 0 0; }
-        .ms-prog-fill       { height:100%;background:#2563EB;border-radius:100px; }
+        .ms-prog-fill       { height:100%;background:#2563EB;border-radius:100px;transition:width .5s ease; }
         .ms-continue-btn    { width:100%;background:#2563EB;color:#fff;font-weight:700;font-size:.82rem;padding:10px;border:none;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s; }
         .ms-continue-btn:hover { background:#1D4ED8; }
 
@@ -457,7 +506,7 @@ const MiddleSubjectsView = () => {
         .ms-math-prog-wrap { flex:1; }
         .ms-math-prog-row  { display:flex;justify-content:space-between;font-size:.72rem;color:rgba(255,255,255,.45);margin-bottom:4px; }
         .ms-math-prog-bar  { height:3px;background:rgba(255,255,255,.12);border-radius:100px;overflow:hidden; }
-        .ms-math-prog-fill { height:100%;background:#22C55E;border-radius:100px; }
+        .ms-math-prog-fill { height:100%;background:#22C55E;border-radius:100px;transition:width .5s ease; }
         .ms-start-btn  { background:#fff;color:#2563EB;font-weight:800;font-size:.88rem;padding:11px 22px;border:none;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background .15s; }
         .ms-start-btn:hover { background:#F0F4FF; }
 
@@ -551,7 +600,7 @@ const MiddleSubjectsView = () => {
           <button className="ms-qr-btn-solid" onClick={() => navigate("/worksheets/0")}>
             <FileText size={14} /> {isUrdu ? "ورک شیٹس" : "Worksheets"}
           </button>
-         <button className="ms-qr-btn-outline" onClick={() => navigate(`/class/${classId}/quiz`)}>
+      <button className="ms-qr-btn-outline" onClick={() => navigate(`/${classSlug}/quiz`)}>
             <BookMarked size={14} /> {isUrdu ? "باب کے کوئز" : "Chapter Quizzes"}
           </button>
         </div>
@@ -614,22 +663,27 @@ const MiddleSubjectsView = () => {
           {/* ════ RIGHT SIDEBAR ════ */}
           <aside className="ms-sidebar">
 
-            {/* Study Analytics */}
+            {/* Study Analytics — now backed by the same v2 progress data
+                used on MiddleSubjectDetailView */}
             <div className="ms-analytics">
               <div className="ms-an-hd">
                 <BarChart2 size={20} color="#2563EB" />
                 <h3 className="ms-an-title">{isUrdu ? "مطالعہ تجزیات" : "Study Analytics"}</h3>
               </div>
               <div className="ms-an-prog-box">
-                <div className="ms-an-pct">0%</div>
+                <div className="ms-an-pct">{overallStats.pct}%</div>
                 <div>
                   <p className="ms-an-prog-title">{isUrdu ? "مجموعی پیشرفت" : "Overall Progress"}</p>
-                  <p className="ms-an-prog-sub">{isUrdu ? "نئے دریافت کار کا سفر" : "New explorer journey"}</p>
+                  <p className="ms-an-prog-sub">
+                    {overallStats.watched === 0
+                      ? (isUrdu ? "نئے دریافت کار کا سفر" : "New explorer journey")
+                      : (isUrdu ? "بہترین کام جاری رکھیں!" : "Keep up the great work!")}
+                  </p>
                 </div>
               </div>
               <div className="ms-an-row">
                 <span className="ms-an-lbl">{isUrdu ? "مکمل اسائنمنٹس" : "Assignments Done"}</span>
-                <span className="ms-an-val">0 / 48</span>
+                <span className="ms-an-val">{overallStats.watched} / {overallStats.total}</span>
               </div>
               <div className="ms-an-row">
                 <span className="ms-an-lbl">{isUrdu ? "ٹیسٹ اسکور اوسط" : "Test Score Avg."}</span>
@@ -639,11 +693,13 @@ const MiddleSubjectsView = () => {
                 <span className="ms-an-lbl">{isUrdu ? "گھنٹے لاگ کیے" : "Hours Logged"}</span>
                 <span className="ms-an-val">0h</span>
               </div>
-              <div className="ms-an-empty">
-                {isUrdu
-                  ? "ابھی تک کوئی ڈیٹا نہیں۔ بصیرت دیکھنے کے لیے پہلا سبق شروع کریں!"
-                  : "No data to display yet. Start your first lesson to see insights!"}
-              </div>
+              {overallStats.watched === 0 && (
+                <div className="ms-an-empty">
+                  {isUrdu
+                    ? "ابھی تک کوئی ڈیٹا نہیں۔ بصیرت دیکھنے کے لیے پہلا سبق شروع کریں!"
+                    : "No data to display yet. Start your first lesson to see insights!"}
+                </div>
+              )}
             </div>
 
             {/* Weekly Schedule */}

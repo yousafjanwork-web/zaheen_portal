@@ -89,12 +89,12 @@ export default function StudentDashboard() {
         showDismiss
       />
 
-      {!isLoggedIn && (
+      {/* {!isLoggedIn && (
         <div className="rounded-2xl border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
           Log in to see your real XP, streak, and badges — showing placeholder
           numbers for now.
         </div>
-      )}
+      )} */}
       {isLoggedIn && dashLoading && (
         <div className="text-sm text-slate-400">Refreshing your dashboard…</div>
       )}

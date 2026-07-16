@@ -11,6 +11,7 @@ import MobileMenu from "@/modules/shared/components/MobileHeader";
 
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useLogin } from "@/modules/shared/hooks/useLogin";
+import { useUserDisplayName } from "@/modules/shared/hooks/useUserDisplayName"; // ← ADD THIS
 
 interface HeaderProps {
   isDark: boolean;
@@ -21,6 +22,7 @@ const boards = [{ key: "boards.federal" }];
 
 const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   const { msisdn, logout } = useAuth();
+  const displayName = useUserDisplayName(); // ← ADD THIS
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { handleLogin } = useLogin(() => setShowLoginModal(true));
 const [intelligenceOpen, setIntelligenceOpen] = useState(false);
@@ -236,7 +238,8 @@ const [intelligenceOpen, setIntelligenceOpen] = useState(false);
             {/* AUTH */}
             {msisdn ? (
               <>
-                <span className="text-sm font-medium">{msisdn}</span>
+                {/* ↓ ONLY CHANGE: was {msisdn}, now shows name when available */}
+                <span className="text-sm font-medium">{displayName}</span>
 
                 <button
                   onClick={logout}

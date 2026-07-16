@@ -3,6 +3,7 @@ import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import KGClassView from "./KGClassView";
 import ClassSubjectsView from "./ClassSubjectsView";
 import PrimarySubjectsView from "./PrimarySubjectsView";
+import { classIdFromSlug } from "@/config/classSlugs";
 import React from "react";
 
 // MiddleSubjectsView — lazy import with fallback so missing file never crashes the app
@@ -43,12 +44,13 @@ const isMiddleClass = (gradeType?: string, className?: string): boolean => {
 };
 
 const ClassSubjectsRouter = () => {
-  const { classId } = useParams<{ classId: string }>();
+  const { classSlug } = useParams<{ classSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const location = useLocation();
   const gradeType = location.state?.gradeType as string | undefined;
 
   const needsApiCheck = !gradeType;
-  const { classInfo, loading } = useClassSubjects(needsApiCheck ? Number(classId) : 0);
+  const { classInfo, loading } = useClassSubjects(needsApiCheck ? (classId ?? 0) : 0);
 
   // 1. Fast path — Agar gradeType pehle se state mai majood hai
   if (gradeType) {

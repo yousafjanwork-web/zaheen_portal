@@ -5,6 +5,8 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { findSubjectBySlug } from "../../../config/subjectSlug";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import owl from "../../../assets/images/owl.png";
 import orange from "../../../assets/images/orange.png";
@@ -21,8 +23,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useKGSubjects as useClassSubjects } from "@/modules/shared/hooks/useKGSubjects";
-import { fetchKGVideoDetail } from "@/modules/shared/hooks/useKGSubjects";
+import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { fetchVideoDetail } from "@/modules/shared/services/classService";
 import fallbackThumbnail from "../../../assets/images/physics.png";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
@@ -1017,7 +1019,8 @@ const KGLectureSkeleton = () => (
    MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
 const KGLectureView = () => {
-  const { classId, subjectId } = useParams();
+  const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1039,13 +1042,13 @@ const KGLectureView = () => {
   const gradeType = location.state?.gradeType;
   const selectedSubjectFromState = location.state?.selectedSubject;
 
-  const { classInfo, chapters, chapterVideos, subjects, loading } =
-    useClassSubjects(Number(classId));
+const { classInfo, chapters, chapterVideos, subjects, loading } =
+    useClassSubjects(classId ?? 0);
 
   const selectedSubject = useMemo(() => {
     if (selectedSubjectFromState) return selectedSubjectFromState;
-    return subjects?.find((s: any) => String(s.id) === String(subjectId)) ?? null;
-  }, [selectedSubjectFromState, subjects, subjectId]);
+    return findSubjectBySlug(subjects, subjectSlug ?? "");
+  }, [selectedSubjectFromState, subjects, subjectSlug]);
 
   /**
    * subjectRawName — always the English name so getTheme() keyword
@@ -1075,12 +1078,12 @@ const KGLectureView = () => {
       ? selectedSubject?.urdu_desc || selectedSubject?.desc
       : selectedSubject?.desc) || t(theme.taglineKey);
 
-  const subjectChapters: ChapterWithVideos[] = useMemo(
+ const subjectChapters: ChapterWithVideos[] = useMemo(
     () =>
       chapters
-        .filter((c: any) => String(c.subject_id) === String(subjectId))
+        .filter((c: any) => String(c.subject_id) === String(selectedSubject?.id))
         .map((c: any) => ({ ...c, videos: chapterVideos[c.id] || [] })),
-    [chapters, chapterVideos, subjectId],
+    [chapters, chapterVideos, selectedSubject],
   );
 
   const allVideos: Video[] = useMemo(
@@ -1141,7 +1144,7 @@ const selectVideo = useCallback(
     // NEW: fetch the real playable URL — the list endpoint that populated
     // `video` doesn't include it; only the single-video detail does.
     try {
-      const detail = await fetchKGVideoDetail(video.id);
+     const detail = await fetchVideoDetail(video.id);
       setVideoUrl(detail.video_url || buildVideoUrl(video.path));
     } catch {
       setVideoUrl(buildVideoUrl(video.path)); // fallback, shouldn't normally hit
@@ -1201,9 +1204,9 @@ const selectVideo = useCallback(
   }, []);
 
   const handleBackToHome  = useCallback(() => navigate("/"), [navigate]);
-  const handleBackToGrade = useCallback(
-    () => navigate(`/class/${classId}`, { state: { gradeType } }),
-    [navigate, classId, gradeType],
+const handleBackToGrade = useCallback(
+    () => navigate(`/${classSlug}`, { state: { gradeType } }),
+    [navigate, classSlug, gradeType],
   );
 
   const heroCommonProps = {

@@ -571,51 +571,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
         </div>
       </section>
 
-      {/* ===== TEACHER RESOURCES ===== */}
-      <section className={`py-16 sm:py-24 ${darkMode ? 'bg-[#0a0a1a]' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeInUp} className="text-center mb-12">
-            <h2 className="font-fredoka font-bold text-3xl sm:text-4xl lg:text-5xl mb-4">
-              Teacher Resources 📚
-            </h2>
-            <p className={`font-nunito text-lg max-w-2xl mx-auto ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Everything you need to bring origami into your classroom!
-            </p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
-            {[
-              { emoji: '📋', title: 'Printable Worksheets', desc: 'Download and print step-by-step folding guides for classroom use.', color: 'from-primary to-indigo-400' },
-              { emoji: '🎓', title: 'Class Activities', desc: 'Curated lesson plans with origami projects for every subject.', color: 'from-green to-teal-400' },
-              { emoji: '📦', title: 'Craft Collections', desc: 'Themed bundles perfect for school events and art classes.', color: 'from-amber to-orange-400' },
-            ].map((resource, index) => (
-              <motion.div
-                key={resource.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
-              >
-                <div className={`card-hover rounded-[1.5rem] p-8 ${
-                  darkMode ? 'bg-[#16213e]' : 'bg-white'
-                } shadow-md border ${darkMode ? 'border-gray-800' : 'border-gray-100'}`}>
-                  <div className={`w-16 h-16 bg-gradient-to-br ${resource.color} rounded-2xl flex items-center justify-center mb-6`}>
-                    <span className="text-3xl">{resource.emoji}</span>
-                  </div>
-                  <h3 className="font-fredoka font-bold text-xl mb-2">{resource.title}</h3>
-                  <p className={`font-nunito mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {resource.desc}
-                  </p>
-                  <button className="flex items-center gap-2 text-primary font-nunito font-bold text-sm hover:gap-3 transition-all">
-                    <Download size={16} />
-                    Download Free
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+ 
 
       {/* ===== NEWSLETTER ===== */}
       <section className="py-16 sm:py-24">

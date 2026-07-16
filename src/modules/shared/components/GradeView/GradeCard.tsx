@@ -1,13 +1,14 @@
 import { motion } from "motion/react";
+import { classSlugFromId } from "@/config/classSlugs";
 
 
 const GradeCard = ({ grade, navigate, type }: any) => {
   return (
     <motion.div
       whileHover={{ y: -8 }}
-      onClick={() => {
-        // Yeh direct usey usi class ki id par bhejega jo clicked hai
-        navigate(`/class/${grade.id}`, {
+    onClick={() => {
+        // Yeh direct usey usi class ke slug par bhejega jo clicked hai
+        navigate(`/${classSlugFromId(grade.id)}`, {
           state: { gradeType: type === "k-12" ? undefined : type }, // k-12 ke waqt undefined bhejenge taake router khud check kare
         });
       }}

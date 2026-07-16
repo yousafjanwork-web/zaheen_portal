@@ -2,6 +2,7 @@ import React from 'react';
 import { Baby, BookOpen, FlaskConical, GraduationCap, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from "react-router-dom";
+import { classSlugFromId } from "@/config/classSlugs";
 import { t } from '@/modules/shared/i18n';
 
 const grades = [
@@ -13,8 +14,8 @@ const grades = [
     cardBg: "bg-[#F4EFE2]",
     iconBg: "bg-[#F8E7B0]",
     iconColor: "text-orange-500",
-    badgeText: "Games Included",
-    link: "/class/1"
+   badgeText: "Games Included",
+    link: `/${classSlugFromId(1)}`
   },
   {
     title: t("browseGrade.g1Title"),

@@ -11,6 +11,7 @@ import {
 import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
 import { useApi } from '../hooks/useApi';
 import { fetchCraftById, fetchFeaturedCrafts } from '../services/origamiApi';
+import { recordVideoWatched, recordCraftCompleted, toggleBookmark, isBookmarked } from '../utils/progressTracking';
 
 interface CraftDetailPageProps {
   darkMode: boolean;
@@ -27,7 +28,7 @@ const formatDuration = (seconds: number): string | null => {
 
 const CraftDetailPage = ({ darkMode }: CraftDetailPageProps) => {
 
-  const { isLoggedIn } = useZaheenAuth();
+const { isLoggedIn, isLoading: authLoading } = useZaheenAuth();
   const location = useLocation();
 
 const { slug } = useParams<{ slug: string }>();
@@ -36,12 +37,18 @@ const { data: allCraftsForLookup, loading: lookupLoading } = useApi(fetchAllCraf
 const matchedCraft = allCraftsForLookup?.find((c) => slugify(c.title) === slug);
 const realId = matchedCraft?.id;
 
-const { data: craft, loading: craftLoading, error } = useApi(
-  () => (realId ? fetchCraftById(realId) : Promise.reject(new Error('Craft not found'))),
+// Only genuinely "not found" once the lookup has finished and no match
+// turned up — not merely because realId isn't resolved yet.
+const notFound = !lookupLoading && !realId;
+
+const { data: craft, loading: craftLoading, error: craftError } = useApi(
+  () => fetchCraftById(realId!),
   [realId],
+  { enabled: !!realId },
 );
 
 const loading = lookupLoading || (!!realId && craftLoading);
+const error = notFound ? 'Craft not found' : craftError;
 
   // Related crafts — re-use the featured endpoint and filter out current
   const { data: allCrafts } = useApi(fetchFeaturedCrafts, []);
@@ -60,6 +67,13 @@ const loading = lookupLoading || (!!realId && craftLoading);
     setRealDuration(null);
     setShowAllSteps(false);
   }, [slug]);
+
+  // Sync the favorite button with whatever's actually stored for this craft
+  useEffect(() => {
+    if (craft?.id) {
+      setIsFavorited(isBookmarked(craft.id));
+    }
+  }, [craft?.id]);
 
   const hasVideo = !!craft?.videoUrl && craft.videoUrl !== '#' && craft.videoUrl !== '';
   const hasPdf   = !!craft?.pdfUrl   && craft.pdfUrl   !== '#' && craft.pdfUrl   !== '';
@@ -116,7 +130,23 @@ const loading = lookupLoading || (!!realId && craftLoading);
     if (craft && newSet.size === craft.steps.length) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
+      // Real completion event — this is what drives Crafts Done, Total
+      // Stars, streak, and certificate progress on the profile page.
+      recordCraftCompleted(craft.id);
     }
+  };
+
+  const handlePlayVideo = () => {
+    if (!hasVideo || !craft) return;
+    setIsPlaying(true);
+    // Real watch event — drives "Recently Watched" and video-based XP/stars.
+    recordVideoWatched(craft.id);
+  };
+
+  const handleToggleFavorite = () => {
+    if (!craft) return;
+    const nowFavorited = toggleBookmark(craft.id);
+    setIsFavorited(nowFavorited);
   };
 
   const handleDownloadPdf = () => {
@@ -132,6 +162,9 @@ const loading = lookupLoading || (!!realId && craftLoading);
   // Deep-linking straight to a craft/video page must be blocked the same
   // way the library listing is. Checked before loading/error states so a
   // logged-out visitor never sees so much as a skeleton of gated content.
+  if (authLoading) {
+  return null;
+  }
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
@@ -275,7 +308,7 @@ const loading = lookupLoading || (!!realId && craftLoading);
                       <motion.button
                         whileHover={{ scale: hasVideo ? 1.1 : 1 }}
                         whileTap={{ scale: hasVideo ? 0.95 : 1 }}
-                        onClick={() => hasVideo && setIsPlaying(true)}
+                        onClick={handlePlayVideo}
                         disabled={!hasVideo}
                         className="w-20 h-20 sm:w-24 sm:h-24 bg-white/90 rounded-full flex items-center justify-center shadow-2xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -323,7 +356,7 @@ const loading = lookupLoading || (!!realId && craftLoading);
                 <div className="flex items-center gap-2">
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setIsFavorited(!isFavorited)}
+                    onClick={handleToggleFavorite}
                     className={`p-3 rounded-xl border transition-all ${
                       isFavorited
                         ? 'bg-pink/10 border-pink text-pink'
@@ -349,7 +382,7 @@ const loading = lookupLoading || (!!realId && craftLoading);
               </div>
             </motion.div>
 
-            {/* Progress Bar */}
+            {/* Progress Bar
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -370,7 +403,7 @@ const loading = lookupLoading || (!!realId && craftLoading);
               <p className={`mt-2 font-nunito text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {completedSteps.size} of {craft.steps.length} steps completed
               </p>
-            </motion.div>
+            </motion.div> */}
 
             {/* Step-by-step Cards */}
             <div className="space-y-4">
@@ -499,7 +532,7 @@ const loading = lookupLoading || (!!realId && craftLoading);
 
               {/* Tags */}
               <div className="mt-6">
-                <h4 className="font-nunito font-bold text-sm mb-3">Tags</h4>
+                {/* <h4 className="font-nunito font-bold text-sm mb-3">Tags</h4> */}
                 <div className="flex flex-wrap gap-2">
                   {(craft.tags ?? []).map((tag) => (
                     <span

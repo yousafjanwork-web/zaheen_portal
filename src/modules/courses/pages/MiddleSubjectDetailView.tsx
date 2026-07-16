@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { classIdFromSlug } from "../../../config/classSlugs";
+import { findSubjectBySlug } from "../../../config/subjectSlug";
+import { gradeNumberFromSlug } from "../../../config/classSlugs";
 import {
   ChevronDown, ChevronUp, Lock, CheckCircle2, PlayCircle,
   Clock, BookOpen, Gamepad2,
@@ -9,7 +12,7 @@ import {
   Sigma, Atom, Leaf, FlaskConical, Languages, Globe, Cpu, Landmark,
 } from "lucide-react";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useMiddleSubjects as useClassSubjects, fetchMiddleVideoDetail } from "@/modules/shared/hooks/useMiddleSubjects";
+import { useClassSubjects, fetchVideoDetail } from "@/modules/shared/hooks/useClassSubjects";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";   // ← same hook as KG / Primary
 
@@ -91,7 +94,8 @@ const getThumbUrl = (video: Video): string | null => {
    COMPONENT
 ══════════════════════════════════════════════════════════ */
 const MiddleSubjectDetailView = () => {
-  const { classId, subjectId } = useParams<{ classId: string; subjectId: string }>();
+const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: string }>();
+  const classId = classIdFromSlug(classSlug ?? "");
   const navigate = useNavigate();
   const location = useLocation();
   const lang     = useLang();
@@ -102,9 +106,9 @@ const MiddleSubjectDetailView = () => {
   const gradeType    = location.state?.gradeType as string | undefined;
   const stateSubject = location.state?.selectedSubject;
 
-  const { classInfo, subjects, chapters, chapterVideos, loading } = useClassSubjects(Number(classId));
+ const { classInfo, subjects, chapters, chapterVideos, loading } = useClassSubjects(classId ?? 0);
 
-  const subject     = useMemo(() => subjects?.find((s: any) => String(s.id) === String(subjectId)) ?? stateSubject ?? null, [subjects, subjectId, stateSubject]);
+  const subject     = useMemo(() => findSubjectBySlug(subjects, subjectSlug ?? "") ?? stateSubject ?? null, [subjects, subjectSlug, stateSubject]);
   const subjectName = isUrdu ? subject?.urdu_name?.trim() || subject?.name || "" : subject?.name || "";
   const theme       = getSubjectTheme(subject?.name || "");
   const ThemeIcon   = theme.icon;
@@ -112,13 +116,12 @@ const MiddleSubjectDetailView = () => {
   const heroTitle = isUrdu ? theme.heroTitle.ur : theme.heroTitle.en;
   const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.desc || theme.tagline.en);
 
-  const subjectChapters: Chapter[] = useMemo(() =>
+ const subjectChapters: Chapter[] = useMemo(() =>
     chapters
-      .filter((c: any) => String(c.subject_id) === String(subjectId))
+      .filter((c: any) => String(c.subject_id) === String(subject?.id))
       .map((c: any) => ({ ...c, videos: chapterVideos[c.id] || [] })),
-    [chapters, chapterVideos, subjectId]
+    [chapters, chapterVideos, subject]
   );
-
   const allVideos: Video[] = useMemo(() => subjectChapters.flatMap((c) => c.videos), [subjectChapters]);
   const allVideoIds        = useMemo(() => allVideos.map((v) => v.id), [allVideos]);
   const totalLessons       = allVideos.length;
@@ -196,8 +199,8 @@ const MiddleSubjectDetailView = () => {
     return offsets;
   }, [subjectChapters]);
 
-  const gradeName = useMemo(() => {
-    if (!classInfo) return `Class ${classId}`;
+ const gradeName = useMemo(() => {
+    if (!classInfo) return `Class ${gradeNumberFromSlug(classSlug ?? "") ?? classId}`;
     if (!isUrdu) return classInfo.name || `Class ${classId}`;
     const u = classInfo.urdu_name?.trim();
     if (u) return u;
@@ -219,7 +222,7 @@ const MiddleSubjectDetailView = () => {
     setActiveChapter(chapter);
 
     try {
-      const detail = await fetchMiddleVideoDetail(video.id);
+    const detail = await fetchVideoDetail(video.id);
       setResolvedVideoUrl(detail.video_url || `${CDN}${video.path}`);
     } catch {
       setResolvedVideoUrl(`${CDN}${video.path}`);
@@ -576,7 +579,7 @@ const MiddleSubjectDetailView = () => {
 
             {/* Breadcrumb */}
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: ".78rem", color: "#64748B", marginBottom: 16, flexWrap: "wrap" }}>
-              <button onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })} style={{ background: "none", border: "none", color: theme.color, fontWeight: 700, cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0, fontSize: ".78rem" }}>
+             <button onClick={() => navigate(`/${classSlug}`, { state: { gradeType } })} style={{ background: "none", border: "none", color: theme.color, fontWeight: 700, cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0, fontSize: ".78rem" }}>
                 {gradeName}
               </button>
               <ChevronRight size={12} />
@@ -734,7 +737,7 @@ const MiddleSubjectDetailView = () => {
               <div className="msv-bc" style={{ color: theme.color }}>
                 <Link to="/" style={{ color: theme.color }}>{isUrdu ? "ہوم" : "Home"}</Link>
                 <ChevronRight size={13} />
-                <Link to={`/class/${classId}`} state={{ gradeType }} style={{ color: theme.color }}>{gradeName}</Link>
+           <Link to={`/${classSlug}`} state={{ gradeType }} style={{ color: theme.color }}>{gradeName}</Link>
                 <ChevronRight size={13} />
                 <span style={{ color: "#374151" }}>{subjectName}</span>
               </div>
@@ -892,7 +895,7 @@ const MiddleSubjectDetailView = () => {
                     })}
 
                 <div style={{ padding: "14px 18px", borderTop: "1px solid #F1F5F9" }}>
-                  <button onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })} style={{ color: theme.color, fontWeight: 700, fontSize: ".84rem", background: "none", border: "none", cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0 }}>
+             <button onClick={() => navigate(`/${classSlug}`, { state: { gradeType } })} style={{ color: theme.color, fontWeight: 700, fontSize: ".84rem", background: "none", border: "none", cursor: "pointer", fontFamily: "'Nunito',sans-serif", padding: 0 }}>
                     {isUrdu ? "→" : "←"} {isUrdu ? "مضامین پر واپس" : "Back to Subjects"}
                   </button>
                 </div>
@@ -945,7 +948,7 @@ const MiddleSubjectDetailView = () => {
                     : `Lessons for ${subjectName} are being prepared and will be available soon!`}
                 </p>
                 <button
-                  onClick={() => navigate(`/class/${classId}`, { state: { gradeType } })}
+            onClick={() => navigate(`/${classSlug}`, { state: { gradeType } })}
                   style={{
                     marginTop: 22, background: theme.color, color: "#fff", border: "none",
                     borderRadius: 10, padding: "10px 22px", fontWeight: 800, fontSize: ".85rem",
@@ -1040,7 +1043,7 @@ const MiddleSubjectDetailView = () => {
                     })}
 
                     {/* Quiz Game card */}
-                    <div style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }} onClick={() => navigate(`/class/${classId}/quiz`)}>
+                    <div style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }} onClick={() => navigate(`/${classSlug}/quiz`)}>
                       <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Gamepad2 size={26} style={{ color: "#fff" }} />
                       </div>

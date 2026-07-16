@@ -151,8 +151,12 @@ export default function MdcatApp() {
       if (res.ok) {
         const json = await res.json();
         // Handle both { data: {} } and direct quiz object responses
-        const quizData: Quiz = json.data ?? json;
-        setActiveQuiz(quizData);
+       const raw = json.data ?? json;
+const quizData: Quiz = {
+  ...mapQuiz(raw),
+  questions: (raw.questions || []).map(mapQuestion),
+};
+setActiveQuiz(quizData);
         setSelectedQuizId(id);
       }
     } catch (e) {

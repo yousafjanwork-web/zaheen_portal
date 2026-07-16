@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
+import { classIdFromSlug, classSlugFromId } from "@/config/classSlugs";
+import { slugifySubject } from "../../../config/subjectSlug";
 import student from "../../../assets/images/boy.png";
 import {
   BookOpen, Languages, Sigma, Gamepad2, Bot, Trophy,
@@ -8,7 +10,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import { useKGSubjects as useClassSubjects } from "@/modules/shared/hooks/useKGSubjects";
+import type { NormalizedSubject } from "@/modules/shared/services/classService";
+import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
@@ -244,8 +247,9 @@ const CTABanner = ({ badge, title, desc, btnLessons, btnApp, isRtl, onNavigate }
    MAIN PAGE
 ═══════════════════════════════════════════════════════════ */
 const KGClassView = () => {
-  const { classId } = useParams();
-  console.log("Current Class ID:", classId); 
+ const { classSlug } = useParams();
+const classId = classIdFromSlug(classSlug ?? "");
+console.log("Current Class Slug:", classSlug, "→ resolved ID:", classId);
   const navigate    = useNavigate();
   const location    = useLocation();
   const gradeType   = location.state?.gradeType;
@@ -261,16 +265,15 @@ const KGClassView = () => {
     || classInfo?.name
     || t("kgClassView.defaultGrade");
 
-  const handleSubjectClick = (subject: NormalizedSubject) => {
-    navigate(`/class/${classInfo?.id}/subject/${subject.id}`, {
+const handleSubjectClick = (subject: NormalizedSubject) => {
+    navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
   };
-
-  const handleSeeAllLessons = () => {
+const handleSeeAllLessons = () => {
     const eng = subjects.find((s) => s.name.toLowerCase().includes("english"));
     if (eng) {
-      navigate(`/class/${classInfo?.id}/subject/${eng.id}`, {
+      navigate(`/${classSlug}/${slugifySubject(eng.name)}`, {
         state: { gradeType, selectedSubject: eng, classTitle: classInfo?.name },
       });
     } else {
@@ -351,14 +354,14 @@ const KGClassView = () => {
                   tagline={t("kgClassView.quizzes.tagline")}
                   btnLabel={t("kgClassView.quizzes.btnLabel")}
                   isRtl={isRtl}
-                  onClick={() => navigate("/class/2/quiz")}
+             onClick={() => navigate(`/${classSlug}/quiz`)}
                   // badge={<SoonBadge label={t("kgClassView.soonBadge")} />}
                   customBtn={
                     <PillBtn
                       bg="#F43F5E"
                       label={t("kgClassView.quizzes.btnLabel")}
                       icon={<Star size={15} className="fill-white" strokeWidth={0} />}
-                      onClick={(e) => { e.stopPropagation(); navigate("/class/2/quiz"); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/${classSlug}/quiz`); }}
                     />
                   }
                 />
@@ -371,13 +374,13 @@ const KGClassView = () => {
                   tagline={t("kgClassView.funGames.tagline")}
                   btnLabel={t("kgClassView.funGames.btnLabel")}
                   isRtl={isRtl}
-                  onClick={() => navigate(`/games?type=${gradeType === "kg" ? "kg" : "1-5"}`)}
+                  onClick={() => navigate("/games")}
                   customBtn={
                     <PillBtn
                       bg="#7C3AED"
                       label={t("kgClassView.funGames.btnLabel")}
                       icon={<Gamepad2 size={15} strokeWidth={2} />}
-                      onClick={(e) => { e.stopPropagation(); navigate(`/games?type=${gradeType === "kg" ? "kg" : "1-5"}`); }}
+                      onClick={(e) => { e.stopPropagation(); navigate("/games") }}
                     />
                   }
                 />
