@@ -5,6 +5,7 @@ import { useLessonsData } from '../context/LessonsContext';
 import { speech, SpeechManager } from '../utils/speech';
 import { Volume2, RotateCcw, Check, X, Shuffle, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useVocabBase } from '../hooks/useVocabBase';
 
 type Difficulty = 'new' | 'hard' | 'good' | 'easy';
 
@@ -18,8 +19,8 @@ interface Card {
   partOfSpeech: string;
   theme: string;
 }
-
 export default function Flashcards() {
+  const base = useVocabBase();
   const { user, addXP, addCoins, updateQuestProgress, updateChallengeProgress } = useAuth();
   const { lessons, isLoading, error } = useLessonsData();
   const [deck, setDeck] = useState<Card[]>([]);
@@ -146,8 +147,8 @@ export default function Flashcards() {
             >
               <RotateCcw className="w-4 h-4" /> New Session
             </button>
-            <Link
-              to="/vocab"
+        <Link
+              to={base}
               className="px-6 py-3 bg-white/20 backdrop-blur-md text-white rounded-2xl font-bold hover:bg-white/30 transition-all border border-white/30"
             >
               Back Home

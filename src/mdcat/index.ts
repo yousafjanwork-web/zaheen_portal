@@ -6,4 +6,3 @@
 
 export { default as MdcatApp } from "./MdcatApp";
 export { default as MdcatEntryCard } from "./MdcatEntryCard";
-

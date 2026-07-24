@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X, Sun, Moon, User, Home, Grid3X3, Play, BarChart3 } from 'lucide-react';
 import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
@@ -15,6 +16,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const base = useOrigamiBase();
 
   // Phone number the user actually logged in with, straight from the
   // shared auth context — no separate "name" field exists, so this is
@@ -24,17 +26,17 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/origami/search?q=${encodeURIComponent(searchQuery)}`);
+     navigate(`${base}/search?q=${encodeURIComponent(searchQuery)}`);
       setSearchOpen(false);
       setSearchQuery('');
     }
   };
 
-  const navLinks = [
-    { to: '/origami', label: 'Home', icon: <Home size={18} /> },
-    { to: '/origami/library', label: 'Videos', icon: <Play size={18} /> },
-    { to: '/origami/category/animals', label: 'Categories', icon: <Grid3X3 size={18} /> },
-    { to: '/origami/profile', label: 'My Profile', icon: <User size={18} /> },
+ const navLinks = [
+    { to: base, label: 'Home', icon: <Home size={18} /> },
+    { to: `${base}/library`, label: 'Videos', icon: <Play size={18} /> },
+    { to: `${base}/category/animals`, label: 'Categories', icon: <Grid3X3 size={18} /> },
+    { to: `${base}/profile`, label: 'My Profile', icon: <User size={18} /> },
   ];
 
   return (
@@ -105,8 +107,8 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
               </motion.button>
 
               {/* Profile */}
-              {isLoggedIn ? (
-                <Link to="/origami/profile">
+             {isLoggedIn ? (
+                <Link to={`${base}/profile`}>
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-primary to-pink px-4 py-2 rounded-xl text-white font-nunito font-bold text-sm"
@@ -166,9 +168,9 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                   </Link>
                 ))}
                 {/* Mobile Profile */}
-                {isLoggedIn ? (
+              {isLoggedIn ? (
                   <Link
-                    to="/origami/profile"
+                    to={`${base}/profile`}
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 bg-gradient-to-r from-primary to-pink px-4 py-3 rounded-2xl text-white font-nunito font-bold mt-2"
                   >
@@ -238,8 +240,8 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                   {['Paper Crane', 'Butterfly', 'Dog', 'Heart', 'Airplane', 'Flower', 'Star', 'Fish'].map((term) => (
                     <button
                       key={term}
-                      onClick={() => {
-                        navigate(`/origami/search?q=${encodeURIComponent(term)}`);
+                     onClick={() => {
+                        navigate(`${base}/search?q=${encodeURIComponent(term)}`);
                         setSearchOpen(false);
                       }}
                       className={`px-4 py-2 rounded-xl text-sm font-nunito font-semibold transition-all ${

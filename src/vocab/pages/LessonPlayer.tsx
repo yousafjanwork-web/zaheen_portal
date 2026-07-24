@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useVocabBase } from "../hooks/useVocabBase";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useLessonsData } from "../context/LessonsContext";
@@ -32,6 +33,7 @@ type Step =
 
 export default function LessonPlayer() {
   const { lessonId } = useParams<{ lessonId: string }>();
+  const base = useVocabBase();
   const {
     addXP,
     addCoins,
@@ -165,8 +167,8 @@ export default function LessonPlayer() {
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
           Lesson not found
         </h2>
-        <Link
-          to="/vocab/courses"
+      <Link
+          to={`${base}/courses`}
           className="mt-4 inline-flex items-center gap-2 text-violet-600 font-semibold"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Courses
@@ -1372,14 +1374,14 @@ export default function LessonPlayer() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                to="/vocab/courses"
+         <Link
+                to={`${base}/courses`}
                 className="px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
               >
                 <BookOpen className="w-4 h-4" /> More Lessons
               </Link>
               <Link
-                to="/vocab/dashboard"
+                to={`${base}/dashboard`}
                 className="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl font-bold hover:scale-105 transition-all shadow-lg flex items-center justify-center gap-2"
               >
                 <Trophy className="w-4 h-4" /> View Dashboard

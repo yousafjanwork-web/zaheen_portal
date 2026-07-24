@@ -105,7 +105,7 @@ const MobileHeader = () => {
             {t("learning.boardResults")}
           </a>
           <a href="/ai" className="block">
-            {t("menu.aiTutor")}
+           {t("menu.ai_tutor")}
           </a>
           {/* 🔹 AUTH SECTION */}
 

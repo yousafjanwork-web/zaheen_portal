@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import { LayoutDashboard, FolderOpen } from "lucide-react";
+import { fetchClasses, fetchSubjects } from "@/modules/shared/services/classService";
+import { fetchSeniorPastPapers } from "@/modules/shared/services/seniorService";
 
 const ResourcesPage = () => {
     const [searchParams] = useSearchParams();
@@ -18,60 +20,65 @@ const ResourcesPage = () => {
     const lang = getLanguage();
     const isUrdu = lang === "ur";
 
-    /* ---------- FETCH GRADES ---------- */
+    /* ---------- FETCH GRADES (now v2, via classService.ts) ---------- */
     useEffect(() => {
-        const fetchGrades = async () => {
-            const res = await fetch(
-                "https://api.zaheen.com.pk/api/board/1/classes"
-            );
-            const data = await res.json();
+        const loadGrades = async () => {
+            try {
+                const data = await fetchClasses();
 
-            const filtered = data.filter(
-                (g: any) => g.id >= 10 && g.id <= 13
-            );
+                // Same range filter as before — self-heals once Sir adds
+                // Grade 10-12 to the backend (see useGrade.ts migration notes).
+                const filtered = data.filter(
+                    (g: any) => g.id >= 10 && g.id <= 13
+                );
 
-            setGrades(filtered);
-            if (filtered.length) setSelectedGrade(filtered[0].id);
+                setGrades(filtered);
+                if (filtered.length) setSelectedGrade(filtered[0].id);
+            } catch (err) {
+                console.error("Failed to fetch grades:", err);
+            }
         };
 
-        fetchGrades();
+        loadGrades();
     }, []);
 
-    /* ---------- FETCH SUBJECTS + YEARS ---------- */
+    /* ---------- FETCH SUBJECTS (now v2) + YEARS (still old API — past
+       papers not yet available on v2, per Sir's instruction) ---------- */
     useEffect(() => {
         if (!selectedGrade) return;
 
-        const fetchSubjects = async () => {
-            const res = await fetch(
-                `https://api.zaheen.com.pk/api/class/${selectedGrade}/subjects`
-            );
-            const data = await res.json();
+        const loadSubjectsAndYears = async () => {
+            try {
+                const data = await fetchSubjects(selectedGrade);
+                setSubjects(data);
 
-            setSubjects(data);
+                const yearsMap: any = {};
 
-            const yearsMap: any = {};
-
-            for (let subject of data) {
-                try {
-                    const res = await fetch(
-                        `https://api.zaheen.com.pk/api/pastpapers?class_id=${selectedGrade}&subject_id=${subject.id}`
-                    );
-                    const papers = await res.json();
-
-                    const years = [
-                        ...new Set(papers.data.map((p: any) => p.year)),
-                    ];
-
-                    yearsMap[subject.id] = years;
-                } catch {
-                    yearsMap[subject.id] = [];
+                for (const subject of data) {
+                    try {
+                        // Past papers: intentionally still old API — no v2
+                        // endpoint exists yet. Reuses the same function
+                        // already used on the Grade 9-12 subjects view.
+                        const papers = await fetchSeniorPastPapers(selectedGrade, subject.id);
+                        const list: any[] = Array.isArray(papers)
+                            ? papers
+                            : Array.isArray(papers?.data)
+                            ? papers.data
+                            : [];
+                        const years = [...new Set(list.map((p: any) => p.year))];
+                        yearsMap[subject.id] = years;
+                    } catch {
+                        yearsMap[subject.id] = [];
+                    }
                 }
-            }
 
-            setYearsData(yearsMap);
+                setYearsData(yearsMap);
+            } catch (err) {
+                console.error("Failed to fetch subjects:", err);
+            }
         };
 
-        fetchSubjects();
+        loadSubjectsAndYears();
     }, [selectedGrade]);
 
     return (

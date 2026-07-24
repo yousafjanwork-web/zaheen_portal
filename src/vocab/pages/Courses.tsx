@@ -1,4 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useVocabBase } from "../hooks/useVocabBase";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useAuth as useZaheenAuth } from "@/modules/shared/context/AuthContext";
@@ -16,8 +17,9 @@ import Mascot from "../components/Mascot";
 export default function Courses() {
   const { user, completedLessons } = useAuth();
   const { isLoggedIn } = useZaheenAuth();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
+  const base = useVocabBase();
   const { lessons, isLoading, error } = useLessonsData();
 
   if (!user) return null;
@@ -203,7 +205,7 @@ export default function Courses() {
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
-    navigate(`/vocab/lesson/${lesson.id}`);
+  navigate(`${base}/lesson/${lesson.id}`);
   }}
   className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
     isCompleted

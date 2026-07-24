@@ -42,7 +42,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
       </Link>
 
       <Link to="/ai" className="block hover:text-primary">
-        {t("menu.aiTutor")}
+       {t("menu.ai_tutor")}
       </Link>
 
       {/* AUTH SECTION */}

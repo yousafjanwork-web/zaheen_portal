@@ -108,26 +108,20 @@ interface ChapterWithVideos {
    CDN thumbnail helper
 ──────────────────────────────────────────────────────────────── */
 const CDN_BASE = "https://cdn.zaheen.com.pk";
-//"Hum wahan old API use nahi kar rahe — woh line API call hi nahi kar rahi.
-
-// API_BASE = "https://api.zaheen.com.pk" sirf image URLs ka domain check karne ke liye use ho raha hai jo v2 API already send karti hai,
-
 const API_BASE = "https://api.zaheen.com.pk";
 
 const buildThumbUrl = (raw?: string): string | null => {
   if (!raw) return null;
-  // Already correct CDN URL — return as-is
-  if (raw.startsWith(CDN_BASE)) return raw;
-  // API domain — swap to CDN domain
+  // Swap API domain to CDN domain (thumbnails are served from CDN)
   if (raw.startsWith(API_BASE)) return raw.replace(API_BASE, CDN_BASE);
-  // Any other absolute URL — return as-is
+  // Already a full URL (CDN or other) — return as-is
   if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
   // Relative path — prepend CDN base
   return `${CDN_BASE}/${raw.replace(/^\/+/, "")}`;
 };
 
 const getThumbUrl = (video: Video): string | null => {
-  const explicit =
+  const raw =
     video.thumbnail_url ||
     video.thumbnailUrl ||
     video.thumbnail ||
@@ -136,9 +130,7 @@ const getThumbUrl = (video: Video): string | null => {
     video.cover ||
     video.poster ||
     null;
-
-  if (explicit) return buildThumbUrl(explicit);
-  return null;
+  return buildThumbUrl(raw ?? undefined);
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -1146,31 +1138,33 @@ const subjectChapters: ChapterWithVideos[] = useMemo(
     [selectedVideo],
   );
 
-  const selectVideo = useCallback(
-    async (video: Video, chapterId: number, globalIdx: number) => {
-      if (globalIdx > 0 && !isLoggedIn) {
-        navigate("/login", { state: { from: location.pathname } });
-        return;
-      }
-      flushBeforeSwitch();
-      const position = await fetchJourneyForVideo(video.id);
-      resumePositionRef.current = position;
+ const selectVideo = useCallback(
+  async (video: Video, chapterId: number, globalIdx: number) => {
+    if (globalIdx > 0 && !isLoggedIn) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+    flushBeforeSwitch();
+    const position = await fetchJourneyForVideo(video.id);
+    resumePositionRef.current = position;
 
-      setSelectedVideo(video);
-      setActiveChapterId(chapterId);
-      setIsWatchMode(true);
+    setSelectedVideo(video);
+    setActiveChapterId(chapterId);
+    setIsWatchMode(true);
 
-      try {
-     const detail = await fetchVideoDetail(video.id);
-        setVideoUrl(detail.video_url || `https://cdn.zaheen.com.pk/videos/${video.path}`);
-      } catch {
-        setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
-      }
+    try {
+      const detail = await fetchVideoDetail(video.id);
+      // ✅ Save thumbnail_url back so getThumbUrl works on the selected video
+      video.thumbnail_url = detail.thumbnail_url || video.thumbnail_url;
+      setVideoUrl(detail.video_url || `https://cdn.zaheen.com.pk/videos/${video.path}`);
+    } catch {
+      setVideoUrl(`https://cdn.zaheen.com.pk/videos/${video.path}`);
+    }
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    },
-    [isLoggedIn, navigate, location.pathname, flushBeforeSwitch, fetchJourneyForVideo],
-  );
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  [isLoggedIn, navigate, location.pathname, flushBeforeSwitch, fetchJourneyForVideo],
+);
 
   const goNext = useCallback(() => {
     if (currentGlobalIdx < allVideos.length - 1) {

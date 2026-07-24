@@ -1043,17 +1043,23 @@ const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: s
                     })}
 
                     {/* Quiz Game card */}
-                    <div style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }} onClick={() => navigate(`/${classSlug}/quiz`)}>
+                    <div style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }} onClick={() => navigate(`/assessment/1`)}>
                       <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Gamepad2 size={26} style={{ color: "#fff" }} />
                       </div>
-                      <div>
-                        <h4 style={{ fontSize: "1rem", fontWeight: 900, color: "#111827", margin: "0 0 5px" }}>{isUrdu ? "باب کا کوئز گیم" : "Chapter Quiz Game"}</h4>
-                        <p style={{ fontSize: ".8rem", color: "#6B7280", margin: "0 0 12px" }}>{isUrdu ? "اپنی معلومات جانچیں اور بیج جیتیں!" : "Test your knowledge and win a badge!"}</p>
-                        <button style={{ background: "#065F46", color: "#fff", border: "none", borderRadius: 11, padding: "10px 22px", fontWeight: 800, fontSize: ".88rem", cursor: "pointer", fontFamily: "'Nunito',sans-serif", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={(e) => { e.stopPropagation(); navigate(`/class/${classId}/quiz`); }}>
-                          {isUrdu ? "کھیلنا شروع کریں" : "Start Playing"} <ChevronRight size={15} />
-                        </button>
-                      </div>
+                     <div onClick={() => navigate(`/assessment/1`)} style={{ cursor: "pointer" }}>
+  <h4 style={{ fontSize: "1rem", fontWeight: 900, color: "#111827", margin: "0 0 5px" }}>
+    {isUrdu ? "باب کا کوئز گیم" : "Chapter Quiz Game"}
+  </h4>
+
+  <p style={{ fontSize: ".8rem", color: "#6B7280", margin: "0 0 12px" }}>
+    {isUrdu ? "اپنی معلومات جانچیں اور بیج جیتیں!" : "Test your knowledge and win a badge!"}
+  </p>
+
+  <button style={{ background: "#065F46", color: "#fff", border: "none", borderRadius: 11, padding: "10px 22px", fontWeight: 800, fontSize: ".88rem", cursor: "pointer", fontFamily: "'Nunito',sans-serif", display: "inline-flex", alignItems: "center", gap: 6 }}>
+    {isUrdu ? "کھیلنا شروع کریں" : "Start Playing"} <ChevronRight size={15} />
+  </button>
+</div>
                     </div>
                   </div>
                 )}

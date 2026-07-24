@@ -6,6 +6,7 @@ import { VocabularyWord, WordCollection } from '../types';
 import { Search, Sparkles, Star, Volume2, X, Plus } from 'lucide-react';
 import { speech, SpeechManager } from '../utils/speech';
 import { useNavigate } from 'react-router-dom';
+import { useVocabBase } from '../hooks/useVocabBase';
 
 const masteryColors: Record<WordCollection['mastery'], { bg: string; text: string; ring: string; label: string; emoji: string }> = {
   new: { bg: 'from-slate-100 to-slate-50', text: 'text-slate-700', ring: 'ring-slate-200', label: 'New', emoji: '🌱' },
@@ -17,7 +18,8 @@ const masteryColors: Record<WordCollection['mastery'], { bg: string; text: strin
 export default function WordGarden() {
   const { user, wordCollection, addToCollection, addXP, addCoins, updateQuestProgress, updateChallengeProgress } = useAuth();
   const { lessons, isLoading, error } = useLessonsData();
-  const navigate = useNavigate();
+const navigate = useNavigate();
+  const base = useVocabBase();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | WordCollection['mastery']>('all');
   const [detailWord, setDetailWord] = useState<VocabularyWord | null>(null);
@@ -274,7 +276,7 @@ export default function WordGarden() {
               )}
               <button
                 onClick={() => {
-                  navigate(`/vocab/lesson/${detailWord.id && allWords.find(w => w.id === detailWord.id)?.lessonId || 'lesson-1'}`);
+                 navigate(`${base}/lesson/${detailWord.id && allWords.find(w => w.id === detailWord.id)?.lessonId || 'lesson-1'}`);
                 }}
                 className="mt-4 w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
               >

@@ -185,7 +185,7 @@ const localName = (en: string, ur?: string, isRtl?: boolean) =>
 const TRADING_MODULES = [
   { id: 1, labelEn: "Trading Course Module 1", labelUr: "ٹریڈنگ کورس ماڈیول 1", start: 1,  end: 11 },
   { id: 2, labelEn: "Trading Course Module 2", labelUr: "ٹریڈنگ کورس ماڈیول 2", start: 12, end: 20 },
-  { id: 3, labelEn: "Trading Course Module 3", labelUr: "ٹریڈنگ کورس ماڈیول 3", start: 21, end: 27 },
+  { id: 3, labelEn: "Trading Course Module 3", labelUr: "ٹریڈنگ کورس ماڈیول 3", start: 21, end: 35 },
 ];
 
 // classId → v2 parent_id

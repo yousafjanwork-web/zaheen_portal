@@ -7,12 +7,14 @@ import { fetchAllCrafts, fetchCategories } from '../services/origamiApi';
 import { slugify } from '../utils/slugify';
 import { getWatchedCraftIds } from '../utils/progressTracking';
 import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 
 interface VideoLibraryPageProps {
   darkMode: boolean;
 }
 
 const VideoLibraryPage = ({ darkMode }: VideoLibraryPageProps) => {
+  const base = useOrigamiBase();
   const { isLoggedIn } = useZaheenAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -201,7 +203,7 @@ const VideoLibraryPage = ({ darkMode }: VideoLibraryPageProps) => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.04 }}
                     >
-                      <Link to={`/origami/craft/${slugify(craft.title)}`}>
+                     <Link to={`${base}/craft/${slugify(craft.title)}`}>
                         <div
                           className={`card-hover rounded-[1.5rem] overflow-hidden ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md border-2 ${
                             watched ? 'border-green' : 'border-transparent'
@@ -263,7 +265,7 @@ const VideoLibraryPage = ({ darkMode }: VideoLibraryPageProps) => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
                     >
-                      <Link to={`/origami/craft/${craft.id}`}>
+                      <Link to={`${base}/craft/${craft.id}`}>
                         <div
                           className={`card-hover flex gap-4 p-4 rounded-2xl ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md border-2 ${
                             watched ? 'border-green' : 'border-transparent'

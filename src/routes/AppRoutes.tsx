@@ -8,8 +8,11 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ScrollToTop from "@/modules/shared/components/ScrollToTop";
 import GradesView from "@/modules/courses/pages/GradesView";
 import LecturesPage from "@/modules/lectures/pages/LecturesPage";
-import Assessment from "@/modules/assessments/pages/Assessment";
-import AssessmentQuiz from "@/modules/assessments/pages/AssessmentQuiz";
+// import Assessment from "@/modules/assessments/pages/Assessment";
+// import AssessmentQuiz from "@/modules/assessments/pages/AssessmentQuiz";
+// import PrimaryGradesQuiz from "@/modules/courses/pages/PrimaryGradesQuizz"
+import SecondaryQuizFlow from "../modules/assessments/pages/SecondaryQuizFlow";
+import PrimaryQuizFlow from "../modules/assessments/pages/PrimaryQuizFlow";
 import SkillsChaptersPage from "@/modules/courses/pages/SkillsChaptersPage";
 import PracticeCornerPage from "@/modules/practice/pages/PracticeCornerPage";
 import WorksheetsPage from "@/modules/worksheets/pages/WorksheetPage";
@@ -34,13 +37,16 @@ import AllProfessionalCourses from "@/modules/home/sections/AllProfessionalCours
 // ✅ Routers that pick the right view based on class type
 import ClassSubjectsRouter from "@/modules/courses/pages/ClassSubjectsRouter";
 import SubjectLecturesRouter from "@/modules/courses/pages/SubjectLecturesRouter";
-import PrimaryGradesQuiz from "@/modules/courses/pages/PrimaryGradesQuizz"
 import { MdcatApp } from "../mdcat";
 import { CosmokidApp } from "../cosmokid";
 import CosmoKidMobile from "../cosmokid/Cosmokidmobile";
 import { VocabApp } from "../vocab";
+import VocabMobileApp from "../vocab/Vocabmobileapp"; // adjust path to match your project
 import { OrigamiApp } from "../origami";
-import { MDCATmobile } from "../mdcat/components/MDCATmobile";
+import { DiscoverPakistanApp } from "../pakistan";
+import PakistanMobileApp from "../pakistan/PakistanMobileApp";
+import OrigamiMobileApp from "../origami/Origamimobileapp"; // adjust path
+// import { MDCATmobile } from "../mdcat/components/MDCATmobile";
 
 
 const AppRoutes = () => {
@@ -65,9 +71,11 @@ const AppRoutes = () => {
 
          
          <Route path="/:classSlug/:subjectSlug" element={<SubjectLecturesRouter />} />
-          <Route path="/:classSlug/quiz" element={<PrimaryGradesQuiz />} />
+          {/* <Route path="/:classSlug/quiz" element={<PrimaryGradesQuiz />} />
           <Route path="/assessment/" element={<Assessment />} />
-          <Route path="/assessment/:skillId" element={<AssessmentQuiz />} />
+          <Route path="/assessment/:skillId" element={<AssessmentQuiz />} /> */}
+          <Route path="/:classSlug/quiz" element={<PrimaryQuizFlow />} />
+<Route path="/assessment/1" element={<SecondaryQuizFlow />} />
           <Route
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}
@@ -82,8 +90,8 @@ const AppRoutes = () => {
           <Route path="/mza" element={<MzaPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/resource-player" element={<ResourcePlayer />} />
-          <Route path="/games" element={<GamesPage />} />
-          <Route path="/games/play" element={<PlayGamePage />} />
+        <Route path="/games/:type" element={<GamesPage />} />
+          <Route path="/games/:type/play/:game" element={<PlayGamePage />} />
         
           <Route path="/ai" element={<Chatbot />} />
         </Route>
@@ -96,14 +104,18 @@ const AppRoutes = () => {
         <Route path="/sub_enrollnow" element={<SubEnrollNow />} />
         <Route path="thanks-for-subscribing" element={<SuccessScreen />} />
        {/* // mdcat route */}
-<Route path="/mdcat/*" element={<MdcatApp />} />
-<Route path="/mdcat-mobile/*" element={<MDCATmobile />} />
+       <Route path="/mdcat/*" element={<MdcatApp />} />
+         {/* <Route path="/mdcat-mobile/*" element={<MDCATmobile />} /> */}
 
       {/* existing Zaheen routes */}
       <Route path="/cosmokid/*" element={<CosmokidApp />} />
-      <Route path="/cosmokid_mobile" element={<CosmoKidMobile />} />
+      <Route path="/cosmokid-mobile" element={<CosmoKidMobile />} />
        <Route path="/vocab/*" element={<VocabApp />} />
+       <Route path="/vocab-mobile/*" element={<VocabMobileApp />} />
      <Route path="/origami/*" element={<OrigamiApp />} />
+     <Route path="/pakistan/*" element={<DiscoverPakistanApp />} />
+       <Route path="/pakistan-mobile/*" element={<PakistanMobileApp />} />
+     <Route path="/origami-mobile/*" element={<OrigamiMobileApp />} />
 
 {/* AppRoutes.tsx mein */}
 

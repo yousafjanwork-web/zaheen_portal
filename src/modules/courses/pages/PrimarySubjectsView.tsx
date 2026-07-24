@@ -257,8 +257,7 @@ const FunGamesCard = ({
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.35, delay: index * 0.06 }}
-    onClick={() => navigate("/games")}
+onClick={() => navigate("/games/1-5")}
     className="group cursor-pointer rounded-3xl overflow-hidden flex flex-col"
     style={{
       background: "linear-gradient(145deg,#EEF2FF 0%,#E0E7FF 100%)",
@@ -297,7 +296,7 @@ const FunGamesCard = ({
           </span>
         </div>
         <button
-          onClick={(e) => { e.stopPropagation(); navigate("/games"); }}
+     onClick={(e) => { e.stopPropagation(); navigate("/games/1-5"); }}
           className="w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-110"
           style={{ background: "#3730A3" }}
         >

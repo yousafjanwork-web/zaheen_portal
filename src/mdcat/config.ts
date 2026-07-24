@@ -8,13 +8,16 @@
  *
  * MDCAT_AI_API   → AI APIs (chat, AI quiz generation)
  */
- 
+
 export const MDCAT_DB_API = "https://api.zaheen.com.pk/v2";
+
+// used local backend api for testing
+
+
 export const MDCAT_AI_API = "https://zai.zaheen.com.pk";
- 
+
 /** For database endpoints: quizzes, past papers, attempts, focus sessions, recommendations */
 export const mdcatApi = (path: string) => `${MDCAT_DB_API}${path}`;
- 
+
 /** For AI endpoints: chat, AI quiz generation */
 export const mdcatAiApi = (path: string) => `${MDCAT_AI_API}${path}`;
- 

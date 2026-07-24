@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useLessonsData } from "../context/LessonsContext";
 import Mascot from "../components/Mascot";
+import { useVocabBase } from "../hooks/useVocabBase";
 
 const juniorLevels = [
   "Beginner Explorer",
@@ -34,11 +35,11 @@ const seniorLevels = [
 export default function Home() {
   const { user } = useAuth();
   const { isLoggedIn } = useZaheenAuth();
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const location = useLocation();
+  const base = useVocabBase();
   const { lessons, isLoading, error } = useLessonsData();
   if (!user) return null;
-
   if (isLoading) {
     return (
       <div className="text-center py-20 text-slate-500 dark:text-slate-400">
@@ -55,7 +56,7 @@ export default function Home() {
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
-    navigate(`/vocab/lesson/${lessonId}`);
+   navigate(`${base}/lesson/${lessonId}`);
   };
   const levels = user.ageGroup === "junior" ? juniorLevels : seniorLevels;
   // ... rest of component stays the same
@@ -160,8 +161,8 @@ export default function Home() {
                 </span>
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-lime-200/60 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
               </button>
-              <Link
-                to="/vocab/courses"
+             <Link
+                to={`${base}/courses`}
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/15 backdrop-blur-md rounded-2xl font-bold hover:bg-white/25 transition-all border border-white/30 hover:scale-105"
               >
                 <BookOpen className="w-5 h-5" /> All Courses
@@ -347,8 +348,8 @@ export default function Home() {
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                 Keep it going to earn the 7-Day Streak badge!
               </p>
-              <Link
-                to="/vocab/dashboard"
+             <Link
+                to={`${base}/dashboard`}
                 className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-sm font-bold text-amber-700 dark:text-amber-300 shadow-sm hover:gap-2 hover:shadow-md transition-all"
               >
                 View Dashboard <ArrowRight className="w-3.5 h-3.5" />
@@ -367,37 +368,37 @@ export default function Home() {
           </h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
+        {[
             {
-              to: "/vocab/flashcards",
+              to: `${base}/flashcards`,
               label: "Flashcards",
               sub: "Quick review",
               icon: "🃏",
               color: "from-cyan-500 to-blue-500",
             },
             {
-              to: "/vocab/story-studio",
+              to: `${base}/story-studio`,
               label: "Story Studio",
               sub: "Write & publish",
               icon: "✍️",
               color: "from-pink-500 to-rose-500",
             },
             {
-              to: "/vocab/word-garden",
+              to: `${base}/word-garden`,
               label: "Word Garden",
               sub: "Grow words",
               icon: "🌱",
               color: "from-lime-500 to-green-500",
             },
             {
-              to: "/vocab/leaderboard",
+              to: `${base}/leaderboard`,
               label: "Leaderboard",
               sub: "Compete!",
               icon: "🏆",
               color: "from-amber-500 to-orange-500",
             },
             {
-              to: "/vocab/quests",
+              to: `${base}/quests`,
               label: "Daily Quests",
               sub: "Bonus XP",
               icon: "🎯",
@@ -440,8 +441,8 @@ export default function Home() {
             <span className="w-1.5 h-7 rounded-full bg-gradient-to-b from-blue-500 to-indigo-600" />
             Your Lessons
           </h2>
-          <Link
-            to="/vocab/courses"
+        <Link
+            to={`${base}/courses`}
             className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-lime-600 transition-colors inline-flex items-center gap-1"
           >
             View All <ArrowRight className="w-3.5 h-3.5" />

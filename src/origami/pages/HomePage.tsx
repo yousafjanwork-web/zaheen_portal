@@ -5,13 +5,13 @@ import { ageGroups, whyOrigami } from '../data/crafts';
 import { useApi } from '../hooks/useApi';
 import { slugify } from '../utils/slugify';
 import kids from "../../assets/images/hero-kids-origami.jpg"
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import {
   fetchCategories,
   fetchFeaturedCrafts,
   fetchTodaysCraft,
   fetchDifficultyLevels,
 } from '../services/origamiApi';
-
 interface HomePageProps {
   darkMode: boolean;
 }
@@ -41,6 +41,7 @@ const SkeletonCard = ({ darkMode }: { darkMode: boolean }) => (
 );
 
 const HomePage = ({ darkMode }: HomePageProps) => {
+  const base = useOrigamiBase();
   const { data: categories, loading: catsLoading } = useApi(fetchCategories, []);
   const { data: featuredCrafts, loading: craftsLoading } = useApi(fetchFeaturedCrafts, []);
   const { data: todaysCraft, loading: todayLoading } = useApi(fetchTodaysCraft, []);
@@ -87,8 +88,8 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                 Perfect for kids aged 4-14! 🎨
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link to="/origami/library">
+             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link to={`${base}/library`}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -98,7 +99,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                     Start Learning
                   </motion.button>
                 </Link>
-                <Link to="/origami/category/animals">
+                <Link to={`${base}/category/animals`}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -192,7 +193,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.05, duration: 0.5 }}
                   >
-                    <Link to={`/origami/category/${cat.id}`}>
+                    <Link to={`${base}/category/${cat.id}`}>
                       <div className={`card-hover rounded-[1.5rem] p-5 sm:p-6 text-center group cursor-pointer bg-gradient-to-br ${cat.gradient} text-white relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300" />
                         <div className="absolute -bottom-4 -right-4 text-6xl opacity-10 group-hover:opacity-20 transition-opacity">
@@ -228,7 +229,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                 Most loved crafts by our young origami artists
               </p>
             </div>
-            <Link to="/origami/library" className="hidden sm:flex items-center gap-2 text-primary font-nunito font-bold hover:gap-3 transition-all">
+          <Link to={`${base}/library`} className="hidden sm:flex items-center gap-2 text-primary font-nunito font-bold hover:gap-3 transition-all">
               View All <ChevronRight size={18} />
             </Link>
           </motion.div>
@@ -244,7 +245,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1, duration: 0.5 }}
                   >
-                   <Link to={`/origami/craft/${slugify(craft.title)}`}>
+                 <Link to={`${base}/craft/${slugify(craft.title)}`}>
                       <div className={`card-hover rounded-[1.5rem] overflow-hidden ${
                         darkMode ? 'bg-[#16213e]' : 'bg-white'
                       } shadow-md hover:shadow-xl transition-all duration-300`}>
@@ -300,8 +301,8 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                 ))}
           </div>
 
-          <div className="sm:hidden text-center mt-8">
-            <Link to="/origami/library" className="inline-flex items-center gap-2 text-primary font-nunito font-bold text-lg">
+        <div className="sm:hidden text-center mt-8">
+            <Link to={`${base}/library`} className="inline-flex items-center gap-2 text-primary font-nunito font-bold text-lg">
               View All Videos <ChevronRight size={20} />
             </Link>
           </div>
@@ -350,7 +351,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                       ))}
                     </div>
 
-                 <Link to={`/origami/craft/${slugify(todaysCraft.title)}`}>
+                <Link to={`${base}/craft/${slugify(todaysCraft.title)}`}>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -408,7 +409,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                     {...childFade}
                     transition={{ delay: index * 0.15 }}
                   >
-                    <Link to="/origami/library">
+                  <Link to={`${base}/library`}>
                       <div className={`card-hover rounded-[1.5rem] p-8 text-center ${
                         darkMode ? 'bg-[#16213e]' : 'bg-white'
                       } shadow-md border ${
@@ -461,7 +462,7 @@ const HomePage = ({ darkMode }: HomePageProps) => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link to="/origami/library">
+              <Link to={`${base}/library`}>
                   <div className={`card-hover rounded-[1.5rem] p-6 sm:p-8 text-center ${
                     darkMode ? 'bg-[#16213e]' : 'bg-white'
                   } shadow-md border ${darkMode ? 'border-gray-800' : 'border-gray-100'}`}>

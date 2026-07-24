@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import mascot from "@/assets/images/mascot.png";
 
 // ─── KG Game card images ───────────────────────────────────────
@@ -10,9 +10,7 @@ import urduAnimalImg from "@/assets/images/games/kg/cards/urdu-animal-alphabet.p
 
 const GamesPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const query = new URLSearchParams(location.search);
-  const type = query.get("type") || "kg";
+  const { type = "kg" } = useParams();
 
   /* =========================
      🎮 KG GAMES
@@ -102,9 +100,7 @@ const GamesPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* ── Featured card ── */}
             <div
-              onClick={() =>
-                navigate(`/games/play?game=${featured.id}&type=${type}`)
-              }
+              onClick={() => navigate(`/games/${type}/play/${featured.id}`)}
               className="lg:col-span-2 rounded-3xl overflow-hidden cursor-pointer group relative"
               style={{
                 background: "#ffffff",
@@ -142,7 +138,6 @@ const GamesPage = () => {
                 </div>
 
                 {/* ✅ Image side — white background, image is a floating rounded square */}
-                {/* Matches screenshot 1: white bg, image centered with padding, rounded corners */}
                 <div
                   className="sm:w-64 flex items-center justify-center p-5 relative"
                   style={{ background: "#ffffff", minHeight: "200px" }}
@@ -156,7 +151,7 @@ const GamesPage = () => {
                       maxWidth: "220px",
                       height: "220px",
                       objectFit: "cover",
-                      borderRadius: "20px", // ✅ rounded square like screenshot 1
+                      borderRadius: "20px",
                       display: "block",
                     }}
                   />
@@ -168,9 +163,7 @@ const GamesPage = () => {
             {gridGames[0] && (
               <TopRightCard
                 game={gridGames[0]}
-                onClick={() =>
-                  navigate(`/games/play?game=${gridGames[0].id}&type=${type}`)
-                }
+                onClick={() => navigate(`/games/${type}/play/${gridGames[0].id}`)}
               />
             )}
           </div>
@@ -181,9 +174,7 @@ const GamesPage = () => {
               <BottomCard
                 key={g.id}
                 game={g}
-                onClick={() =>
-                  navigate(`/games/play?game=${g.id}&type=${type}`)
-                }
+                onClick={() => navigate(`/games/${type}/play/${g.id}`)}
               />
             ))}
           </div>
@@ -287,7 +278,7 @@ const GamesPage = () => {
           {games.map((g) => (
             <div
               key={g.id}
-              onClick={() => navigate(`/games/play?game=${g.id}&type=${type}`)}
+              onClick={() => navigate(`/games/${type}/play/${g.id}`)}
               className="group relative cursor-pointer"
             >
               <div
@@ -339,7 +330,7 @@ const GamesPage = () => {
           {games.map((g) => (
             <div
               key={g.id}
-              onClick={() => navigate(`/games/play?game=${g.id}&type=${type}`)}
+              onClick={() => navigate(`/games/${type}/play/${g.id}`)}
               className="group relative cursor-pointer"
             >
               <div
@@ -394,8 +385,6 @@ interface CardGame {
 }
 
 // ─── Top right card (How Many) ────────────────────────────────
-// ✅ Same style as bottom cards — full cover image on top, text below
-// ✅ Same fixed image height as bottom cards for consistency
 function TopRightCard({
   game,
   onClick,
@@ -414,11 +403,10 @@ function TopRightCard({
         minHeight: "280px",
       }}
     >
-      {/* ✅ Image fills top area fully like screenshot 2 — cover style, rounded top only */}
       <div
         className="w-full overflow-hidden flex-shrink-0"
         style={{
-          height: "170px", // ✅ same as bottom cards
+          height: "170px",
           borderRadius: "24px 24px 0 0",
           backgroundColor: game.bg,
         }}
@@ -431,7 +419,6 @@ function TopRightCard({
         />
       </div>
 
-      {/* Text + button */}
       <div className="p-4 flex flex-col gap-1 flex-1">
         <h2
           className="font-black text-gray-800 text-base leading-tight"
@@ -463,8 +450,6 @@ function TopRightCard({
 }
 
 // ─── Bottom row card ──────────────────────────────────────────
-// ✅ Image covers the top of the card fully — matches screenshot 2
-// ✅ All 3 bottom cards use SAME image height (170px) and SAME card minHeight (320px)
 function BottomCard({
   game,
   onClick,
@@ -480,16 +465,14 @@ function BottomCard({
         background: "#ffffff",
         border: "1.5px solid #e2e8f0",
         boxShadow: "0 4px 24px -4px rgba(0,0,0,0.08)",
-        minHeight: "320px", // ✅ all 3 same height
+        minHeight: "320px",
       }}
     >
-      {/* ✅ Image fills top — full width cover, rounded top corners only */}
-      {/* ✅ All 3 cards: same image height 170px */}
       <div
         className="w-full overflow-hidden flex-shrink-0"
         style={{
-          height: "170px", // ✅ same for all 3
-          borderRadius: "24px 24px 0 0", // ✅ rounded top only, straight bottom
+          height: "170px",
+          borderRadius: "24px 24px 0 0",
           backgroundColor: game.bg,
         }}
       >
@@ -501,7 +484,6 @@ function BottomCard({
         />
       </div>
 
-      {/* Text + button */}
       <div className="p-4 flex flex-col gap-1 flex-1">
         <h2
           className="font-black text-gray-800 text-base leading-tight"

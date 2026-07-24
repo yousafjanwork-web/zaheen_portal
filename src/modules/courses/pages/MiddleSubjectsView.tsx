@@ -9,7 +9,7 @@ import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress"; // ← same hook as MiddleSubjectDetailView
 import {
   ChevronRight, BookOpen, Zap, FileText, BookMarked,
-  BarChart2, Calendar, Play,
+  BarChart2, Calendar, Play, Gamepad2,
   FlaskConical, Atom, Leaf, Languages, Sigma, Landmark, Globe,
   Calculator, Cpu,
 } from "lucide-react";
@@ -600,8 +600,11 @@ const handleSubject = (subject: any) =>
           <button className="ms-qr-btn-solid" onClick={() => navigate("/worksheets/0")}>
             <FileText size={14} /> {isUrdu ? "ورک شیٹس" : "Worksheets"}
           </button>
-      <button className="ms-qr-btn-outline" onClick={() => navigate(`/${classSlug}/quiz`)}>
+    <button className="ms-qr-btn-outline" onClick={() => navigate(`/assessment/1`)}>
             <BookMarked size={14} /> {isUrdu ? "باب کے کوئز" : "Chapter Quizzes"}
+          </button>
+         <button className="ms-qr-btn-outline" onClick={() => navigate("/games/6-8")}>
+            <Gamepad2 size={14} /> {isUrdu ? "کھیل" : "Games"}
           </button>
         </div>
 

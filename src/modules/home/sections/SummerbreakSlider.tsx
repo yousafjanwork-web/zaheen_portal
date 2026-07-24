@@ -11,6 +11,7 @@ import "swiper/css/pagination";
 
 // TODO: point these at your actual files in the images folder.
 import cosmokidImg from "@/assets/images/solar2.png";
+import pakdesk from "@/assets/images/pakdesk.png";
 
 
 
@@ -24,6 +25,12 @@ const lang = localStorage.getItem("lang") || "en";
 // Static modules — update names/paths/images as needed.
 // "path" is where the card navigates to on click.
 const modules = [
+   {
+    name: "🏔️ Let's Discover Pakistan",
+    urdu_name: " 🏔️ آئیے پاکستان کو دریافت کریں",
+    path: "/pakistan",
+    image: pakdesk,
+  },
     {
     name: "📚 Grammar Adventure ",
     urdu_name: " 📚 گرامر کی مہم ",
@@ -43,6 +50,7 @@ const modules = [
     path: "/cosmokid",
     image: cosmokidImg,
   },
+ 
   
 ];
 

@@ -4,6 +4,7 @@ import { Play, Clock, Heart, ArrowLeft } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { fetchCategories, fetchCraftsByCategory } from '../services/origamiApi';
 import { slugify } from '../utils/slugify';
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 
 interface CategoryPageProps {
   darkMode: boolean;
@@ -11,6 +12,7 @@ interface CategoryPageProps {
 
 const CategoryPage = ({ darkMode }: CategoryPageProps) => {
   const { id } = useParams<{ id: string }>();
+  const base = useOrigamiBase();
 
   const { data: categories, loading: catsLoading } = useApi(fetchCategories, []);
   const { data: crafts, loading: craftsLoading } = useApi(
@@ -34,7 +36,7 @@ const CategoryPage = ({ darkMode }: CategoryPageProps) => {
           </div>
         )}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <Link to="/origami" className="inline-flex items-center gap-2 text-white/80 hover:text-white font-nunito font-semibold mb-6 transition-colors">
+         <Link to={base} className="inline-flex items-center gap-2 text-white/80 hover:text-white font-nunito font-semibold mb-6 transition-colors">
             <ArrowLeft size={18} />
             Back to Home
           </Link>
@@ -70,7 +72,7 @@ const CategoryPage = ({ darkMode }: CategoryPageProps) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
             {(categories ?? []).map((cat) => (
-              <Link key={cat.id} to={`/origami/category/${cat.id}`}>
+             <Link key={cat.id} to={`${base}/category/${cat.id}`}>
                 <button className={`flex items-center gap-2 px-4 py-2 rounded-xl font-nunito font-semibold text-sm whitespace-nowrap transition-all ${
                   cat.id === id
                     ? 'bg-primary text-white'
@@ -108,7 +110,7 @@ const CategoryPage = ({ darkMode }: CategoryPageProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-               <Link to={`/origami/craft/${slugify(craft.title)}`}>
+              <Link to={`${base}/craft/${slugify(craft.title)}`}>
                   <div className={`card-hover rounded-[1.5rem] overflow-hidden ${
                     darkMode ? 'bg-[#16213e]' : 'bg-white'
                   } shadow-md`}>

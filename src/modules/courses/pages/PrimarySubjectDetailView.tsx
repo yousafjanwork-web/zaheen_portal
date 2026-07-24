@@ -881,7 +881,7 @@ const exitPlayer = useCallback(() => {
                     {/* Quiz game card */}
                     <div
                       style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }}
-                      onClick={() => navigate(`/class/${classId}/quiz`)}
+                      onClick={() => navigate(`/${classSlug}/quiz`)}
                     >
                       <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Gamepad2 size={26} style={{ color: "#fff" }} />
@@ -895,7 +895,7 @@ const exitPlayer = useCallback(() => {
                         </p>
                         <button
                           style={{ background: "#065F46", color: "#fff", border: "none", borderRadius: 11, padding: "10px 22px", fontWeight: 800, fontSize: ".88rem", cursor: "pointer", fontFamily: "'Nunito',sans-serif", display: "inline-flex", alignItems: "center", gap: 6 }}
-                          onClick={(e) => { e.stopPropagation(); navigate(`/class/${classId}/quiz`); }}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/${classSlug}/quiz`); }}
                         >
                           {isUrdu ? "کھیلنا شروع کریں" : "Start Playing"} <ChevronRight size={15} />
                         </button>

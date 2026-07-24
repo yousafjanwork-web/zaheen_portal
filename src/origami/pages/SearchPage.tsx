@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Search, Play, Clock, Heart } from 'lucide-react';
 import { useApi } from '../hooks/useApi';
 import { fetchCategories, searchCrafts } from '../services/origamiApi';
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import type { Craft } from '../data/crafts';
 
 interface SearchPageProps {
@@ -13,6 +14,7 @@ interface SearchPageProps {
 const suggestions = ['Crane', 'Butterfly', 'Dog', 'Cat', 'Heart', 'Star', 'Airplane', 'Flower', 'Fish', 'Dinosaur'];
 
 const SearchPage = ({ darkMode }: SearchPageProps) => {
+  const base = useOrigamiBase();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
@@ -117,8 +119,8 @@ const SearchPage = ({ darkMode }: SearchPageProps) => {
               Browse Categories
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {(categories ?? []).slice(0, 5).map((cat) => (
-                <Link key={cat.id} to={`/origami/category/${cat.id}`}>
+            {(categories ?? []).slice(0, 5).map((cat) => (
+                <Link key={cat.id} to={`${base}/category/${cat.id}`}>
                   <div className={`card-hover rounded-2xl p-4 text-center bg-gradient-to-br ${cat.gradient} text-white`}>
                     <span className="text-3xl block mb-2">{cat.emoji}</span>
                     <h4 className="font-nunito font-bold text-sm">{cat.name}</h4>
@@ -136,8 +138,8 @@ const SearchPage = ({ darkMode }: SearchPageProps) => {
               Categories
             </p>
             <div className="flex flex-wrap gap-3">
-              {matchingCategories.map((cat) => (
-                <Link key={cat.id} to={`/origami/category/${cat.id}`}>
+             {matchingCategories.map((cat) => (
+                <Link key={cat.id} to={`${base}/category/${cat.id}`}>
                   <div className={`card-hover flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r ${cat.gradient} text-white font-nunito font-bold text-sm`}>
                     <span className="text-2xl">{cat.emoji}</span>
                     {cat.name}
@@ -174,7 +176,7 @@ const SearchPage = ({ darkMode }: SearchPageProps) => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Link to={`/origami/craft/${craft.id}`}>
+                     <Link to={`${base}/craft/${craft.id}`}>
                         <div className={`card-hover flex gap-4 p-4 rounded-2xl ${
                           darkMode ? 'bg-[#16213e]' : 'bg-white'
                         } shadow-md`}>

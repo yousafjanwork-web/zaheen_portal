@@ -4,20 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import {
-  Database,
-  Sparkles,
-  TrendingUp,
-  BookMarked,
-  BookOpen,
-  Layers,
-  Award,
-  ChevronRight,
-  Compass,
-  Activity,
-  Stethoscope,
-  HelpCircle,
-} from "lucide-react";
+
 import { motion, AnimatePresence } from "motion/react";
 import {
   PerformanceStats,
@@ -25,6 +12,8 @@ import {
   Quiz,
   MDCATSubject,
 } from "./types";
+import { Navigate, useLocation, useParams } from "react-router-dom";
+
 import { mdcatApi } from "./config";
 import Dashboard from "./components/Dashboard";
 import QuizSession from "./components/QuizSession";
@@ -33,7 +22,13 @@ import PastPapers from "./components/PastPapers";
 import ZaheenLogo from "./components/ZaheenLogo";
 // import FocusTimer from "./components/FocusTimer";
 import StudyNotes from "./components/StudyNotes";
-import FAQ from "./components/FAQ";
+import FAQ from "./components/Faq";
+import Footer from "./components/Footer";
+import ProgressBar from "./components/ProgressBar";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import Header from "./components/Header";
+import LoadingFrame from "./components/LoadingFrame";
+import AiTutorPage from "./components/AiTutorPage";
 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
@@ -58,6 +53,137 @@ const mapQuestion = (q: any) => ({
   subTopic: q.subTopic ?? q.sub_topic ?? "",
 });
 
+function PageTransition({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      style={{ gridArea: "1 / 1" }}
+      className="w-full min-w-0 h-full overflow-hidden"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function AIQuizRoute({ quiz, onAttemptFinished }: {
+  quiz: Quiz | null;
+  onAttemptFinished: (...args: any[]) => void;
+
+}) {
+  const navigate = useNavigate();
+  if (!quiz) return <Navigate to="/mdcat/ai-prep" replace />;
+  return (
+    <QuizSession
+      quiz={quiz}
+      onBack={() => navigate("/mdcat/ai-prep")}
+      onAttemptFinished={onAttemptFinished}
+      
+    />
+  );
+}
+
+ function QuizSessionRoute({
+  
+  loading,
+  onAttemptFinished,
+ 
+}: {
+  quizzes: Quiz[];
+  loading: boolean;
+  onAttemptFinished: (...args: any[]) => void;
+
+}) {
+  const { quizId } = useParams();
+  const navigate = useNavigate();
+  const [fullQuiz, setFullQuiz] = useState<Quiz | null>(null);
+  const [fetchingQuiz, setFetchingQuiz] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFetchingQuiz(true);
+
+    fetch(mdcatApi(`/api/mdcat/quizzes/${quizId}`))
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        const raw = json.data ?? json;
+        setFullQuiz({
+          ...mapQuiz(raw),
+          questions: (raw.questions || []).map(mapQuestion),
+        });
+      })
+      .catch((e) => {
+        console.error("Failed to load quiz", e);
+        if (!cancelled) setFullQuiz(null);
+      })
+      .finally(() => {
+        if (!cancelled) setFetchingQuiz(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [quizId]);
+
+  if (loading || fetchingQuiz) {
+    return <LoadingFrame />;
+  }
+
+  if (!fullQuiz) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <QuizSession
+      quiz={fullQuiz}
+      onBack={() => navigate("/mdcat/past-papers")}
+      onAttemptFinished={onAttemptFinished}
+     
+    />
+  );
+}
+
+interface Question {
+  quiz_id: 9999;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: "A" | "B" | "C" | "D";
+  subTopic?: string;
+  explanation?: string;
+}
+
+async function addNewAIQuestions(questions:Question[])
+{
+    const url = mdcatApi("/api/mdcat/quizzes/AddAIQuestions");
+    try
+    {
+    const res = await fetch(url, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ questions }), // wrap it to match req.body.questions
+});
+    if(!res.ok)
+    {
+      console.log(await res.json())
+    }
+    }
+    catch(e)
+    {
+      alert("could not upload questions");
+      console.log(e);
+    }
+
+  
+    
+
+
+}
 export default function MdcatApp() {
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "ai-generator" | "past-papers" | "notes" | "faq"
@@ -65,6 +191,9 @@ export default function MdcatApp() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Performance tracking states
   const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({
@@ -82,7 +211,6 @@ export default function MdcatApp() {
 
   // UI state
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Load all foundational data on startup
   const fetchAllData = async () => {
@@ -145,26 +273,9 @@ export default function MdcatApp() {
 
   // Fetch a single quiz with its full list of detailed questions
   const handleSelectQuiz = async (id: number) => {
-    setLoading(true);
-    try {
-      const res = await fetch(mdcatApi(`/api/mdcat/quizzes/${id}`));
-      if (res.ok) {
-        const json = await res.json();
-        // Handle both { data: {} } and direct quiz object responses
-       const raw = json.data ?? json;
-const quizData: Quiz = {
-  ...mapQuiz(raw),
-  questions: (raw.questions || []).map(mapQuestion),
-};
-setActiveQuiz(quizData);
-        setSelectedQuizId(id);
-      }
-    } catch (e) {
-      console.error("Failed to load quiz details", e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      navigate(`/mdcat/quiz/${id}`);
+      
+    };
   // Callback when a dynamic AI quiz is compiled successfully
   const handleQuizGenerated = (newQuiz: Quiz) => {
     // AI generator returns { success: true, data: {...} } — safely unwrap
@@ -176,6 +287,9 @@ setActiveQuiz(quizData);
     setQuizzes((prev) => [quiz, ...prev]);
     setActiveQuiz(quiz);
     setSelectedQuizId(quiz.id);
+    addNewAIQuestions(newQuiz.questions);
+    navigate("/mdcat/ai-quiz");
+    
   };
 
   // Refresh stats after attempt is saved
@@ -206,274 +320,109 @@ setActiveQuiz(quizData);
     0,
     Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
+
+
+  // Small wrapper so every page gets the same enter/exit motion without repeating it 5 times
+ 
+
+  // Quiz session needs the id from the URL, not from local state
+
   return (
-    <div className="min-h-screen bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200">
+    <div className="min-h-screen  bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200">
       {/* Platform Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-sky-100 px-6 py-4 flex items-center justify-between card-shadow">
-        <div className="flex items-center gap-1.5 matches-logo">
-          <ZaheenLogo className="w-16 h-10 -ml-2 select-none" />
-          <div className="pl-1">
-            <h1 className="text-sm md:text-base font-black tracking-tight text-sky-900 uppercase">
-              zaheen MDCAT Prep
-            </h1>
-            <p className="text-[9px] text-sky-400 font-bold tracking-widest uppercase">
-              Pakistan Curriculum Standard
-            </p>
-          </div>
-        </div>
+      <Header setActiveQuiz={setActiveQuiz} activeTab={activeTab} setActiveTab={setActiveTab} daysLeft={daysLeft} selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-[10px] font-black text-sky-400 tracking-wider">
-              EXAM IN
-            </p>
-            <p className="text-xs md:text-sm font-black text-sky-900">
-              {daysLeft} DAYS
-            </p>
-          </div>
-          <div className="w-9 h-9 rounded-full bg-sky-100 border-2 border-white shadow-sm flex items-center justify-center font-display text-xs font-black text-sky-800">
-            ZH
-          </div>
-        </div>
-      </header>
 
-      {/* Main Full-Width Layout Area */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Navigation Rails Panel */}
-        <nav className="lg:col-span-3 space-y-4 shrink-0">
-          <div className="bg-white p-6 rounded-3xl border border-sky-100 card-shadow space-y-4">
-            <h3 className="text-[10px] uppercase font-black text-sky-400 tracking-widest">
-              Navigation
-            </h3>
-
-            <div className="space-y-1">
-              <button
-                onClick={() => {
-                  setActiveTab("dashboard");
-                  setSelectedQuizId(null);
-                  setActiveQuiz(null);
-                }}
-                className={`w-full flex items-center justify-between gap-3 p-3 text-xs rounded-xl transition-all ${activeTab === "dashboard" && !selectedQuizId ? "bg-sky-600 text-white font-black uppercase tracking-wider card-shadow" : "text-sky-950 font-black uppercase tracking-wider hover:bg-sky-50/50"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("ai-generator");
-                  setSelectedQuizId(null);
-                  setActiveQuiz(null);
-                }}
-                className={`w-full flex items-center justify-between gap-3 p-3 text-xs rounded-xl transition-all ${activeTab === "ai-generator" && !selectedQuizId ? "bg-sky-600 text-white font-black uppercase tracking-wider card-shadow" : "text-sky-950 font-black uppercase tracking-wider hover:bg-sky-50/50"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>AI Prep Exams</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("past-papers");
-                  setSelectedQuizId(null);
-                  setActiveQuiz(null);
-                }}
-                className={`w-full flex items-center justify-between gap-3 p-3 text-xs rounded-xl transition-all ${activeTab === "past-papers" && !selectedQuizId ? "bg-sky-600 text-white font-black uppercase tracking-wider card-shadow" : "text-sky-950 font-black uppercase tracking-wider hover:bg-sky-50/50"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <BookMarked className="w-4 h-4" />
-                  <span>MDCAT Past Papers</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("notes");
-                  setSelectedQuizId(null);
-                  setActiveQuiz(null);
-                }}
-                className={`w-full flex items-center justify-between gap-3 p-3 text-xs rounded-xl transition-all ${activeTab === "notes" && !selectedQuizId ? "bg-sky-600 text-white font-black uppercase tracking-wider card-shadow" : "text-sky-950 font-black uppercase tracking-wider hover:bg-sky-50/50"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  <span>Syllabus Study Notes</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("faq");
-                  setSelectedQuizId(null);
-                  setActiveQuiz(null);
-                }}
-                className={`w-full flex items-center justify-between gap-3 p-3 text-xs rounded-xl transition-all ${activeTab === "faq" && !selectedQuizId ? "bg-sky-600 text-white font-black uppercase tracking-wider card-shadow" : "text-sky-950 font-black uppercase tracking-wider hover:bg-sky-50/50"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <HelpCircle className="w-4 h-4" />
-                  <span>FAQ</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-            </div>
-          </div>
-
-          {/* Pomodoro Focus Timer */}
-          {/* <FocusTimer onSessionLogged={fetchAllData} /> */}
-
-          {/* Quick Stats sidebar widget */}
-          <div className="hidden lg:block bg-white p-6 rounded-3xl border border-sky-100 card-shadow space-y-4">
-            <h4 className="text-[10px] uppercase font-black text-sky-400 tracking-widest">
-              Syllabus Check
-            </h4>
-            <div className="space-y-3.5">
-              {[
-                "Biology",
-                "Chemistry",
-                "Physics",
-                "English",
-                "Logical Reasoning",
-              ].map((name) => {
-                const pct =
-                  performanceStats.subjectBreakdown.find(
-                    (s) => s.subject === name,
-                  )?.percentage || 0;
-                return (
-                  <div key={name} className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-semibold text-slate-600">
-                      <span>{name}</span>
-                      <span className="font-mono-custom text-slate-900">
-                        {pct.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${getSubjectColorBadge(name)}`}
-                        style={{ width: `${pct}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </nav>
-
-        {/* Right Main Content Panel */}
-        <main className="lg:col-span-9 space-y-6">
-          <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div
-                key="loading-frame"
-                className="p-16 text-center bg-white border border-brand-100 rounded-3xl min-h-[400px] flex flex-col items-center justify-center space-y-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin"></div>
-                <p className="text-xs text-slate-500 font-mono-custom">
-                  Reading syllabus indices, preparing test engines...
-                </p>
-              </motion.div>
-            ) : selectedQuizId && activeQuiz ? (
-              <motion.div
-                key="quiz-session-frame"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <QuizSession
-                  quiz={activeQuiz}
-                  onBack={() => {
-                    setSelectedQuizId(null);
-                    setActiveQuiz(null);
-                    setActiveTab("dashboard");
-                  }}
-                  onAttemptFinished={handleAttemptFinished}
-                  refreshData={fetchAllData}
-                />
-              </motion.div>
-            ) : activeTab === "dashboard" ? (
-              <motion.div
-                key="dashboard-frame"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <Dashboard
-                  stats={performanceStats}
-                  recommendations={recommendations}
-                  onStartGenQuiz={() => setActiveTab("ai-generator")}
-                  onSelectQuiz={handleSelectQuiz}
-                  availableQuizzes={quizzes}
-                  refreshData={fetchAllData}
-                />
-              </motion.div>
-            ) : activeTab === "ai-generator" ? (
-              <motion.div
-                key="ai-generator-frame"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <AIQuizGenerator
-                  onQuizGenerated={handleQuizGenerated}
-                  onBack={() => setActiveTab("dashboard")}
-                />
-              </motion.div>
-            ) : activeTab === "past-papers" ? (
-              <motion.div
-                key="past-papers-frame"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <PastPapers quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
-              </motion.div>
-            ) : activeTab === "notes" ? (
-              <motion.div
-                key="study-notes-frame"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <StudyNotes
-                  onSelectQuiz={handleSelectQuiz}
-                  onBack={() => setActiveTab("dashboard")}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="faq-frame"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <FAQ onBack={() => setActiveTab("dashboard")} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
-      </div>
-
-      {/* Portal Footer */}
-      <footer className="mt-auto border-t border-brand-100 bg-white/50 py-5 text-center text-slate-400 text-[10px] space-y-1">
-        <p className="font-semibold text-slate-500 flex items-center justify-center gap-1">
-          <Stethoscope className="w-3.5 h-3.5 text-brand-500" /> zaheen MDCAT
-          Prep — Pakistan's elite practice and real-time AI Tutoring engine for
-          UHS Lahore, KMU & Sindh entry.
-        </p>
-        <p className="font-mono-custom text-slate-450 text-[9px]">
-          Zaheen AI Advisor continuously diagnoses performance reports to
-          optimize your study recommendations.
-        </p>
-      </footer>
-    </div>
+<div className="grid flex-1 grid-rows-[minmax(0,1fr)] overflow-x-hidden min-h-0">  <AnimatePresence mode="wait">
+    <Routes location={location} key={location.pathname}>
+    <Route
+      path="/study-notes/*"
+      element={
+        <PageTransition>
+          <StudyNotes onSelectQuiz={handleSelectQuiz} onBack={() => navigate("/")} />
+        </PageTransition>
+      }
+      />
+    <Route
+      path="/past-papers"
+      element={
+        <PageTransition>
+          {loading?<LoadingFrame/>:
+          <PastPapers quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
+        }
+          </PageTransition>
+      }
+      />
+    <Route
+      path="/ai-prep"
+      element={
+        <PageTransition>
+          <AIQuizGenerator onQuizGenerated={handleQuizGenerated} onBack={() => navigate("/")} setActiveQuiz={setActiveQuiz}/>
+        </PageTransition>
+      }
+      />
+    <Route path="/ai-quiz"
+    element={
+      <PageTransition>
+       <AIQuizRoute 
+         quiz={activeQuiz}
+         onAttemptFinished={handleAttemptFinished}
+        
+         />
+      </PageTransition>
+      }
+      />
+    <Route
+      path="/faq"
+      element={
+        <PageTransition>
+          <FAQ onBack={() => navigate("/mdcat")} />
+        </PageTransition>
+      }
+      />
+    <Route
+  path="/quiz/:quizId"
+  element={
+    <PageTransition>
+      <QuizSessionRoute
+        
+        loading={loading}
+        quizzes={quizzes}
+        onAttemptFinished={handleAttemptFinished}
+        
+        
+        />
+    </PageTransition>
+  }
+/>
+<Route
+  path="/"
+  element={
+    <PageTransition>
+      {loading ? (
+        <LoadingFrame />
+      ) : (
+        <Dashboard
+        testDate={examDate}
+        setActiveTab={setActiveTab}
+        performanceStats={performanceStats}
+        getSubjectColorBadge={getSubjectColorBadge}
+        />
+      )}
+    </PageTransition>
+  }
+/>
+          <Route element={
+            <PageTransition>
+              <div className="h-screen" >
+            <AiTutorPage  />
+              </div>
+            </PageTransition>
+            } path="/ai-tutor"/>
+</Routes>
+</AnimatePresence>
+</div>
+      <Footer />
+  </div>
   );
 }

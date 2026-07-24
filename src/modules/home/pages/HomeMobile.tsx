@@ -1,16 +1,13 @@
 import MobileMarketingBanner from "@/modules/home/sections/MobileMarketingBanner";
 import MobileHeader from "@/modules/shared/components/MobileHeader";
 import PromoSlider from "@/modules/home/sections/PromoSlider";
-
-
 import HeroMobile from "@/modules/home/sections/HeroMobile";
 import BrowseByGrade from "@/modules/home/sections/BrowseByGrade";
 import ProfessionalCourses from "@/modules/home/sections/ProfessionalCourses";
 import Pricing from "@/modules/home/sections/Pricing";
 import CTASection from "@/modules/home/sections/CTASection";
 import MDCATBanner from "../sections/MDCATMobileBanner";
-// import SummerCampBanner from "../sections/SummerCampMobile";
-// import OrigamiCampMobile from "../sections/OrigamiMobile";
+import ZaheenAppMobile from "../sections/ZaheenAppMobile"
 import SummerBreak from "../sections/SummerbreakSlider"
 const HomeMobile = () => {
   return (
@@ -21,12 +18,10 @@ const HomeMobile = () => {
       <PromoSlider />
       <BrowseByGrade />
       <SummerBreak/>
-       {/* <SummerCampBanner/> */}
-      {/* <OrigamiCampMobile/> */}
       <ProfessionalCourses />
       <MDCATBanner/>
+      <ZaheenAppMobile />
       <Pricing />
-
       <CTASection />
     </>
   );

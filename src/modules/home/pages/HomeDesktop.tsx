@@ -4,8 +4,7 @@ import ProfessionalCourses from "../sections/ProfessionalCourses";
 import Pricing from "../sections/Pricing";
 import CTASection from "../sections/CTASection";
 import MDCATDesktopBanner from "../sections/MDCATDesktopBanner";
-// import SummerCampBanner from "../sections/SummerCampDesktop";
-// import OrigamiCampBanner from "../sections/OrigamiDesktop";
+import ZaheenAppDesktop from "../sections/ZaheenAppDesktop"
 import SummerBreak from "../sections/SummerbreakSlider"
 
 const HomeDesktop = () => {
@@ -14,12 +13,9 @@ const HomeDesktop = () => {
       <HeroSlider />
       <BrowseByGrade />
       <SummerBreak/>
-        {/* <SummerCampBanner/> */}
-          {/* <OrigamiCampBanner/> */}
       <ProfessionalCourses />
       <MDCATDesktopBanner/>
-      
-
+      <ZaheenAppDesktop />
       <Pricing />
       <CTASection />
 

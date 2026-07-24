@@ -3,17 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
+import { mdcatAiApi } from "../config";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import {
-  BookMarked,
   ArrowRight,
   Sparkles,
   Send,
   RefreshCw,
   AlertCircle,
+  Calendar,
+  ClipboardList,
+  Target,
+  CheckCircle2,
+  Search,
+  X,
 } from "lucide-react";
 import { Quiz } from "../types";
 
@@ -40,10 +46,13 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
   const [isAskingAI, setIsAskingAI] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // Filter quizzes that are past papers
+  useEffect(()=>
+    {
+      window.scrollTo(0,0)
+    },[])
+
   const pastPapers = quizzes.filter((q) => !!q.isPastPaper);
 
-  // Build dynamic year list from actual DB data
   const availableYears = Array.from(
     new Set(
       pastPapers
@@ -52,7 +61,6 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
     ),
   ).sort((a, b) => Number(b) - Number(a));
 
-  // Build dynamic region list from actual DB data
   const availableRegions = Array.from(
     new Set(
       pastPapers
@@ -65,7 +73,6 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
     const matchesYear =
       selectedYear === "All" ||
       paper.pastPaperYear?.toString() === selectedYear;
-    // Use exact match now that dropdown values come from DB
     const matchesRegion =
       selectedRegion === "All" || paper.pastPaperRegion === selectedRegion;
     const matchesSearch =
@@ -85,7 +92,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
     setChatReply("");
 
     try {
-      const response = await fetch("/api/mdcat/ai/chat", {
+      const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -106,14 +113,6 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
     }
   };
 
-  const handleSelectQuiz = (id: number) => {
-    if (!isLoggedIn) {
-      navigate("/login", { state: { from: location.pathname } });
-      return;
-    }
-    onSelectQuiz(id);
-  };
-
   const presetDoubts = [
     { text: "Why are transition elements colored?", subj: "Chemistry" },
     { text: "Help me memorize active transport rules", subj: "Biology" },
@@ -124,294 +123,235 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Banner */}
-      <div className="bg-sky-600 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 card-shadow">
-        <div className="relative z-10">
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] mb-3 opacity-90">
-            Authentic Preparation
-          </h2>
-          <div className="text-3xl md:text-4xl font-black tracking-tight text-white uppercase">
-            MDCAT Past Papers
-          </div>
-          <p className="mt-4 max-w-lg font-bold text-sky-100 text-xs sm:text-sm leading-relaxed">
-            Gain a competitive edge by practicing actual previous board
-            questions formulated by UHS Lahore, KMU, NUMS, and DUHS.
-          </p>
-        </div>
-        <div className="absolute -right-6 -bottom-6 opacity-10 select-none pointer-events-none">
-          <BookMarked className="w-56 h-56 text-white" />
-        </div>
+    <div className="animate-fade-in ">
+      {/* Cover Card */}
+      <div
+        className="bg-sky-950 px-7 md:px-10 pt-14 pb-8 md:pt-16 md:pb-10 text-white relative overflow-hidden flex flex-col items-center text-center gap-3 border-y border-sky-900 -mt-6 md:-mt-10"
+        style={{
+          marginLeft: "calc(-50vw + 50%)",
+          marginRight: "calc(-50vw + 50%)",
+          width: "auto",
+        }}
+      >
+        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-sky-400">
+          Year-wise papers
+        </span>
+        <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-tight flex items-center gap-3 whitespace-nowrap">
+          <span>MDCAT</span>
+          <span className="bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">Past Papers by Year</span>
+        </h2>
+
+        <p className="text-sm text-sky-200/80 font-semibold leading-relaxed max-w-xl">
+          Browse through {availableYears.length || "multiple"} years of MDCAT
+          papers. Each paper includes complete solutions and detailed
+          explanations for every question.
+        </p>
       </div>
 
-      {/* 180-Question PMDC Simulation */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-50/70 to-orange-50/70 border border-orange-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 card-shadow relative overflow-hidden group">
-        <div className="space-y-1.5 z-10">
-          <span className="px-2.5 py-0.5 text-[9px] font-black uppercase text-orange-700 bg-orange-100 rounded-md tracking-wider">
-            PMDC standard simulation
+      {/* ── SECTION 1: Past Papers ── */}
+      <div className="bg-white py-10 md:py-14">
+        <div className="space-y-6">
+          <span className="block text-center text-[13px] font-black uppercase tracking-[0.3em] text-sky-500">
+            Practice papers
           </span>
-          <h3 className="text-base font-black text-sky-950 uppercase tracking-tight flex items-center gap-1.5">
-            180 questions complete paper style quiz ⏱️
-          </h3>
-          <p className="text-xs text-sky-900/70 font-bold max-w-xl leading-relaxed">
-            Take a complete syllabus exam composed of{" "}
-            <b className="text-sky-950">
-              60 Biology, 50 Chemistry, 45 Physics, 18 English, and 7 Logical
-              Reasoning
-            </b>{" "}
-            questions. Includes a dynamic 210-minute (3.5 hours) countdown board
-            timer!
-          </p>
-        </div>
-       <button
-          onClick={() => handleSelectQuiz(1800)}
-          className="px-5 py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase text-[10px] tracking-wider rounded-xl flex items-center gap-1.5 transition shrink-0 card-shadow hover:scale-[1.03] active:scale-95"
-        >
-          <span>Launch 180-QS Exam</span>
-          <ArrowRight className="w-4 h-4 text-white" />
-        </button>
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-[0.03] select-none pointer-events-none text-9xl group-hover:scale-110 transition-all">
-          ⏱️
+
+
+          {/* Search bar + filters */}
+          <div className="flex flex-col sm:flex-row gap-3 max-w-3xl mx-auto px-4">
+            <div className="group relative flex-1 flex items-center gap-2.5 h-12 md:h-14 px-4 md:px-5 rounded-full bg-white border border-sky-100 card-shadow focus-within:rounded-md overflow-hidden">
+              <Search className="w-4 h-4 text-sky-400 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search papers by title or year..."
+                className="peer flex-1 h-full bg-transparent text-sm font-semibold text-sky-950 placeholder:text-slate-400 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
+                className="shrink-0 text-slate-400 hover:text-sky-600 opacity-0 invisible peer-[:not(:placeholder-shown)]:opacity-100 peer-[:not(:placeholder-shown)]:visible transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <span className="pointer-events-none absolute left-0 bottom-0 h-[2px] w-full origin-center scale-x-0 bg-sky-950 rounded-full transition-transform duration-300 group-focus-within:scale-x-100" />
+            </div>
+
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="h-12 md:h-14 px-4 rounded-full text-xs font-black uppercase tracking-wide border border-sky-100 bg-white text-sky-700 card-shadow focus:outline-none focus:border-sky-400 transition-colors shrink-0"
+            >
+              <option value="All">All years</option>
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="h-12 md:h-14 px-4 rounded-full text-xs font-black uppercase tracking-wide border border-sky-100 bg-white text-sky-700 card-shadow focus:outline-none focus:border-sky-400 transition-colors shrink-0"
+            >
+              <option value="All">All regions</option>
+              {availableRegions.map((region) => (
+                <option key={region} value={region}>
+                  {region}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Papers grid */}
+          {filteredPapers.length === 0 ? (
+            <div className="py-16 text-center space-y-2">
+              <p className="text-sky-400 text-xs font-bold uppercase tracking-wider">
+                No matching past papers found.
+              </p>
+              <p className="text-sky-300 text-[10px] font-bold">
+                {pastPapers.length === 0
+                  ? "No past papers loaded from database yet."
+                  : "Try changing the year or region filters."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 max-w-6xl mx-auto">
+              {filteredPapers.map((paper) => (
+                // change to — bolder, clearly visible gradient
+                <div
+                  key={paper.id}
+                  className="p-6 rounded-3xl bg-gradient-to-br from-sky-50 via-white to-sky-100 border border-sky-100 card-shadow flex flex-col gap-5 hover:border-sky-300 hover:shadow-lg transition-all"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-sky-950 leading-tight">
+                          MDCAT {paper.pastPaperYear ?? ""}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">
+                          {paper.pastPaperRegion ?? "Conducted"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 text-[9px] font-black uppercase text-sky-700 bg-sky-50 rounded-md shrink-0">
+                      {paper.pastPaperRegion ?? "PMC"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                      <ClipboardList className="w-3.5 h-3.5 text-sky-400" />
+                      {paper.subject}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-sky-400" />
+                      {paper.subTopic}
+                    </span>
+                  </div>
+
+                  <ul className="space-y-2 flex-1">
+                    <li className="flex items-start gap-2 text-xs text-slate-600 font-semibold leading-relaxed">
+                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                      <span>{paper.title}</span>
+                    </li>
+                  </ul>
+
+                <button
+                    onClick={() => {
+                      if (!isLoggedIn) {
+                        navigate("/login", { state: { from: location.pathname } });
+                        return;
+                      }
+                      onSelectQuiz(paper.id);
+                      window.scrollTo({ top: 0, behavior: "instant" });
+                    }}
+                    className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-[11px] tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition card-shadow"
+                  >
+                    Practice online
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Past Papers List */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 rounded-3xl bg-white border border-sky-100 card-shadow space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-base font-black uppercase tracking-tight text-sky-950">
-                  Available Past Papers
-                  <span className="ml-2 px-2 py-0.5 text-[9px] font-black bg-sky-100 text-sky-700 rounded-md">
-                    {filteredPapers.length} papers
-                  </span>
-                </h3>
-                <p className="text-xs text-sky-500 font-bold">
-                  Select any region or year to begin practice.
-                </p>
-              </div>
+      {/* ── SECTION 2: 180-Question Quiz ── */}
+      <div
+        className="bg-slate-50 py-10 md:py-14"
+        style={{
+          marginLeft: "calc(-50vw + 50%)",
+          marginRight: "calc(-50vw + 50%)",
+          width: "auto",
+          paddingLeft: "calc(50vw - 50%)",
+          paddingRight: "calc(50vw - 50%)",
+        }}
+      >
+        <span className="block text-center text-[13px] font-black uppercase tracking-[0.3em] text-orange-600 mb-6">
+          Full simulation quiz
+        </span>
+        <div
+          style={{
+            marginLeft: "calc(-50vw + 50%)",
+            marginRight: "calc(-50vw + 50%)",
+            width: "auto",
+          }}
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 p-8 md:p-10 text-center card-shadow group">
+            {/* Decorative rings */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full border-8 border-white/10" />
+            <div className="absolute -bottom-14 -left-14 w-48 h-48 rounded-full border-8 border-white/10" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_60%)]" />
 
-              <div className="flex flex-wrap gap-2">
-                {/* Dynamic Year Filter */}
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="text-xs font-bold border border-sky-100 rounded-lg bg-sky-50/50 px-2 py-1 text-sky-900 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                >
-                  <option value="All">All Years</option>
-                  {availableYears.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Dynamic Region Filter */}
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => setSelectedRegion(e.target.value)}
-                  className="text-xs font-bold border border-sky-100 rounded-lg bg-sky-50/50 px-2 py-1 text-sky-900 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                >
-                  <option value="All">All Regions</option>
-                  {availableRegions.map((region) => (
-                    <option key={region} value={region}>
-                      {region}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Search bar */}
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search papers by title, subject, or topic..."
-              className="w-full text-xs font-bold border border-sky-100 rounded-xl bg-sky-50/30 px-4 py-2.5 text-sky-950 focus:outline-none focus:border-sky-300 transition"
-            />
-
-            {/* Past Papers List */}
-            <div className="space-y-4">
-              {filteredPapers.length === 0 ? (
-                <div className="py-12 text-center space-y-2">
-                  <p className="text-sky-400 text-xs font-bold uppercase tracking-wider">
-                    No matching past papers found.
-                  </p>
-                  <p className="text-sky-300 text-[10px] font-bold">
-                    {pastPapers.length === 0
-                      ? "No past papers loaded from database yet."
-                      : "Try changing the year or region filters."}
-                  </p>
-                  {pastPapers.length === 0 && (
-                    <p className="text-amber-500 text-[10px] font-bold mt-2">
-                      ⚠️ Total quizzes loaded: {quizzes.length} — Past papers
-                      found: {pastPapers.length}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                filteredPapers.map((paper) => (
-                  <div
-                    key={paper.id}
-                    className="p-5 border border-sky-100 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-sky-300 hover:bg-sky-50/20 transition-all group"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-sky-100 text-sky-800 rounded">
-                          {paper.pastPaperYear} Past Paper
-                        </span>
-                        <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-lime-100 text-lime-800 rounded">
-                          {paper.pastPaperRegion}
-                        </span>
-                        <span className="text-[10px] text-sky-600 font-bold uppercase">
-                          {paper.subject}
-                        </span>
-                      </div>
-                      <h4 className="text-sm font-black text-sky-950 group-hover:text-sky-600 transition">
-                        {paper.title}
-                      </h4>
-                      <p className="text-xs text-sky-600 font-bold">
-                        Focus: {paper.subTopic}
-                      </p>
-                    </div>
-
-                 <button
-                      onClick={() => handleSelectQuiz(paper.id)}
-                      className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-[10px] tracking-wider rounded-xl flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-center transition-all card-shadow"
-                    >
-                      <span>Solve Paper</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: AI Tutor */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="p-6 rounded-3xl bg-white border border-sky-100 card-shadow space-y-5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
-                <Sparkles className="w-4 h-4 fill-sky-200" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-tight text-sky-950">
-                  Ask Zaheen AI Tutor
-                </h3>
-                <p className="text-[10px] text-sky-500 font-bold uppercase">
-                  Dynamic concept explanation bot.
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleAskAI} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-black uppercase text-sky-400 block mb-1">
-                    Subject
-                  </label>
-                  <select
-                    value={chatSubject}
-                    onChange={(e) => setChatSubject(e.target.value)}
-                    className="w-full text-xs font-bold border border-sky-100 rounded-lg bg-sky-50/50 p-2 text-sky-900 focus:outline-none"
-                  >
-                    <option value="Biology">Biology</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Physics">Physics</option>
-                    <option value="English">English</option>
-                    <option value="Logical Reasoning">Logical Reasoning</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-sky-400 block mb-1">
-                    Language
-                  </label>
-                  <select
-                    value={chatLanguage}
-                    onChange={(e) => setChatLanguage(e.target.value)}
-                    className="w-full text-xs font-bold border border-sky-100 rounded-lg bg-sky-50/50 p-2 text-sky-900 focus:outline-none"
-                  >
-                    <option value="Bilingual (Urdu + Eng)">
-                      Bilingual (Urdu + Eng)
-                    </option>
-                    <option value="English Only">English Only</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-black uppercase text-sky-400 block mb-1">
-                  Enter Doubt or Question
-                </label>
-                <div className="relative">
-                  <textarea
-                    value={chatQuestion}
-                    onChange={(e) => setChatQuestion(e.target.value)}
-                    placeholder="Ask about formulas, textbook lines, or tricky past paper MCQs..."
-                    className="w-full h-24 text-xs font-bold border border-sky-100 rounded-2xl bg-sky-50/30 p-3 pr-10 text-sky-950 focus:outline-none focus:border-sky-300 focus:bg-white transition-all resize-none leading-relaxed"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isAskingAI || !chatQuestion.trim()}
-                    className="absolute right-2.5 bottom-2.5 w-7 h-7 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center justify-center transition disabled:opacity-50"
-                  >
-                    {isAskingAI ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Send className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            {/* Quick preset doubts */}
-            <div className="space-y-2 pt-2 border-t border-sky-50">
-              <span className="text-[9px] uppercase font-black text-sky-400 tracking-wider block">
-                Suggested Doubts:
+            <div className="relative z-10 flex flex-col items-center gap-4">
+              <span className="px-3 py-1 text-[10px] font-black uppercase text-orange-700 bg-white rounded-full tracking-wider">
+                PMDC standard simulation
               </span>
-              <div className="flex flex-col gap-1.5">
-                {presetDoubts.map((doubt, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setChatQuestion(doubt.text);
-                      setChatSubject(doubt.subj);
-                    }}
-                    className="text-[10px] font-bold text-sky-700 hover:text-sky-950 text-left p-2 bg-sky-50/40 hover:bg-sky-50/80 rounded-lg border border-sky-100/30 cursor-pointer transition"
-                  >
-                    • {doubt.text} ({doubt.subj})
-                  </button>
-                ))}
+
+              <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-snug">
+                180 questions complete
+                <br className="hidden sm:block" /> paper style quiz
+              </h3>
+
+              <p className="text-xs md:text-sm text-white/85 font-bold max-w-md leading-relaxed">
+                Take a complete syllabus exam composed of{" "}
+                <b className="text-white">
+                  60 Biology, 50 Chemistry, 45 Physics, 18 English, and 7
+                  Logical Reasoning
+                </b>{" "}
+                questions. Includes a dynamic 210-minute (3.5 hours)
+                countdown board timer!
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-4 text-white/90 text-[10px] font-black uppercase tracking-wider pt-1">
+                <span>180 MCQs</span>
+                <span className="w-1 h-1 rounded-full bg-white/50" />
+                <span>210 minutes</span>
+                <span className="w-1 h-1 rounded-full bg-white/50" />
+                <span>5 subjects</span>
               </div>
+
+             <button
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    navigate("/login", { state: { from: location.pathname } });
+                    return;
+                  }
+                  onSelectQuiz(1800);
+                }}
+                className="mt-3 px-8 py-3.5 bg-white hover:bg-orange-50 text-orange-700 font-black uppercase text-xs tracking-wider rounded-full flex items-center gap-2 transition card-shadow hover:scale-[1.04] active:scale-95"
+              >
+                <span>Launch 180-QS exam</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
-
-            {/* Reply Area */}
-            <AnimatePresence mode="wait">
-              {aiError && (
-                <div className="p-4 rounded-2xl bg-rose-50 text-rose-700 text-xs font-bold leading-relaxed flex items-start gap-2 border border-rose-100">
-                  <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                  <p>{aiError}</p>
-                </div>
-              )}
-
-              {chatReply && (
-                <div className="p-4 rounded-2xl bg-sky-50 border border-sky-100 text-xs font-bold text-sky-900 leading-relaxed space-y-2 max-h-[250px] overflow-y-auto animate-fade-in">
-                  <div className="font-black text-xs text-sky-700 uppercase tracking-wide flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 fill-sky-200 text-sky-600" />{" "}
-                    Zaheen AI Advice:
-                  </div>
-                  <div className="space-y-2 text-sky-950 font-sans leading-relaxed whitespace-pre-wrap">
-                    {chatReply}
-                  </div>
-                </div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       </div>

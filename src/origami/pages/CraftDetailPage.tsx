@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
  import { slugify } from '../utils/slugify';
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import { fetchAllCrafts } from '../services/origamiApi'; // add to existing import
 import {
   Play, Clock, Users, BookOpen, Heart, Download, Star,
@@ -30,6 +31,7 @@ const CraftDetailPage = ({ darkMode }: CraftDetailPageProps) => {
 
 const { isLoggedIn, isLoading: authLoading } = useZaheenAuth();
   const location = useLocation();
+  const base = useOrigamiBase();
 
 const { slug } = useParams<{ slug: string }>();
 
@@ -197,7 +199,7 @@ const error = notFound ? 'Craft not found' : craftError;
           <p className={`font-nunito mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             {error ?? 'We couldn\'t load this craft. Please try again.'}
           </p>
-          <Link to="/origami" className="text-primary font-nunito font-bold hover:underline">
+        <Link to={base} className="text-primary font-nunito font-bold hover:underline">
             ← Back to Home
           </Link>
         </div>
@@ -246,8 +248,8 @@ const error = notFound ? 'Craft not found' : craftError;
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="mb-6">
-          <Link
-            to="/origami"
+         <Link
+            to={base}
             className={`inline-flex items-center gap-2 font-nunito font-semibold ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-primary'} transition-colors`}
           >
             <ChevronLeft size={20} />
@@ -553,7 +555,7 @@ const error = notFound ? 'Craft not found' : craftError;
               <h3 className="font-fredoka font-bold text-xl mb-4">You'll Also Love</h3>
               <div className="space-y-3">
                 {relatedCrafts.map((related) => (
-                 <Link key={related.id} to={`/origami/craft/${slugify(related.title)}`}>
+                <Link key={related.id} to={`${base}/craft/${slugify(related.title)}`}>
                     <div className={`flex items-center gap-3 p-3 rounded-xl transition-all ${darkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}>
                       <img src={related.thumbnail || undefined} alt={related.title} className="w-16 h-16 rounded-xl object-cover" loading="lazy" />
                       <div className="flex-1 min-w-0">

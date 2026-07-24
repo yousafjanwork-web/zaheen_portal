@@ -23,20 +23,75 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { Quiz, Question, QuizAttempt } from "../types";
-import { mdcatApi } from "../config";
+import { mdcatApi, mdcatAiApi } from "../config";
+import { useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+
+const markdownComponents = {
+  h1: ({ children }: any) => (
+    <h1 className="text-sm font-black uppercase tracking-tight text-sky-900 mb-2">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }: any) => (
+    <h2 className="text-xs font-black uppercase tracking-wide text-sky-800 mt-3 mb-1.5">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }: any) => (
+    <h3 className="text-xs font-black uppercase tracking-wide text-sky-700 mt-3 mb-1">
+      {children}
+    </h3>
+  ),
+  p: ({ children }: any) => (
+    <p className="text-xs font-bold text-sky-900 leading-relaxed mb-2">
+      {children}
+    </p>
+  ),
+  strong: ({ children }: any) => (
+    <strong className="font-black text-sky-950">{children}</strong>
+  ),
+  ul: ({ children }: any) => (
+    <ul className="space-y-1 mb-2 pl-1">{children}</ul>
+  ),
+  li: ({ children }: any) => (
+    <li className="text-xs font-bold text-sky-900 leading-relaxed flex gap-2">
+      <span className="text-sky-400 mt-0.5">•</span>
+      <span>{children}</span>
+    </li>
+  ),
+  hr: () => <hr className="border-sky-100 my-3" />,
+};
+
+const conceptMarkdownComponents = {
+  ...markdownComponents,
+  strong: ({ children }: any) => (
+    <strong className="font-black text-violet-950">{children}</strong>
+  ),
+  li: ({ children }: any) => (
+    <li className="text-xs font-semibold text-violet-900 leading-relaxed flex gap-2">
+      <span className="text-violet-400 mt-0.5">•</span>
+      <span>{children}</span>
+    </li>
+  ),
+};
+
+
 
 interface QuizSessionProps {
   quiz: Quiz;
   onBack: () => void;
   onAttemptFinished: () => Promise<void>;
-  refreshData: () => Promise<void>;
+  submitQuizId?: number;
+  
 }
 
 export default function QuizSession({
   quiz,
   onBack,
   onAttemptFinished,
-  refreshData,
+  submitQuizId
+  
 }: QuizSessionProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -44,8 +99,25 @@ export default function QuizSession({
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attemptResult, setAttemptResult] = useState<QuizAttempt | null>(null);
+  
+  const [quizSnapshot] = useState(quiz);
+  
 
-  const questionsList = quiz.questions || [];
+   const totalQuestions = quizSnapshot.questions?.length || 0;
+  const [timeLeft, setTimeLeft] = useState(
+    totalQuestions === 180 ? 210 * 60 : totalQuestions * 60,
+  );
+  const [quizStatus, setQuizStatus] = useState<"taking" | "submitted">(
+    "taking",
+  );
+
+  
+   useEffect(()=>
+  {
+    window.scrollTo(0,0)
+  },[])
+
+  const questionsList = quizSnapshot.questions || [];
 
   // FIX: use null instead of "A" fallback so unanswered questions are always wrong
   const incorrectQuestions = questionsList.filter((q) => {
@@ -77,7 +149,7 @@ export default function QuizSession({
     setIsExplainingMap((prev) => ({ ...prev, [q.id]: true }));
     try {
       const qText = `Question: "${q.questionText}"\nOptions:\nA: ${q.optionA}\nB: ${q.optionB}\nC: ${q.optionC}\nD: ${q.optionD}\nCorrect Option: ${q.correctOption}\nExisting Explanation: ${q.explanation}`;
-      const response = await fetch(mdcatApi("/api/mdcat/ai/chat"), {
+      const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -105,7 +177,7 @@ export default function QuizSession({
     setIsSummarizingMap((prev) => ({ ...prev, [q.id]: true }));
     try {
       const qText = `Question: "${q.questionText}"\nOptions:\nA: ${q.optionA}\nB: ${q.optionB}\nC: ${q.optionC}\nD: ${q.optionD}\nCorrect Option: ${q.correctOption}\nExisting Explanation: ${q.explanation}`;
-      const response = await fetch(mdcatApi("/api/mdcat/ai/chat"), {
+      const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,11 +224,11 @@ ${qText}`,
         )
         .join("\n");
 
-      const response = await fetch(mdcatApi("/api/mdcat/ai/chat"), {
+      const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: `Act as an elite medical entry exam mentor. The student recently attempted the MDCAT Practice Module "${quiz.title}" and answered several questions incorrectly.
+          question: `Act as an elite medical entry exam mentor. The student recently attempted the MDCAT Practice Module "${quizSnapshot.title}" and answered several questions incorrectly.
 We have aggregated the topics they struggled with below:
 ${topicAggregates}
 
@@ -171,7 +243,7 @@ Format your response exactly as follows:
 - Final Mnemonics & Tips: Give a combined memorable, clever mnemonic for these weak areas.
 
 Ensure it is entirely composed of easy-to-read, concise, and highly professional bulleted explanations.`,
-          subject: quiz.subject,
+          subject: quizSnapshot.subject,
           language: "Bilingual (Urdu + Eng)",
         }),
       });
@@ -189,13 +261,7 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
   };
 
   // Timer settings: 60 seconds per question (standard MDCAT timing constraint). Full 180-question paper gets 210 minutes.
-  const totalQuestions = quiz.questions?.length || 0;
-  const [timeLeft, setTimeLeft] = useState(
-    totalQuestions === 180 ? 210 * 60 : totalQuestions * 60,
-  );
-  const [quizStatus, setQuizStatus] = useState<"taking" | "submitted">(
-    "taking",
-  );
+  
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sound/Vibe feedback logic
@@ -252,27 +318,39 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
         selectedOption: selectedAnswers[q.id] || null,
       }));
 
+     
       const bodyPayload = {
-        quizId: quiz.id,
+        quizId: quizSnapshot.id,
         responses,
       };
 
+     
+      
       const res = await fetch(mdcatApi("/api/mdcat/attempts"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
       });
 
+
       if (!res.ok) {
-        throw new Error("Could not compute quiz attempts on backend");
+          
+          throw new Error("Could not compute quiz attempts on backend");
+          
       }
+
+      
+
+     
 
       // FIX: unwrap { success, data: { ... } } response format
       const json = await res.json();
+      // console.log(json)
       const savedAttempt: QuizAttempt = json.data ?? json;
+      
       setAttemptResult(savedAttempt);
       setQuizStatus("submitted");
-      await refreshData();
+      
       await onAttemptFinished();
     } catch (e) {
       console.error("[SessionError] Submission failed:", e);
@@ -304,8 +382,10 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
   };
 
   if (totalQuestions === 0) {
+    
     return (
-      <div className="p-8 rounded-3xl bg-white border border-sky-100 card-shadow text-center space-y-4">
+
+      <div className="p-8 rounded-3xl bg-white border border-sky-100 card-shadow text-center  space-y-4">
         <HelpCircle className="w-12 h-12 text-sky-400 mx-auto" />
         <h3 className="text-lg font-black uppercase tracking-tight text-sky-950">
           Empty Practice Module
@@ -325,299 +405,331 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
   }
 
   return (
-    <div className="space-y-6">
-      {/* Quiz Top Action Bar with standard layout */}
-      <div className="flex items-center justify-between gap-4 py-2 border-b border-sky-100 flex-wrap">
-        <button
-          onClick={onBack}
-          className="text-sky-950 hover:text-sky-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
+<div className="h-full w-full flex flex-col gap-4 overflow-hidden ">  {/* Top Action Bar — just Back now, timer moved down into the progress panel */}
+  
+  {quizStatus === "taking" ? (
+    
+    <div className="flex-1 min-h-0 flex flex-col gap-4 m-6">
+      <div className="flex items-center justify-between gap-4 py-2 border-b border-sky-100 flex-wrap shrink-0">
+    <button
+      onClick={onBack}
+      className="text-sky-950 hover:text-sky-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider "
+    >
+      <ArrowLeft className="w-4 h-4" /> Back
+    </button>
+    <span className="text-[10px] font-black uppercase tracking-widest text-sky-500">
+      Subject Area: <b className="text-sky-950">{quizSnapshot.subject}</b>
+    </span>
+    </div>
 
-        {quizStatus === "taking" && (
-          <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-sky-100 card-shadow">
-            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-sky-500">
-              <Clock className="w-4 h-4 text-sky-600 animate-pulse" />
-              <span>TIME:</span>
-              <span className="font-mono-custom font-black text-xs text-sky-950">
-                {formatTime(timeLeft)}
-              </span>
-            </div>
-          </div>
-        )}
+      {/* Combined Exam Progress + Timer bar — replaces the old linear progress bar */}
+      <div className="shrink-0 flex items-center gap-3 p-3 rounded-2xl bg-white border border-sky-100 card-shadow">
+        <div className="flex items-center gap-1.5 shrink-0 pr-3 border-r border-sky-100">
+          <Clock className="w-4 h-4 text-sky-600 animate-pulse" />
+          <span className="font-mono-custom font-black text-xs text-sky-950 whitespace-nowrap">
+            {formatTime(timeLeft)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-2 overflow-x-auto no-scrollbar min-w-0">
+          {questionsList.map((q, idx) => {
+            const isAnswered = selectedAnswers[q.id] !== undefined;
+            const isCurrent = idx === currentQuestionIndex;
+
+            return (
+              <button
+                key={q.id}
+                onClick={() => setCurrentQuestionIndex(idx)}
+                className={`shrink-0 w-8 h-8 rounded-lg font-mono-custom text-[11px] font-black flex items-center justify-center transition border ${
+                  isCurrent
+                    ? "ring-2 ring-sky-500 border-transparent bg-sky-50 text-sky-800"
+                    : isAnswered
+                    ? "bg-sky-600 text-white border-transparent"
+                    : "bg-sky-50/50 text-sky-900 border-sky-100 hover:bg-sky-100/30"
+                }`}
+              >
+                {(idx + 1).toString().padStart(2, "0")}
+              </button>
+            );
+          })}
+        </div>
+
+        <span className="shrink-0 pl-3 ml-auto border-l border-sky-100 text-[10px] font-black uppercase tracking-widest text-sky-500 whitespace-nowrap">
+          {currentQuestionIndex + 1}/{totalQuestions}
+        </span>
       </div>
 
-      {quizStatus === "taking" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Question Column */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Realtime progress bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-[10px] text-sky-500 uppercase font-black tracking-widest">
-                <span>
-                  Subject Area:{" "}
-                  <b className="text-sky-950 font-black">{quiz.subject}</b>
-                </span>
-                <span>
-                  Question {currentQuestionIndex + 1} of {totalQuestions}
-                </span>
-              </div>
-              <div className="w-full bg-sky-50 h-2 rounded-full overflow-hidden border border-sky-100">
-                <div
-                  className="bg-sky-600 h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-
-            {/* MCQ Card */}
-            <div className="p-8 rounded-3xl bg-white border border-sky-100 card-shadow space-y-6">
-              {/* Question Text with monospace accents for PMDC style */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-sky-700 bg-sky-100 rounded-md">
-                    {currentQuestion.subTopic || "Module Specific"}
-                  </span>
-                </div>
-                <h3 className="text-base md:text-lg font-bold text-sky-950 leading-relaxed font-sans">
-                  {currentQuestion.questionText}
-                </h3>
-              </div>
-
-              {/* Multiple Choice Options List */}
-              <div className="space-y-3">
-                {[
-                  { key: "A", value: currentQuestion.optionA },
-                  { key: "B", value: currentQuestion.optionB },
-                  { key: "C", value: currentQuestion.optionC },
-                  { key: "D", value: currentQuestion.optionD },
-                ].map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => handleSelectOption(option.key as any)}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center justify-between gap-3 group scale-[0.99] active:scale-[0.98] ${getOptionClass(option.key as any, option.value)}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-display text-xs font-black border transition ${selectedAnswers[currentQuestion.id] === option.key ? "bg-sky-600 text-white border-transparent" : "bg-sky-50/50 text-sky-905 border-sky-100 text-sky-800"}`}
-                      >
-                        {option.key}
-                      </span>
-                      <span className="text-xs md:text-sm text-sky-950/90 font-semibold select-none leading-relaxed">
-                        {option.value}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Navigation Action Buttons footer */}
-            <div className="flex items-center justify-between gap-4">
-              <button
-                onClick={handlePrev}
-                disabled={currentQuestionIndex === 0}
-                className="px-4 py-2 border border-sky-100 text-sky-900 bg-white rounded-xl hover:bg-sky-50 disabled:opacity-40 disabled:hover:bg-white text-xs font-black uppercase tracking-wider flex items-center gap-1 transition"
-              >
-                <ChevronLeft className="w-4 h-4" /> Previous
-              </button>
-
-              {currentQuestionIndex === totalQuestions - 1 ? (
-                <button
-                  onClick={handleSubmitQuiz}
-                  disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-xs tracking-widest rounded-xl text-center shadow-md transition-all flex items-center gap-1"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Paper"}
-                </button>
-              ) : (
-                <button
-                  onClick={handleNext}
-                  className="px-5 py-2 hover:bg-sky-100/50 text-sky-900 bg-sky-50 border border-sky-100 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all"
-                >
-                  Next <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Right sidebar: Quick question index jump panel */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="p-6 rounded-3xl bg-white border border-sky-100 card-shadow space-y-4">
-              <h3 className="text-xs font-black text-sky-950 uppercase tracking-widest">
-                Exam Progress
-              </h3>
-
-              <div className="grid grid-cols-5 gap-2.5">
-                {questionsList.map((q, idx) => {
-                  const isAnswered = selectedAnswers[q.id] !== undefined;
-                  const isCurrent = idx === currentQuestionIndex;
-
-                  return (
-                    <button
-                      key={q.id}
-                      onClick={() => setCurrentQuestionIndex(idx)}
-                      className={`h-9 rounded-lg font-mono-custom text-xs font-black flex items-center justify-center transition border ${isCurrent ? "ring-2 ring-sky-500 border-transparent bg-sky-50 text-sky-800" : isAnswered ? "bg-sky-600 text-white border-transparent" : "bg-sky-50/50 text-sky-900 border-sky-100 hover:bg-sky-100/30"}`}
-                    >
-                      {(idx + 1).toString().padStart(2, "0")}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="pt-2 border-t border-sky-100 space-y-2">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-sky-450 text-sky-500">
-                  <span className="w-3 h-3 rounded-full bg-sky-600 block"></span>
-                  <span>Answered QUESTIONS</span>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-sky-450 text-sky-500">
-                  <span className="w-3 h-3 rounded-full bg-sky-50/50 border border-sky-100 block"></span>
-                  <span>Unanswered QUESTIONS</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* MCQ Card — fills remaining space */}
+      <div className="flex-1 min-h-0 p-5 md:p-8 rounded-3xl bg-white border border-sky-100 card-shadow flex flex-col gap-5 overflow-hidden">
+        <div className="space-y-2 shrink-0">
+          <span className="px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-sky-700 bg-sky-100 rounded-md">
+            {currentQuestion.subTopic || "Module Specific"}
+          </span>
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-sky-950 leading-snug font-sans">
+            {currentQuestion.questionText}
+          </h3>
         </div>
-      ) : (
+
+        {/* Two-column options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 flex-1 content-start overflow-y-auto">
+          {[
+            { key: "A", value: currentQuestion.optionA },
+            { key: "B", value: currentQuestion.optionB },
+            { key: "C", value: currentQuestion.optionC },
+            { key: "D", value: currentQuestion.optionD },
+          ].map((option) => (
+            <button
+              key={option.key}
+              onClick={() => handleSelectOption(option.key as any)}
+              className={`w-full text-left p-3.5 md:p-4 rounded-xl border-2 transition-all flex items-center gap-3 group scale-[0.99] active:scale-[0.98] ${getOptionClass(option.key as any, option.value)}`}
+            >
+              <span
+                className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-display text-xs font-black border transition ${
+                  selectedAnswers[currentQuestion.id] === option.key
+                    ? "bg-sky-600 text-white border-transparent"
+                    : "bg-sky-50/50 text-sky-905 border-sky-100 text-sky-800"
+                }`}
+              >
+                {option.key}
+              </span>
+              <span className="text-xs md:text-sm text-sky-950/90 font-semibold select-none leading-relaxed">
+                {option.value}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation — always visible at the bottom, never needs scrolling to reach */}
+      <div className="shrink-0 flex items-center justify-between gap-4">
+        <button
+          onClick={handlePrev}
+          disabled={currentQuestionIndex === 0}
+          className="px-4 py-2 border border-sky-100 text-sky-900 bg-white rounded-xl hover:bg-sky-50 disabled:opacity-40 disabled:hover:bg-white text-xs font-black uppercase tracking-wider flex items-center gap-1 transition"
+        >
+          <ChevronLeft className="w-4 h-4" /> Previous
+        </button>
+
+        {
+
+        currentQuestionIndex === totalQuestions - 1 ? (
+          <button
+            onClick={handleSubmitQuiz}
+            disabled={isSubmitting}
+            className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-xs tracking-widest rounded-xl text-center shadow-md transition-all flex items-center gap-1"
+          >
+            {isSubmitting ? "Submitting..." : "Submit Paper"}
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="px-5 py-2 hover:bg-sky-100/50 text-sky-900 bg-sky-50 border border-sky-100 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1 transition-all"
+          >
+            Next <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  ) :  (
         /* =====================================================================
            SUBMITTED / DETAILED REVIEW MODE: Show answers & incorrect explanations
            ===================================================================== */
-        <div className="space-y-8 animate-fade-in">
-          {/* Diagnostic Stats Result Summary */}
-          <div className="p-8 rounded-3xl bg-white border border-sky-100 card-shadow text-center max-w-xl mx-auto space-y-5">
-            <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center bg-sky-100 text-sky-600">
-              <TrendingUp className="w-8 h-8" />
-            </div>
+        <div className="space-y-8 animate-fade-in mx-8">
+{/* Diagnostic Stats Result Summary */}
 
-            <div className="space-y-2">
-              <span className="text-[10px] uppercase font-black text-sky-500 tracking-widest">
-                Practice Paper Results
-              </span>
-              <h2 className="text-xl font-black text-sky-950 uppercase tracking-tight">
-                {quiz.title}
-              </h2>
-              <p className="text-xs font-bold text-sky-900/60 leading-relaxed">
-                Review mistakes to fix weak concepts before the actual MDCAT
-                exam.
-              </p>
-            </div>
+<div
+  className="relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50/60 to-white card-shadow"
+  style={{
+    marginLeft: "calc(-50vw + 50%)",
+    marginRight: "calc(-50vw + 50%)",
+    width: "auto",
+    marginTop: "-1.5rem",
+  }}
+>
+  {/* Back button, overlaid top-left */}
+  <button
+    onClick={onBack}
+    className="absolute top-6 left-6 md:top-8 md:left-8 z-20 text-sky-950 hover:text-sky-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider"
+  >
+    <ArrowLeft className="w-4 h-4" /> Back
+  </button>
 
-            {attemptResult && (
-              <div className="grid grid-cols-3 gap-4 py-4 border-y border-sky-100">
-                <div className="text-center">
-                  <div className="text-[10px] uppercase font-black text-sky-400 tracking-wider">
-                    Total MCQ
-                  </div>
-                  <div className="text-lg font-mono-custom font-black text-sky-950">
-                    {attemptResult.totalQuestions}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-[10px] uppercase font-black text-sky-450 tracking-wider">
-                    Correct
-                  </div>
-                  <div className="text-lg font-mono-custom font-black text-emerald-600">
-                    {attemptResult.score}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-[10px] uppercase font-black text-sky-450 tracking-wider">
-                    Score Pct
-                  </div>
-                  <div className="text-lg font-mono-custom font-black text-sky-650 text-sky-600">
-                    {attemptResult.percentage}%
-                  </div>
-                </div>
-              </div>
-            )}
+  {/* Soft glow blob */}
+  <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-amber-200/40 blur-3xl" />
+  
+  <div className="relative z-10 p-8 md:p-12 text-center space-y-6">
+    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase text-orange-700 bg-orange-100 border border-orange-200 rounded-full tracking-widest">
+      <TrendingUp className="w-3.5 h-3.5" /> Practice paper results
+    </span>
 
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={onBack}
-                className="px-6 py-3 bg-sky-600 text-white font-black uppercase text-xs tracking-widest rounded-xl text-center shadow-md hover:bg-sky-700 transition-all duration-150 transform hover:scale-[1.01]"
-              >
-                Back to Dashboard
-              </button>
-            </div>
+    <div className="space-y-2">
+      <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tight leading-tight text-sky-950">
+        {attemptResult ? (
+          <>
+            You scored{" "}
+            <span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
+              {attemptResult.percentage}%
+            </span>
+          </>
+        ) : (
+          quizSnapshot.title
+        )}
+      </h2>
+      <p className="text-sm text-slate-500 font-semibold leading-relaxed max-w-lg mx-auto">
+        Review mistakes to fix weak concepts before the actual MDCAT exam.
+      </p>
+    </div>
+
+    {attemptResult && (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto pt-2">
+        <div className="rounded-2xl bg-white card-shadow border-t-4 border-sky-500 p-5">
+          <div className="text-3xl font-black text-sky-950 font-mono-custom">
+            {attemptResult.totalQuestions}
           </div>
+          <div className="text-[10px] uppercase font-black text-slate-400 tracking-wider mt-1">
+            Total MCQs
+          </div>
+        </div>
+        <div className="rounded-2xl bg-white card-shadow border-t-4 border-emerald-500 p-5">
+          <div className="text-3xl font-black text-emerald-600 font-mono-custom">
+            {attemptResult.score}
+          </div>
+          <div className="text-[10px] uppercase font-black text-slate-400 tracking-wider mt-1">
+            Correct
+          </div>
+        </div>
+        <div className="rounded-2xl bg-white card-shadow border-t-4 border-rose-500 p-5">
+          <div className="text-3xl font-black text-rose-600 font-mono-custom">
+            {attemptResult.totalQuestions - attemptResult.score}
+          </div>
+          <div className="text-[10px] uppercase font-black text-slate-400 tracking-wider mt-1">
+            Incorrect
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
 
-          {/* AI Concept Summarizer Master Panel */}
-          {incorrectQuestions.length > 0 && (
-            <div className="p-6 rounded-3xl bg-gradient-to-r from-violet-50/70 to-indigo-50/70 border border-violet-100 flex flex-col gap-5 card-shadow relative overflow-hidden group">
-              <div className="space-y-1.5 z-10">
-                <span className="px-2.5 py-0.5 text-[9px] font-black uppercase text-violet-700 bg-violet-100 rounded-md tracking-wider">
-                  AI Revision Hub
-                </span>
-                <h3 className="text-base font-black text-sky-950 uppercase tracking-tight flex items-center gap-1.5">
-                  AI Concept Summarizer Master Sheet 🧠
-                </h3>
-                <p className="text-xs text-indigo-900/70 font-semibold max-w-xl leading-relaxed">
-                  Generate a complete high-yield bulleted concept cheat sheet
-                  covering all{" "}
-                  <b className="text-sky-950">
-                    {incorrectQuestions.length} missed topics
-                  </b>{" "}
-                  from this test. Instantly identifies core physiological
-                  mechanisms, formulas, and mnemonics!
-                </p>
-              </div>
+{/* AI Concept Summarizer Master Panel */}
+{incorrectQuestions.length > 0 && (
+  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1e1b4b] via-[#312663] to-[#1e1b4b] card-shadow">
+    {/* Ambient glow orbs */}
+    <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-violet-500/30 blur-3xl pointer-events-none" />
+    <div className="absolute -bottom-24 -left-10 w-64 h-64 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
 
-              <div className="z-10 flex items-center justify-start">
-                <button
-                  onClick={handleRequestMasterConceptSummary}
-                  disabled={isGeneratingMaster}
-                  className="px-5 py-3 bg-violet-600 hover:bg-violet-750 text-white font-black uppercase text-[10px] tracking-wider rounded-xl flex items-center gap-1.5 transition card-shadow hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-white fill-violet-250 animate-pulse" />
-                  <span>
-                    {isGeneratingMaster
-                      ? "Generating Master Summary Sheet..."
-                      : "Generate Missed Concepts Cheat Sheet"}
-                  </span>
-                </button>
-              </div>
+    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center p-8 md:p-10">
+      {/* Left: copy + CTA */}
+      <div className="space-y-4">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-black uppercase text-violet-200 bg-white/10 border border-white/10 rounded-full tracking-widest backdrop-blur-sm">
+          <Sparkles className="w-3 h-3" /> AI Revision Hub
+        </span>
 
-              {/* Master Summary output display */}
-              {masterSummary && (
-                <div className="z-10 mt-2 p-5 bg-white border border-violet-100 rounded-2xl shadow-sm animate-fade-in space-y-3">
-                  <div className="flex items-center justify-between border-b border-violet-50 pb-2">
-                    <span className="text-[10px] text-violet-600 font-extrabold uppercase tracking-widest flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 fill-violet-100" />{" "}
-                      High-Yield Revision Sheet
-                    </span>
-                    <button
-                      onClick={() => setMasterSummary("")}
-                      className="text-[9px] font-black uppercase text-rose-600 hover:text-rose-850 tracking-wider flex items-center gap-0.5 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded cursor-pointer transition-all"
-                    >
-                      Clear Sheet
-                    </button>
-                  </div>
-                  <div className="whitespace-pre-wrap font-semibold text-xs leading-relaxed text-indigo-950 pl-1 select-text">
-                    {masterSummary}
-                  </div>
-                </div>
-              )}
+        <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white leading-tight">
+          Concept Summarizer
+          <br className="hidden md:block" /> Master Sheet
+        </h3>
 
-              <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-[0.03] select-none pointer-events-none text-9xl group-hover:scale-110 transition-all">
-                🧠
-              </div>
-            </div>
-          )}
+        <p className="text-sm text-violet-100/70 font-semibold max-w-lg leading-relaxed">
+          One tap turns your{" "}
+          <span className="text-white font-black">
+            {incorrectQuestions.length} missed topics
+          </span>{" "}
+          into a single high-yield cheat sheet — core mechanisms, formulas,
+          and mnemonics, bundled for fast revision.
+        </p>
 
-          {/* Interactive Question-by-Question Explanation List */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-base font-black uppercase tracking-tight text-sky-950">
-                Detailed MCQ Analytical Review
-              </h3>
-              <p className="text-xs text-sky-500 font-bold">
-                Review detailed textbook descriptions and explanations for every
-                incorrect option.
-              </p>
-            </div>
+        <button
+          onClick={handleRequestMasterConceptSummary}
+          disabled={isGeneratingMaster}
+          className="mt-2 px-6 py-3.5 bg-white hover:bg-violet-50 text-violet-900 font-black uppercase text-[11px] tracking-wider rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-violet-950/40 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer w-fit"
+        >
+          <Sparkles
+            className={`w-4 h-4 text-violet-600 ${isGeneratingMaster ? "animate-pulse" : "animate-pulse"}`}
+          />
+          {isGeneratingMaster
+            ? "Generating Master Summary Sheet..."
+            : "Generate Missed Concepts Cheat Sheet"}
+        </button>
+      </div>
+
+      {/* Right: floating stat badge */}
+      <div className="justify-self-center lg:justify-self-end">
+        <div className="relative w-36 h-36 md:w-40 md:h-40 rounded-3xl bg-white/10 border border-white/15 backdrop-blur-sm flex flex-col items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-300">
+          <BookOpen className="w-6 h-6 text-violet-200 mb-1" />
+          <div className="text-4xl font-black text-white font-mono-custom">
+            {incorrectQuestions.length}
+          </div>
+          <div className="text-[9px] uppercase font-black text-violet-200 tracking-widest mt-1">
+            Weak Topics
+          </div>
+        </div>
+      </div>
+    </div>
+
+{/* Master Summary output display */}
+{masterSummary && (
+  <div className="relative z-10 mx-8 md:mx-10 mb-8 md:mb-10 p-6 bg-white/95 backdrop-blur border border-white/20 rounded-2xl shadow-xl animate-fade-in space-y-4">
+    <div className="flex items-center justify-between border-b border-violet-100 pb-3">
+      <span className="text-[10px] text-violet-600 font-extrabold uppercase tracking-widest flex items-center gap-1">
+        <Sparkles className="w-3.5 h-3.5 fill-violet-100" />
+        High-Yield Revision Sheet
+      </span>
+
+      <button
+        onClick={() => setMasterSummary("")}
+        className="text-[9px] font-black uppercase text-rose-600 hover:text-rose-700 tracking-wider flex items-center gap-0.5 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded"
+      >
+        <X className="w-3 h-3" />
+        Close
+      </button>
+    </div>
+
+    <div className="prose-summary text-sky-950">
+      <ReactMarkdown
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-base font-black uppercase tracking-tight text-violet-900 mb-3">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-sm font-black uppercase tracking-wide text-violet-800 mt-5 mb-2 pb-1 border-b border-violet-100">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xs font-black uppercase tracking-wide text-violet-700 mt-4 mb-1.5">
+              {children}
+            </h3>
+          ),
+          p: ({ children }) => (
+            <p className="text-xs font-semibold text-sky-950/90 leading-relaxed mb-3">
+              {children}
+            </p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-black text-sky-950">{children}</strong>
+          ),
+          ul: ({ children }) => (
+            <ul className="space-y-1.5 mb-3 pl-1">{children}</ul>
+          ),
+          li: ({ children }) => (
+            <li className="text-xs font-semibold text-sky-950/90 leading-relaxed flex gap-2">
+              <span className="text-violet-400 mt-0.5">•</span>
+              <span>{children}</span>
+            </li>
+          ),
+          hr: () => <hr className="border-violet-100 my-4" />,
+        }}
+      >
+        {masterSummary}
+      </ReactMarkdown>
+    </div>
+  </div>
+)}
+  </div>
+)}
 
             <div className="space-y-6">
               {questionsList.map((question, idx) => {
@@ -681,15 +793,15 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                         let optionStyle =
                           "border-sky-100/50 bg-sky-50/20 text-sky-900";
                         let badgeStyle =
-                          "bg-sky-150 text-sky-650 text-sky-800 bg-sky-100";
+                          "bg-sky-100 text-sky-700";
 
                         if (isThisCorrectOption) {
                           optionStyle =
-                            "border-emerald-250 bg-emerald-50/50 text-sky-950 border-2 card-shadow";
+                            "border-emerald-400 bg-emerald-50/50 text-sky-950 border-2 card-shadow";
                           badgeStyle = "bg-emerald-500 text-white font-black";
                         } else if (isThisSelectedByStudent && !isCorrect) {
                           optionStyle =
-                            "border-rose-250 bg-rose-50/50 text-sky-950 border-2";
+                            "border-rose-400 bg-rose-50/50 text-sky-950 border-2";
                           badgeStyle = "bg-rose-500 text-white font-black";
                         }
 
@@ -721,8 +833,8 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                       })}
                     </div>
 
-                    {/* Explanation Segment */}
-                    <div className="p-4 rounded-2xl bg-sky-50 border border-sky-100 text-xs text-sky-905 pl-4 relative space-y-2.5">
+{/* Explanation Segment */}
+                    <div className="p-4 rounded-2xl bg-sky-50 border border-sky-100 text-xs text-sky-900 pl-4 relative space-y-2.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-sky-700 font-black uppercase tracking-wider text-[10px]">
                           <Compass className="w-4 h-4 text-sky-600" />{" "}
@@ -750,11 +862,13 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                       {aiExplanationMap[question.id] && (
                         <div className="mt-3 p-3.5 bg-white border border-sky-100 rounded-xl space-y-2 text-sky-950 font-sans tracking-tight leading-relaxed select-text shadow-sm animate-fade-in">
                           <div className="flex items-center gap-1.5 text-[9px] font-black uppercase text-sky-600">
-                            <Sparkles className="w-3 h-3 fill-sky-150" /> Zaheen
+                            <Sparkles className="w-3 h-3 fill-sky-200" /> Zaheen
                             AI Masterclass Explanation:
                           </div>
-                          <div className="whitespace-pre-wrap font-bold text-xs text-sky-900 space-y-1">
-                            {aiExplanationMap[question.id]}
+                          <div className="text-sky-900">
+                            <ReactMarkdown components={markdownComponents}>
+                              {aiExplanationMap[question.id]}
+                            </ReactMarkdown>
                           </div>
                         </div>
                       )}
@@ -764,7 +878,7 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                     {!isCorrect && (
                       <div className="p-4 rounded-2xl bg-violet-50/50 border border-violet-100 text-xs text-violet-900 relative space-y-2.5">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-2 text-violet-750 font-black uppercase tracking-wider text-[10px]">
+                          <div className="flex items-center gap-2 text-violet-700 font-black uppercase tracking-wider text-[10px]">
                             <BookOpen className="w-4 h-4 text-violet-600" /> AI
                             Concept Summarizer 🧠
                           </div>
@@ -774,7 +888,7 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                               handleRequestConceptSummary(question)
                             }
                             disabled={isSummarizingMap[question.id]}
-                            className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider bg-violet-650 hover:bg-violet-700 text-white rounded-lg flex items-center gap-1 cursor-pointer disabled:opacity-55 self-start transition-all"
+                            className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider bg-violet-600 hover:bg-violet-700 text-white rounded-lg flex items-center gap-1 cursor-pointer disabled:opacity-55 self-start transition-all"
                           >
                             <Sparkles className="w-3 h-3 fill-violet-200" />
                             {isSummarizingMap[question.id]
@@ -793,11 +907,13 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                         {conceptSummaryMap[question.id] && (
                           <div className="mt-3 p-3.5 bg-white border border-violet-100 rounded-xl space-y-2 text-sky-950 font-sans tracking-tight leading-relaxed select-text shadow-sm animate-fade-in font-semibold">
                             <div className="flex items-center gap-1.5 text-[9px] font-black uppercase text-violet-600">
-                              <Sparkles className="w-3 h-3 fill-violet-150" />{" "}
+                              <Sparkles className="w-3 h-3 fill-violet-200" />{" "}
                               Bulleted Concept Summary:
                             </div>
-                            <div className="whitespace-pre-wrap font-semibold text-xs text-violet-950 space-y-2 pl-1">
-                              {conceptSummaryMap[question.id]}
+                            <div className="text-violet-950">
+                              <ReactMarkdown components={conceptMarkdownComponents}>
+                                {conceptSummaryMap[question.id]}
+                              </ReactMarkdown>
                             </div>
                           </div>
                         )}
@@ -807,7 +923,6 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
                 );
               })}
             </div>
-          </div>
         </div>
       )}
     </div>

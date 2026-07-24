@@ -7,6 +7,7 @@ import { useApi } from '../hooks/useApi';
 import { fetchAllCrafts } from '../services/origamiApi';
 import { useAuth } from '@/modules/shared/context/AuthContext';
 import { getComputedProfile } from '../utils/progressTracking';
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 
 interface ProfilePageProps {
   darkMode: boolean;
@@ -14,6 +15,7 @@ interface ProfilePageProps {
 
 const ProfilePage = ({ darkMode }: ProfilePageProps) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const base = useOrigamiBase();
   const { isLoggedIn } = useAuth();
   const { data: allCrafts } = useApi(fetchAllCrafts, []);
 
@@ -244,7 +246,7 @@ const ProfilePage = ({ darkMode }: ProfilePageProps) => {
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {bookmarkedCrafts.map((craft) => (
-                  <Link key={craft.id} to={`/origami/craft/${craft.id}`}>
+                 <Link key={craft.id} to={`${base}/craft/${craft.id}`}>
                     <div className={`card-hover rounded-[1.5rem] overflow-hidden ${darkMode ? 'bg-[#16213e]' : 'bg-white'} shadow-md`}>
                       <div className="relative aspect-video">
                         <img src={craft.thumbnail || undefined} alt={craft.title} className="w-full h-full object-cover" loading="lazy" />

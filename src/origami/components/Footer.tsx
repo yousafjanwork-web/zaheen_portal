@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Heart, Mail, Camera, Video, MessageCircle } from 'lucide-react';
 import logo from "../../assets/logo/zaheen-origami-logo1 1.png";
+import { useOrigamiBase } from '../hooks/useOrigamiBase';
 
 interface FooterProps {
   darkMode: boolean;
 }
 
 const Footer = ({ darkMode }: FooterProps) => {
+  const base = useOrigamiBase();
   return (
     <footer className={`relative overflow-hidden ${darkMode ? 'bg-[#0a0a1a]' : 'bg-gray-900'} text-white`}>
       {/* Decorative Top Wave */}
@@ -23,7 +25,7 @@ const Footer = ({ darkMode }: FooterProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <Link to="/origami" className="flex items-center gap-3 mb-4">
+          <Link to={base} className="flex items-center gap-3 mb-4">
   <img
     src={logo}
     alt="Zaheen Origami Logo"
@@ -63,11 +65,11 @@ const Footer = ({ darkMode }: FooterProps) => {
           <div>
             <h4 className="font-fredoka font-bold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2.5">
-              {[
-                { to: '/origami', label: 'Home' },
-                { to: '/origami/library', label: 'Video Library' },
-                { to: '/origami/category/animals', label: 'Categories' },
-                { to: '/origami/profile', label: 'My Profile' },
+            {[
+                { to: base, label: 'Home' },
+                { to: `${base}/library`, label: 'Video Library' },
+                { to: `${base}/category/animals`, label: 'Categories' },
+                { to: `${base}/profile`, label: 'My Profile' },
               
               ].map((link) => (
                 <li key={link.to}>
@@ -86,10 +88,10 @@ const Footer = ({ darkMode }: FooterProps) => {
           <div>
             <h4 className="font-fredoka font-bold text-lg mb-4">Categories</h4>
             <ul className="space-y-2.5">
-              {['🐦 Birds', '🐶 Animals', '🌸 Flowers', '⭐ Stars', '❤️ Hearts', '🎁 Boxes'].map((cat) => (
+             {['🐦 Birds', '🐶 Animals', '🌸 Flowers', '⭐ Stars', '❤️ Hearts', '🎁 Boxes'].map((cat) => (
                 <li key={cat}>
                   <Link
-                    to="/origami/library"
+                    to={`${base}/library`}
                     className="text-gray-400 hover:text-white font-nunito text-sm transition-colors duration-200"
                   >
                     {cat}

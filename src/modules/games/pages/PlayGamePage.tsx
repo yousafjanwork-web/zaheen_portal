@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import MathGame from "../components/MathGame";
 import MemoryGame from "../components/MemoryGame";
@@ -14,6 +14,7 @@ import AnimalAlphabetDray from "../components/AnimalAlphabetDrag";
 import UrduAnimalAlphabet from "../components/UrduAnimalAlphabet";
 import HowManyFruits from "../components/HowManyFruits";
 import Missinglettergame from "../components/Missinglettergame";
+
 // ✅ Games that have their OWN GameLayout inside — no double wrapping
 const SELF_LAYOUT_GAMES = [
   "alphabet-match",
@@ -25,17 +26,14 @@ const SELF_LAYOUT_GAMES = [
 
 const PlayGamePage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const query = new URLSearchParams(location.search);
-  const game = query.get("game")?.toLowerCase();
-  const type = query.get("type") || "kg";
+  const { type = "kg", game: gameParam } = useParams();
+  const game = gameParam?.toLowerCase();
 
   const [loading, setLoading] = useState(true);
   const [iframeError, setIframeError] = useState(false);
 
   if (!game) {
-    navigate(`/games?type=${type}`);
+    navigate(`/games/${type}`);
     return null;
   }
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { classIdFromSlug, classSlugFromId } from "@/config/classSlugs";
+import { classIdFromSlug, classSlugFromId, gradeNumberFromSlug } from "@/config/classSlugs";
 import { slugifySubject } from "../../../config/subjectSlug";
 import student from "../../../assets/images/boy.png";
 import {
@@ -258,8 +258,14 @@ console.log("Current Class Slug:", classSlug, "→ resolved ID:", classId);
   const lang = getLanguage();
   const isRtl = lang === "ur";
 
-  const { classInfo, subjects, loading } = useClassSubjects(Number(classId));
+const { classInfo, subjects, loading } = useClassSubjects(Number(classId));
 
+  const gamesType = (() => {
+    if (classSlug === "kg") return "kg";
+    const num = gradeNumberFromSlug(classSlug ?? "");
+    if (num == null) return "kg";
+    return num <= 5 ? "1-5" : "6-8";
+  })();
   const gradeName =
     (isRtl ? classInfo?.urdu_name : classInfo?.name)
     || classInfo?.name
@@ -374,13 +380,13 @@ const handleSeeAllLessons = () => {
                   tagline={t("kgClassView.funGames.tagline")}
                   btnLabel={t("kgClassView.funGames.btnLabel")}
                   isRtl={isRtl}
-                  onClick={() => navigate("/games")}
+          onClick={() => navigate(`/games/${gamesType}`)}
                   customBtn={
                     <PillBtn
                       bg="#7C3AED"
                       label={t("kgClassView.funGames.btnLabel")}
                       icon={<Gamepad2 size={15} strokeWidth={2} />}
-                      onClick={(e) => { e.stopPropagation(); navigate("/games") }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/games/${gamesType}`); }}
                     />
                   }
                 />
