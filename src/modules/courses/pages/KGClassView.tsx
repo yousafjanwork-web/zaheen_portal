@@ -360,7 +360,7 @@ const handleSeeAllLessons = () => {
                   tagline={t("kgClassView.quizzes.tagline")}
                   btnLabel={t("kgClassView.quizzes.btnLabel")}
                   isRtl={isRtl}
-             onClick={() => navigate(`/${classSlug}/quiz`)}
+        onClick={() => navigate(`/${classSlug}/quiz`)}
                   // badge={<SoonBadge label={t("kgClassView.soonBadge")} />}
                   customBtn={
                     <PillBtn

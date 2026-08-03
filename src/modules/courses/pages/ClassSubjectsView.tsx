@@ -11,18 +11,33 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
- import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 
+/* ─────────────────────────────────────────────────────────────
+   Quiz API helper
+   Counts skills with has_questions === 1 for a given subject.
+──────────────────────────────────────────────────────────────── */
+const BASE = "https://api.zaheen.com.pk/v2";
 
+async function fetchQuizCountForSubject(subjectId: number): Promise<number> {
+  try {
+    const res = await fetch(
+      `${BASE}/api/quiz/adaptive/skills-by-subject?subjectId=${subjectId}`
+    );
+    const json = await res.json();
+    const skills: { has_questions: 0 | 1 }[] = Array.isArray(json?.data)
+      ? json.data
+      : [];
+    return skills.filter((s) => s.has_questions === 1).length;
+  } catch {
+    return 0;
+  }
+}
 
 /* ─────────────────────────────────────────────────────────────
-   useTranslation  — REACTIVE (same pattern as SubjectLecturesView)
-   Listens to storage + languageChange so the component re-renders
-   whenever the user switches language.  Previously getLanguage()
-   was called once at render time and never updated, which is why
-   "Grade 9" stayed in English after switching to Urdu.
+   useTranslation  — REACTIVE
 ──────────────────────────────────────────────────────────────── */
 type TranslationFile = typeof enTranslations;
 
@@ -129,55 +144,18 @@ const StatValue = ({
 };
 
 /* ─────────────────────────────────────────────────────────────
-   Quiz Modal
-──────────────────────────────────────────────────────────────── */
-const QuizzesComingSoonModal = ({ onClose, t }: { onClose: () => void; t: (k: string) => string }) => (
-  <motion.div
-    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    onClick={onClose}
-    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4"
-  >
-    <motion.div
-      initial={{ opacity: 0, scale: 0.88, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.88, y: 20 }}
-      transition={{ type: "spring", stiffness: 340, damping: 28 }}
-      onClick={(e) => e.stopPropagation()}
-      className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-8 flex flex-col items-center text-center gap-5 relative"
-    >
-      <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-        <X size={16} />
-      </button>
-      <motion.div
-        initial={{ scale: 0.6, rotate: -10 }} animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.1 }}
-        className="bg-amber-50 p-5 rounded-2xl border border-amber-100"
-      >
-        <Sparkles size={34} className="text-amber-400" strokeWidth={1.6} />
-      </motion.div>
-      <span className="text-[10px] font-black tracking-widest uppercase text-amber-500 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
-        {t("quizModal.comingSoon")}
-      </span>
-      <div className="space-y-2">
-        <h2 className="text-[22px] font-black text-[#0F172A] leading-tight">{t("quizModal.title")}</h2>
-        <p className="text-slate-500 text-[14px] leading-relaxed">{t("quizModal.description")}</p>
-      </div>
-      <div className="w-full border-t border-slate-100" />
-      <button onClick={onClose} className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-bold text-[14px] py-3 rounded-xl transition-colors duration-200">
-        {t("quizModal.gotIt")}
-      </button>
-    </motion.div>
-  </motion.div>
-);
-
-/* ─────────────────────────────────────────────────────────────
    StatsRow
 ──────────────────────────────────────────────────────────────── */
 const StatsRow = ({
-  lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, iconColor,
-  onLecturesClick, onQuizzesClick, onPastPapersClick, t,
+  lectures, quizzes, pastPapers,
+  lecturesLoading, pastPapersLoading, quizzesLoading,
+  iconColor,
+  onLecturesClick, onQuizzesClick, onPastPapersClick,
+  t,
 }: {
   lectures: number; quizzes: number; pastPapers: number;
-  lecturesLoading: boolean; pastPapersLoading: boolean; iconColor: string;
+  lecturesLoading: boolean; pastPapersLoading: boolean; quizzesLoading: boolean;
+  iconColor: string;
   onLecturesClick: (e: React.MouseEvent) => void;
   onQuizzesClick: (e: React.MouseEvent) => void;
   onPastPapersClick: (e: React.MouseEvent) => void;
@@ -189,7 +167,7 @@ const StatsRow = ({
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/lec:text-slate-600 transition-colors">{t("stats.lectures")}</p>
     </button>
     <button onClick={onQuizzesClick} className="text-left group/quiz hover:opacity-70 transition-opacity focus:outline-none">
-      <StatValue count={0} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
+      <StatValue count={quizzes} loading={quizzesLoading} iconColor={iconColor} comingSoonLabel={t("stats.comingSoon")} />
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 underline underline-offset-2 decoration-dotted group-hover/quiz:text-slate-600 transition-colors">{t("stats.quizzes")}</p>
     </button>
     <button onClick={onPastPapersClick} className="text-left group/pp hover:opacity-70 transition-opacity focus:outline-none">
@@ -204,19 +182,20 @@ const StatsRow = ({
 ═══════════════════════════════════════════════════════════ */
 const FeaturedPhysicsCard = ({
   subject, classInfo, classSlug, gradeType, navigate, isUrdu,
-  lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, onQuizzesClick, t,
+  lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, quizzesLoading,
+  onQuizzesClick, t,
 }: {
-  subject: any; classInfo: any; gradeType: string;
+  subject: any; classInfo: any; classSlug: string; gradeType: string;
   navigate: ReturnType<typeof useNavigate>; isUrdu: boolean;
   lectures: number; quizzes: number; pastPapers: number;
-  lecturesLoading: boolean; pastPapersLoading: boolean;
+  lecturesLoading: boolean; pastPapersLoading: boolean; quizzesLoading: boolean;
   onQuizzesClick: () => void; t: (k: string) => string;
 }) => {
   const meta  = getMeta(subject.name, t);
   const Icon  = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
 
-const goToLectures = () =>
+  const goToLectures = () =>
     navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
@@ -241,17 +220,18 @@ const goToLectures = () =>
           </div>
           <h3 className={`text-[24px] font-bold text-[#0F172A] leading-none mt-1 ${isUrdu ? "font-urdu" : ""}`}>{title}</h3>
         </div>
-       <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
-  {isUrdu ? (subject.urdu_desc || meta.description) : (subject.desc || meta.description)}
-</p>
+        <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
+          {isUrdu ? (subject.urdu_desc || meta.description) : (subject.desc || meta.description)}
+        </p>
         <div className="border-t border-slate-100 mt-auto" />
         <StatsRow
           lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
           lecturesLoading={lecturesLoading} pastPapersLoading={pastPapersLoading}
+          quizzesLoading={quizzesLoading}
           iconColor={meta.iconColor}
           onLecturesClick={(e) => { e.stopPropagation(); goToLectures(); }}
           onQuizzesClick={(e) => { e.stopPropagation(); onQuizzesClick(); }}
-         onPastPapersClick={(e) => {
+          onPastPapersClick={(e) => {
             e.stopPropagation();
             navigate(`/${classSlug}/${slugifySubject(subject.name)}/past-papers`, {
               state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
@@ -269,21 +249,24 @@ const goToLectures = () =>
 ═══════════════════════════════════════════════════════════ */
 const SubjectCard = ({
   subject, classInfo, classSlug, gradeType, navigate, isUrdu, index,
-  lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, onQuizzesClick, t,
+  lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, quizzesLoading,
+  onQuizzesClick, t,
 }: {
-  subject: any; classInfo: any; gradeType: string;
+  subject: any; classInfo: any; classSlug: string; gradeType: string;
   navigate: ReturnType<typeof useNavigate>; isUrdu: boolean; index: number;
   lectures: number; quizzes: number; pastPapers: number;
-  lecturesLoading: boolean; pastPapersLoading: boolean;
+  lecturesLoading: boolean; pastPapersLoading: boolean; quizzesLoading: boolean;
   onQuizzesClick: () => void; t: (k: string) => string;
 }) => {
   const meta  = getMeta(subject.name, t);
   const Icon  = meta.icon;
   const title = isUrdu ? subject.urdu_name || subject.name : subject.name;
-const goToLectures = () =>
+
+  const goToLectures = () =>
     navigate(`/${classSlug}/${slugifySubject(subject.name)}`, {
       state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name },
     });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -296,23 +279,24 @@ const goToLectures = () =>
       </div>
       <div>
         <h3 className={`text-[21px] font-bold text-[#0F172A] leading-tight mb-1.5 ${isUrdu ? "text-right" : ""}`}>{title}</h3>
-    <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
-  {isUrdu ? (subject.urdu_desc || meta.description) : (subject.desc || meta.description)}
-</p>
+        <p className={`text-[14px] text-slate-500 leading-relaxed ${isUrdu ? "text-right" : ""}`}>
+          {isUrdu ? (subject.urdu_desc || meta.description) : (subject.desc || meta.description)}
+        </p>
       </div>
       <div className="border-t border-slate-100" />
       <StatsRow
         lectures={lectures} quizzes={quizzes} pastPapers={pastPapers}
         lecturesLoading={lecturesLoading} pastPapersLoading={pastPapersLoading}
+        quizzesLoading={quizzesLoading}
         iconColor={meta.iconColor}
         onLecturesClick={(e) => { e.stopPropagation(); goToLectures(); }}
         onQuizzesClick={(e) => { e.stopPropagation(); onQuizzesClick(); }}
-       onPastPapersClick={(e) => {
-            e.stopPropagation();
-            navigate(`/${classSlug}/${slugifySubject(subject.name)}/past-papers`, {
-              state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
-            });
-          }}
+        onPastPapersClick={(e) => {
+          e.stopPropagation();
+          navigate(`/${classSlug}/${slugifySubject(subject.name)}/past-papers`, {
+            state: { gradeType, selectedSubject: subject, classTitle: classInfo?.name, subjectName: subject.name },
+          });
+        }}
         t={t}
       />
     </motion.div>
@@ -351,96 +335,117 @@ const CardSkeleton = ({ wide = false }: { wide?: boolean }) => (
 const ClassSubjectsView = () => {
   const { classSlug } = useParams<{ classSlug: string }>();
   const classId = classIdFromSlug(classSlug ?? "");
-  const navigate    = useNavigate();
-  const location    = useLocation();
-  const gradeType   = location.state?.gradeType;
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const gradeType = location.state?.gradeType;
 
-  // ── i18n — now fully reactive ──────────────────────────────
   const { t, lang } = useTranslation();
   const isUrdu      = lang === "ur";
-const { classInfo, subjects, chapterVideos, chapters, loading } =
+
+  const { classInfo, subjects, chapterVideos, chapters, loading } =
     useClassSubjects(classId ?? 0);
 
-  /* ─────────────────────────────────────────────────────────────
-     FIX: gradeName is now derived reactively from both classInfo
-     AND the current language (lang/isUrdu).
-
-     Previously: const gradeName = classInfo?.name  ← always English
-
-     Now:
-       1. Use classInfo.urdu_name when Urdu is active (from API).
-       2. If urdu_name is null/empty, extract the grade number from
-          the English name and build "جماعت 9" as a safe fallback,
-          so we NEVER show "Grade 9" while in Urdu mode.
-       3. Wrapped in useMemo so it reacts to both classInfo loading
-          AND language switching without any extra state.
-  ──────────────────────────────────────────────────────────────── */
-const gradeName = useMemo(() => {
+  /* ── Reactive grade display name ── */
+  const gradeName = useMemo(() => {
     if (!classInfo) return `Grade ${gradeNumberFromSlug(classSlug ?? "") ?? classId}`;
     if (!isUrdu) return classInfo.name || `Grade ${classId}`;
-
-    // Prefer the API-supplied Urdu name when it exists
     const apiUrdu = classInfo.urdu_name?.trim();
     if (apiUrdu) return apiUrdu;
-
-    // Fallback: extract number → build "جماعت N"
-    // e.g. "Grade 9" → "جماعت 9"  |  "Class 10" → "جماعت 10"
     const numMatch = (classInfo.name || "").match(/\d+/);
     if (numMatch) return `جماعت ${numMatch[0]}`;
-
-    // Last resort: return English rather than blank
     return classInfo.name || `Grade ${classId}`;
   }, [classInfo, isUrdu, classId]);
 
-  const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
-  const [showQuizModal, setShowQuizModal]     = useState(false);
+  /* ── Past papers state ── */
   const [pastPaperCounts, setPastPaperCounts] = useState<Record<number, number>>({});
   const [ppLoading, setPpLoading]             = useState(true);
   const [ppFetched, setPpFetched]             = useState(false);
 
-useEffect(() => {
-  if (!classId || subjects.length === 0) return;
-  let cancelled = false;
-  const fetchAllCounts = async () => {
-    setPpLoading(true);
-    try {
-      const results = await Promise.allSettled(
-        subjects.map(async (subject: any) => {
-          const json = await fetchSeniorPastPapers(classId, subject.id);
-          const list: any[] = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [];
-          return { subjectId: subject.id as number, count: list.length };
-        })
-      );
-      if (!cancelled) {
-        const counts: Record<number, number> = {};
-        results.forEach((r) => { if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count; });
-        setPastPaperCounts(counts);
-      }
-    } catch (err) {
-      console.error("Failed to fetch past paper counts:", err);
-    } finally {
-      if (!cancelled) { setPpLoading(false); setPpFetched(true); }
-    }
-  };
-  fetchAllCounts();
-  return () => { cancelled = true; };
-}, [classId, subjects]);
+  /* ── Quiz counts state ── */
+  const [quizCounts, setQuizCounts]               = useState<Record<number, number>>({});
+  const [quizCountsLoading, setQuizCountsLoading] = useState(true);
+  const [quizCountsFetched, setQuizCountsFetched] = useState(false);
 
+  const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
+
+  /* ── Fetch past paper counts ── */
+  useEffect(() => {
+    if (!classId || subjects.length === 0) return;
+    let cancelled = false;
+    const fetchAllCounts = async () => {
+      setPpLoading(true);
+      try {
+        const results = await Promise.allSettled(
+          subjects.map(async (subject: any) => {
+            const json = await fetchSeniorPastPapers(classId, subject.id);
+            const list: any[] = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : [];
+            return { subjectId: subject.id as number, count: list.length };
+          })
+        );
+        if (!cancelled) {
+          const counts: Record<number, number> = {};
+          results.forEach((r) => {
+            if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count;
+          });
+          setPastPaperCounts(counts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch past paper counts:", err);
+      } finally {
+        if (!cancelled) { setPpLoading(false); setPpFetched(true); }
+      }
+    };
+    fetchAllCounts();
+    return () => { cancelled = true; };
+  }, [classId, subjects]);
+
+  /* ── Fetch quiz counts ── */
+  useEffect(() => {
+    if (!classId || subjects.length === 0) return;
+    let cancelled = false;
+    const fetchAllQuizCounts = async () => {
+      setQuizCountsLoading(true);
+      try {
+        const results = await Promise.allSettled(
+          subjects.map(async (subject: any) => {
+            const count = await fetchQuizCountForSubject(subject.id);
+            return { subjectId: subject.id as number, count };
+          })
+        );
+        if (!cancelled) {
+          const counts: Record<number, number> = {};
+          results.forEach((r) => {
+            if (r.status === "fulfilled") counts[r.value.subjectId] = r.value.count;
+          });
+          setQuizCounts(counts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch quiz counts:", err);
+      } finally {
+        if (!cancelled) { setQuizCountsLoading(false); setQuizCountsFetched(true); }
+      }
+    };
+    fetchAllQuizCounts();
+    return () => { cancelled = true; };
+  }, [classId, subjects]);
+
+  /* ── Per-subject stats ── */
   const getSubjectStats = (subjectId: number) => {
     const subjectChapters = chapters.filter((c: any) => c.subject_id === subjectId);
     const chaptersExist   = subjectChapters.length > 0;
     const videosInFlight  = chaptersExist && subjectChapters.every((c: any) => !(c.id in chapterVideos));
     const lecturesLoading = loading || videosInFlight;
-    let lectures = 0, quizzes = 0;
+    let lectures = 0;
     if (!lecturesLoading) {
       subjectChapters.forEach((c: any) => {
         lectures += (chapterVideos[c.id] || []).length;
-        quizzes  += (c.quizzes || []).length;
       });
     }
     const pastPapersLoading = !ppFetched || ppLoading;
     const pastPapers        = pastPapersLoading ? 0 : (pastPaperCounts[subjectId] ?? 0);
-    return { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading };
+    const quizzesLoading    = !quizCountsFetched || quizCountsLoading;
+    const quizzes           = quizzesLoading ? 0 : (quizCounts[subjectId] ?? 0);
+    return { lectures, quizzes, pastPapers, lecturesLoading, pastPapersLoading, quizzesLoading };
   };
 
   const sortedSubjects  = sortSubjects(subjects);
@@ -460,7 +465,9 @@ useEffect(() => {
     return (
       <SubjectCard key={mathsSubject.id} subject={mathsSubject} classInfo={classInfo}
         classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={index}
-        {...stats} onQuizzesClick={() => setShowQuizModal(true)} t={t}
+        {...stats}
+    onQuizzesClick={() => navigate(`/${classSlug}/quiz`, { state: { subjectId: mathsSubject.id } })}
+        t={t}
       />
     );
   };
@@ -471,7 +478,6 @@ useEffect(() => {
       {/* ══════ SIDEBAR ══════ */}
       <aside className="hidden lg:flex w-[272px] shrink-0 h-screen sticky top-0 border-r border-slate-200 flex-col bg-white">
         <div className="px-6 pt-8 pb-6 border-b border-slate-100">
-          {/* FIX: gradeName is now reactive — shows جماعت 9 in Urdu */}
           <p className="text-[#1E3A8A] font-extrabold text-[15px] leading-tight">
             {gradeName} {t("curriculumLabel")}
           </p>
@@ -527,20 +533,18 @@ useEffect(() => {
             </div>
           </div>
 
-        {/* Breadcrumb — also uses reactive gradeName */}
+          {/* Breadcrumb */}
           <div className="text-sm text-slate-400 flex items-center gap-2 mb-7 flex-wrap">
             <Link to="/" className="hover:text-slate-600 transition-colors">{t("home")}</Link>
             <span>/</span>
-            
-            {/* ADDED 9-12 BREADCRUMB HERE */}
             <Link to="/grade-view/9-12" className="hover:text-slate-600 transition-colors">
-             Grades 9-12
+              Grades 9-12
             </Link>
             <span>/</span>
-
             <span className="text-slate-700 font-semibold">{gradeName}</span>
           </div>
-          {/* Heading — also uses reactive gradeName */}
+
+          {/* Heading */}
           <div className="mb-9">
             <h1 className="text-[34px] font-black text-[#0F172A] tracking-tight leading-none mb-2">
               {gradeName} {t("subjectOverview")}
@@ -579,11 +583,12 @@ useEffect(() => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     {(() => {
                       const stats = getSubjectStats(physicsSubject.id);
-                   return (
+                      return (
                         <FeaturedPhysicsCard key={physicsSubject.id} subject={physicsSubject}
                           classInfo={classInfo} classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate}
                           isUrdu={isUrdu} {...stats}
-                          onQuizzesClick={() => setShowQuizModal(true)} t={t}
+                    onQuizzesClick={() => navigate(`/${classSlug}/quiz`, { state: { subjectId: physicsSubject.id } })}
+                          t={t}
                         />
                       );
                     })()}
@@ -596,10 +601,12 @@ useEffect(() => {
                     {!physicsSubject && mathsSubject && renderMathCard(0)}
                     {restSubjects.map((subject: any, i: number) => {
                       const stats = getSubjectStats(subject.id);
-                   return (
+                      return (
                         <SubjectCard key={subject.id} subject={subject} classInfo={classInfo}
                           classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={i}
-                          {...stats} onQuizzesClick={() => setShowQuizModal(true)} t={t}
+                          {...stats}
+                     onQuizzesClick={() => navigate(`/${classSlug}/quiz`, { state: { subjectId: physicsSubject.id } })}
+                          t={t}
                         />
                       );
                     })}
@@ -613,154 +620,8 @@ useEffect(() => {
         </div>
       </main>
 
-      <AnimatePresence>
-        {showQuizModal && <QuizzesComingSoonModal onClose={() => setShowQuizModal(false)} t={t} />}
-      </AnimatePresence>
-
     </section>
   );
 };
 
 export default ClassSubjectsView;
-// const ClassSubjectsView = () => {
-//   const { classId }: any = useParams();
-//   const navigate = useNavigate();
-//   const location = useLocation();
-
-//   const { isLoggedIn } = useAuth(); // ✅ REQUIRED for Sidebar
-
-//   const gradeType = location.state?.gradeType;
-//   const selectedSubjectId = location.state?.selectedSubjectId;
-
-//   const lang = getLanguage();
-//   const isUrdu = lang === "ur";
-
-//   const {
-//     classInfo,
-//     subjects,
-//     selectedSubject,
-//     setSelectedSubject,
-//     chapters,
-//     loading,
-//   } = useClassSubjects(Number(classId), selectedSubjectId);
-
-//   return (
-//     <section className="py-20 bg-slate-50">
-
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-//         {/* ✅ Breadcrumb */}
-//         <div className="mb-6 text-sm text-slate-500 flex gap-2">
-//           <Link to="/">{isUrdu ? "ہوم" : "Home"}</Link>
-//           <span>/</span>
-//           <Link to={`/grade-view/${gradeType}`}>
-//             {isUrdu ? classInfo?.urdu_name : classInfo?.name}
-//           </Link>
-//         </div>
-
-//         {/* ✅ Header */}
-//         {classInfo && (
-//           <ClassWelcomeCard
-//             isUrdu={isUrdu}
-//             classInfo={classInfo}
-//             subjects={subjects}
-//           />
-//         )}
-
-//         {/* ✅ Layout SAME as GradesView */}
-
-//         {/* ✅ Sidebar (ONLY when needed like GradesView) */}
-
-
-//         {/* ✅ MAIN CONTENT */}
-//         <div className="flex-1">
-
-//           {/* ================= SUBJECTS ================= */}
-//           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
-//             {subjects.map((subject: any) => (
-//               <div
-//                 key={subject.id}
-//                 onClick={() => setSelectedSubject(subject)}
-//                 className={`bg-surface-container-low p-6 rounded-xl border border-white/50
-//                     ${selectedSubject?.id === subject.id
-//                     ? "bg-blue-600 text-white shadow-lg"
-//                     : "bg-[#f1efff] hover:shadow-md"
-//                   }`}
-//               >
-//                 <div class="flex items-center justify-between mb-4">
-
-//                   <p className="text-lg font-bold">
-//                     {isUrdu ? subject.urdu_name : subject.name}
-//                   </p>
-
-//                   <p className="text-xs opacity-70">
-//                     {isUrdu ? "مضمون" : "Subject"}
-//                   </p>
-//                 </div>
-
-//               </div>
-
-
-
-//             ))}
-//           </div>
-
-//           <div className="flex flex-col lg:flex-row gap-10">
-
-
-//             {gradeType != "kg" && (
-//               <Sidebar
-//                 isLoggedIn={isLoggedIn}
-//                 isUrdu={isUrdu}
-//                 type={gradeType}
-//                 navigate={navigate}
-//               />
-//             )}
-
-//             {/* ================= CHAPTERS ================= */}
-//             {loading ? (
-//               <Loader />
-//             ) : chapters.length === 0 ? (
-//               <div className="text-center py-20 text-slate-500">
-//                 {isUrdu ? "جلد آرہا ہے" : "Coming Soon"}
-//               </div>
-//             ) : (
-//               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-//                 {chapters.map((c: any, i) => (
-//                   <div
-//                     key={c.id}
-//                     className="bg-white rounded-xl p-6 shadow hover:shadow-lg transition flex flex-col"
-//                   >
-//                     <div className="text-3xl mb-4">📖 Chapter {i + 1}</div>
-
-//                     <h3 className="text-lg font-bold mb-2">
-//                       {isUrdu ? c.urdu_name || c.name : c.name}
-//                     </h3>
-
-//                     <p className="text-sm text-slate-500 mb-6 flex-grow">
-//                       {isUrdu
-//                         ? "اس باب کے اسباق دیکھیں"
-//                         : "Explore lessons, videos and quizzes for this chapter."}
-//                     </p>
-
-//                     <button
-//                       onClick={() =>
-//                         navigate(`/chapter/${c.id}`, {
-//                           state: { chapter: c ,  classId: classId, },
-//                         })
-//                       }
-//                       className="mt-auto py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition"
-//                     >
-//                       {isUrdu ? "شروع کریں" : "Start Learning"}
-//                     </button>
-//                   </div>
-//                 ))}
-//               </div>
-//             )}
-
-//           </div>
-//         </div>
-//        </div>
-//     </section>
-//   );
-// }; 

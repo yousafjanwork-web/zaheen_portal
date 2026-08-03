@@ -22,17 +22,36 @@
  */
 import { useEffect, useState } from "react";
 import { fetchGrades, fetchSubjectsByClass } from "@/modules/shared/services/gradeService";
+import kg from "../../../assets/images/kg.png"
+import grade1 from "../../../assets/images/grade-1.png"
+import grade2 from "../../../assets/images/grade-2.png"
+import grade3 from "../../../assets/images/grade-3.png"
+import grade4 from "../../../assets/images/grade-4.png"
+import grade5 from "../../../assets/images/grade-5.png"
+import grade6 from "../../../assets/images/grade-6.png"
+import grade7 from "../../../assets/images/grade-7.png"
+import grade8 from "../../../assets/images/grade-8.png"
+import grade9 from "../../../assets/images/grade-9.png"
+import grade10 from "../../../assets/images/grade-10.png"
+import grade11 from "../../../assets/images/grade-11.png"
+import grade12 from "../../../assets/images/grade-12.png"
+
 
 const gradeImages: Record<number, string> = {
-  7: "https://images.unsplash.com/photo-1588072432836-e10032774350",
-  8: "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
-  9: "https://images.unsplash.com/photo-1513258496099-48168024aec0",
-  10: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-  11: "https://images.unsplash.com/photo-1571260899304-425eee4c7efc",
-  12: "https://images.unsplash.com/photo-1509062522246-3755977927d7",
-  13: "https://images.unsplash.com/photo-1523580494863-6f3031224c94",
+  1: kg,
+  2: grade1,
+  3: grade2,
+  4: grade3,
+  5: grade4,
+  6: grade5,
+  7: grade6,
+  8: grade7,
+  9: grade8,
+  10: grade9,
+  11: grade10,
+  12: grade11,
+  13: grade12,
 };
-
 const filterGrades = (data: any[], type: string) => {
   if (type === "kg") return data.filter((g) => g.id === 1);
   if (type === "1-5") return data.filter((g) => g.id >= 2 && g.id <= 6);

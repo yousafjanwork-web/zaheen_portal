@@ -42,6 +42,17 @@
  * that's why thumbnails/descriptions went blank when KGLectureView was
  * switched over to the shared hook without it.
  *
+ * THUMBNAIL URLS — the backend returns thumbnail_url values that may
+ * point at either:
+ *   • https://api.zaheen.com.pk/images/...  (API domain — static images
+ *     that are genuinely hosted on the API server, e.g. KG Chapter 1
+ *     letter thumbnails)
+ *   • https://cdn.zaheen.com.pk/images/...  (CDN domain — e.g. KG
+ *     Chapter 2 exercise thumbnails)
+ * Both must be passed through as-is. Do NOT rewrite API-domain URLs to
+ * the CDN domain — the files do not exist there and the browser will get
+ * a 404. The <img> onError fallback in each view handles null/broken URLs.
+ *
  * MIGRATION CHECKLIST (delete old files only after all boxes are checked):
  *   [ ] KGLectureView.tsx / KGClassView.tsx           → use useClassSubjects
  *   [ ] PrimarySubjectDetailView.tsx / PrimaryClassView.tsx → use useClassSubjects
@@ -101,7 +112,6 @@ export const fetchVideoDetail = async (videoId: number) => {
 
 /* ─────────────────────────────────────────────────────────────
    Normalization types & helpers
-   (ported as-is from useKGSubjects.ts — proven to work correctly)
 ──────────────────────────────────────────────────────────────── */
 export interface NormalizedClass {
   id: number;
@@ -137,6 +147,13 @@ export interface NormalizedVideo {
   urdu_name?: string;
   desc?: string;
   urdu_desc?: string;
+  /**
+   * Fully-resolved thumbnail URL — may point at either the API domain
+   * (https://api.zaheen.com.pk/images/...) or the CDN domain
+   * (https://cdn.zaheen.com.pk/images/...) depending on which server
+   * hosts that particular file. Both are valid and must be used as-is.
+   * undefined when the API returned null/empty for this video.
+   */
   thumbnailUrl?: string;
   path: string;
   [key: string]: any;
@@ -191,10 +208,21 @@ export const normalizeVideo = (raw: any): NormalizedVideo => {
   const descUrRaw =
     raw.description_html_ur || raw.description_ur || raw.urdu_desc || "";
 
-  const rawThumb = raw.thumbnail_url || raw.thumbnail;
-  const thumb =
-    (isUrl(rawThumb) ? rawThumb : undefined) ||
-    (isUrl(raw.thumbnailUrl) ? raw.thumbnailUrl : undefined);
+  // Pick the first non-empty thumbnail field the API provides.
+  // Pass the URL through as-is — do NOT rewrite between API and CDN
+  // domains, as each file is only hosted on one of them.
+  const rawThumb =
+    raw.thumbnail_url ||
+    raw.thumbnail ||
+    raw.thumbnailUrl ||
+    raw.thumb ||
+    raw.image ||
+    raw.cover ||
+    raw.poster ||
+    null;
+
+  const thumbnailUrl =
+    rawThumb && isUrl(rawThumb) ? rawThumb : undefined;
 
   return {
     ...raw,
@@ -203,7 +231,7 @@ export const normalizeVideo = (raw: any): NormalizedVideo => {
     urdu_name: nameUr || undefined,
     desc: stripHtml(descEnRaw) || undefined,
     urdu_desc: stripHtml(descUrRaw) || undefined,
-    thumbnailUrl: thumb,
+    thumbnailUrl,
     path: raw.path || "",
   };
 };

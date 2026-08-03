@@ -1,89 +1,109 @@
 /**
  * useUserDisplayName.ts
  *
- * Returns the best display label for the logged-in user:
- *   1. name   (e.g. "Fits Testing")   — from GET /api/users?msisdn=…
- *   2. username (e.g. "ali123")        — fallback if name is empty
- *   3. msisdn  (e.g. "923111185557")  — shown while name loads / if no name exists
+ * Returns the display name for the currently logged-in user.
+ * Source of truth is ALWAYS the API — nothing is stored in localStorage.
  *
- * WHY THE NAME WASN'T SHOWING BEFORE:
- *   resolveUserId() was only called when useVideoProgress mounted (video pages).
- *   If the user stayed on the home page, it never ran, so user_name was never
- *   saved to localStorage, and the navbar kept showing the phone number.
+ * Priority: name → username → msisdn → ""
  *
- * THE FIX:
- *   This hook now calls resolveUserId() itself the moment the navbar mounts.
- *   resolveUserId() is cached — the second call costs nothing (returns instantly).
- *   When it completes it saves "user_name" to localStorage AND fires the
- *   "userResolved" CustomEvent, which updates the navbar state immediately.
+ * API is called once per login session when the hook first mounts.
+ * After a profile save, call notifyNameChanged(newName) to update
+ * every mounted navbar instantly without an extra API call.
  *
- * USAGE in your Navbar component:
- *
- *   import { useUserDisplayName } from "@/modules/shared/hooks/useUserDisplayName";
- *
- *   const Navbar = () => {
- *     const displayName = useUserDisplayName();
- *     return <span>{displayName}</span>;   // replaces the raw msisdn
- *   };
+ * On logout the in-memory state is cleared automatically because
+ * React unmounts and remounts components with an empty msisdn.
  */
 
-import { useEffect, useState } from "react";
-import { resolveUserId } from "@/modules/shared/hooks/Usevideoprogress";
+import { useEffect, useState, useRef } from "react";
+import { getUserProfile } from "@/modules/shared/services/profileService";
 
-/* ─── Read the best available name from localStorage ─── */
-function readName(): string {
-  return (
-    localStorage.getItem("user_name") ||  // real name ("Fits Testing")
-    localStorage.getItem("msisdn")    ||  // phone number fallback
-    ""
-  );
-}
+/* Event name used for same-tab instant updates after profile save */
+const NAME_CHANGED_EVENT = "zaheen:nameChanged";
 
+/* ── Main hook ── */
 export function useUserDisplayName(): string {
-  const [name, setName] = useState<string>(readName);
+  const msisdn = (() => {
+    try { return localStorage.getItem("msisdn") || ""; } catch { return ""; }
+  })();
+
+  const [name, setName] = useState<string>(msisdn); // start with msisdn as placeholder
+  const fetchedFor = useRef<string>(""); // track which msisdn we last fetched for
 
   useEffect(() => {
-    // ── Set up listeners FIRST (synchronous) ─────────────────
+    if (!msisdn) {
+      setName("");
+      fetchedFor.current = "";
+      return;
+    }
 
-    // Fires when resolveUserId() completes in the SAME tab
-    const onResolved = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.name) setName(detail.name);
+    /* ── 1. Listen for instant updates from this tab (after profile save) ── */
+    const onNameChanged = (e: Event) => {
+      const detail = (e as CustomEvent<{ msisdn: string; name: string }>).detail;
+      if (detail?.msisdn === msisdn) {
+        setName(detail.name || msisdn);
+      }
     };
+    window.addEventListener(NAME_CHANGED_EVENT, onNameChanged);
 
-    // Fires when another tab writes to localStorage (cross-tab sync)
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "user_name" || e.key === "msisdn") setName(readName());
-    };
+    /* ── 2. Show msisdn immediately as a placeholder while fetching ── */
+    setName(msisdn);
 
-    window.addEventListener("userResolved", onResolved);
-    window.addEventListener("storage",      onStorage);
-
-    // ── Read current value immediately ───────────────────────
-    // This shows the name straight away if it was already saved
-    // in a previous session or earlier in this session.
-    setName(readName());
-
-    // ── THE KEY FIX: trigger the lookup right now ─────────────
-    // resolveUserId() is cached after the first call, so this is
-    // free on subsequent renders. On first run it calls the API,
-    // saves user_name to localStorage, and dispatches "userResolved"
-    // which the listener above catches → setName() → navbar updates.
-    const msisdn = localStorage.getItem("msisdn");
-    if (msisdn && !localStorage.getItem("user_name")) {
-      // Only call if we don't already have the name
-      resolveUserId().then(() => {
-        // resolveUserId already dispatches "userResolved" which
-        // triggers onResolved above. But read again as a safety net.
-        setName(readName());
-      });
+    /* ── 3. Fetch from API if we haven't fetched for this msisdn yet ── */
+    if (fetchedFor.current !== msisdn) {
+      fetchedFor.current = msisdn;
+      getUserProfile(msisdn)
+        .then((profile) => {
+          if (!profile) return; // no profile yet — keep showing msisdn
+          const display =
+            profile.name?.trim()     ||
+            profile.username?.trim() ||
+            msisdn;
+          setName(display);
+        })
+        .catch(() => {
+          // Network error — keep showing msisdn, will retry on next mount
+          fetchedFor.current = "";
+        });
     }
 
     return () => {
-      window.removeEventListener("userResolved", onResolved);
-      window.removeEventListener("storage",      onStorage);
+      window.removeEventListener(NAME_CHANGED_EVENT, onNameChanged);
     };
-  }, []);
+  }, [msisdn]);
 
   return name;
+}
+
+/**
+ * Call this from ProfilePage after a successful profile save.
+ * Instantly updates the navbar name in this tab without an extra API call.
+ */
+export function notifyNameChanged(msisdn: string, newName: string): void {
+  if (!msisdn) return;
+  window.dispatchEvent(
+    new CustomEvent(NAME_CHANGED_EVENT, {
+      detail: { msisdn, name: newName?.trim() || msisdn },
+    })
+  );
+}
+
+/**
+ * Call this on logout to reset the display name.
+ * Since the hook reads msisdn from localStorage which is cleared on logout,
+ * this is only needed if you want an instant same-tab reset before remount.
+ */
+export function clearDisplayNameCache(): void {
+  // Nothing to clear — we use no localStorage cache.
+  // Dispatch with empty values so any mounted hook resets to "".
+  window.dispatchEvent(
+    new CustomEvent(NAME_CHANGED_EVENT, { detail: { msisdn: "", name: "" } })
+  );
+}
+
+/** @deprecated — use notifyNameChanged() */
+export function invalidateDisplayNameCache(newName: string): void {
+  const msisdn = (() => {
+    try { return localStorage.getItem("msisdn") || ""; } catch { return ""; }
+  })();
+  notifyNameChanged(msisdn, newName);
 }

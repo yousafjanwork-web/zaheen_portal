@@ -14,14 +14,12 @@ const GradeCard = ({ grade, navigate, type }: any) => {
       }}
       className="bg-white rounded-3xl p-5 border border-slate-200 hover:shadow-xl cursor-pointer"
     >
-      <div className="h-30 rounded-2xl overflow-hidden mb-4 relative">
-        <img
-          src={grade.image}
-          className={`w-full h-full ${
-            grade.id <= 6 ? "object-contain bg-slate-50 p-2" : "object-cover"
-          }`}
-          alt={grade.title}
-        />
+    <div className="h-52 sm:h-44 rounded-2xl overflow-hidden mb-4 relative">
+       <img
+  src={grade.image}
+  className="w-full h-full object-cover"
+  alt={grade.title}
+/>
         <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">
           {grade.lessons}
         </div>

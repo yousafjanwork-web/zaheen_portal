@@ -22,6 +22,7 @@ import LoginPage from "@/modules/auth/pages/LoginPage";
 import Chatbot from "@/modules/aiTutor/pages/Chatbot";
 import AiTutorMobile from "@/modules/aiTutor/pages/AiTutorMobile";
 import MzaPage from "@/pages/MzaPage";
+import ProfilePage from "@/pages/ProfilePage";
 import ResourcesPage from "@/modules/courses/pages/ResourcesPage";
 import ResourcePlayer from "@/modules/courses/pages/ResourcesPlayer";
 import { EnrollmentLandingPage } from "@/modules/auth/enrollnow/EnrollNowPage";
@@ -33,6 +34,7 @@ import GamesPage from "@/modules/games/pages/GamesPage";
 import PlayGamePage from "@/modules/games/pages/PlayGamePage";
 import PastPapersPage from "@/modules/courses/pages/PastPapersPage";
 import AllProfessionalCourses from "@/modules/home/sections/AllProfessionalCourses";
+import QuizRouter from "@/modules/courses/pages/QuizRouter"; // adjust path
 
 // ✅ Routers that pick the right view based on class type
 import ClassSubjectsRouter from "@/modules/courses/pages/ClassSubjectsRouter";
@@ -46,6 +48,7 @@ import { OrigamiApp } from "../origami";
 import { DiscoverPakistanApp } from "../pakistan";
 import PakistanMobileApp from "../pakistan/PakistanMobileApp";
 import OrigamiMobileApp from "../origami/Origamimobileapp"; // adjust path
+
 // import { MDCATmobile } from "../mdcat/components/MDCATmobile";
 
 
@@ -71,11 +74,12 @@ const AppRoutes = () => {
 
          
          <Route path="/:classSlug/:subjectSlug" element={<SubjectLecturesRouter />} />
+         <Route path="/:classSlug/quiz" element={<QuizRouter />} />
           {/* <Route path="/:classSlug/quiz" element={<PrimaryGradesQuiz />} />
           <Route path="/assessment/" element={<Assessment />} />
           <Route path="/assessment/:skillId" element={<AssessmentQuiz />} /> */}
-          <Route path="/:classSlug/quiz" element={<PrimaryQuizFlow />} />
-<Route path="/assessment/1" element={<SecondaryQuizFlow />} />
+         <Route path="/:classSlug/quiz" element={<PrimaryQuizFlow />} />
+<Route path="/:classSlug/quiz/secondary" element={<SecondaryQuizFlow />} />
           <Route
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}
@@ -88,6 +92,7 @@ const AppRoutes = () => {
           <Route path="/subscribe" element={<SubscribePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/mza" element={<MzaPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/resource-player" element={<ResourcePlayer />} />
         <Route path="/games/:type" element={<GamesPage />} />

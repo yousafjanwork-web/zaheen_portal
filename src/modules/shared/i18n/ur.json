@@ -728,5 +728,79 @@
 "summerBreak": {
   "title": "سمر بریک",
   "subtitle": "سیکھیں، کھیلیں، بڑھیں"
-}
+},
+"subjectSkillSelector": {
+    "steps": {
+      "selectClass": {
+        "icon": "🎒",
+        "title": "اپنی جماعت منتخب کریں",
+        "subtitle": "دستیاب مضامین اور کوئزز دیکھنے کے لیے اپنا درجہ چنیں"
+      },
+      "selectSubject": {
+        "icon": "📚",
+        "title": "مضمون منتخب کریں",
+        "subtitleWithClass": "آپ {{className}} میں کیا پڑھنا چاہتے ہیں؟",
+        "subtitleDefault": "پڑھنے کے لیے ایک مضمون چنیں"
+      },
+      "selectSkill": {
+        "icon": "📋",
+        "title": "باب منتخب کریں",
+        "subtitleDefault": "وہ باب چنیں جس کی آپ مشق کرنا چاہتے ہیں"
+      },
+      "confirm": {
+        "title": "شروع کرنے کے لیے تیار ہیں؟",
+        "subtitle": "نیچے اپنے کوئز کی تفصیلات دیکھیں"
+      }
+    },
+    "confirmDetails": {
+      "class": "جماعت",
+      "subject": "مضمون",
+      "chapter": "باب",
+      "quizType": "کوئز کی قسم",
+      "quizTypeValue": "موافق کوئز",
+      "difficulty": "مشکل درجہ",
+      "difficultyValue": "آپ کے مطابق خود بخود ڈھل جاتا ہے"
+    },
+    "actions": {
+      "startQuiz": "کوئز شروع کریں ←",
+      "startPractising": "مشق شروع کریں",
+      "back": "← واپس",
+      "tryAgain": "دوبارہ کوشش کریں",
+      "start": "شروع کریں ←",
+      "comingSoon": "جلد آ رہا ہے"
+    },
+    "loading": {
+      "classes": "جماعتیں لوڈ ہو رہی ہیں…",
+      "subjects": "مضامین لوڈ ہو رہے ہیں…",
+      "skills": "ابواب لوڈ ہو رہے ہیں…"
+    },
+    "errors": {
+      "classes": "جماعتیں لوڈ نہیں ہو سکیں۔ براہ کرم دوبارہ کوشش کریں۔",
+      "subjects": "مضامین لوڈ نہیں ہو سکے۔ براہ کرم دوبارہ کوشش کریں۔",
+      "skills": "ابواب لوڈ نہیں ہو سکے۔ براہ کرم دوبارہ کوشش کریں۔"
+    },
+    "empty": {
+      "classesTitle": "کوئی جماعت دستیاب نہیں",
+      "classesSubtitle": "براہ کرم بعد میں دوبارہ دیکھیں۔",
+      "subjectsTitle": "ابھی کوئی مضمون نہیں",
+      "subjectsSubtitle": "اس جماعت کا مواد جلد آ رہا ہے!",
+      "skillsTitle": "ابھی کوئی کوئز دستیاب نہیں",
+      "skillsSubtitle": "جلد دیکھیں — مواد شامل کیا جا رہا ہے!"
+    },
+    "badges": {
+      "chapters": "{{count}} ابواب",
+      "questions": "{{count}} سوالات"
+    },
+    "subjectConfig": {
+      "BookOpen": "انگریزی",
+      "Sigma": "ریاضی",
+      "Languages": "زبان",
+      "Calculator": "ریاضی",
+      "Atom": "سائنس",
+      "Leaf": "حیاتیات",
+      "TaskConical": "مطالعات",
+      "Cpu": "ٹیکنالوجی",
+      "default": "مضمون"
+    }
+  }
 }

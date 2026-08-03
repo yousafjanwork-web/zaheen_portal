@@ -1043,11 +1043,11 @@ const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: s
                     })}
 
                     {/* Quiz Game card */}
-                    <div style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }} onClick={() => navigate(`/assessment/1`)}>
+                    <div style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }} onClick={() => navigate(`/${classSlug}/quiz/secondary`, { state: { subjectId: subject?.id } })}>
                       <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Gamepad2 size={26} style={{ color: "#fff" }} />
                       </div>
-                     <div onClick={() => navigate(`/assessment/1`)} style={{ cursor: "pointer" }}>
+                     <div onClick={() => navigate(`/${classSlug}/quiz/secondary`, { state: { subjectId: subject?.id } })} style={{ cursor: "pointer" }}>
   <h4 style={{ fontSize: "1rem", fontWeight: 900, color: "#111827", margin: "0 0 5px" }}>
     {isUrdu ? "باب کا کوئز گیم" : "Chapter Quiz Game"}
   </h4>

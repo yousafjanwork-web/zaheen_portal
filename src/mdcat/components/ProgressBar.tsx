@@ -72,11 +72,11 @@ const ProgressBar = ({ performanceStats, getSubjectColorBadge }: ProgressBarProp
         Your Progress
       </span>
       <h3 className="text-lg sm:text-xl font-black uppercase text-sky-950">
-        Syllabus Check
+        Correct Answer Percentage
       </h3>
     </div>
     <span className="text-xs font-bold text-slate-400">
-      {avg.toFixed(0)}% avg
+      {avg.toFixed(1)}% avg
     </span>
   </div>
 
@@ -102,7 +102,7 @@ const ProgressBar = ({ performanceStats, getSubjectColorBadge }: ProgressBarProp
                 {name}
               </span>
               <span className="text-xs font-black text-sky-950 shrink-0">
-                {pct.toFixed(0)}%
+                {pct.toFixed(1)}%
               </span>
             </div>
             <div className="h-1.5 sm:h-2 rounded-full bg-sky-50 overflow-hidden">
@@ -122,3 +122,4 @@ const ProgressBar = ({ performanceStats, getSubjectColorBadge }: ProgressBarProp
 };
 
 export default ProgressBar;
+export {SUBJECT_ICON,SUBJECT_THEME};

@@ -35,6 +35,16 @@ import urTranslations from "@/modules/shared/i18n/ur.json";
 /* ─────────────────────────────────────────────────────────────
    FONT
 ──────────────────────────────────────────────────────────────── */
+// Add this helper near the top of the file
+const API_ORIGIN = "https://api.zaheen.com.pk";
+const CDN_ORIGIN  = "https://cdn.zaheen.com.pk";
+
+const swapDomain = (url: string): string => {
+  if (url.startsWith(API_ORIGIN)) return url.replace(API_ORIGIN, CDN_ORIGIN);
+  if (url.startsWith(CDN_ORIGIN)) return url.replace(CDN_ORIGIN, API_ORIGIN);
+  return url;
+};
+
 const FONT = "'Nunito', 'Fredoka One', sans-serif";
 
 const translations: Record<string, any> = {
@@ -667,6 +677,7 @@ const HeroDefault = ({
 const VideoCard = ({
   video,
   index,
+  localIdx,
   isWatched,
   progress,
   isPlaying,
@@ -705,7 +716,7 @@ const VideoCard = ({
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: (index - 1) * 0.05 }}
+   transition={{ duration: 0.3, delay: localIdx * 0.05 }}
       whileHover={{ y: -6, transition: { duration: 0.18 } }}
       onClick={onClick}
       className="bg-white rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-200"
@@ -716,12 +727,22 @@ const VideoCard = ({
       }}
     >
       <div className="relative w-full overflow-hidden bg-slate-200" style={{ aspectRatio: "16/9" }}>
-        <img
-          src={thumbSrc}
-          alt={title}
-          className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).src = fallbackThumbnail; }}
-        />
+       <img
+  src={thumbSrc}
+  alt={title}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    const img = e.target as HTMLImageElement;
+    const swapped = swapDomain(img.src);
+    if (img.src !== swapped) {
+      // Try the other domain once before giving up
+      img.onerror = () => { img.src = fallbackThumbnail; };
+      img.src = swapped;
+    } else {
+      img.src = fallbackThumbnail;
+    }
+  }}
+/>
 
         {isLocked && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -940,6 +961,18 @@ const ChapterSection = ({
   const chLabel = isRtl ? chapter.urdu_name || chapter.name : chapter.name;
   const watched = chapter.videos.filter((v) => watchedSet.has(v.id)).length;
 
+  /* ── Pagination: show VIDEOS_PER_PAGE videos at a time, with arrow
+     buttons to page through the rest of this chapter's videos before
+     the next chapter appears. Avoids one long vertical scroll. ── */
+  const VIDEOS_PER_PAGE = 4;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(chapter.videos.length / VIDEOS_PER_PAGE));
+  const pageStart = page * VIDEOS_PER_PAGE;
+  const pageVideos = chapter.videos.slice(pageStart, pageStart + VIDEOS_PER_PAGE);
+
+  const goPrevPage = () => setPage((p) => Math.max(0, p - 1));
+  const goNextPage = () => setPage((p) => Math.min(totalPages - 1, p + 1));
+
   return (
     <div ref={sectionRef} id={`chapter-${chapter.id}`} className="mb-12 scroll-mt-4">
       {chapter.name && (
@@ -962,26 +995,110 @@ const ChapterSection = ({
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {chapter.videos.map((video, localIdx) => {
-          const globalIdx = globalOffset + localIdx;
-          return (
-            <VideoCard
-              key={video.id}
-              video={video}
-              index={globalIdx + 1}
-              isWatched={watchedSet.has(video.id)}
-              progress={watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0}
-              isPlaying={selectedVideo?.id === video.id}
-              theme={theme}
-              isRtl={isRtl}
-               isLoggedIn={isLoggedIn}
-              onClick={() => onSelect(video, globalIdx)}
-              t={t}
-            />
-          );
-        })}
+
+      <div className="flex items-center gap-3">
+        {/* Prev-page arrow — only shown once there's a previous page */}
+        {totalPages > 1 && (
+          <button
+            onClick={goPrevPage}
+            disabled={page === 0}
+            aria-label="Previous videos"
+            className="hidden sm:flex w-10 h-10 shrink-0 rounded-full border border-slate-200 bg-white items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {isRtl ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        )}
+
+        <div className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={page}
+              initial={{ opacity: 0, x: isRtl ? -24 : 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isRtl ? 24 : -24 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              {pageVideos.map((video, localIdx) => {
+                const globalIdx = globalOffset + pageStart + localIdx;
+                return (
+                  <VideoCard
+                    key={video.id}
+                    video={video}
+                    index={globalIdx + 1}
+                    localIdx={localIdx} // <--- YAHAN LOCAL INDEX PASS KAREIN
+                    isWatched={watchedSet.has(video.id)}
+                    progress={watchedSet.has(video.id) ? 100 : progressMap[video.id] || 0}
+                    isPlaying={selectedVideo?.id === video.id}
+                    theme={theme}
+                    isRtl={isRtl}
+                    isLoggedIn={isLoggedIn}
+                    onClick={() => onSelect(video, globalIdx)}
+                    t={t}
+                  />
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Next-page arrow — advances 4 more videos within this chapter */}
+        {totalPages > 1 && (
+          <button
+            onClick={goNextPage}
+            disabled={page === totalPages - 1}
+            aria-label="Next videos"
+            className="hidden sm:flex w-10 h-10 shrink-0 rounded-full border border-slate-200 bg-white items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+          </button>
+        )}
       </div>
+
+      {/* Mobile pagination controls (arrows hidden above sm, shown here) */}
+      {totalPages > 1 && (
+        <div className="flex sm:hidden items-center justify-center gap-4 mt-5">
+          <button
+            onClick={goPrevPage}
+            disabled={page === 0}
+            aria-label="Previous videos"
+            className="w-10 h-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {isRtl ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+          <span className="text-[12px] font-bold text-slate-500" style={{ fontFamily: FONT }}>
+            {page + 1} / {totalPages}
+          </span>
+          <button
+            onClick={goNextPage}
+            disabled={page === totalPages - 1}
+            aria-label="Next videos"
+            className="w-10 h-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+          </button>
+        </div>
+      )}
+
+      {/* Page dots (desktop/tablet) */}
+      {totalPages > 1 && (
+        <div className="hidden sm:flex items-center justify-center gap-2 mt-5">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              aria-label={`Go to page ${i + 1}`}
+              className="rounded-full transition-all"
+              style={{
+                width: i === page ? 20 : 8,
+                height: 8,
+                backgroundColor: i === page ? theme.accentHex : "#E2E8F0",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="mt-10 border-t border-slate-100" />
     </div>
   );

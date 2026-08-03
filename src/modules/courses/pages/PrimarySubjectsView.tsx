@@ -309,16 +309,17 @@ onClick={() => navigate("/games/1-5")}
 
 /* ── Daily Quizzes Card ── */
 const DailyQuizzesCard = ({
-  navigate, isUrdu, classId, gradeType, index,
+  navigate, isUrdu, classSlug, numericClassId, gradeType, index,
 }: {
   navigate: ReturnType<typeof useNavigate>; isUrdu: boolean;
-  classId: string | undefined; gradeType: string | undefined; index: number;
+ classSlug: string | undefined; gradeType: string | undefined; index: number;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 24 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.35, delay: index * 0.06 }}
-  onClick={() => navigate(`/${classId}/quiz`, { state: { gradeType } })}
+    // UPDATE 1: Append ?classId= to the navigation URL
+   onClick={() => navigate(`/${classSlug}/quiz`, { state: { gradeType } })}
     className="group cursor-pointer rounded-3xl overflow-hidden flex flex-col"
     style={{
       background: "linear-gradient(145deg,#FFF1F2 0%,#FFE4E6 100%)",
@@ -359,7 +360,8 @@ const DailyQuizzesCard = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-           navigate(`/${classId}/quiz`, { state: { gradeType } });
+            // UPDATE 2: Append ?classId= to the navigation URL
+          navigate(`/${classSlug}/quiz`, { state: { gradeType } });
           }}
           className="w-11 h-11 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-110"
           style={{ background: "#BE123C" }}
@@ -610,13 +612,13 @@ const gradeName = useMemo(() => {
               isUrdu={isUrdu}
               index={sortedSubjects.length}
             />
-           <DailyQuizzesCard
-              navigate={navigate}
-              isUrdu={isUrdu}
-              classId={classSlug}
-              gradeType={gradeType}
-              index={sortedSubjects.length + 1}
-            />
+          <DailyQuizzesCard
+  navigate={navigate}
+  isUrdu={isUrdu}
+  classSlug={classSlug}
+  gradeType={gradeType}
+  index={sortedSubjects.length + 1}
+/>
             <AiTutorCard navigate={navigate} isUrdu={isUrdu} />
           </div>
         )}

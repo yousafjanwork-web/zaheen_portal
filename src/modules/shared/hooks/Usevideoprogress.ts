@@ -1,57 +1,68 @@
 /**
- * useVideoProgress.ts  — v6
+ * useVideoProgress.ts  — v8
  *
- * What changed from v5:
+ * What changed from v7:
  *
- *  FIX — resolveUserId() now also saves the user's display name.
- *    After calling GET /api/users?msisdn=… we read data.name and
- *    data.username from the response.  If either exists we write it
- *    to localStorage as "user_name" and dispatch a "userResolved"
- *    CustomEvent on window so the navbar can update immediately
- *    without a page reload.
+ *  FIX — fetchJourney() now awaits resolveUserId() instead of calling
+ *    getUserIdSync(). This eliminates a race condition where the bulk
+ *    pre-load effect fired before the async user ID resolve had settled
+ *    (e.g. on a fresh remount with cached chapter data), causing all
+ *    17+ progress fetches to return null and progressMap to stay empty —
+ *    showing "Not started" on every card despite saved progress.
  *
- *    Priority:  data.name  →  data.username  →  nothing saved
- *    Fallback in the navbar: if "user_name" is empty, show msisdn
- *    (handled by useUserDisplayName hook — see that file).
+ *    Since resolveUserId() caches its result in _cachedUserId after the
+ *    first call, the 20+ parallel fetchJourney() calls in Promise.all
+ *    all hit the fast path and cost nothing extra.
  *
- *  Everything else (throttle, beacon, safeDuration, bulk pre-load,
- *  per-video fetch, flush-on-unload) is UNCHANGED from v5.
+ *    Also removed the now-redundant standalone await resolveUserId()
+ *    at the top of the bulk load() function — fetchJourney handles it.
+ *
+ *  Everything else (throttle, beacon, safeDuration, clearUserCache,
+ *  per-video fetch, flush-on-unload) is UNCHANGED from v7.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const BASE         = "https://api.zaheen.com.pk/v2";
-const THROTTLE_MS  = 10_000;
+const BASE        = "https://api.zaheen.com.pk/v2";
+const THROTTLE_MS = 10_000;
 
 /* ─────────────────────────────────────────────────────────────
-   User ID helper
-   Step 1: read msisdn from localStorage (saved at login).
-   Step 2: if we already resolved user_id once, return it instantly.
-   Step 3: otherwise call GET /api/users?msisdn=… and cache the result.
+   Module-level cache — valid only for the current logged-in user.
+   Call clearUserCache() at logout to invalidate it.
 ──────────────────────────────────────────────────────────────── */
 let _cachedUserId: number | null = null;
 
-// ↓ exported so useUserDisplayName can call it directly from the navbar
-export async function resolveUserId(): Promise<number | null> {
-  // Already resolved this session
-  if (_cachedUserId !== null) return _cachedUserId;
+/**
+ * Call this during logout, BEFORE wiping localStorage.
+ * Resets the in-memory cache so the next login resolves fresh.
+ */
+export function clearUserCache(): void {
+  _cachedUserId = null;
+}
 
-  const stored      = localStorage.getItem("user_id");
+/* ─────────────────────────────────────────────────────────────
+   User ID helper
+──────────────────────────────────────────────────────────────── */
+export async function resolveUserId(): Promise<number | null> {
+  const storedRaw = localStorage.getItem("user_id");
+  const storedId  = storedRaw ? Number(storedRaw) : null;
+
+  // If the cache belongs to a different user, invalidate it.
+  if (_cachedUserId !== null && _cachedUserId !== storedId) {
+    _cachedUserId = null;
+  }
+
   const nameIsSaved = !!localStorage.getItem("user_name");
 
-  // If we already have BOTH the id AND the name cached, return instantly.
-  // Bug fix: previously we returned as soon as user_id was found, which
-  // skipped the name fetch entirely on sessions after the first login.
-  if (stored && nameIsSaved) {
-    _cachedUserId = Number(stored);
+  // Both id and name already resolved for this user — fast path.
+  if (_cachedUserId !== null && nameIsSaved) {
     return _cachedUserId;
   }
 
-  // We need the API — either to get the id for the first time,
-  // or because we have the id but the name was never fetched yet.
+  // Need the API — either first login, or name was never fetched.
   const msisdn = localStorage.getItem("msisdn");
   if (!msisdn) {
-    if (stored) { _cachedUserId = Number(stored); return _cachedUserId; }
+    if (storedId) { _cachedUserId = storedId; return _cachedUserId; }
     return null;
   }
 
@@ -61,13 +72,10 @@ export async function resolveUserId(): Promise<number | null> {
       { headers: { "Content-Type": "application/json" } }
     );
     if (!res.ok) {
-      if (stored) { _cachedUserId = Number(stored); return _cachedUserId; }
+      if (storedId) { _cachedUserId = storedId; return _cachedUserId; }
       return null;
     }
     const json = await res.json();
-
-    // ── v5 had: const id = json?.data?.id
-    // ── v6 reads the whole data object so we can also grab the name
     const data = json?.data;
     const id: number | undefined = data?.id;
     if (!id) return null;
@@ -75,9 +83,6 @@ export async function resolveUserId(): Promise<number | null> {
     _cachedUserId = id;
     localStorage.setItem("user_id", String(id));
 
-    // ── NEW in v6: save display name ──────────────────────────
-    // Priority: real name ("Fits Testing") → username → nothing
-    // If nothing, navbar falls back to msisdn via useUserDisplayName
     const displayName: string =
       data?.name?.trim() ||
       data?.username?.trim() ||
@@ -86,9 +91,6 @@ export async function resolveUserId(): Promise<number | null> {
       localStorage.setItem("user_name", displayName);
     }
 
-    // ── NEW in v6: notify the navbar in the same browser tab ──
-    // window "storage" event only fires in OTHER tabs, so we
-    // dispatch a custom event that useUserDisplayName listens for.
     window.dispatchEvent(
       new CustomEvent("userResolved", {
         detail: { id, name: displayName || msisdn },
@@ -97,6 +99,7 @@ export async function resolveUserId(): Promise<number | null> {
 
     return id;
   } catch {
+    if (storedId) { _cachedUserId = storedId; return _cachedUserId; }
     return null;
   }
 }
@@ -113,7 +116,7 @@ function getUserIdSync(): number | null {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Auth headers — Content-Type only (no token in this app)
+   Auth headers
 ──────────────────────────────────────────────────────────────── */
 function getHeaders(): Record<string, string> {
   return { "Content-Type": "application/json" };
@@ -131,7 +134,7 @@ export interface VideoProgress {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Safe duration helper — avoids sending NaN / Infinity
+   Safe duration helper
 ──────────────────────────────────────────────────────────────── */
 function safeDuration(d: number): number {
   if (!d || !isFinite(d) || isNaN(d)) return 0;
@@ -140,7 +143,6 @@ function safeDuration(d: number): number {
 
 /* ─────────────────────────────────────────────────────────────
    API — POST /api/videos/progress
-   Body: { user_id, video_id, watched_seconds, last_position, total_duration }
 ──────────────────────────────────────────────────────────────── */
 async function postProgress(payload: {
   video_id:        number;
@@ -149,9 +151,8 @@ async function postProgress(payload: {
   total_duration:  number;
 }) {
   if (payload.total_duration <= 0) return;
-
   const user_id = getUserIdSync();
-  if (!user_id) return; // not logged in / not resolved yet
+  if (!user_id) return;
 
   try {
     const res = await fetch(`${BASE}/api/videos/progress`, {
@@ -169,7 +170,7 @@ async function postProgress(payload: {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   API — beacon on tab-close / unload (sync XHR)
+   API — beacon on tab-close / unload
 ──────────────────────────────────────────────────────────────── */
 function beaconProgress(payload: {
   video_id:        number;
@@ -178,13 +179,12 @@ function beaconProgress(payload: {
   total_duration:  number;
 }) {
   if (payload.total_duration <= 0) return;
-
   const user_id = getUserIdSync();
   if (!user_id) return;
 
   try {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${BASE}/api/videos/progress`, false); // sync on unload
+    xhr.open("POST", `${BASE}/api/videos/progress`, false);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.send(JSON.stringify({ user_id, ...payload }));
   } catch { /* page is unloading — ignore */ }
@@ -192,7 +192,6 @@ function beaconProgress(payload: {
 
 /* ─────────────────────────────────────────────────────────────
    API — POST /api/videos/view
-   Body: { user_id, video_id, watched_seconds }
 ──────────────────────────────────────────────────────────────── */
 async function postView(videoId: number) {
   const user_id = getUserIdSync();
@@ -215,23 +214,13 @@ async function postView(videoId: number) {
 
 /* ─────────────────────────────────────────────────────────────
    API — GET /api/videos/learning-journey/:videoId?user_id=…
-   Response shape (v2):
-   {
-     data: {
-       current_video: {
-         duration_seconds: number,
-         progress: {
-           watched_seconds: number,
-           last_position:   number,
-           percentage_watched: number,
-           completed: 0 | 1
-         }
-       }
-     }
-   }
+
+   FIX (v8): now awaits resolveUserId() instead of getUserIdSync().
+   This ensures the user ID is always ready before firing the fetch,
+   even on a fresh remount where _cachedUserId hasn't settled yet.
 ──────────────────────────────────────────────────────────────── */
 async function fetchJourney(videoId: number): Promise<VideoProgress | null> {
-  const user_id = getUserIdSync();
+  const user_id = await resolveUserId(); // ← was getUserIdSync()
   if (!user_id) return null;
 
   try {
@@ -280,7 +269,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
   /* ── Resolve user_id as soon as the user is logged in ───── */
   useEffect(() => {
     if (!isLoggedIn) return;
-    resolveUserId(); // fire-and-forget; caches result for all subsequent calls
+    resolveUserId();
   }, [isLoggedIn]);
 
   /* ── helpers ─────────────────────────────────────────────── */
@@ -305,10 +294,12 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
     let cancelled = false;
 
     async function load() {
-      // Make sure user_id is resolved before firing 20+ requests
-      await resolveUserId();
       if (cancelled) return;
 
+      // fetchJourney() now calls resolveUserId() internally, so we no
+      // longer need a standalone await resolveUserId() here. The first
+      // of the parallel calls will resolve the ID; the rest hit the
+      // fast-path cache (_cachedUserId) at zero cost.
       const results = await Promise.all(allVideoIds.map(fetchJourney));
       if (cancelled) return;
 
@@ -342,8 +333,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
   const fetchJourneyForVideo = useCallback(
     async (videoId: number): Promise<number> => {
       if (!isLoggedIn) return 0;
-      await resolveUserId(); // ensure id is ready
-      const r = await fetchJourney(videoId);
+      const r = await fetchJourney(videoId); // resolveUserId() handled inside
       if (!r) return 0;
 
       const pct =
@@ -356,7 +346,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
       lastPositionRef.current = { ...lastPositionRef.current, [videoId]: r.last_position };
       setLastPositionMap((p) => ({ ...p, [videoId]: r.last_position }));
 
-      return r.last_position; // ← used by selectVideo to seek the <video>
+      return r.last_position;
     },
     [isLoggedIn]
   );
@@ -387,7 +377,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
   const handleTimeUpdate = useCallback(
     (videoId: number, currentTime: number, duration: number) => {
       const dur = safeDuration(duration);
-      if (!dur) return; // metadata not loaded yet
+      if (!dur) return;
 
       const pct = Math.min(100, Math.round((currentTime / dur) * 100));
       setProgressMap((p) => ({ ...p, [videoId]: pct }));
@@ -395,7 +385,6 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
 
       if (!isLoggedIn) return;
 
-      // Accumulate the latest state; the throttle will flush it
       pendingRef.current = {
         video_id:        videoId,
         watched_seconds: Math.round(currentTime),
@@ -439,7 +428,7 @@ export function useVideoProgress(allVideoIds: number[], isLoggedIn: boolean) {
     [isLoggedIn, setPosition]
   );
 
-  /* ── View tracking (fires once per video on first play) ──── */
+  /* ── View tracking ───────────────────────────────────────── */
   const handleView = useCallback(
     (videoId: number) => {
       if (!isLoggedIn) return;

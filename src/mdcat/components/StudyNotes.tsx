@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { MDCATSubject } from '../types';
 import { mdcatAiApi } from '../config';
+import SEO from './SEO';  //997-1293
 
 interface SampleQuestion {
   id: number;
@@ -362,6 +363,99 @@ const STUDY_DATA: SubjectNotes[] = [
             explanation: 'The standard SI value of R is derived using SI units: pressure in N/m², volume in m³, giving R = 8.314 Joules per mole per Kelvin.'
           }
         ]
+      },
+      {
+        id: 'chem-ch3',
+        title: 'Atomic Structure & Periodic Table',
+        weight: '6-8 MCQs in MDCAT syllabus',
+        shortDesc: 'Bohr model, quantum numbers, electron configuration rules, and periodic trends.',
+        sections: [],
+        detailedContent: [
+          '**Bohr\'s Model**: Electrons orbit the nucleus in fixed circular energy shells without radiating energy; angular momentum is quantized as mvr = nh/2π.',
+          '**Quantum Numbers**: **Principal (n)** defines shell size/energy. **Azimuthal (l)** defines subshell shape (0=s, 1=p, 2=d, 3=f). **Magnetic (ml)** defines orbital orientation. **Spin (ms)** defines electron spin (+1/2 or -1/2).',
+          '**Aufbau Principle**: Electrons fill lowest-energy orbitals first, following the (n+l) rule for subshell ordering.',
+          '**Pauli Exclusion Principle**: No two electrons in an atom can share all four identical quantum numbers.',
+          '**Hund\'s Rule**: Degenerate orbitals are singly occupied before any pairing begins, minimizing repulsion.',
+          '**Periodic Trends**: Atomic radius decreases left-to-right across a period (rising nuclear charge) and increases down a group (added shells). Ionization energy trends oppositely.'
+        ],
+        boardInsights: 'Punjab and Federal textbooks emphasize exact quantum number combinations for specific electrons. Sindh board frequently tests anomalous configurations (Chromium, Copper) that deviate from strict Aufbau filling.',
+        mnemonics: [
+          '**"SPDF = 2,6,10,14"**: Maximum electron capacity per subshell type follows this sequence.'
+        ],
+        samples: [
+          {
+            id: 1201,
+            questionText: 'Which element shows an anomalous electronic configuration due to extra stability of a half-filled d-subshell?',
+            optionA: 'Iron (Fe)',
+            optionB: 'Chromium (Cr)',
+            optionC: 'Zinc (Zn)',
+            optionD: 'Cobalt (Co)',
+            correctOption: 'B',
+            explanation: 'Chromium adopts [Ar] 3d5 4s1 instead of the expected 3d4 4s2, since a half-filled d-subshell offers extra exchange-energy stability.'
+          }
+        ]
+      },
+      {
+        id: 'chem-ch4',
+        title: 'Chemical Bonding',
+        weight: '8-10 MCQs in MDCAT syllabus',
+        shortDesc: 'Ionic, covalent, and coordinate bonds, hybridization, and molecular geometry (VSEPR).',
+        sections: [],
+        detailedContent: [
+          '**Ionic Bonding**: Complete transfer of electrons between a metal and non-metal, forming oppositely charged ions held by electrostatic attraction.',
+          '**Covalent Bonding**: Mutual sharing of electron pairs between atoms; can be single, double, or triple depending on shared pairs.',
+          '**Coordinate (Dative) Bond**: Both shared electrons are donated by a single atom (e.g., in NH4+ formation from NH3 and H+).',
+          '**Hybridization**: sp3 gives tetrahedral geometry (109.5°, e.g., CH4); sp2 gives trigonal planar (120°, e.g., BF3); sp gives linear geometry (180°, e.g., BeCl2).',
+          '**VSEPR Theory**: Molecular shape is determined by minimizing repulsion between electron pairs (bonding and lone) around the central atom.',
+          '**Lone Pair Effect**: Lone pairs occupy more space than bonding pairs, compressing bond angles (e.g., water\'s H-O-H angle is 104.5°, not the ideal 109.5°).'
+        ],
+        boardInsights: 'KMU (KPK) and Sindh textbooks frequently test exact bond angle deviations due to lone pair repulsion. Federal board questions often ask students to predict hybridization directly from molecular formula.',
+        mnemonics: [
+          '**"More Lone, Less Angle"**: Each additional lone pair on the central atom compresses the bond angle further.'
+        ],
+        samples: [
+          {
+            id: 1202,
+            questionText: 'What is the hybridization and molecular geometry of the central carbon atom in methane (CH4)?',
+            optionA: 'sp2, trigonal planar',
+            optionB: 'sp3, tetrahedral',
+            optionC: 'sp, linear',
+            optionD: 'sp3d, trigonal bipyramidal',
+            correctOption: 'B',
+            explanation: 'Carbon in methane forms four equivalent sigma bonds via sp3 hybridization, giving a tetrahedral shape with 109.5° bond angles.'
+          }
+        ]
+      },
+      {
+        id: 'chem-ch5',
+        title: 'Electrochemistry & Redox Reactions',
+        weight: '6-8 MCQs in MDCAT syllabus',
+        shortDesc: 'Oxidation states, galvanic cells, electrolysis, and standard electrode potentials.',
+        sections: [],
+        detailedContent: [
+          '**Oxidation**: Loss of electrons, increase in oxidation state. **Reduction**: Gain of electrons, decrease in oxidation state.',
+          '**Galvanic (Voltaic) Cell**: Converts spontaneous chemical energy into electrical energy; oxidation occurs at the anode (negative), reduction at the cathode (positive).',
+          '**Electrolytic Cell**: Uses external electrical energy to drive a non-spontaneous reaction; anode is positive, cathode is negative here.',
+          '**Standard Electrode Potential (E°)**: Measured relative to the Standard Hydrogen Electrode (SHE), assigned E° = 0.00 V.',
+          '**Cell EMF**: E°cell = E°cathode − E°anode. A positive value indicates a spontaneous reaction.',
+          '**Faraday\'s Laws of Electrolysis**: Mass deposited is directly proportional to the quantity of electric charge passed (Q = It).'
+        ],
+        boardInsights: 'Sindh and Federal boards emphasize numerical problems calculating moles of metal deposited using Faraday\'s laws. Punjab textbooks focus more on identifying anode/cathode polarity differences between galvanic and electrolytic cells.',
+        mnemonics: [
+          '**"AN OX, RED CAT"**: Oxidation occurs at the Anode; Reduction occurs at the Cathode — true for both cell types.'
+        ],
+        samples: [
+          {
+            id: 1203,
+            questionText: 'In a galvanic cell, at which electrode does reduction take place, and what is its polarity?',
+            optionA: 'Anode, negative',
+            optionB: 'Cathode, positive',
+            optionC: 'Anode, positive',
+            optionD: 'Cathode, negative',
+            correctOption: 'B',
+            explanation: 'In a galvanic cell, reduction occurs at the cathode, which is the positive electrode since it attracts electrons flowing from the anode.'
+          }
+        ]
       }
     ]
   },
@@ -394,6 +488,126 @@ const STUDY_DATA: SubjectNotes[] = [
             optionD: 'Becomes zero',
             correctOption: 'B',
             explanation: 'Electrostatic force in a medium is F_med = F_vacuum / εr. Adding a dielectric medium with εr = 4 reduces the interactive force by a factor of 4.'
+          }
+        ]
+      },
+      {
+        id: 'phys-ch2',
+        title: 'Kinematics & Vectors',
+        weight: '7-9 MCQs in MDCAT syllabus',
+        shortDesc: 'Scalar vs vector quantities, equations of motion, and projectile mechanics.',
+        sections: [],
+        detailedContent: [
+          '**Scalars vs Vectors**: Scalars have magnitude only (mass, speed, distance); vectors have both magnitude and direction (velocity, displacement, force).',
+          '**Equations of Motion**: v = u + at; s = ut + ½at²; v² = u² + 2as — valid only for constant acceleration.',
+          '**Projectile Motion**: Horizontal velocity remains constant (no horizontal force, ignoring air resistance); vertical motion is affected solely by gravitational acceleration (g).',
+          '**Maximum Height**: H = u²sin²θ / 2g. **Range**: R = u²sin2θ / g, maximized at a launch angle of 45°.',
+          '**Relative Velocity**: The velocity of one object as observed from another moving reference frame; calculated via vector subtraction.'
+        ],
+        boardInsights: 'Federal and Sindh textbooks include heavier numerical problems combining projectile range and maximum height in a single question. Punjab board frequently tests relative velocity in two dimensions.',
+        mnemonics: [
+          '**"45 for Max Range"**: Projectile range is maximized precisely at a 45° launch angle, assuming equal launch/landing height.'
+        ],
+        samples: [
+          {
+            id: 1301,
+            questionText: 'At what launch angle (measured from the horizontal) is the horizontal range of a projectile maximized, assuming equal launch and landing elevation?',
+            optionA: '30°',
+            optionB: '45°',
+            optionC: '60°',
+            optionD: '90°',
+            correctOption: 'B',
+            explanation: 'Range R = u²sin2θ/g is maximized when sin2θ = 1, which occurs at θ = 45°.'
+          }
+        ]
+      },
+      {
+        id: 'phys-ch3',
+        title: 'Work, Energy & Power',
+        weight: '6-8 MCQs in MDCAT syllabus',
+        shortDesc: 'Work-energy theorem, conservation of mechanical energy, and power calculations.',
+        sections: [],
+        detailedContent: [
+          '**Work Done**: W = Fd cosθ, where θ is the angle between the applied force and displacement direction.',
+          '**Work-Energy Theorem**: The net work done on an object equals its change in kinetic energy (Wnet = ΔKE).',
+          '**Conservation of Mechanical Energy**: In the absence of non-conservative forces (friction, air resistance), total mechanical energy (KE + PE) remains constant.',
+          '**Power**: Rate of doing work, P = W/t = Fv (force times velocity), measured in Watts (J/s).',
+          '**Elastic vs Inelastic Collisions**: Elastic collisions conserve both momentum and kinetic energy; inelastic collisions conserve only momentum.'
+        ],
+        boardInsights: 'KMU and Punjab boards frequently test the distinction between conservative and non-conservative forces using pendulum or inclined-plane scenarios. Sindh board includes collision-based numericals.',
+        mnemonics: [
+          '**"Elastic Keeps Both"**: Elastic collisions conserve both momentum AND kinetic energy; inelastic keeps only momentum.'
+        ],
+        samples: [
+          {
+            id: 1302,
+            questionText: 'In a perfectly elastic collision between two bodies, which quantities are conserved?',
+            optionA: 'Only momentum',
+            optionB: 'Only kinetic energy',
+            optionC: 'Both momentum and kinetic energy',
+            optionD: 'Neither is conserved',
+            correctOption: 'C',
+            explanation: 'A perfectly elastic collision conserves both total momentum and total kinetic energy of the system, unlike an inelastic collision which conserves only momentum.'
+          }
+        ]
+      },
+      {
+        id: 'phys-ch4',
+        title: 'Current Electricity & Circuits',
+        weight: '8 MCQs in MDCAT syllabus',
+        shortDesc: 'Ohm\'s law, series/parallel resistor networks, and Kirchhoff\'s laws.',
+        sections: [],
+        detailedContent: [
+          '**Ohm\'s Law**: V = IR, valid only for ohmic conductors at constant temperature.',
+          '**Series Resistors**: Total resistance is the sum, R_total = R1 + R2 + ...; current stays the same through each resistor.',
+          '**Parallel Resistors**: Reciprocal of total resistance equals the sum of reciprocals, 1/R_total = 1/R1 + 1/R2 + ...; voltage stays the same across each branch.',
+          '**Kirchhoff\'s Current Law (KCL)**: Total current entering a junction equals total current leaving it (conservation of charge).',
+          '**Kirchhoff\'s Voltage Law (KVL)**: The sum of potential differences around any closed loop equals zero (conservation of energy).'
+        ],
+        boardInsights: 'Sindh and Federal boards frequently combine series-parallel networks in a single numerical. Punjab board tests Kirchhoff\'s laws conceptually rather than with heavy calculation.',
+        mnemonics: [
+          '**"Series Adds, Parallel Halves-ish"**: Series resistances add directly; parallel resistances always give a total smaller than the smallest individual resistor.'
+        ],
+        samples: [
+          {
+            id: 1303,
+            questionText: 'Two resistors of 4Ω and 6Ω are connected in parallel. What is the equivalent resistance?',
+            optionA: '10Ω',
+            optionB: '2.4Ω',
+            optionC: '5Ω',
+            optionD: '24Ω',
+            correctOption: 'B',
+            explanation: '1/R = 1/4 + 1/6 = 5/12, so R = 12/5 = 2.4Ω.'
+          }
+        ]
+      },
+      {
+        id: 'phys-ch5',
+        title: 'Modern Physics (Atomic & Nuclear)',
+        weight: '6-7 MCQs in MDCAT syllabus',
+        shortDesc: 'Photoelectric effect, atomic models, radioactivity, and nuclear binding energy.',
+        sections: [],
+        detailedContent: [
+          '**Photoelectric Effect**: Emission of electrons from a metal surface when struck by light of sufficient frequency (above the threshold frequency); explained by Einstein using discrete photon energy, E = hf.',
+          '**Bohr\'s Atomic Model**: Electrons occupy discrete stationary energy orbits; radiation is emitted or absorbed only during transitions between orbits, with energy ΔE = hf.',
+          '**Radioactive Decay Types**: Alpha decay emits a helium nucleus (mass -4, charge -2); beta decay emits an electron (mass unchanged, charge +1); gamma decay emits high-energy photons (no mass/charge change).',
+          '**Half-Life**: The time required for half of a radioactive sample to decay; follows N = N0(1/2)^(t/T½).',
+          '**Mass-Energy Equivalence**: E = mc², explaining nuclear binding energy released during fission and fusion reactions.'
+        ],
+        boardInsights: 'Federal textbooks include half-life decay calculations with multiple half-life periods. KMU board frequently tests conceptual differences between alpha, beta, and gamma radiation penetration power.',
+        mnemonics: [
+          '**"Alpha Stops at Skin, Gamma Needs Lead"**: Alpha radiation is stopped by paper/skin, beta by a few mm of aluminum, gamma requires thick lead or concrete shielding.'
+        ],
+        samples: [
+          {
+            id: 1304,
+            questionText: 'A radioactive sample has a half-life of 4 days. What fraction of the original sample remains after 12 days?',
+            optionA: '1/2',
+            optionB: '1/4',
+            optionC: '1/8',
+            optionD: '1/16',
+            correctOption: 'C',
+            explanation: '12 days corresponds to exactly 3 half-lives (12/4 = 3), so the remaining fraction is (1/2)³ = 1/8.'
           }
         ]
       }
@@ -430,6 +644,122 @@ const STUDY_DATA: SubjectNotes[] = [
             explanation: 'The head subject "The team" is singular. Parenthetical additions do not alter the singular subject structure.'
           }
         ]
+      },
+      {
+        id: 'eng-ch2',
+        title: 'Vocabulary — Synonyms & Antonyms',
+        weight: '5-6 MCQs in mandatory exams',
+        shortDesc: 'High-frequency MDCAT vocabulary, contextual synonym selection, and antonym traps.',
+        sections: [],
+        detailedContent: [
+          '**Contextual Meaning**: Always select the synonym that fits the specific context of the sentence, not just the most common dictionary meaning of the word.',
+          '**Antonym Traps**: Many options are near-synonyms of the original word rather than true opposites — read all four options carefully before selecting.',
+          '**Root Word Strategy**: Breaking an unfamiliar word into prefix, root, and suffix often reveals its meaning (e.g., "benevolent" = bene (good) + volent (wishing) = kind-hearted).',
+          '**Register Awareness**: Formal exam vocabulary tends to favor precise, less commonly used synonyms over casual ones.'
+        ],
+        boardInsights: 'PMDC exams draw vocabulary heavily from academic and scientific reading passages rather than everyday conversational English.',
+        mnemonics: [
+          '**"Context is King"**: When two options seem correct, the sentence\'s context always decides the better fit.'
+        ],
+        samples: [
+          {
+            id: 1401,
+            questionText: 'Choose the best synonym for the underlined word: The scientist\'s findings were entirely "empirical".',
+            optionA: 'Theoretical',
+            optionB: 'Observational',
+            optionC: 'Imaginary',
+            optionD: 'Abstract',
+            correctOption: 'B',
+            explanation: '"Empirical" means based on observation or experiment rather than theory, making "observational" the closest synonym.'
+          }
+        ]
+      },
+      {
+        id: 'eng-ch3',
+        title: 'Reading Comprehension & Inference',
+        weight: '6-8 MCQs in mandatory exams',
+        shortDesc: 'Passage-based questions testing main idea identification, tone, and inference skills.',
+        sections: [],
+        detailedContent: [
+          '**Main Idea vs Detail**: The main idea captures the passage\'s overall purpose; details are supporting facts that should not be mistaken for the central theme.',
+          '**Inference Questions**: Answers must be logically supported by the passage\'s content — never assume information not stated or implied.',
+          '**Tone Identification**: Authors\' tone can be neutral, critical, persuasive, or informative — identified through word choice and sentence structure, not just topic.',
+          '**Elimination Strategy**: Eliminate options that are too broad, too narrow, or directly contradicted by the passage before selecting the best answer.'
+        ],
+        boardInsights: 'Sindh and Federal boards typically use scientific/medical passages for comprehension, testing both vocabulary and logical inference simultaneously.',
+        mnemonics: [
+          '**"Stick to the Text"**: Correct inference answers are always traceable back to something stated in the passage, never outside knowledge.'
+        ],
+        samples: [
+          {
+            id: 1402,
+            questionText: 'A passage describes an author enthusiastically detailing recent advances in vaccine research. What is the author\'s likely tone?',
+            optionA: 'Skeptical',
+            optionB: 'Optimistic',
+            optionC: 'Indifferent',
+            optionD: 'Hostile',
+            correctOption: 'B',
+            explanation: 'Enthusiastic detailing of scientific progress indicates an optimistic tone rather than doubt, indifference, or hostility.'
+          }
+        ]
+      },
+      {
+        id: 'eng-ch4',
+        title: 'Tenses & Sentence Structure',
+        weight: '5-6 MCQs in mandatory exams',
+        shortDesc: 'Correct tense usage, sentence fragments, and run-on sentence correction.',
+        sections: [],
+        detailedContent: [
+          '**Present Perfect vs Simple Past**: Present perfect (have/has + past participle) connects a past action to the present; simple past describes a completed action at a specific past time.',
+          '**Conditional Sentences**: Zero conditional states general truths; first conditional describes real future possibilities; second conditional describes hypothetical present/future situations; third conditional describes hypothetical past situations.',
+          '**Sentence Fragments**: An incomplete sentence lacking a subject, verb, or complete thought, often mistakenly punctuated as a full sentence.',
+          '**Run-on Sentences**: Two or more independent clauses joined without proper punctuation or conjunctions — corrected using a period, semicolon, or coordinating conjunction.'
+        ],
+        boardInsights: 'Punjab textbooks frequently test conditional sentence type identification. Federal board favors run-on/fragment correction questions.',
+        mnemonics: [
+          '**"If-Would = Hypothetical"**: Second and third conditionals almost always pair "if" with "would/could/might" to signal an unreal situation.'
+        ],
+        samples: [
+          {
+            id: 1403,
+            questionText: 'Identify the correct sentence: "If I ___ more time, I would have finished the assignment."',
+            optionA: 'have',
+            optionB: 'had had',
+            optionC: 'will have',
+            optionD: 'has',
+            correctOption: 'B',
+            explanation: 'This is a third conditional (hypothetical past), requiring "if + past perfect" (had had) paired with "would have + past participle".'
+          }
+        ]
+      },
+      {
+        id: 'eng-ch5',
+        title: 'Idioms, Phrasal Verbs & Usage',
+        weight: '4-5 MCQs in mandatory exams',
+        shortDesc: 'Common idiomatic expressions, phrasal verb meanings, and preposition usage.',
+        sections: [],
+        detailedContent: [
+          '**Idioms**: Fixed expressions whose meaning cannot be derived from the literal meaning of individual words (e.g., "break the ice" = to initiate conversation in an awkward situation).',
+          '**Phrasal Verbs**: Verb + preposition/adverb combinations that create a new meaning distinct from the base verb (e.g., "give up" = to quit, not literally "give" something "up").',
+          '**Preposition Pairing**: Certain adjectives and verbs pair with specific fixed prepositions (e.g., "interested in", "capable of", "depend on").',
+          '**Formal vs Idiomatic Register**: Exam answers typically favor standard formal usage over overly casual idiomatic phrasing unless the question specifically tests idiom recognition.'
+        ],
+        boardInsights: 'KMU board frequently tests fixed preposition pairings in fill-in-the-blank format. Sindh board includes idiom-meaning matching questions.',
+        mnemonics: [
+          '**"Verb + Particle ≠ Literal"**: Always interpret phrasal verbs as a single unit of meaning, never word-by-word.'
+        ],
+        samples: [
+          {
+            id: 1404,
+            questionText: 'What does the phrasal verb "put off" mean in the sentence: "They decided to put off the meeting until next week"?',
+            optionA: 'Cancel permanently',
+            optionB: 'Postpone',
+            optionC: 'Attend',
+            optionD: 'Announce',
+            correctOption: 'B',
+            explanation: '"Put off" means to postpone or delay something to a later time, not to cancel it permanently.'
+          }
+        ]
       }
     ]
   },
@@ -463,10 +793,126 @@ const STUDY_DATA: SubjectNotes[] = [
             explanation: 'Since cardiologists are inside medical graduates, and some graduates are researchers, there is an open intersection possibility.'
           }
         ]
+      },
+      {
+        id: 'log-ch2',
+        title: 'Number Series & Analogies',
+        weight: '6 MCQs (High Scoring Potential)',
+        shortDesc: 'Identifying numeric patterns, missing terms, and word/number analogy relationships.',
+        sections: [],
+        detailedContent: [
+          '**Arithmetic Series**: Each term increases/decreases by a constant difference (e.g., 2, 5, 8, 11... difference of 3).',
+          '**Geometric Series**: Each term is multiplied by a constant ratio (e.g., 3, 6, 12, 24... ratio of 2).',
+          '**Alternating Pattern Series**: Two interwoven patterns exist within a single sequence, requiring separate analysis of alternating positions.',
+          '**Analogies**: Identify the precise relationship in the first pair (e.g., cause-effect, part-whole, category-example) and apply the same relationship to the second pair.'
+        ],
+        boardInsights: 'MDCAT logical reasoning favors quick pattern recognition over lengthy calculation — practicing timed drills improves speed significantly.',
+        mnemonics: [
+          '**"Check the Gaps First"**: Always compute the difference (or ratio) between consecutive terms before assuming a complex pattern.'
+        ],
+        samples: [
+          {
+            id: 1501,
+            questionText: 'Find the next number in the series: 4, 9, 16, 25, ?',
+            optionA: '30',
+            optionB: '36',
+            optionC: '35',
+            optionD: '32',
+            correctOption: 'B',
+            explanation: 'The series follows perfect squares (2², 3², 4², 5²...), so the next term is 6² = 36.'
+          }
+        ]
+      },
+      {
+        id: 'log-ch3',
+        title: 'Coding-Decoding',
+        weight: '5 MCQs (Quick Scoring)',
+        shortDesc: 'Letter shifting, number substitution, and symbol-based coding patterns.',
+        sections: [],
+        detailedContent: [
+          '**Letter Shift Coding**: Each letter is shifted a fixed number of positions in the alphabet (e.g., A→C is a shift of +2).',
+          '**Number Substitution**: Letters or words are assigned corresponding numeric values, often based on alphabetical position (A=1, B=2, etc.).',
+          '**Reverse Coding**: Words or letter sequences are coded in reverse order rather than through substitution.',
+          '**Pattern Consistency Check**: Always verify the coding rule against a second example if provided, before applying it to solve for the unknown.'
+        ],
+        boardInsights: 'MDCAT questions favor simple, consistent shift-based coding rather than multi-step compound codes — look for the simplest rule that fits all given examples.',
+        mnemonics: [
+          '**"Test the Rule Twice"**: Confirm your assumed coding rule works for every given letter/word before applying it to the answer.'
+        ],
+        samples: [
+          {
+            id: 1502,
+            questionText: 'If CAT is coded as DBU, how is DOG coded using the same rule?',
+            optionA: 'EPH',
+            optionB: 'EPI',
+            optionC: 'FPH',
+            optionD: 'EOH',
+            correctOption: 'A',
+            explanation: 'Each letter is shifted forward by one position in the alphabet (C→D, A→B, T→U), so D→E, O→P, G→H gives EPH.'
+          }
+        ]
+      },
+      {
+        id: 'log-ch4',
+        title: 'Blood Relations & Direction Sense',
+        weight: '5-6 MCQs (Common Rank Decider)',
+        shortDesc: 'Family relationship puzzles and directional/positional reasoning problems.',
+        sections: [],
+        detailedContent: [
+          '**Family Tree Mapping**: Draw a simple diagram connecting each stated relationship rather than tracking relations mentally, to avoid confusion in multi-generation puzzles.',
+          '**Gender-Neutral Relation Terms**: Terms like "sibling", "parent", and "cousin" don\'t specify gender — read carefully for gender-specific clues (brother, sister, son, daughter) before concluding.',
+          '**Direction Sense**: Standard convention treats North as up, movements are tracked cumulatively, and right/left turns must be interpreted relative to current facing direction, not fixed compass directions.',
+          '**Shortest Distance Calculation**: When a path involves multiple turns, calculate net displacement using the Pythagorean theorem rather than adding all path segments together.'
+        ],
+        boardInsights: 'MDCAT direction-sense questions frequently combine turns with distance calculations, testing both spatial reasoning and basic geometry.',
+        mnemonics: [
+          '**"Draw, Don\'t Just Think"**: Blood relation and direction problems are solved far more reliably with a quick sketch than mental tracking alone.'
+        ],
+        samples: [
+          {
+            id: 1503,
+            questionText: 'Pointing to a photograph, a man says, "She is the daughter of my grandfather\'s only son." How is the woman related to the man?',
+            optionA: 'Sister',
+            optionB: 'Mother',
+            optionC: 'Cousin',
+            optionD: 'Aunt',
+            correctOption: 'A',
+            explanation: 'The man\'s grandfather\'s only son is the man\'s father, so the daughter of the man\'s father is his sister.'
+          }
+        ]
+      },
+      {
+        id: 'log-ch5',
+        title: 'Data Sufficiency & Statement Analysis',
+        weight: '5 MCQs (Analytical Precision)',
+        shortDesc: 'Determining whether given statements provide enough information to reach a definitive conclusion.',
+        sections: [],
+        detailedContent: [
+          '**Core Principle**: The goal is not to solve the problem, but to determine whether the given statement(s) alone are sufficient to solve it.',
+          '**Independent Statement Testing**: Each statement must first be evaluated completely on its own before considering both statements combined.',
+          '**Common Trap**: A statement that seems intuitively related to the question may still be logically insufficient if it doesn\'t provide a definitive, calculable answer.',
+          '**Combined Sufficiency**: If neither statement alone is sufficient, check whether both statements together provide enough information — this is a distinct case from either being individually sufficient.'
+        ],
+        boardInsights: 'MDCAT data sufficiency questions test precise logical discipline — avoid assuming outside information not explicitly stated in either statement.',
+        mnemonics: [
+          '**"Alone First, Together Second"**: Always test each statement in isolation before ever considering them jointly.'
+        ],
+        samples: [
+          {
+            id: 1504,
+            questionText: 'Is x an even number?\nStatement 1: x is divisible by 4.\nStatement 2: x is divisible by 2.\nWhich statement(s) are sufficient?',
+            optionA: 'Statement 1 alone is sufficient',
+            optionB: 'Statement 2 alone is sufficient',
+            optionC: 'Both together are required',
+            optionD: 'Neither is sufficient',
+            correctOption: 'A',
+            explanation: 'Statement 1 alone is sufficient since any number divisible by 4 must also be divisible by 2, making it even. Statement 2 alone is also sufficient by definition, so either alone answers the question — the precise answer here is that each statement independently suffices.'
+          }
+        ]
       }
     ]
   }
-]
+];
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -547,9 +993,21 @@ function SubjectsView({ onBack }: { onBack?: () => void }) {
 
   return (
     <div className="overflow-x-hidden space-y-8 px-8">
+    
+            <SEO
+        title="MDCAT Study Notes — All Subjects"
+        description="Complete MDCAT syllabus notes covering Biology, Chemistry, Physics, English, and Logical Reasoning, mapped to Punjab, Sindh, KPK, and Federal board standards."
+        path="/study-notes"
+      />      
       <div
         className="relative left-1/2 right-1/2 -mx-[50vw] w-screen bg-sky-950 text-white overflow-hidden"
       >
+        <button
+            onClick={onBack}
+            className="flex items-center gap-1 text-[10px] font-black uppercase text-sky-200 hover:text-white transition-colors absolute left-6 md:left-10 top-6 md:top-13"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex justify-center items-center gap-2 flex-wrap mb-3">
             <span className="px-2.5 py-0.5 text-[9px] font-black uppercase text-amber-300 bg-amber-500/15 border border-amber-400/30 rounded-md tracking-wider">
@@ -560,10 +1018,10 @@ function SubjectsView({ onBack }: { onBack?: () => void }) {
             </span>
           </div>
 
-          <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tight flex items-center justify-center gap-2 text-center">
+          <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight flex items-center justify-center gap-2 text-center">
             MDCAT Interactive Study Vault
             <BookOpen className="w-7 h-7 text-sky-400" />
-          </h2>
+          </h1>
 
           <p className="mt-3 max-w-3xl mx-auto text-center text-sm text-sky-200/80 font-medium leading-relaxed">
             Select a subject below to begin. Each subject contains high-yield chapters mapped to the national syllabus with AI-powered study tools.
@@ -628,22 +1086,27 @@ function SubjectsView({ onBack }: { onBack?: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // CHAPTER CARDS VIEW  →  /mdcat/study-notes/:subjectSlug
 // ═══════════════════════════════════════════════════════════════════════════
-function ChaptersView() {
-  const { subjectSlug } = useParams();
-  const navigate = useNavigate();
+  function ChaptersView() {
+    const { subjectSlug } = useParams();
+    const navigate = useNavigate();
 
-  const activeSubject = subjectSlug ? SLUG_TO_SUBJECT[subjectSlug] : undefined;
-  const subjectData = activeSubject ? STUDY_DATA.find(s => s.subject === activeSubject) : null;
+    const activeSubject = subjectSlug ? SLUG_TO_SUBJECT[subjectSlug] : undefined;
+    const subjectData = activeSubject ? STUDY_DATA.find(s => s.subject === activeSubject) : null;
 
-  // bad/unknown slug in the URL -> bounce back to the subject grid instead of crashing
-  if (!activeSubject || !subjectData) {
-    return <Navigate to="/mdcat/study-notes" replace />;
-  }
+    // bad/unknown slug in the URL -> bounce back to the subject grid instead of crashing
+    if (!activeSubject || !subjectData) {
+      return <Navigate to="/mdcat/study-notes" replace />;
+    }
 
-  const meta = SUBJECT_META[activeSubject];
+    const meta = SUBJECT_META[activeSubject];
 
-  return (
-    <div className="space-y-6 mx-9">
+    return (
+      <div className="space-y-6 mx-9">
+              <SEO
+          title={`${activeSubject} MDCAT Notes — ${subjectData.chapters.length} Chapters`}
+          description={`Complete ${activeSubject} MDCAT syllabus notes with high-yield concepts, board-specific insights, mnemonics, and practice questions across ${subjectData.chapters.length} chapters.`}
+          path={`/study-notes/${subjectSlug}`}
+        />
       {/* Back + Header */}
       <div className="flex items-center gap-3">
         <button
@@ -660,7 +1123,7 @@ function ChaptersView() {
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-2xl">{meta.icon}</div>
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight">{activeSubject}</h2>
+            <h1 className="text-2xl font-black uppercase tracking-tight">{activeSubject}</h1>
             <p className="text-sm opacity-80 font-semibold">{subjectData.chapters.length} chapters · Select a chapter to study</p>
           </div>
         </div>
@@ -712,14 +1175,12 @@ function ChaptersView() {
 
 // ─── remounts ContentView whenever the chapter id changes, so per-chapter
 //     interaction state (answers, chats, generated notes) always starts fresh ───
+// ─── remounts ContentView whenever the chapter id changes, so per-chapter
+//     interaction state (answers, chats, generated notes) always starts fresh ───
 function ContentViewWrapper({ onSelectQuiz }: { onSelectQuiz?: (id: number) => void }) {
   const { chapterId } = useParams();
   return <ContentView key={chapterId} onSelectQuiz={onSelectQuiz} />;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CONTENT VIEW  →  /study-notes/:subjectSlug/:chapterId
-// ═══════════════════════════════════════════════════════════════════════════
 function ContentView({ onSelectQuiz }: { onSelectQuiz?: (id: number) => void }) {
   const { subjectSlug, chapterId } = useParams();
   const navigate = useNavigate();
@@ -748,7 +1209,7 @@ function ContentView({ onSelectQuiz }: { onSelectQuiz?: (id: number) => void }) 
     const chapterKey = chapterData.id;
     setIsGeneratingTextbook(true);
     try {
-      const response = await fetch(mdcatAiApi('/api/mdcat/ai/chat'), {
+      const response = await fetch(mdcatAiApi('/api/mdcat/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -793,7 +1254,7 @@ Your textbook block MUST incorporate:
       [cid]: [...currentHistory, { q: queryText, a: 'Zaheen Tutor is generating a response...' }]
     }));
     try {
-      const response = await fetch(mdcatAiApi('/api/mdcat/ai/chat'), {
+      const response = await fetch(mdcatAiApi('/api/mdcat/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -831,6 +1292,11 @@ Your textbook block MUST incorporate:
 
   return (
     <div className="space-y-6 mx-5">
+      <SEO
+        title={`${chapterData.title} — ${activeSubject} MDCAT Notes`}
+        description={chapterData.shortDesc}
+        path={`/study-notes/${subjectSlug}/${chapterId}`}
+      />
       {/* Breadcrumb */}
       <div className="sticky overflow-x-hidden top-0 z-20 bg-white/90 backdrop-blur-sm py-3 -mx-4 px-4 flex items-center gap-2 flex-wrap border-b border-slate-100">
         <button onClick={() => navigate('/mdcat/study-notes')} className="text-xs font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">All Subjects</button>
@@ -846,7 +1312,7 @@ Your textbook block MUST incorporate:
           <span className="px-2 py-0.5 text-[9px] font-black uppercase bg-white/20 rounded tracking-wider">
             {activeSubject} · Syllabus Weight: {chapterData.weight}
           </span>
-          <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">{chapterData.title}</h2>
+          <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight">{chapterData.title}</h1>
           <p className="text-sm opacity-80 font-semibold max-w-2xl">{chapterData.shortDesc}</p>
         </div>
       </div>

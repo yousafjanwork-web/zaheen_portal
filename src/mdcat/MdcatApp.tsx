@@ -13,9 +13,11 @@ import {
   MDCATSubject,
 } from "./types";
 import { Navigate, useLocation, useParams } from "react-router-dom";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 
 import { mdcatApi } from "./config";
-import Dashboard from "./components/Dashboard";
+import Dashboard from "./components/Home";
+import DashBoard1 from "./components/Dashboard";
 import QuizSession from "./components/QuizSession";
 import AIQuizGenerator from "./components/AIQuizGenerator";
 import PastPapers from "./components/PastPapers";
@@ -29,6 +31,7 @@ import { Route, Routes, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import LoadingFrame from "./components/LoadingFrame";
 import AiTutorPage from "./components/AiTutorPage";
+import SEO from "./components/SEO";
 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
@@ -184,6 +187,15 @@ async function addNewAIQuestions(questions:Question[])
 
 
 }
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoggedIn } = useAuth();
+  const location = useLocation();
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+  return <>{children}</>;
+}
+
 export default function MdcatApp() {
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "ai-generator" | "past-papers" | "notes" | "faq"
@@ -333,93 +345,166 @@ export default function MdcatApp() {
       <Header setActiveQuiz={setActiveQuiz} activeTab={activeTab} setActiveTab={setActiveTab} daysLeft={daysLeft} selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />
 
 
-<div className="grid flex-1 grid-rows-[minmax(0,1fr)] overflow-x-hidden min-h-0">  <AnimatePresence mode="wait">
+<div className="grid flex-1 grid-rows-[minmax(0,1fr)] overflow-x-hidden min-h-0">
+  <AnimatePresence mode="wait">
     <Routes location={location} key={location.pathname}>
-    <Route
-      path="/study-notes/*"
-      element={
-        <PageTransition>
-          <StudyNotes onSelectQuiz={handleSelectQuiz} onBack={() => navigate("/")} />
-        </PageTransition>
-      }
-      />
-    <Route
-      path="/past-papers"
-      element={
-        <PageTransition>
-          {loading?<LoadingFrame/>:
-          <PastPapers quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
-        }
+      <Route
+        path="/study-notes/*"
+        element={
+          <PageTransition>
+            <SEO
+              title="Study Notes"
+              description="Browse subject-wise MDCAT study notes covering Biology, Chemistry, Physics, and English — aligned with the PMDC syllabus."
+              path="/study-notes"
+            />
+            <StudyNotes onSelectQuiz={handleSelectQuiz} onBack={() => navigate("/mdcat/")} />
           </PageTransition>
-      }
+        }
+      />
+      <Route
+        path="/past-papers"
+        element={
+          <PageTransition>
+            <SEO
+              title="Past Papers"
+              description="Practice with previous years' MDCAT past papers and solved MCQs to prepare effectively for your entry test."
+              path="/past-papers"
+            />
+            {loading ? (
+              <LoadingFrame />
+            ) : (
+              <PastPapers quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
+            )}
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/ai-prep"
+        element={
+          <PageTransition>
+            <SEO
+              title="AI Quiz Generator"
+              description="Generate custom AI-powered MDCAT practice quizzes by subject, topic, and difficulty level."
+              path="/ai-prep"
+            />
+            <AIQuizGenerator
+              onQuizGenerated={handleQuizGenerated}
+              onBack={() => navigate("/mdcat/")}
+              setActiveQuiz={setActiveQuiz}
+            />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/ai-quiz"
+        element={
+          <PageTransition>
+            <SEO
+              title="AI Generated Quiz"
+              description="Take your AI-generated MDCAT practice quiz and test your knowledge instantly."
+              path="/ai-quiz"
+              noIndex
+            />
+            <AIQuizRoute quiz={activeQuiz} onAttemptFinished={handleAttemptFinished} />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/faq"
+        element={
+          <PageTransition>
+            <SEO
+              title="FAQs"
+              description="Frequently asked questions about Zaheen MDCAT Prep — quizzes, study notes, past papers, and AI tools."
+              path="/faq"
+            />
+            <FAQ onBack={() => navigate("/mdcat")} />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/quiz/:quizId"
+        element={
+          <PageTransition>
+            <SEO
+              title="Quiz Session"
+              description="Attempt your MDCAT practice quiz and track your performance in real time."
+              path="/quiz"
+              noIndex
+            />
+            <QuizSessionRoute
+              loading={loading}
+              quizzes={quizzes}
+              onAttemptFinished={handleAttemptFinished}
+            />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <PageTransition>
+            <SEO
+              title="Dashboard"
+              description="Your MDCAT prep dashboard — track performance, countdown to your test date, and jump into practice quizzes."
+              path="/"
+            />
+            {loading ? (
+              <LoadingFrame />
+            ) : (
+              <Dashboard
+                testDate={examDate}
+                setActiveTab={setActiveTab}
+                performanceStats={performanceStats}
+                getSubjectColorBadge={getSubjectColorBadge}
+              />
+            )}
+          </PageTransition>
+        }
+      />
+      <Route
+        element={
+          <PageTransition>
+            <SEO
+              title="AI Tutor"
+              description="Chat with your personal AI tutor for instant MDCAT concept help, explanations, and doubt-solving."
+              path="/ai-tutor"
+            />
+            <div className="h-screen">
+              <AiTutorPage />
+            </div>
+          </PageTransition>
+        }
+        path="/ai-tutor"
       />
     <Route
-      path="/ai-prep"
-      element={
-        <PageTransition>
-          <AIQuizGenerator onQuizGenerated={handleQuizGenerated} onBack={() => navigate("/")} setActiveQuiz={setActiveQuiz}/>
-        </PageTransition>
-      }
-      />
-    <Route path="/ai-quiz"
-    element={
-      <PageTransition>
-       <AIQuizRoute 
-         quiz={activeQuiz}
-         onAttemptFinished={handleAttemptFinished}
-        
-         />
-      </PageTransition>
-      }
-      />
-    <Route
-      path="/faq"
-      element={
-        <PageTransition>
-          <FAQ onBack={() => navigate("/mdcat")} />
-        </PageTransition>
-      }
-      />
-    <Route
-  path="/quiz/:quizId"
-  element={
-    <PageTransition>
-      <QuizSessionRoute
-        
-        loading={loading}
-        quizzes={quizzes}
-        onAttemptFinished={handleAttemptFinished}
-        
-        
-        />
-    </PageTransition>
-  }
-/>
-<Route
-  path="/"
-  element={
-    <PageTransition>
-      {loading ? (
-        <LoadingFrame />
-      ) : (
-        <Dashboard
-        testDate={examDate}
-        setActiveTab={setActiveTab}
-        performanceStats={performanceStats}
-        getSubjectColorBadge={getSubjectColorBadge}
-        />
-      )}
-    </PageTransition>
-  }
-/>
-          <Route element={
+        element={
+          <ProtectedRoute>
             <PageTransition>
-              <div className="h-screen" >
-            <AiTutorPage  />
-              </div>
+              <SEO
+                title="Performance Dashboard"
+                description="View detailed performance stats, personalized recommendations, and quiz history for your MDCAT preparation."
+                path="/dashboard"
+              />
+              {loading ? (
+                <LoadingFrame />
+              ) : (
+                <DashBoard1
+                  stats={performanceStats}
+                  recommendations={recommendations}
+                  onStartGenQuiz={() => navigate("/mdcat/ai-prep")}
+                  onSelectQuiz={handleSelectQuiz}
+                  availableQuizzes={quizzes}
+                  refreshData={fetchAllData}
+                />
+              )}
             </PageTransition>
-            } path="/ai-tutor"/>
-</Routes>
+          </ProtectedRoute>
+        }
+        path="/dashboard"
+      />
+    </Routes>
+
 </AnimatePresence>
 </div>
       <Footer />

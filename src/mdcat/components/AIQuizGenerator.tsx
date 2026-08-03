@@ -4,7 +4,7 @@
  */
 
 import { useState, FormEvent, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import {
   Plus,
@@ -21,8 +21,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { MDCATSubject, Quiz } from "../types";
-import { mdcatAiApi } from "../config";
+import { MDCAT_AI_API, mdcatAiApi, mdcatApi } from "../config";
+import SEO from "./SEO";
 import AIQuestionsPractice from "./AiQuestionsPractice";
+import { body } from "motion/react-client";
 
 interface AIQuizGeneratorProps {
   onQuizGenerated?: (quiz: Quiz) => void;
@@ -35,8 +37,9 @@ export default function AIQuizGenerator({
   onBack,
   setActiveQuiz
 }: AIQuizGeneratorProps) {
- const { isLoggedIn } = useAuth();
+const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [subject, setSubject] = useState<MDCATSubject>("Biology");
   const [subTopic, setSubTopic] = useState("");
   const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">(
@@ -56,9 +59,12 @@ export default function AIQuizGenerator({
     "Configuring logical and analytical parameters for English and Analytical reasoning...",
   ];
 
+  
+
   // Rotate tips during loading
-  useState(() => {
+  useEffect(() => {
     const loaderInterval = setInterval(() => {
+      
       setLoadingTipIndex((prev) => (prev + 1) % tips.length);
     }, 2800);
     return () => clearInterval(loaderInterval);
@@ -69,15 +75,14 @@ export default function AIQuizGenerator({
       window.scrollTo(0,0)
     },[])
 
- const handleGenerate = async (e: FormEvent) => {
+  const handleGenerate = async (e: FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      navigate("/login", { state: { from: window.location.pathname } });
+      navigate("/login", { state: { from: location.pathname } });
       return;
     }
     setIsGenerating(true);
     setErrorMsg(null);
-
     // works if u put a valid id like 1 in the prompt
     const prompt = `Generate exactly ${questionCount} MDCAT ${difficulty} level MCQ questions for subject: ${subject}, topic: ${subTopic.trim() || "General PMDC Syllabus Concepts"}.
 
@@ -106,7 +111,9 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
 }`;
 
     try {
+      
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
+        signal:AbortSignal.timeout(20000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -115,8 +122,10 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
           language: "English",
         }),
       });
+      
 
       if (!response.ok) {
+        console.log(response)
         const errorData = await response.json();
         throw new Error(
           errorData.error ||
@@ -145,43 +154,128 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
       const generatedQuiz: Quiz = JSON.parse(
         clean.slice(jsonStart, jsonEnd + 1),
       );
-            console.log("quiz not generated")
 
-            console.log(generatedQuiz.questions);
+
+            console.log("AI quiz generated")
       onQuizGenerated(generatedQuiz);
-      console.log("quiz generated")
+
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg(
-        err.message ||
-          "Connecting server failed. Sourcing standard test questions.",
-      );
+
+       console.error(err.message);
+       setErrorMsg(
+         err.message ||
+           "Connecting server failed. Sourcing standard test questions.",
+       );
+     
+        try
+        {
+
+          const response = await fetch(mdcatApi("/api/mdcat/quizzes/AISubstituteQuestions"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subject: subject,
+              subTopic: subTopic,
+              questionCount:questionCount
+            }),
+          });
+          if(!response.ok)
+          {
+            console.log(err.message)
+            setErrorMsg(
+           
+             "Could not Find Replacement Quiz aswell.Please Try Again later",
+            );
+            return;
+          }
+
+          const rawquiz = await response.json();
+          const rows = rawquiz.data || rawquiz; // array of question rows from DB
+
+          const quiz: Quiz = {
+            id: 9999,
+            title: `AI Generated ${subject} Quiz`,
+            subject: subject,
+            subTopic: subTopic?.trim() || "General",
+            difficulty: difficulty,
+            isAiGenerated: true,
+            questions: rows.map((row: any, index: number) => ({
+              id: row.id ?? index + 1,
+              questionText: row.question_text ?? row.questionText,
+              optionA: row.option_a ?? row.optionA,
+              optionB: row.option_b ?? row.optionB,
+              optionC: row.option_c ?? row.optionC,
+              optionD: row.option_d ?? row.optionD,
+              correctOption: row.correct_option ?? row.correctOption,
+              explanation: row.explanation,
+              subject: row.subject ?? subject,
+              subTopic: row.sub_topic ?? row.subTopic ?? subTopic,
+            })),
+          };
+        
+        console.log("sub quiz");
+        onQuizGenerated(quiz);
+        }
+        catch(err:any)
+        {
+          setErrorMsg(
+          err.message ||
+           "Could not Find Replacement Quiz aswell.Please Try Again later",
+          );
+        }
+       
+      
     } finally {
       setIsGenerating(false);
     }
   };
 
+  const viewPastAIPapers = () =>
+  {
+    document.getElementById("ai-practice-questions")?.scrollIntoView();
+  }
+
   return (
     <div className="max-w-2xl m-8 lg:max-w-3xl xl:max-w-4xl mx-auto space-y-8">
+
+
+     <SEO
+      title="AI-Generated MDCAT Practice Exams — Custom MCQs by Topic"
+      description="Generate custom MDCAT MCQ practice exams by subject, topic, and difficulty level, powered by AI and aligned with PMDC, UHS, KMU, and Sindh board standards."
+      path="/ai-prep"
+      />
+
+
   {/* Header bar */}
-  <div className="flex items-center justify-between pb-5 border-b border-sky-100">
-    <div className="space-y-1">
-      <h2 className="text-xl md:text-2xl font-black uppercase text-sky-950 flex items-center gap-2">
-        <Sparkles className="w-6 h-6 text-sky-600 animate-pulse" />
-        AI Custom Exams
-      </h2>
-      <p className="text-xs font-bold text-sky-500 uppercase tracking-tight">
-        Formulate high-fidelity MDCAT practice papers dynamically.
-      </p>
-    </div>
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-sky-100">
+  <div className="space-y-1">
+    <h2 className="text-lg sm:text-xl md:text-2xl font-black uppercase text-sky-950 flex items-center gap-2">
+      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600 animate-pulse shrink-0" />
+      AI Custom Exams
+    </h2>
+    <p className="text-[11px] sm:text-xs font-bold text-sky-500 uppercase tracking-tight">
+      Formulate high-fidelity MDCAT practice papers dynamically.
+    </p>
+  </div>
+
+  <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:gap-5 w-full sm:w-auto">
+    <button
+      onClick={viewPastAIPapers}
+      className="text-white text-[11px] sm:text-sm bg-blue-500 hover:scale-102 font-black uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-2.5 border border-sky-100 rounded-xl hover:bg-blue-600 transition-all shadow-sm whitespace-nowrap"
+    >
+      Past Quizzes
+    </button>
+
     <button
       onClick={onBack}
-      className="text-sky-900 hover:text-sky-600 text-[10px] font-black uppercase tracking-wider px-4 py-2.5 border border-sky-100 rounded-xl bg-white hover:bg-sky-50/50 transition-all shadow-sm"
+      className="text-sky-900 hover:text-sky-600 hover:scale-102 text-[11px] sm:text-sm font-black uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-2.5 border border-sky-100 rounded-xl bg-white hover:bg-sky-50/50 transition-all shadow-sm whitespace-nowrap"
     >
-      Cancel
+      Back to Home
     </button>
   </div>
 
+
+      </div>
   <AnimatePresence mode="wait">
     {!isGenerating ? (
       <motion.div
@@ -346,7 +440,9 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
         </span>
       </motion.div>
     )}
+    <div id="ai-practice-questions" className="scroll-mt-24">
     <AIQuestionsPractice setActiveQuiz={setActiveQuiz} />
+    </div>
   </AnimatePresence>
 </div>
   );

@@ -739,6 +739,80 @@
   "summerBreak": {
   "title": "Summer Break",
   "subtitle": "Learn, Play, Grow"
-}
+},
+"subjectSkillSelector": {
+    "steps": {
+      "selectClass": {
+        "icon": "🎒",
+        "title": "Select Your Class",
+        "subtitle": "Choose your grade to explore available subjects and quizzes"
+      },
+      "selectSubject": {
+        "icon": "📚",
+        "title": "Choose a Subject",
+        "subtitleWithClass": "What would you like to practise in {{className}}?",
+        "subtitleDefault": "Pick a subject to explore"
+      },
+      "selectSkill": {
+        "icon": "📋",
+        "title": "Choose a Chapter",
+        "subtitleDefault": "Pick the chapter you want to practise"
+      },
+      "confirm": {
+        "title": "Ready to Start?",
+        "subtitle": "Review your quiz details below"
+      }
+    },
+    "confirmDetails": {
+      "class": "Class",
+      "subject": "Subject",
+      "chapter": "Chapter",
+      "quizType": "Quiz Type",
+      "quizTypeValue": "Adaptive Quiz",
+      "difficulty": "Difficulty",
+      "difficultyValue": "Auto-adjusts to you"
+    },
+    "actions": {
+      "startQuiz": "Start Quiz →",
+      "startPractising": "Start Practising",
+      "back": "← Back",
+      "tryAgain": "Try Again",
+      "start": "Start →",
+      "comingSoon": "Soon"
+    },
+    "loading": {
+      "classes": "Loading classes…",
+      "subjects": "Loading subjects…",
+      "skills": "Loading chapters…"
+    },
+    "errors": {
+      "classes": "Could not load classes. Please try again.",
+      "subjects": "Could not load subjects. Please try again.",
+      "skills": "Could not load skills. Please try again."
+    },
+    "empty": {
+      "classesTitle": "No classes available",
+      "classesSubtitle": "Please check back later.",
+      "subjectsTitle": "No subjects yet",
+      "subjectsSubtitle": "Content for this class is coming soon!",
+      "skillsTitle": "No quizzes available yet",
+      "skillsSubtitle": "Check back soon — content is being added!"
+    },
+    "badges": {
+      "chapters": "{{count}} chapters",
+      "questions": "{{count}} Qs"
+    },
+    "subjectConfig": {
+      "BookOpen": "English",
+      "Sigma": "Math",
+      "Languages": "Language",
+      "Calculator": "Math",
+      "Atom": "Science",
+      "Leaf": "Biology",
+      "TaskConical": "Studies",
+      "Cpu": "Tech",
+      "default": "Subject"
+    }
+  }
 
 }

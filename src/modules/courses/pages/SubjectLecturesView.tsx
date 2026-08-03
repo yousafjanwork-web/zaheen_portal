@@ -273,14 +273,14 @@ const NewSidebar = ({
       isStatic: false,
       isActive: true,
     },
-    {
-      id: "assessments",
-      labelKey: "subjectLecturesView.sidebar.assessments",
-      icon: ClipboardList,
-      path: `/assessment/1`,
-      isStatic: false,
-      isActive: false,
-    },
+    // {
+    //   id: "assessments",
+    //   labelKey: "subjectLecturesView.sidebar.assessments",
+    //   icon: ClipboardList,
+    //   path: `/assessment/1`,
+    //   isStatic: false,
+    //   isActive: false,
+    // },
    {
       id: "past-papers",
       labelKey: "subjectLecturesView.sidebar.pastPapers",

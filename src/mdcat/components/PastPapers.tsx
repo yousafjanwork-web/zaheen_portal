@@ -133,9 +133,16 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
           width: "auto",
         }}
       >
-        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-sky-400">
-          Year-wise papers
-        </span>
+<span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.3em] text-sky-400 bg-sky-500/15 border border-sky-400/30 rounded-md px-3 py-1">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-file-text h-3.5 w-3.5 shrink-0">
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+    <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+    <path d="M10 9H8"></path>
+    <path d="M16 13H8"></path>
+    <path d="M16 17H8"></path>
+  </svg>
+  Year-wise papers
+</span>
         <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-tight flex items-center gap-3 whitespace-nowrap">
           <span>MDCAT</span>
           <span className="bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">Past Papers by Year</span>

@@ -381,7 +381,9 @@ const exitPlayer = useCallback(() => {
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
                     <button className="psv-quiz-btn" style={{ background: theme.color, color: "#fff" }}
-                      onClick={() => navigate(`/class/${classId}/quiz`)}>
+                      onClick={() => navigate(`/${classSlug}/quiz`, {
+  state: { subjectId: subject?.id, subjectName: subject?.name }
+})}>
                       <HelpCircle size={16} /> {isUrdu ? "کوئز لیں" : "Take a Quiz"}
                     </button>
                     <button className="psv-quiz-btn" style={{ background: "#92400E", color: "#fff" }}
@@ -642,7 +644,9 @@ const exitPlayer = useCallback(() => {
               <FileText size={20} style={{ color: theme.color }} />
               {isUrdu ? "ورک شیٹس" : "Worksheets"}
             </button>
-          <button onClick={() => navigate(`/${classSlug}/quiz`)}
+          <button onClick={() => navigate(`/${classSlug}/quiz`, {
+  state: { subjectId: subject?.id, subjectName: subject?.name }
+})}
               style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, borderRadius: 14, border: "1.5px solid #E9EEF6", background: "#F0FDF4", cursor: "pointer", transition: "all 0.2s", fontWeight: 800, fontSize: ".9rem", color: "#065F46", fontFamily: "'Nunito',sans-serif" }}
               onMouseOver={(e) => (e.currentTarget.style.borderColor = "#22C55E")}
               onMouseOut={(e)  => (e.currentTarget.style.borderColor = "#E9EEF6")}>
@@ -881,7 +885,9 @@ const exitPlayer = useCallback(() => {
                     {/* Quiz game card */}
                     <div
                       style={{ borderRadius: 18, border: "2px dashed #D1FAE5", background: "#F0FDF4", padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, cursor: "pointer", textAlign: "center" }}
-                      onClick={() => navigate(`/${classSlug}/quiz`)}
+                      onClick={() => navigate(`/${classSlug}/quiz`, {
+  state: { subjectId: subject?.id }
+})}
                     >
                       <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Gamepad2 size={26} style={{ color: "#fff" }} />
@@ -895,7 +901,10 @@ const exitPlayer = useCallback(() => {
                         </p>
                         <button
                           style={{ background: "#065F46", color: "#fff", border: "none", borderRadius: 11, padding: "10px 22px", fontWeight: 800, fontSize: ".88rem", cursor: "pointer", fontFamily: "'Nunito',sans-serif", display: "inline-flex", alignItems: "center", gap: 6 }}
-                          onClick={(e) => { e.stopPropagation(); navigate(`/${classSlug}/quiz`); }}
+                          onClick={(e) => { 
+  e.stopPropagation(); 
+  navigate(`/${classSlug}/quiz`, { state: { subjectId: subject?.id } }); 
+}}
                         >
                           {isUrdu ? "کھیلنا شروع کریں" : "Start Playing"} <ChevronRight size={15} />
                         </button>
