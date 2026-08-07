@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import MainLayout from "../layouts/MainLayout";
 import Home from "../modules/home/pages/Home";
 import TermsOfService from "@/pages/TermsOfService";
@@ -53,6 +54,12 @@ import OrigamiMobileApp from "../origami/Origamimobileapp"; // adjust path
 
 
 const AppRoutes = () => {
+  useEffect(() => {
+    const disableRightClick = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", disableRightClick);
+    return () => document.removeEventListener("contextmenu", disableRightClick);
+  }, []);
+
   return (
     <BrowserRouter>
       <ScrollToTop />
@@ -79,7 +86,7 @@ const AppRoutes = () => {
           <Route path="/assessment/" element={<Assessment />} />
           <Route path="/assessment/:skillId" element={<AssessmentQuiz />} /> */}
          <Route path="/:classSlug/quiz" element={<PrimaryQuizFlow />} />
-<Route path="/:classSlug/quiz/secondary" element={<SecondaryQuizFlow />} />
+         <Route path="/:classSlug/quiz/secondary" element={<SecondaryQuizFlow />} />
           <Route
             path="/lectures/:className/:chapterId/:chapterName"
             element={<LecturesPage />}

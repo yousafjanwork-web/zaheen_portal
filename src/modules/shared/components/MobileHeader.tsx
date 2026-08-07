@@ -7,15 +7,8 @@ import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useUserDisplayName, clearDisplayNameCache } from "@/modules/shared/hooks/useUserDisplayName";
 
-/* Derive initials from a display name */
 const getInitials = (name: string) =>
-  name
-    .trim()
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
+  name.trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
 const MobileHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,8 +18,12 @@ const MobileHeader = () => {
   const displayName = useUserDisplayName();
   const navigate = useNavigate();
 
+  /* MZA active check */
+  const mzaActive = sessionStorage.getItem("mzaStatus") === "ACTIVE";
+  const isSubscribed = isLoggedIn || mzaActive;
+
   const handleLogout = () => {
-    clearDisplayNameCache(); // clear scoped name cache BEFORE logout
+    clearDisplayNameCache();
     logout();
     setMenuOpen(false);
     navigate("/");
@@ -52,7 +49,7 @@ const MobileHeader = () => {
           <img src={logo} alt="Zaheen" className="h-8" />
         </Link>
 
-        {/* Right side: avatar (logged in) or language toggle (guest) */}
+        {/* Right side */}
         <div className="flex items-center gap-2">
 
           {/* Language picker */}
@@ -112,13 +109,12 @@ const MobileHeader = () => {
         </div>
       </div>
 
-      {/* ── Slide-down menu ── */}
+      {/* Slide-down menu */}
       {menuOpen && (
         <nav className="mt-4 pb-2 space-y-1">
 
-          {/* Nav links */}
           {[
-            { href: "/",               label: t("menu.home") },
+            { href: "/",                label: t("menu.home") },
             { href: "/grade-view/k-12", label: t("menu.courses") },
             { href: "/practice",        label: t("learning.practice") },
             { href: "/results",         label: t("learning.boardResults") },
@@ -134,12 +130,10 @@ const MobileHeader = () => {
             </Link>
           ))}
 
-          {/* ── Auth section ── */}
           <div
             className="mt-3 pt-3"
             style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
           >
-
             {isLoggedIn ? (
               <>
                 {/* User card */}
@@ -147,13 +141,9 @@ const MobileHeader = () => {
                   className="flex items-center gap-3 px-3 py-3 rounded-xl mb-2"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
                 >
-                  {/* Avatar */}
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{
-                      background: "linear-gradient(135deg,#F0B429,#f59e0b)",
-                      color: "#0f172a",
-                    }}
+                    style={{ background: "linear-gradient(135deg,#F0B429,#f59e0b)", color: "#0f172a" }}
                   >
                     {displayName ? getInitials(displayName) : <User size={16} />}
                   </div>
@@ -165,7 +155,6 @@ const MobileHeader = () => {
                   </div>
                 </div>
 
-                {/* Edit profile */}
                 <Link
                   to="/profile"
                   onClick={close}
@@ -175,7 +164,6 @@ const MobileHeader = () => {
                   Edit Profile
                 </Link>
 
-                {/* Logout */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors mt-1"
@@ -186,7 +174,7 @@ const MobileHeader = () => {
               </>
             ) : (
               <>
-                {/* Login */}
+                {/* Login always visible */}
                 <button
                   onClick={() => {
                     close();
@@ -199,25 +187,26 @@ const MobileHeader = () => {
                   {t("auth.login")}
                 </button>
 
-                {/* Subscribe */}
-                <button
-                  onClick={() => {
-                    close();
-                    window.location.href =
-                      "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe";
-                  }}
-                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{
-                    background: "linear-gradient(135deg,#F0B429,#f59e0b)",
-                    color: "#0f172a",
-                    boxShadow: "0 4px 12px rgba(240,180,41,0.3)",
-                  }}
-                >
-                  {t("auth.subscribe")}
-                </button>
+                {/* Subscribe button — hidden for MZA active users */}
+                {!isSubscribed && (
+                  <button
+                    onClick={() => {
+                      close();
+                      window.location.href =
+                        "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe";
+                    }}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      background: "linear-gradient(135deg,#F0B429,#f59e0b)",
+                      color: "#0f172a",
+                      boxShadow: "0 4px 12px rgba(240,180,41,0.3)",
+                    }}
+                  >
+                    {t("auth.subscribe")}
+                  </button>
+                )}
               </>
             )}
-
           </div>
         </nav>
       )}

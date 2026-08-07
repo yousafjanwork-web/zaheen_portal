@@ -8,6 +8,7 @@ import {
   makeJazzCashPayment,
 } from "@/modules/shared/services/subscriptionService";
 import { useAuth } from "@/modules/shared/context/AuthContext";
+import { nav } from "framer-motion/client";
 
 type SubscriptionType = "ZONG" | "OTHER";
 
@@ -16,6 +17,8 @@ const SubscribePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // NOTE: subscriptionType is locked to "ZONG" for now.
+  // "OTHER" (JazzCash/Other Networks) is temporarily hidden but kept for future use.
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("ZONG");
   const [zongMsisdn, setZongMsisdn] = useState("");
   const [otherMsisdn, setOtherMsisdn] = useState("");
@@ -86,40 +89,47 @@ const SubscribePage = () => {
     setLoading(false);
   };
 
-  const handleJazzCashSubscribe = async () => {
-    if (!msisdn) { setError("Please enter your mobile number"); return; }
-    if (!/^\d{6}$/.test(cnic)) { setError("Please enter the last 6 digits of your CNIC"); return; }
-    if (!selectedPackage) { setError("Please select a package"); return; }
-    try {
-      setLoading(true); setError("");
-      const result = await makeJazzCashPayment(msisdn, selectedPackage.amount, cnic);
-      const isSuccess =
-        result?.success === true ||
-        result?.status === "success" ||
-        result?.status === 1 ||
-        result?.status === "1";
-      if (isSuccess) {
-        login(msisdn);
-        localStorage.setItem("activeServiceId", serviceId);
-        setStep("SUCCESS");
-      } else {
-        setError(result?.message || result?.desc || "Payment failed");
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const serverMessage = err.response?.data?.message || err.response?.data?.desc;
-        setError(serverMessage || "Invalid mobile number or CNIC. Please check and try again.");
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Payment failed. Please try again.");
-      }
-    }
-    setLoading(false);
-  };
+  // ── Temporarily disabled: JazzCash / Other Networks handler ──────────────
+  // To re-enable, uncomment this function and restore the OTHER toggle + CNIC field below.
+  //
+  // const handleJazzCashSubscribe = async () => {
+  //   if (!msisdn) { setError("Please enter your mobile number"); return; }
+  //   if (!/^\d{6}$/.test(cnic)) { setError("Please enter the last 6 digits of your CNIC"); return; }
+  //   if (!selectedPackage) { setError("Please select a package"); return; }
+  //   try {
+  //     setLoading(true); setError("");
+  //     const result = await makeJazzCashPayment(msisdn, selectedPackage.amount, cnic);
+  //     const isSuccess =
+  //       result?.success === true ||
+  //       result?.status === "success" ||
+  //       result?.status === 1 ||
+  //       result?.status === "1";
+  //     if (isSuccess) {
+  //       login(msisdn);
+  //       localStorage.setItem("activeServiceId", serviceId);
+  //       setStep("SUCCESS");
+  //     } else {
+  //       setError(result?.message || result?.desc || "Payment failed");
+  //     }
+  //   } catch (err) {
+  //     if (axios.isAxiosError(err)) {
+  //       const serverMessage = err.response?.data?.message || err.response?.data?.desc;
+  //       setError(serverMessage || "Invalid mobile number or CNIC. Please check and try again.");
+  //     } else if (err instanceof Error) {
+  //       setError(err.message);
+  //     } else {
+  //       setError("Payment failed. Please try again.");
+  //     }
+  //   }
+  //   setLoading(false);
+  // };
 
+  // NOTE: When re-enabling OTHER, restore this to:
+  // const handleSubscribe = () => {
+  //   subscriptionType === "ZONG" ? handleZongSubscribe() : handleJazzCashSubscribe();
+  // };
   const handleSubscribe = () => {
-    subscriptionType === "ZONG" ? handleZongSubscribe() : handleJazzCashSubscribe();
+    handleZongSubscribe();
   };
 
   const handleVerifyPin = async () => {
@@ -218,7 +228,10 @@ const SubscribePage = () => {
                 </p>
               </div>
 
-              {/* Toggle */}
+              {/* ── Temporarily hidden: ZONG / OTHER NETWORKS toggle ─────────────
+                   To re-enable, uncomment the block below and also uncomment
+                   handleJazzCashSubscribe() and the CNIC field further down.
+
               <div
                 className="flex mb-6 rounded-xl p-1"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
@@ -242,6 +255,7 @@ const SubscribePage = () => {
                   </button>
                 ))}
               </div>
+              ── End of hidden toggle ── */}
 
               {/* Mobile input */}
               <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
@@ -270,7 +284,10 @@ const SubscribePage = () => {
                 />
               </div>
 
-              {/* CNIC (OTHER only) */}
+              {/* ── Temporarily hidden: CNIC field for OTHER network (JazzCash) ──
+                   To re-enable, uncomment this block along with the toggle and
+                   handleJazzCashSubscribe() above.
+
               {subscriptionType === "OTHER" && (
                 <>
                   <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
@@ -299,6 +316,7 @@ const SubscribePage = () => {
                   </div>
                 </>
               )}
+              ── End of hidden CNIC field ── */}
 
               {/* Package selector */}
               <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
@@ -382,9 +400,9 @@ const SubscribePage = () => {
                     <span className="animate-spin inline-block w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full" />
                     Processing…
                   </>
-                ) : subscriptionType === "OTHER" ? (
-                  "Pay via JazzCash →"
                 ) : isAutoMsisdn ? (
+                  // NOTE: When re-enabling OTHER, restore the ternary:
+                  // subscriptionType === "OTHER" ? "Pay via JazzCash →" : isAutoMsisdn ? "Subscribe Now →" : "Send PIN →"
                   "Subscribe Now →"
                 ) : (
                   "Send PIN →"
@@ -393,7 +411,7 @@ const SubscribePage = () => {
 
               <p className="text-center text-xs text-slate-600 mt-4">
                 By subscribing you agree to our{" "}
-                <span className="text-teal-500 cursor-pointer hover:underline">Terms & Conditions</span>
+                <span onClick={()=> navigate("/terms")} className="text-teal-500 cursor-pointer hover:underline">Terms & Conditions</span>
               </p>
             </>
           )}
