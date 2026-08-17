@@ -27,6 +27,7 @@ import GamesPage from "@/modules/games/pages/GamesPage";
 import PlayGamePage from "@/modules/games/pages/PlayGamePage";
 import SubjectLecturesView from "@/modules/courses/pages/SubjectLecturesView";
 import PastPapersPage from "@/modules/courses/pages/PastPapersPage";
+import ScienceLabPage from "@/modules/scienceLab/pages/ScienceLabPage";
 
 const AppRoutes = () => {
   return (
@@ -70,6 +71,7 @@ const AppRoutes = () => {
           <Route path="/games" element={<GamesPage />} />
           <Route path="/games/play" element={<PlayGamePage />} />
           <Route path="/ai" element={<Chatbot />} />
+          <Route path="/science-lab" element={<ScienceLabPage />} />
         </Route>
 
         {/* Routes WITHOUT MainLayout */}
