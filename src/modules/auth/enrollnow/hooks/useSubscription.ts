@@ -33,7 +33,6 @@ export const useSubscription = () => {
     return digits;
   };
 
-
   const getSubMethod = (msisdnFromParams: string | null) => {
     const params = new URLSearchParams(window.location.search);
 
@@ -66,7 +65,8 @@ export const useSubscription = () => {
   useEffect(() => {
     const urlMsisdn = params.get("msisdn");
     const urlTransactionId = params.get("transaction_id");
-    const urlPin = params.get("pin");
+
+  const urlPin = params.get("pin");
 
     if (urlMsisdn && urlMsisdn.trim() !== "") {
       setMsisdn(urlMsisdn);
@@ -138,7 +138,7 @@ export const useSubscription = () => {
   };
 
   const handleVerify = async (e?: React.FormEvent) => {
-  e?.preventDefault();
+    e?.preventDefault();
 
     const fullPin = pin.join("");
 
@@ -154,21 +154,19 @@ export const useSubscription = () => {
       const urlMsisdn = params.get("msisdn");
       const subMethod = getSubMethod(urlMsisdn);
 
-      console.log("VERIFY SUBMETHOD:", subMethod); // ✅ testing log
+      console.log("VERIFY SUBMETHOD:", subMethod);
 
       const res = await verifyPin(
         formatted,
         fullPin,
         serviceId,
         txid,
-        subMethod // ✅ pass this
+        subMethod
       );
 
       if (res.status === "SUCCESS") {
-        // setAlert({ type: "success", message: "Subscription successful" });
-
-        resetForm();
-        window.location.href = "/thanks-for-subscribing";
+        // ✅ Redirect immediately to /thankyou — no resetForm() delay before redirect
+        window.location.href = "/thankyou";
       } else {
         setAlert({ type: "error", message: "Invalid PIN" });
       }
@@ -181,7 +179,7 @@ export const useSubscription = () => {
 
   const handleResend = async () => {
     setTimer(30);
-   await sendPin(normalizeMsisdn(msisdn), serviceId);
+    await sendPin(normalizeMsisdn(msisdn), serviceId);
   };
 
   return {

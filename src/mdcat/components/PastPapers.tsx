@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { Quiz } from "../types";
+import { useAppNavigate } from "../hooks/useAppNavigate";
 
 interface PastPapersProps {
   quizzes: Quiz[];
@@ -30,7 +31,8 @@ interface PastPapersProps {
 
 export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
   const { isLoggedIn } = useAuth();
-  const navigate = useNavigate();
+ const { navigate } = useAppNavigate();
+ const loginNavigate = useNavigate();
   const location = useLocation();
   const [selectedYear, setSelectedYear] = useState<string>("All");
   const [selectedRegion, setSelectedRegion] = useState<string>("All");
@@ -272,7 +274,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
                 <button
                     onClick={() => {
                       if (!isLoggedIn) {
-                        navigate("/login", { state: { from: location.pathname } });
+                        loginNavigate("/login", { state: { from: location.pathname } });
                         return;
                       }
                       onSelectQuiz(paper.id);

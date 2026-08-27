@@ -10,7 +10,7 @@ interface MobileMenuProps {
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
 
-  const { msisdn, isLoggedIn, logout } = useAuth();
+ const { msisdn, userId, isLoggedIn, logout } = useAuth();
 
   console.log("mobile", msisdn);
 
@@ -41,8 +41,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
         {t("learning.boardResults")}
       </Link>
 
-      <Link to="/ai" className="block hover:text-primary">
+     <Link to="/ai" className="block hover:text-primary">
        {t("menu.ai_tutor")}
+      </Link>
+
+      <Link to="/dashboard" className="block hover:text-primary">
+        Dashboard
       </Link>
 
       {/* AUTH SECTION */}
@@ -56,10 +60,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ open }) => {
               {t("auth.loggedInAs")}
             </div>
 
-            <div className="font-semibold">
-              {msisdn}
+          <div className="font-semibold">
+              {msisdn || `User #${userId}`}
             </div>
-
             <button
               onClick={logout}
               className="w-full border border-red-500 text-red-500 py-2 rounded-lg"

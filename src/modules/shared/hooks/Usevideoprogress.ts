@@ -33,34 +33,102 @@ const THROTTLE_MS = 10_000;
 let _cachedUserId: number | null = null;
 
 /**
+ * Call this right after login/auth resolves, to inject the userId
+ * for users (like kids) who have no msisdn in localStorage.
+ */
+export function setResolvedUserId(id: number): void {
+  _cachedUserId = id;
+  localStorage.setItem("user_id", String(id));
+}
+
+/**
  * Call this during logout, BEFORE wiping localStorage.
  * Resets the in-memory cache so the next login resolves fresh.
  */
 export function clearUserCache(): void {
   _cachedUserId = null;
+  localStorage.removeItem("user_id");
+  localStorage.removeItem("user_name");
 }
-
 /* ─────────────────────────────────────────────────────────────
    User ID helper
 ──────────────────────────────────────────────────────────────── */
-export async function resolveUserId(): Promise<number | null> {
-  const storedRaw = localStorage.getItem("user_id");
-  const storedId  = storedRaw ? Number(storedRaw) : null;
+// Read the authoritative userId from zaheen_auth — works for ALL
+// login methods (OTP, credentials, Google) since loginWithUser()
+// always writes to zaheen_auth.
+function getAuthoritativeUserId(): number | null {
+  try {
+    const raw = localStorage.getItem("zaheen_auth");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.userId ? Number(parsed.userId) : null;
+  } catch {
+    return null;
+  }
+}
 
-  // If the cache belongs to a different user, invalidate it.
-  if (_cachedUserId !== null && _cachedUserId !== storedId) {
+export async function resolveUserId(): Promise<number | null> {
+  // Always trust zaheen_auth first — it's updated by loginWithUser()
+  // for every login method (OTP, credentials, Google).
+  const authoritativeId = getAuthoritativeUserId();
+
+  // If the cached ID doesn't match zaheen_auth, invalidate the cache.
+  // This handles user switching correctly regardless of login method.
+  if (authoritativeId !== null && _cachedUserId !== authoritativeId) {
     _cachedUserId = null;
+    // Clear stale user_id and user_name from previous user
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
   }
 
-  const nameIsSaved = !!localStorage.getItem("user_name");
-
-  // Both id and name already resolved for this user — fast path.
-  if (_cachedUserId !== null && nameIsSaved) {
+  // Fast path — cache is valid for current user
+  if (_cachedUserId !== null && _cachedUserId === authoritativeId) {
     return _cachedUserId;
   }
 
-  // Need the API — either first login, or name was never fetched.
-  const msisdn = localStorage.getItem("msisdn");
+  // If zaheen_auth has a userId, use it directly — no API call needed.
+  // This covers credentials login and Google login perfectly.
+  if (authoritativeId !== null) {
+    _cachedUserId = authoritativeId;
+    localStorage.setItem("user_id", String(authoritativeId));
+
+    // Try to resolve display name if not already saved for this user
+    const savedId = localStorage.getItem("user_id");
+    const nameIsSaved = !!localStorage.getItem("user_name");
+    if (!nameIsSaved || Number(savedId) !== authoritativeId) {
+      // Fetch name in background — don't block progress tracking
+      const msisdn = localStorage.getItem("msisdn");
+      if (msisdn) {
+        fetch(
+          `${BASE}/api/users?msisdn=${encodeURIComponent(msisdn)}`,
+          { headers: { "Content-Type": "application/json" } }
+        )
+          .then((r) => r.json())
+          .then((json) => {
+            const data = json?.data;
+            const displayName =
+              data?.name?.trim() || data?.username?.trim() || "";
+            if (displayName) {
+              localStorage.setItem("user_name", displayName);
+              window.dispatchEvent(
+                new CustomEvent("userResolved", {
+                  detail: { id: authoritativeId, name: displayName },
+                })
+              );
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
+    return _cachedUserId;
+  }
+
+  // No zaheen_auth userId — guest or legacy OTP path
+  const storedRaw = localStorage.getItem("user_id");
+  const storedId  = storedRaw ? Number(storedRaw) : null;
+  const msisdn    = localStorage.getItem("msisdn");
+
   if (!msisdn) {
     if (storedId) { _cachedUserId = storedId; return _cachedUserId; }
     return null;
@@ -84,9 +152,7 @@ export async function resolveUserId(): Promise<number | null> {
     localStorage.setItem("user_id", String(id));
 
     const displayName: string =
-      data?.name?.trim() ||
-      data?.username?.trim() ||
-      "";
+      data?.name?.trim() || data?.username?.trim() || "";
     if (displayName) {
       localStorage.setItem("user_name", displayName);
     }

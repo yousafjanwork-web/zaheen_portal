@@ -4,6 +4,7 @@ import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu, X, Sun, Moon, User, Home, Grid3X3, Play, BarChart3 } from 'lucide-react';
 import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
+import { useUserDisplayName } from '@/modules/shared/hooks/useUserDisplayName';
 import logo from "../../assets/logo/zaheen-origami-logo1 1.png"
 
 interface NavbarProps {
@@ -22,6 +23,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
   // shared auth context — no separate "name" field exists, so this is
   // the identity we show in the navbar per sir's instruction.
   const { msisdn, isLoggedIn } = useZaheenAuth();
+  const displayName = useUserDisplayName();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,12 +111,12 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
               {/* Profile */}
              {isLoggedIn ? (
                 <Link to={`${base}/profile`}>
-                  <motion.div
+                                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-primary to-pink px-4 py-2 rounded-xl text-white font-nunito font-bold text-sm"
                   >
                     <span>🦊</span>
-                    <span>{msisdn}</span>
+                    <span>{displayName || msisdn}</span>
                   </motion.div>
                 </Link>
               ) : (
@@ -175,7 +177,7 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                     className="flex items-center gap-3 bg-gradient-to-r from-primary to-pink px-4 py-3 rounded-2xl text-white font-nunito font-bold mt-2"
                   >
                     <span className="text-xl">🦊</span>
-                    <span>{msisdn}</span>
+                                       <span>{displayName || msisdn}</span>
                   </Link>
                 ) : (
                   <Link

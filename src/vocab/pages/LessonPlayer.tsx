@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useLessonsData } from "../context/LessonsContext";
 import XPCelebration from "../components/XPCelebration";
-import Mascot from "../components/Mascot";
+// import Mascot from "../components/Mascot";
 import SpeakButton from "../components/SpeakButton";
 import { speech, SpeechManager } from "../utils/speech";
 import {
@@ -67,17 +67,17 @@ export default function LessonPlayer() {
   } | null>(null);
 
   // Mascot state
-  const [mascotMessage, setMascotMessage] = useState("");
-  const [mascotEmotion, setMascotEmotion] = useState<
-    | "happy"
-    | "excited"
-    | "thinking"
-    | "celebrating"
-    | "encouraging"
-    | "sleeping"
-  >("happy");
-  const [mascotAutoSpeak, setMascotAutoSpeak] = useState(true);
-  const [mascotDismissed, setMascotDismissed] = useState(false);
+  // const [mascotMessage, setMascotMessage] = useState("");
+  // const [mascotEmotion, setMascotEmotion] = useState<
+  //   | "happy"
+  //   | "excited"
+  //   | "thinking"
+  //   | "celebrating"
+  //   | "encouraging"
+  //   | "sleeping"
+  // >("happy");
+  // const [mascotAutoSpeak, setMascotAutoSpeak] = useState(true);
+  // const [mascotDismissed, setMascotDismissed] = useState(false);
 
   // NOTE ON HOOK ORDER: `lesson` now comes from an API fetch instead
   // of a static in-memory array, so it can legitimately be undefined
@@ -92,46 +92,46 @@ export default function LessonPlayer() {
   // for "loading" / "not found" AFTER this hook block, not before it.
 
   // Update mascot messages based on step
-  useEffect(() => {
-    if (!lesson || mascotDismissed) return;
+  // useEffect(() => {
+  //   if (!lesson || mascotDismissed) return;
 
-    const messages: Record<Step, string> = {
-      intro: `Hi there! 🤖 Welcome to "${lesson.title}"! I'm Sparky, your learning buddy! We have ${lesson.words.length} amazing new words to learn today. Ready? Let's go!`,
-      video: `Watch the video carefully! 🎬 It will help you understand today's words much better!`,
-      words: `Let's learn the word "${lesson.words[currentWordIndex]?.word}"! ${lesson.words[currentWordIndex]?.funFact || ""}`,
-      activity: `Great job learning all the words! Now let's test your memory with a fun activity. ${lesson.activity.instructions}`,
-      quiz: `You're doing amazing! Time for the quiz! Don't worry, you've got this! Just pick the best answer.`,
-      challenge: `Almost done! Now it's time to be creative! Use the words you learned to write something wonderful!`,
-      complete: `🎉 Congratulations! You completed "${lesson.title}"! I'm so proud of you! You earned tons of XP today!`,
-    };
+  //   const messages: Record<Step, string> = {
+  //     intro: `Hi there! 🤖 Welcome to "${lesson.title}"! I'm Sparky, your learning buddy! We have ${lesson.words.length} amazing new words to learn today. Ready? Let's go!`,
+  //     video: `Watch the video carefully! 🎬 It will help you understand today's words much better!`,
+  //     words: `Let's learn the word "${lesson.words[currentWordIndex]?.word}"! ${lesson.words[currentWordIndex]?.funFact || ""}`,
+  //     activity: `Great job learning all the words! Now let's test your memory with a fun activity. ${lesson.activity.instructions}`,
+  //     quiz: `You're doing amazing! Time for the quiz! Don't worry, you've got this! Just pick the best answer.`,
+  //     challenge: `Almost done! Now it's time to be creative! Use the words you learned to write something wonderful!`,
+  //     complete: `🎉 Congratulations! You completed "${lesson.title}"! I'm so proud of you! You earned tons of XP today!`,
+  //   };
 
-    setMascotMessage(messages[step]);
+  //   setMascotMessage(messages[step]);
 
-    const emotions: Record<
-      Step,
-      "happy" | "excited" | "thinking" | "celebrating" | "encouraging"
-    > = {
-      intro: "excited",
-      video: "happy",
-      words: "happy",
-      activity: "thinking",
-      quiz: "encouraging",
-      challenge: "thinking",
-      complete: "celebrating",
-    };
-    setMascotEmotion(emotions[step]);
-  }, [step, currentWordIndex, lesson]);
+  //   const emotions: Record<
+  //     Step,
+  //     "happy" | "excited" | "thinking" | "celebrating" | "encouraging"
+  //   > = {
+  //     intro: "excited",
+  //     video: "happy",
+  //     words: "happy",
+  //     activity: "thinking",
+  //     quiz: "encouraging",
+  //     challenge: "thinking",
+  //     complete: "celebrating",
+  //   };
+  //   setMascotEmotion(emotions[step]);
+  // }, [step, currentWordIndex, lesson]);
 
   // Speak on word change (only during words step)
-  useEffect(() => {
-    if (!lesson) return;
-    const currentWord = lesson.words[currentWordIndex];
-    if (step === "words" && mascotAutoSpeak && currentWord && SpeechManager.isAvailable()) {
-      setMascotMessage(
-        `Let's learn the word "${currentWord.word}"! ${currentWord.funFact || ""}`,
-      );
-    }
-  }, [currentWordIndex, step, lesson]);
+  // useEffect(() => {
+  //   if (!lesson) return;
+  //   const currentWord = lesson.words[currentWordIndex];
+  //   if (step === "words" && mascotAutoSpeak && currentWord && SpeechManager.isAvailable()) {
+  //     setMascotMessage(
+  //       `Let's learn the word "${currentWord.word}"! ${currentWord.funFact || ""}`,
+  //     );
+  //   }
+  // }, [currentWordIndex, step, lesson]);
 
   // Cleanup speech on unmount
   useEffect(() => {
@@ -210,9 +210,9 @@ export default function LessonPlayer() {
       reason: "Activity completed! 🎮",
     });
 
-    if (score >= 80) setMascotEmotion("celebrating");
-    else if (score >= 60) setMascotEmotion("happy");
-    else setMascotEmotion("encouraging");
+    // if (score >= 80) setMascotEmotion("celebrating");
+    // else if (score >= 60) setMascotEmotion("happy");
+    // else setMascotEmotion("encouraging");
 
     setTimeout(() => setStep("quiz"), 2500);
   };
@@ -243,20 +243,20 @@ export default function LessonPlayer() {
       reason: "Quiz completed! 📝",
     });
 
-    if (score >= 80) {
-      setMascotEmotion("celebrating");
-      setMascotMessage(`Wow! You scored ${score}%! That's incredible! 🌟`);
-    } else if (score >= 60) {
-      setMascotEmotion("happy");
-      setMascotMessage(
-        `Great effort! You scored ${score}%! Let's move to the writing challenge!`,
-      );
-    } else {
-      setMascotEmotion("encouraging");
-      setMascotMessage(
-        `You scored ${score}%. Don't worry, keep practicing! Now let's do the creative writing challenge!`,
-      );
-    }
+    // if (score >= 80) {
+    //   setMascotEmotion("celebrating");
+    //   setMascotMessage(`Wow! You scored ${score}%! That's incredible! 🌟`);
+    // } else if (score >= 60) {
+    //   setMascotEmotion("happy");
+    //   setMascotMessage(
+    //     `Great effort! You scored ${score}%! Let's move to the writing challenge!`,
+    //   );
+    // } else {
+    //   setMascotEmotion("encouraging");
+    //   setMascotMessage(
+    //     `You scored ${score}%. Don't worry, keep practicing! Now let's do the creative writing challenge!`,
+    //   );
+    // }
 
     setTimeout(() => setStep("challenge"), 2500);
   };
@@ -344,7 +344,7 @@ export default function LessonPlayer() {
       )}
 
       {/* Mascot */}
-      {!mascotDismissed && (
+      {/* {!mascotDismissed && (
         <Mascot
           message={mascotMessage}
           emotion={mascotEmotion}
@@ -354,7 +354,7 @@ export default function LessonPlayer() {
           showDismiss
           onDismiss={() => setMascotDismissed(true)}
         />
-      )}
+      )} */}
 
       {/* Progress Bar */}
       <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/50">
@@ -365,25 +365,7 @@ export default function LessonPlayer() {
             </h2>
             <span className="text-2xl">{lesson.words[0].imageUrl}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMascotAutoSpeak(!mascotAutoSpeak)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                mascotAutoSpeak
-                  ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                  : "bg-slate-100 dark:bg-slate-700 text-slate-500"
-              }`}
-            >
-              🔊 Auto-speak {mascotAutoSpeak ? "ON" : "OFF"}
-            </button>
-            {mascotDismissed && (
-              <button
-                onClick={() => setMascotDismissed(false)}
-                className="px-3 py-1 rounded-lg text-xs font-medium bg-violet-100 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300"
-              >
-                🤖 Show Sparky
-              </button>
-            )}
+                    <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500">
               {currentStepIndex}/{steps.length - 1}
             </span>
@@ -755,10 +737,10 @@ export default function LessonPlayer() {
                   <button
                     onClick={async () => {
                       if (!SpeechManager.isAvailable()) return;
-                      setMascotEmotion("happy");
-                      setMascotMessage(
-                        `Let me tell you everything about "${currentWord.word}"!`,
-                      );
+                      // setMascotEmotion("happy");
+                      // setMascotMessage(
+                      //   `Let me tell you everything about "${currentWord.word}"!`,
+                      // );
                       await speech.speak(
                         `The word is ${currentWord.word}. ${currentWord.pronunciation}. It means: ${currentWord.definition}. For example: ${currentWord.exampleSentence}. Some similar words are: ${currentWord.synonyms.join(", ")}.`,
                         { rate: 0.8, pitch: 1.2 },
@@ -893,12 +875,12 @@ export default function LessonPlayer() {
                                 ...prev,
                                 [q.id]: opt,
                               }));
-                              if (
-                                mascotAutoSpeak &&
-                                SpeechManager.isAvailable()
-                              ) {
-                                speech.speak(opt, { rate: 0.9, pitch: 1.2 });
-                              }
+                              // if (
+                              //   mascotAutoSpeak &&
+                              //   SpeechManager.isAvailable()
+                              // ) {
+                              //   speech.speak(opt, { rate: 0.9, pitch: 1.2 });
+                              // }
                             }
                           }}
                           disabled={activitySubmitted}
@@ -1040,12 +1022,12 @@ export default function LessonPlayer() {
                                   ...prev,
                                   [q.id]: opt,
                                 }));
-                                if (
-                                  mascotAutoSpeak &&
-                                  SpeechManager.isAvailable()
-                                ) {
-                                  speech.speak(opt, { rate: 0.9, pitch: 1.2 });
-                                }
+                                // if (
+                                //   mascotAutoSpeak &&
+                                //   SpeechManager.isAvailable()
+                                // ) {
+                                //   speech.speak(opt, { rate: 0.9, pitch: 1.2 });
+                                // }
                               }
                             }}
                             disabled={quizSubmitted}

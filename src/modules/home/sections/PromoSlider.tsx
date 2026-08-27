@@ -15,19 +15,16 @@ const PromoSlider = () => {
       className="py-6 px-4"
       style={{ background: "#0f172a" }}
     >
-      {/* Section label */}
-      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-400 mb-1">
-        Quick Access
-      </p>
+  
       <h2 className="text-xl font-bold text-white mb-4">
         {t("promo.title")}
       </h2>
 
-      <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+   <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar items-stretch">
         {cards.map((card, i) => (
           <a key={i} href={card.link || "#"}>
             <div
-              className="min-w-[220px] h-[160px] rounded-2xl p-6 flex flex-col
+           className="min-w-[220px] h-[180px] rounded-2xl p-6 flex flex-col justify-between
                          transition-all duration-300 cursor-pointer"
               style={{
                 background: "rgba(255,255,255,0.05)",
@@ -57,7 +54,7 @@ const PromoSlider = () => {
               <h3 className="text-base font-bold text-white mb-1">
                 {t(`promo.cards.${i}.title`)}
               </h3>
-              <p className="text-sm text-slate-400 line-clamp-2">
+             <p className="text-sm text-slate-400 line-clamp-2 flex-1">
                 {t(`promo.cards.${i}.desc`)}
               </p>
             </div>

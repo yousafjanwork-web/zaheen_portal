@@ -150,10 +150,9 @@ export const handleSubscribe = async (
 
     if (!finalMsisdn) {
 
-      const redirect = encodeURIComponent(
-        `https://z.zaheen.com.pk/subscribe`
-      );
-
+    const redirect = encodeURIComponent(
+  `${window.location.origin}/subscribe`
+);
       window.location.href =
         `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
 

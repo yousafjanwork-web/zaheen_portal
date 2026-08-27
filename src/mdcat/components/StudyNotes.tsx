@@ -32,6 +32,7 @@ import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-do
 import { MDCATSubject } from '../types';
 import { mdcatAiApi } from '../config';
 import SEO from './SEO';  //997-1293
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface SampleQuestion {
   id: number;
@@ -989,7 +990,7 @@ export default function StudyNotes({ onBack, onSelectQuiz }: StudyNotesProps) {
 // SUBJECT CARDS VIEW  →  /mdcat/study-notes
 // ═══════════════════════════════════════════════════════════════════════════
 function SubjectsView({ onBack }: { onBack?: () => void }) {
-  const navigate = useNavigate();
+   const { navigate } = useAppNavigate();
 
   return (
     <div className="overflow-x-hidden space-y-8 px-8">
@@ -1088,8 +1089,7 @@ function SubjectsView({ onBack }: { onBack?: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
   function ChaptersView() {
     const { subjectSlug } = useParams();
-    const navigate = useNavigate();
-
+ const { navigate } = useAppNavigate()
     const activeSubject = subjectSlug ? SLUG_TO_SUBJECT[subjectSlug] : undefined;
     const subjectData = activeSubject ? STUDY_DATA.find(s => s.subject === activeSubject) : null;
 
@@ -1183,8 +1183,7 @@ function ContentViewWrapper({ onSelectQuiz }: { onSelectQuiz?: (id: number) => v
 }
 function ContentView({ onSelectQuiz }: { onSelectQuiz?: (id: number) => void }) {
   const { subjectSlug, chapterId } = useParams();
-  const navigate = useNavigate();
-
+ const { navigate } = useAppNavigate()
   const activeSubject = subjectSlug ? SLUG_TO_SUBJECT[subjectSlug] : undefined;
   const subjectData = activeSubject ? STUDY_DATA.find(s => s.subject === activeSubject) : null;
   const chapterData = chapterId && subjectData

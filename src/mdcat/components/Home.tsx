@@ -34,6 +34,7 @@ import SwoopingSubject from './SwoopingSubject';
 import { useNavigate } from 'react-router-dom';
 import PhoneMockup from './Phonemockup';
 import DownloadSection from './DownloadSection';
+import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface DashBoardProps {
   testDate?: string | Date;
@@ -43,7 +44,7 @@ interface DashBoardProps {
 }
 
 export default function Dashboard({ testDate = '2026-08-16', setActiveTab, performanceStats, getSubjectColorBadge }: DashBoardProps) {
-  const navigate = useNavigate()
+   const { navigate } = useAppNavigate()
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
@@ -229,12 +230,10 @@ export default function Dashboard({ testDate = '2026-08-16', setActiveTab, perfo
           <DownloadSection />
         </div>
       </section>
-      <section id='merit-calculator' className="max-w-6xl flex mx-auto px-6 py-16 gap-16 scroll-mt-24">
-        <ProgressBar performanceStats={performanceStats} getSubjectColorBadge={getSubjectColorBadge} />
-        <MeritCalculator />
-      </section>
-
-
+        <section id='merit-calculator' className="max-w-6xl flex flex-col md:flex-row mx-auto px-6 py-16 gap-16 scroll-mt-24">
+  <ProgressBar performanceStats={performanceStats} getSubjectColorBadge={getSubjectColorBadge} />
+  <MeritCalculator />
+</section>
 
     </div>
   );

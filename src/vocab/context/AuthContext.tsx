@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 
 import {
 
@@ -8,13 +8,13 @@ import {
 
 } from '../types';
 
-import { STORAGE_KEYS, getItem, setItem } from '../utils/storage';
+import { STORAGE_KEYS, getItem, setItem, clearVocabStorageForUser } from '../utils/storage';
 
 import { allBadges } from '../data/badges';
 
 import { initialDailyChallenges, initialQuests } from '../data/quests';
 
-import { completeLessonRaw } from '../services/vocabApi';
+import { completeLessonWithUserId } from '../services/vocabApi';
 
 
 
@@ -131,28 +131,27 @@ const defaultUser: User = {
 };
 
 interface AuthProviderProps {
-
   children: ReactNode;
-
-  // Zaheen's own logged-in-user Bearer token (or null/undefined if
-
-  // nobody is logged in). Used only to notify the backend when a
-
-  // lesson is completed — POST /api/vocab/lessons/:id/complete.
-
+  isLoggedIn?: boolean;
+  displayName?: string | null;
   token?: string | null;
-
 }
 
 
 
-export function AuthProvider({ children, token }: AuthProviderProps) {
+export function AuthProvider({ children, isLoggedIn = false, displayName, token }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(() => {
+    if (!isLoggedIn) return { ...defaultUser, xp: 0, level: 1, streak: 0, coins: 0, wordsLearned: 0, lessonsCompleted: 0 };
+    const saved = getItem<User | null>(STORAGE_KEYS.USER, null);
+    return saved ?? defaultUser;
+  });
 
-  const [user, setUser] = useState<User | null>(() => getItem<User | null>(STORAGE_KEYS.USER, defaultUser));
-
- const [completedLessons, setCompletedLessons] = useState<string[]>(() => getItem<string[]>(STORAGE_KEYS.COMPLETED_LESSONS, []));
-
-const [streak] = useState<number>(() => getItem<number>(STORAGE_KEYS.STREAK, 0));
+  const [completedLessons, setCompletedLessons] = useState<string[]>(() =>
+    isLoggedIn ? getItem<string[]>(STORAGE_KEYS.COMPLETED_LESSONS, []) : []
+  );
+  const [streak, setStreak] = useState<number>(() =>
+    isLoggedIn ? getItem<number>(STORAGE_KEYS.STREAK, 0) : 0
+  );
 
   const [xpTransactions, setXpTransactions] = useState<XPTransaction[]>(() => getItem<XPTransaction[]>(STORAGE_KEYS.XP_TRANSACTIONS, []));
 
@@ -178,33 +177,60 @@ const [streak] = useState<number>(() => getItem<number>(STORAGE_KEYS.STREAK, 0))
 
 
 
+  // Sync Zaheen display name into the local user object
+  useEffect(() => {
+    if (isLoggedIn && displayName) {
+      setUser(prev => prev ? { ...prev, name: displayName } : null);
+    }
+  }, [isLoggedIn, displayName]);
+
+  // Reset progress only when user explicitly logs out
+  // (isLoggedIn goes from true → false, not on first mount)
+  const prevLoggedInRef = useRef<boolean>(isLoggedIn);
+  useEffect(() => {
+    const wasLoggedIn = prevLoggedInRef.current;
+    prevLoggedInRef.current = isLoggedIn;
+    // Only reset if user WAS logged in and now ISN'T (actual logout)
+      if (wasLoggedIn && !isLoggedIn) {
+      // Clear the previous user's vocab data from localStorage
+      const prevUserId = (() => {
+        try {
+          const raw = localStorage.getItem('zaheen_auth');
+          const parsed = raw ? JSON.parse(raw) : {};
+          return parsed?.userId ? String(parsed.userId) : 'guest';
+        } catch { return 'guest'; }
+      })();
+      clearVocabStorageForUser(prevUserId);
+
+      setUser({ ...defaultUser, xp: 0, level: 1, streak: 0, coins: 0, wordsLearned: 0, lessonsCompleted: 0 });
+      setCompletedLessons([]);
+      setXpTransactions([]);
+      setBadges([]);
+      setWordsLearned([]);
+      setChallengeResponses({});
+      setQuizScores({});
+      setWordCollection([]);
+      setStories([]);
+      setDailyChallenges(initialDailyChallenges());
+      setQuests(initialQuests());
+    }
+  }, [isLoggedIn]);
+
   // Persistence
+  useEffect(() => { if (isLoggedIn && user) setItem(STORAGE_KEYS.USER, user); }, [user, isLoggedIn]);
 
-  useEffect(() => { if (user) setItem(STORAGE_KEYS.USER, user); }, [user]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.COMPLETED_LESSONS, completedLessons); }, [completedLessons]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.XP_TRANSACTIONS, xpTransactions); }, [xpTransactions]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.BADGES, badges); }, [badges]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.STREAK, streak); }, [streak]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.CALENDAR, calendar); }, [calendar]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.WORDS_LEARNED, wordsLearned); }, [wordsLearned]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.CHALLENGE_RESPONSES, challengeResponses); }, [challengeResponses]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.QUIZ_SCORES, quizScores); }, [quizScores]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.WORD_COLLECTION, wordCollection); }, [wordCollection]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.STORIES, stories); }, [stories]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.DAILY_CHALLENGES, dailyChallenges); }, [dailyChallenges]);
-
-  useEffect(() => { setItem(STORAGE_KEYS.QUESTS, quests); }, [quests]);
+   useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.COMPLETED_LESSONS, completedLessons); }, [completedLessons, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.XP_TRANSACTIONS, xpTransactions); }, [xpTransactions, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.BADGES, badges); }, [badges, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.STREAK, streak); }, [streak, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.CALENDAR, calendar); }, [calendar, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.WORDS_LEARNED, wordsLearned); }, [wordsLearned, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.CHALLENGE_RESPONSES, challengeResponses); }, [challengeResponses, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.QUIZ_SCORES, quizScores); }, [quizScores, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.WORD_COLLECTION, wordCollection); }, [wordCollection, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.STORIES, stories); }, [stories, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.DAILY_CHALLENGES, dailyChallenges); }, [dailyChallenges, isLoggedIn]);
+  useEffect(() => { if (isLoggedIn) setItem(STORAGE_KEYS.QUESTS, quests); }, [quests, isLoggedIn]);
 
 
 
@@ -376,21 +402,19 @@ const [streak] = useState<number>(() => getItem<number>(STORAGE_KEYS.STREAK, 0))
 
       // celebration UI if the network hiccups.
 
-      if (token && result) {
-
-        completeLessonRaw(lessonId, token, {
-
-          score: result.score,
-
-          xp_earned: result.xpEarned,
-
-          words_count: result.wordsCount,
-
-        }).catch(err => {
-
-          console.error(`Failed to sync lesson completion for ${lessonId}:`, err);
-
-        });
+               if (isLoggedIn && result) {
+        import("../../modules/shared/hooks/Usevideoprogress").then(({ resolveUserId }) =>
+          resolveUserId().then(userId => {
+                     if (!userId) return;
+            completeLessonWithUserId(lessonId, userId, {
+              score: result.score,
+              xp_earned: result.xpEarned,
+              words_count: result.wordsCount,
+            }).catch(err => {
+              console.error(`Failed to sync lesson completion for ${lessonId}:`, err);
+            });
+          })
+        );
 
       }
 

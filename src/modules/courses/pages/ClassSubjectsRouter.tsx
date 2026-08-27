@@ -1,61 +1,51 @@
-import { useLocation, useParams } from "react-router-dom";
+import React from "react";
+import { useParams, useLocation } from "react-router-dom";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
+import { classIdFromSlug, classSlugFromId } from "@/config/classSlugs";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 import KGClassView from "./KGClassView";
 import ClassSubjectsView from "./ClassSubjectsView";
 import PrimarySubjectsView from "./PrimarySubjectsView";
-import { classIdFromSlug } from "@/config/classSlugs";
-import React from "react";
 
-// MiddleSubjectsView — lazy import with fallback so missing file never crashes the app
 const MiddleSubjectsView = React.lazy(() =>
   import("./MiddleSubjectsView").catch(() => ({
-    default: () => <ClassSubjectsView />, 
+    default: () => <ClassSubjectsView />,
   }))
 );
 
-const isKindergartenClass = (gradeType?: string, className?: string): boolean => {
-  const check = (s?: string) =>
-    !!s && (s.toLowerCase().includes("kg") || s.toLowerCase().includes("kindergarten") || s.toLowerCase().includes("kinder"));
-  return check(gradeType) || check(className);
+const isKindergartenClass = (name?: string) =>
+  !!name && /kg|kindergarten|kinder/i.test(name);
+
+const isPrimaryClass = (name?: string) => {
+  if (!name) return false;
+  if (/^(1-5|primary)$/i.test(name)) return true;
+  const m = name.match(/(?:grade|class)[- ]?(\d+)/i);
+  return m ? parseInt(m[1]) >= 1 && parseInt(m[1]) <= 5 : false;
 };
 
-const isPrimaryClass = (gradeType?: string, className?: string): boolean => {
-  const test = (s?: string) => {
-    if (!s) return false;
-    const lower = s.toLowerCase();
-    if (lower === "1-5" || lower === "primary") return true;
-    const m = lower.match(/(?:grade|class)[- ]?(\d+)/);
-    if (m) { const n = parseInt(m[1], 10); return n >= 1 && n <= 5; }
-    return false;
-  };
-  return test(gradeType) || test(className);
-};
-
-const isMiddleClass = (gradeType?: string, className?: string): boolean => {
-  const test = (s?: string) => {
-    if (!s) return false;
-    const lower = s.toLowerCase();
-    if (lower === "6-8" || lower === "middle") return true;
-    const m = lower.match(/(?:grade|class)[- ]?(\d+)/);
-    if (m) { const n = parseInt(m[1], 10); return n >= 6 && n <= 8; }
-    return false;
-  };
-  return test(gradeType) || test(className);
+const isMiddleClass = (name?: string) => {
+  if (!name) return false;
+  if (/^(6-8|middle)$/i.test(name)) return true;
+  const m = name.match(/(?:grade|class|جماعت)[- ]?(\d+)/i);
+  return m ? parseInt(m[1]) >= 6 && parseInt(m[1]) <= 8 : false;
 };
 
 const ClassSubjectsRouter = () => {
   const { classSlug } = useParams<{ classSlug: string }>();
-  const classId = classIdFromSlug(classSlug ?? "");
   const location = useLocation();
+  const { isLoggedIn, selectedClassId, isKid, role } = useAuth();
+
+  const requestedClassId = classIdFromSlug(classSlug ?? "");
+
+
+
   const gradeType = location.state?.gradeType as string | undefined;
-
   const needsApiCheck = !gradeType;
-  const { classInfo, loading } = useClassSubjects(needsApiCheck ? (classId ?? 0) : 0);
+  const { classInfo, loading } = useClassSubjects(needsApiCheck ? (requestedClassId ?? 0) : 0);
 
-  // 1. Fast path — Agar gradeType pehle se state mai majood hai
   if (gradeType) {
     if (isKindergartenClass(gradeType)) return <KGClassView />;
-    if (isPrimaryClass(gradeType))      return <PrimarySubjectsView />; // Sahi primary view!
+    if (isPrimaryClass(gradeType))      return <PrimarySubjectsView />;
     if (isMiddleClass(gradeType)) {
       return (
         <React.Suspense fallback={<div className="h-screen bg-white" />}>
@@ -66,7 +56,6 @@ const ClassSubjectsRouter = () => {
     return <ClassSubjectsView />;
   }
 
-  // 2. Refresh YA View All Path — Jab hamen API response ka wait karna ho
   if (needsApiCheck && (loading || !classInfo)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-white">
@@ -75,24 +64,16 @@ const ClassSubjectsRouter = () => {
     );
   }
 
-  // 3. API Response aane ke baad sahi Layout ka faisla:
   const className = classInfo?.name;
-
-  if (isKindergartenClass(undefined, className)) return <KGClassView />;
-  
-  // 🔥 Yahan pakrenge Primary Classes ko! 
-  // Agar API ne bataya ke yeh Class 1, 2, 3, 4, 5 mai se koi hai, to PrimarySubjectsView load hoga!
-  if (isPrimaryClass(undefined, className)) return <PrimarySubjectsView />;
-  
-  if (isMiddleClass(undefined, className)) {
+  if (isKindergartenClass(className)) return <KGClassView />;
+  if (isPrimaryClass(className))      return <PrimarySubjectsView />;
+  if (isMiddleClass(className)) {
     return (
       <React.Suspense fallback={<div className="h-screen bg-white" />}>
         <MiddleSubjectsView />
       </React.Suspense>
     );
   }
-
-  // Fallback default (Sirf tab chalega jab saari conditions check ho chuki hon)
   return <ClassSubjectsView />;
 };
 

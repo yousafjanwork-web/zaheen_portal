@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
-// ─── UNCOMMENT when handing to frontend developer (Zaheen's shared auth) ─────
- import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
+import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
+import { useUserDisplayName } from '@/modules/shared/hooks/useUserDisplayName';
 // ─────────────────────────────────────────────────────────────────────────────
 import { useVocabDashboard } from "../hooks/useVocabDashboard";
 import {
@@ -17,7 +17,7 @@ import {
   ArrowUp,
   Coins,
 } from "lucide-react";
-import Mascot from "../components/Mascot";
+// import Mascot from "../components/Mascot";
 
 const juniorLevels = [
   "Beginner Explorer",
@@ -36,11 +36,8 @@ const seniorLevels = [
 
 export default function StudentDashboard() {
   const { user, xpTransactions, calendar, quizScores } = useAuth();
-
-  // ─── LOCAL DEV: token is null so dashboard runs in zero/guest mode ────────
-  // const token: string | null = null;
-  // ─── UNCOMMENT when handing to frontend developer ─────────────────────────
-   const { token } = useZaheenAuth() as { token?: string | null };
+  const { token: zaheenToken, isLoggedIn: zaheenLoggedIn } = useZaheenAuth();
+  const displayName = useUserDisplayName();
   // ─────────────────────────────────────────────────────────────────────────
 
   // Per sir's instructions: only hit /vocab/dashboard when someone is
@@ -51,7 +48,7 @@ export default function StudentDashboard() {
     data: dash,
     isLoading: dashLoading,
     isLoggedIn,
-  } = useVocabDashboard(token);
+  } = useVocabDashboard(zaheenToken, zaheenLoggedIn);
 
   if (!user) return null;
 
@@ -79,7 +76,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Mascot */}
+      {/* Mascot
       <Mascot
         message={`Great to see you, ${user.name}! 🌟 You've learned ${dash.wordsLearned} words and completed ${dash.lessonsCompleted} lessons. Keep up the amazing work!`}
         emotion={dash.streak >= 5 ? "celebrating" : "happy"}
@@ -87,7 +84,7 @@ export default function StudentDashboard() {
         position="bottom-right"
         size="md"
         showDismiss
-      />
+      /> */}
 
       {/* {!isLoggedIn && (
         <div className="rounded-2xl border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
@@ -153,10 +150,7 @@ export default function StudentDashboard() {
           </div>
           <div className="text-right">
             <div className="text-6xl md:text-7xl">{user.avatar}</div>
-            <p className="font-bold text-lg">{user.name}</p>
-            <p className="text-white/60 text-sm capitalize">
-              {user.ageGroup} Learner
-            </p>
+                             <p className="font-bold text-lg">{displayName || user.name}</p>
           </div>
         </div>
       </motion.div>

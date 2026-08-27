@@ -324,8 +324,8 @@ export default function MdcatApp() {
         return "bg-rose-500";
     }
   };
-  // Dynamic MDCAT countdown — exam date: 16 August 2026
-  const examDate = new Date("2026-08-16T00:00:00");
+  // Dynamic MDCAT countdown — exam date: 20 September 2026
+  const examDate = new Date("2026-09-20T00:00:00");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const daysLeft = Math.max(

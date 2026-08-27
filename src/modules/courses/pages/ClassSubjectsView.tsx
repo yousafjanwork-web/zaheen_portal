@@ -7,7 +7,7 @@ import { fetchSeniorPastPapers } from "../../shared/services/seniorService";
 import { slugifySubject } from "../../../config/subjectSlug";
 import {
   BookOpen, FlaskConical, Atom, Leaf, Languages, Sigma, Landmark, Globe,
-  Calculator, Cpu, Download, GraduationCap, X, Sparkles,
+  Calculator, Cpu, Download, GraduationCap, Sparkles, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
@@ -17,7 +17,6 @@ import urTranslations from "@/modules/shared/i18n/ur.json";
 
 /* ─────────────────────────────────────────────────────────────
    Quiz API helper
-   Counts skills with has_questions === 1 for a given subject.
 ──────────────────────────────────────────────────────────────── */
 const BASE = "https://api.zaheen.com.pk/v2";
 
@@ -37,7 +36,91 @@ async function fetchQuizCountForSubject(subjectId: number): Promise<number> {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   useTranslation  — REACTIVE
+   Subjects with no quizzes yet — intercept click and show modal.
+   Add or remove keywords here as quizzes go live in the future.
+──────────────────────────────────────────────────────────────── */
+const COMING_SOON_SUBJECTS = ["computer science", "biology"];
+
+function isComingSoonSubject(name: string): boolean {
+  const n = name.toLowerCase();
+  return COMING_SOON_SUBJECTS.some((keyword) => n.includes(keyword));
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Coming Soon Modal
+──────────────────────────────────────────────────────────────── */
+const ComingSoonModal = ({
+  subjectName,
+  onClose,
+}: {
+  subjectName: string;
+  onClose: () => void;
+}) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    onClick={onClose}
+    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4"
+  >
+    <motion.div
+      initial={{ opacity: 0, scale: 0.88, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.88, y: 20 }}
+      transition={{ type: "spring", stiffness: 340, damping: 28 }}
+      onClick={(e) => e.stopPropagation()}
+      className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-8 flex flex-col items-center text-center gap-5 relative"
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+      >
+        <X size={16} />
+      </button>
+
+      {/* Icon */}
+      <motion.div
+        initial={{ scale: 0.6, rotate: -10 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.1 }}
+        className="bg-amber-50 p-5 rounded-2xl border border-amber-100"
+      >
+        <Sparkles size={34} className="text-amber-400" strokeWidth={1.6} />
+      </motion.div>
+
+      {/* Badge */}
+      <span className="text-[10px] font-black tracking-widest uppercase text-amber-500 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+        Coming Soon
+      </span>
+
+      {/* Text */}
+      <div className="space-y-2">
+        <h2 className="text-[22px] font-black text-[#0F172A] leading-tight">
+          {subjectName} Quizzes
+        </h2>
+        <p className="text-slate-500 text-[14px] leading-relaxed">
+          We're working hard to bring you interactive quizzes for{" "}
+          <span className="font-semibold text-slate-700">{subjectName}</span>.
+          Check back soon — they'll be worth the wait!
+        </p>
+      </div>
+
+      <div className="w-full border-t border-slate-100" />
+
+      {/* CTA */}
+      <button
+        onClick={onClose}
+        className="w-full bg-[#1E3A8A] hover:bg-[#1E293B] text-white font-bold text-[14px] py-3 rounded-xl transition-colors duration-200"
+      >
+        Got it, I'll check back later
+      </button>
+    </motion.div>
+  </motion.div>
+);
+
+/* ─────────────────────────────────────────────────────────────
+   useTranslation — REACTIVE
 ──────────────────────────────────────────────────────────────── */
 type TranslationFile = typeof enTranslations;
 
@@ -368,6 +451,23 @@ const ClassSubjectsView = () => {
 
   const [activeSidebarId, setActiveSidebarId] = useState<number | null>(null);
 
+  /* ── Coming Soon modal: stores the subject name to display, or null ── */
+  const [comingSoonSubject, setComingSoonSubject] = useState<string | null>(null);
+
+  /* ─────────────────────────────────────────────────────────────
+     makeQuizHandler
+     Returns the correct onClick for any subject's quiz button:
+     - Coming Soon subjects  → open the modal (no navigation)
+     - All other subjects    → navigate to the quiz flow
+  ──────────────────────────────────────────────────────────────── */
+  const makeQuizHandler = (subject: any) => () => {
+    if (isComingSoonSubject(subject.name)) {
+      setComingSoonSubject(subject.name);
+    } else {
+      navigate(`/${classSlug}/quiz`, { state: { subjectId: subject.id } });
+    }
+  };
+
   /* ── Fetch past paper counts ── */
   useEffect(() => {
     if (!classId || subjects.length === 0) return;
@@ -466,7 +566,7 @@ const ClassSubjectsView = () => {
       <SubjectCard key={mathsSubject.id} subject={mathsSubject} classInfo={classInfo}
         classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={index}
         {...stats}
-    onQuizzesClick={() => navigate(`/${classSlug}/quiz`, { state: { subjectId: mathsSubject.id } })}
+        onQuizzesClick={makeQuizHandler(mathsSubject)}
         t={t}
       />
     );
@@ -587,7 +687,7 @@ const ClassSubjectsView = () => {
                         <FeaturedPhysicsCard key={physicsSubject.id} subject={physicsSubject}
                           classInfo={classInfo} classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate}
                           isUrdu={isUrdu} {...stats}
-                    onQuizzesClick={() => navigate(`/${classSlug}/quiz`, { state: { subjectId: physicsSubject.id } })}
+                          onQuizzesClick={makeQuizHandler(physicsSubject)}
                           t={t}
                         />
                       );
@@ -605,7 +705,7 @@ const ClassSubjectsView = () => {
                         <SubjectCard key={subject.id} subject={subject} classInfo={classInfo}
                           classSlug={classSlug ?? ""} gradeType={gradeType} navigate={navigate} isUrdu={isUrdu} index={i}
                           {...stats}
-                     onQuizzesClick={() => navigate(`/${classSlug}/quiz`, { state: { subjectId: physicsSubject.id } })}
+                          onQuizzesClick={makeQuizHandler(subject)}
                           t={t}
                         />
                       );
@@ -619,6 +719,16 @@ const ClassSubjectsView = () => {
 
         </div>
       </main>
+
+      {/* ══════ Coming Soon Modal ══════ */}
+      <AnimatePresence>
+        {comingSoonSubject && (
+          <ComingSoonModal
+            subjectName={comingSoonSubject}
+            onClose={() => setComingSoonSubject(null)}
+          />
+        )}
+      </AnimatePresence>
 
     </section>
   );

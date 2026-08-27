@@ -19,10 +19,8 @@ import { useGameStore } from "../../store/useGameStore";
 import { cn } from "../../utils/cn";
 import { sfx } from "../../utils/audio";
 import { usePakistanBase } from "../../hooks/usePakistanBase";
+import zaheenLogo from "../../../assets/logo/zaheen-pak.png"; // ← update path if needed
 
-// Determines whether a nav link should be highlighted as active.
-// The Home link is treated as an exact match only — otherwise it
-// would match every nested route (they all start with the base path).
 function isLinkActive(pathname: string, to: string, base: string) {
   if (to === base) {
     return pathname === base;
@@ -51,25 +49,25 @@ export function Navbar() {
     <header className="sticky top-0 z-50 safe-bottom">
       <div className="mx-auto max-w-7xl px-3 pt-3">
         <nav className="glass flex items-center justify-between gap-2 rounded-3xl border-2 border-white/80 px-3 py-2 shadow-xl md:px-5">
-          <Link
-            to="/"
-            className="flex items-center gap-2 shrink-0"
-            onClick={() => sound && sfx.click()}
-          >
-            <motion.span
-              className="text-2xl md:text-3xl"
-              animate={{ rotate: [0, -10, 10, 0] }}
-              transition={{ repeat: Infinity, duration: 3 }}
-            >
-              🇵🇰
-            </motion.span>
-            <div className="hidden sm:block">
-              <p className="text-sm font-black leading-tight text-emerald-800 md:text-base">
-                Discover Pakistan
-              </p>
-              <p className="text-[10px] font-bold text-emerald-600">Lvl {level} Explorer</p>
-            </div>
-          </Link>
+
+         {/* ── Logo → navigates to Zaheen Home ── */}
+<Link
+  to="/"
+  className="flex items-center gap-2 shrink-0"
+  onClick={() => sound && sfx.click()}
+>
+  <img
+    src={zaheenLogo}
+    alt="Zaheen"
+    className="h-8 w-auto md:h-10 object-contain"
+  />
+  <div className="hidden sm:block">
+    <p className="text-sm font-black leading-tight text-emerald-800 md:text-base">
+      Discover Pakistan
+    </p>
+    <p className="text-[10px] font-bold text-emerald-600">Lvl {level} Explorer</p>
+  </div>
+</Link>
 
           {/* Stats */}
           <div className="flex items-center gap-1.5 md:gap-3 text-xs md:text-sm font-extrabold">
@@ -84,7 +82,7 @@ export function Navbar() {
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-1">
             {links.map(({ to, icon: Icon, label }) => {
-            const active = isLinkActive(location.pathname, to, base);
+              const active = isLinkActive(location.pathname, to, base);
               return (
                 <Link
                   key={to}
@@ -133,7 +131,7 @@ export function Navbar() {
           >
             <div className="grid grid-cols-2 gap-2">
               {links.map(({ to, icon: Icon, label }) => {
-               const active = isLinkActive(location.pathname, to, base);
+                const active = isLinkActive(location.pathname, to, base);
                 return (
                   <Link
                     key={to}

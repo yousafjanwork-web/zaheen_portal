@@ -31,15 +31,16 @@ const useTranslation = () => {
   return { t, lang };
 };
 
-/* ── Custom Dropdown (replaces native <select> to fix overflow) ── */
+/* ── Custom Dropdown ── */
 interface DropdownProps {
   value: string;
   options: { value: string; label: string }[];
   onChange: (val: string) => void;
-  dropUp?: boolean; // opens upward when true
+  dropUp?: boolean;
+  icon?: string;
 }
 
-const CustomDropdown: React.FC<DropdownProps> = ({ value, options, onChange, dropUp }) => {
+const CustomDropdown: React.FC<DropdownProps> = ({ value, options, onChange, dropUp, icon }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
@@ -54,47 +55,59 @@ const CustomDropdown: React.FC<DropdownProps> = ({ value, options, onChange, dro
 
   return (
     <div ref={ref} style={{ position: "relative", flex: 1 }}>
-      {/* Trigger button */}
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
         style={{
           width: "100%",
-          padding: "8px 12px",
-          borderRadius: 8,
-          border: "1px solid #cbd5e1",
-          background: "#fff",
-          fontSize: 14,
+          padding: "9px 14px",
+          borderRadius: 12,
+          border: "1.5px solid rgba(99,102,241,0.25)",
+          background: "rgba(255,255,255,0.06)",
+          fontSize: 13,
+          fontWeight: 600,
+          color: "#e2e8f0",
           textAlign: "left",
           cursor: "pointer",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 4,
+          gap: 8,
+          backdropFilter: "blur(8px)",
+          transition: "border-color 0.2s, background 0.2s",
         }}
+        onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.6)")}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.25)")}
       >
-        <span>{selected?.label}</span>
-        <span style={{ fontSize: 10, color: "#94a3b8" }}>{open ? "▲" : "▼"}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          {icon && <span style={{ fontSize: 15 }}>{icon}</span>}
+          <span style={{ color: "#a5b4fc" }}>{selected?.label}</span>
+        </span>
+        <svg
+          width="12" height="12" viewBox="0 0 12 12" fill="none"
+          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", flexShrink: 0 }}
+        >
+          <path d="M2 4L6 8L10 4" stroke="#6366f1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
-      {/* Dropdown list — opens DOWNWARD from selector bar, fully inside viewport */}
       {open && (
         <div
           style={{
             position: "absolute",
-            top: dropUp ? "auto" : "calc(100% + 4px)",
-            bottom: dropUp ? "calc(100% + 4px)" : "auto",
+            top: dropUp ? "auto" : "calc(100% + 6px)",
+            bottom: dropUp ? "calc(100% + 6px)" : "auto",
             left: 0,
             right: 0,
-            background: "#fff",
-            border: "1px solid #cbd5e1",
-            borderRadius: 8,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+            background: "rgba(15,15,35,0.98)",
+            border: "1.5px solid rgba(99,102,241,0.3)",
+            borderRadius: 14,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.1)",
             zIndex: 9999,
-            overflow: "hidden",
-            // ✅ Never goes outside — max height + scroll if needed
             maxHeight: 260,
             overflowY: "auto",
+            backdropFilter: "blur(20px)",
+            padding: "4px",
           }}
         >
           {options.map((opt) => (
@@ -107,13 +120,37 @@ const CustomDropdown: React.FC<DropdownProps> = ({ value, options, onChange, dro
                 padding: "10px 14px",
                 textAlign: "left",
                 border: "none",
-                background: opt.value === value ? "#2563eb" : "#fff",
-                color: opt.value === value ? "#fff" : "#1e293b",
-                fontSize: 14,
+                borderRadius: 10,
+                background: opt.value === value
+                  ? "linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2))"
+                  : "transparent",
+                color: opt.value === value ? "#a5b4fc" : "#94a3b8",
+                fontSize: 13,
+                fontWeight: opt.value === value ? 700 : 500,
                 cursor: "pointer",
-                fontWeight: opt.value === value ? 700 : 400,
+                transition: "background 0.15s, color 0.15s",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+              onMouseEnter={e => {
+                if (opt.value !== value) {
+                  e.currentTarget.style.background = "rgba(99,102,241,0.1)";
+                  e.currentTarget.style.color = "#c7d2fe";
+                }
+              }}
+              onMouseLeave={e => {
+                if (opt.value !== value) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#94a3b8";
+                }
               }}
             >
+              {opt.value === value && (
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <circle cx="5" cy="5" r="4" fill="#6366f1" />
+                </svg>
+              )}
               {opt.label}
             </button>
           ))}
@@ -268,81 +305,349 @@ const AiTutorMobile: React.FC = () => {
     { value: "Urdu",    label: t("chatbot.languages.urdu")    },
   ];
 
-  return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", background: "#f8fafc", overflow: "hidden" }}>
+  const hasMessages = messages.length > 0;
 
-      {/* ── Selectors row ── */}
-      <div style={{ flexShrink: 0, background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "8px 12px", display: "flex", gap: 8, position: "relative", zIndex: 100 }}>
-        <CustomDropdown
-          value={topic}
-          options={topicOptions}
-          onChange={setTopic}
-        />
-        <CustomDropdown
-          value={apiLang}
-          options={langOptions}
-          onChange={handleApiLangChange}
-        />
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "linear-gradient(145deg, #0a0a1a 0%, #0d0d2b 40%, #0f0a20 100%)",
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      }}
+    >
+      {/* Background ambient orbs */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
+        <div style={{
+          position: "absolute", top: "-80px", left: "-80px",
+          width: 300, height: 300, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "10%", right: "-60px",
+          width: 260, height: 260, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%)",
+        }} />
       </div>
 
-      {/* ── Chat area — only this scrolls ── */}
+      {/* ── HEADER ── */}
+      <div style={{
+        position: "relative", zIndex: 10, flexShrink: 0,
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "14px 16px",
+        borderBottom: "1px solid rgba(99,102,241,0.15)",
+        background: "rgba(10,10,30,0.85)",
+        backdropFilter: "blur(20px)",
+      }}>
+
+        {/* Status dot */}
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <div style={{
+            width: 7, height: 7, borderRadius: "50%",
+            background: loading ? "#f59e0b" : "#10b981",
+            boxShadow: loading ? "0 0 8px rgba(245,158,11,0.8)" : "0 0 8px rgba(16,185,129,0.8)",
+            transition: "background 0.3s, box-shadow 0.3s",
+          }} />
+          <span style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>
+            {loading ? "Thinking..." : "Online"}
+          </span>
+        </div>
+      </div>
+
+      {/* ── SELECTORS ROW ── */}
+      <div style={{
+        position: "relative", zIndex: 100, flexShrink: 0,
+        display: "flex", gap: 10, padding: "10px 14px",
+        borderBottom: "1px solid rgba(99,102,241,0.08)",
+        background: "rgba(8,8,24,0.6)",
+        backdropFilter: "blur(12px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 10, color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
+            Topic
+          </span>
+          <CustomDropdown value={topic} options={topicOptions} onChange={setTopic} icon="📚" />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 10, color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
+            Lang
+          </span>
+          <CustomDropdown value={apiLang} options={langOptions} onChange={handleApiLangChange} icon="🌐" />
+        </div>
+      </div>
+
+      {/* ── CHAT AREA ── */}
       <div
         ref={chatRef}
         className="chat-area"
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "12px", WebkitOverflowScrolling: "touch" }}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: "16px 14px 10px",
+          position: "relative",
+          zIndex: 5,
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(99,102,241,0.2) transparent",
+        }}
       >
+        {/* Empty state */}
+        {!hasMessages && (
+          <div style={{
+            display: "flex", flexDirection: "column", alignItems: "center",
+            justifyContent: "center", height: "100%", gap: 14, opacity: 0.55,
+          }}>
+            <div style={{
+              width: 58, height: 58, borderRadius: 18,
+              background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
+              border: "1.5px solid rgba(99,102,241,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 26,
+            }}>
+              💬
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ color: "#94a3b8", fontSize: 13, fontWeight: 600 }}>Start a conversation</div>
+              <div style={{ color: "#475569", fontSize: 11, marginTop: 3 }}>Ask anything about your subject</div>
+            </div>
+          </div>
+        )}
+
+        {/* Messages */}
         {messages.map((msg, i) => (
-          <div key={i} className={`msg ${msg.type} ${isUrduText(msg.text) ? "urdu" : ""}`}>
-            {msg.isHtml && msg.type === "bot"
-              ? <div className="bubble bot-formatted" dangerouslySetInnerHTML={{ __html: msg.text }} />
-              : <div className="bubble">{msg.text}</div>
-            }
+          <div
+            key={i}
+            className={`msg ${msg.type} ${isUrduText(msg.text) ? "urdu" : ""}`}
+            style={{
+              display: "flex",
+              justifyContent: msg.type === "user" ? "flex-end" : "flex-start",
+              marginBottom: 12,
+              alignItems: "flex-end",
+              gap: 8,
+            }}
+          >
+            {/* Bot avatar */}
+            {msg.type === "bot" && (
+              <div style={{
+                width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+                background: "linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2))",
+                border: "1px solid rgba(99,102,241,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 13, marginBottom: 2,
+              }}>
+                🤖
+              </div>
+            )}
+
+            {msg.isHtml && msg.type === "bot" ? (
+              <div
+                className="bubble bot-formatted"
+                style={{
+                  maxWidth: "80%",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(99,102,241,0.2)",
+                  borderRadius: "16px 16px 16px 4px",
+                  padding: "10px 14px",
+                  color: "#e2e8f0",
+                  fontSize: 13,
+                  lineHeight: 1.65,
+                  backdropFilter: "blur(8px)",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                }}
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+              />
+            ) : (
+              <div
+                className="bubble"
+                style={{
+                  maxWidth: "80%",
+                  padding: "10px 14px",
+                  borderRadius: msg.type === "user"
+                    ? "16px 16px 4px 16px"
+                    : "16px 16px 16px 4px",
+                  background: msg.type === "user"
+                    ? "linear-gradient(135deg, #6366f1, #7c3aed)"
+                    : "rgba(255,255,255,0.05)",
+                  border: msg.type === "user"
+                    ? "none"
+                    : "1px solid rgba(99,102,241,0.2)",
+                  color: msg.type === "user" ? "#ffffff" : "#e2e8f0",
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  fontWeight: msg.type === "user" ? 500 : 400,
+                  boxShadow: msg.type === "user"
+                    ? "0 4px 18px rgba(99,102,241,0.35)"
+                    : "0 4px 18px rgba(0,0,0,0.2)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                {msg.text}
+              </div>
+            )}
+
+            {/* User avatar */}
+            {msg.type === "user" && (
+              <div style={{
+                width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+                background: "linear-gradient(135deg, #6366f1, #7c3aed)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 13, marginBottom: 2,
+                boxShadow: "0 2px 8px rgba(99,102,241,0.4)",
+              }}>
+                👤
+              </div>
+            )}
           </div>
         ))}
+
+        {/* Typing indicator */}
         {loading && (
-          <div className={`msg bot ${isUrduLang ? "urdu" : ""}`}>
-            <div className="bubble thinking">{t("chatbot.thinking")}</div>
+          <div
+            className={`msg bot ${isUrduLang ? "urdu" : ""}`}
+            style={{ display: "flex", justifyContent: "flex-start", marginBottom: 12, alignItems: "flex-end", gap: 8 }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+              background: "linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2))",
+              border: "1px solid rgba(99,102,241,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13,
+            }}>
+              🤖
+            </div>
+            <div
+              className="bubble thinking"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(99,102,241,0.2)",
+                borderRadius: "16px 16px 16px 4px",
+                padding: "13px 18px",
+                backdropFilter: "blur(8px)",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              {[0, 1, 2].map((n) => (
+                <div
+                  key={n}
+                  style={{
+                    width: 6, height: 6, borderRadius: "50%",
+                    background: "#6366f1",
+                    animation: "zai-bounce 1.2s ease-in-out infinite",
+                    animationDelay: `${n * 0.18}s`,
+                  }}
+                />
+              ))}
+              <style>{`
+                @keyframes zai-bounce {
+                  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+                  40% { transform: translateY(-5px); opacity: 1; }
+                }
+              `}</style>
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── Input — always at bottom ── */}
-      <form
-        onSubmit={sendMessage}
-        style={{
-          flexShrink: 0,
-          borderTop: "1px solid #e2e8f0",
-          background: "#fff",
-          padding: "8px 12px",
-          paddingBottom: "env(safe-area-inset-bottom, 8px)",
-          display: "flex",
-          gap: 6,
-          alignItems: "center",
-        }}
-      >
-        <input
-          ref={inputRef}
-          value={input}
-          placeholder={t("chatbot.placeholder")}
-          onChange={(e) => setInput(e.target.value)}
-          autoFocus
-          className={isUrduLang ? "urdu-input" : ""}
-          style={{ flex: 1, fontSize: 14, padding: "8px 12px", borderRadius: 20, border: "1px solid #cbd5e1", outline: "none" }}
-        />
-        <button
-          type="button"
-          onClick={startListening}
-          style={{ padding: "8px 12px", borderRadius: 20, border: "none", background: "#e2e8f0", cursor: "pointer", fontSize: 16, flexShrink: 0 }}
+      {/* ── INPUT AREA ── */}
+      <div style={{
+        position: "relative", zIndex: 10, flexShrink: 0,
+        padding: "10px 14px",
+        paddingBottom: "max(10px, env(safe-area-inset-bottom))",
+        borderTop: "1px solid rgba(99,102,241,0.12)",
+        background: "rgba(8,8,24,0.85)",
+        backdropFilter: "blur(20px)",
+      }}>
+        <form
+          onSubmit={sendMessage}
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            background: "rgba(255,255,255,0.05)",
+            border: "1.5px solid rgba(99,102,241,0.2)",
+            borderRadius: 16,
+            padding: "5px 7px 5px 13px",
+          }}
         >
-          {t("chatbot.micBtn")}
-        </button>
-        <button
-          type="submit"
-          style={{ padding: "8px 16px", borderRadius: 20, border: "none", background: "#2563eb", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 14, flexShrink: 0 }}
-        >
-          {t("chatbot.sendBtn")}
-        </button>
-      </form>
+          <input
+            ref={inputRef}
+            value={input}
+            placeholder={t("chatbot.placeholder")}
+            onChange={(e) => setInput(e.target.value)}
+            autoFocus
+            className={isUrduLang ? "urdu-input" : ""}
+            style={{
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              color: "#e2e8f0",
+              fontSize: 14,
+              fontWeight: 500,
+              lineHeight: 1.5,
+              padding: "6px 0",
+              caretColor: "#6366f1",
+            }}
+          />
+
+          {/* Mic button */}
+          <button
+            type="button"
+            onClick={startListening}
+            style={{
+              width: 34, height: 34, borderRadius: 9,
+              border: "1px solid rgba(99,102,241,0.2)",
+              background: "rgba(99,102,241,0.08)",
+              color: "#6366f1",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, flexShrink: 0,
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(99,102,241,0.2)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "rgba(99,102,241,0.08)")}
+            title={t("chatbot.micBtn")}
+          >
+            🎙️
+          </button>
+
+          {/* Send button */}
+          <button
+            type="submit"
+            disabled={!input.trim() || loading}
+            style={{
+              height: 34, borderRadius: 9,
+              border: "none",
+              background: input.trim() && !loading
+                ? "linear-gradient(135deg, #6366f1, #7c3aed)"
+                : "rgba(99,102,241,0.15)",
+              color: input.trim() && !loading ? "#ffffff" : "#475569",
+              cursor: input.trim() && !loading ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 5,
+              padding: "0 14px",
+              fontSize: 13, fontWeight: 700,
+              transition: "all 0.2s",
+              flexShrink: 0,
+              boxShadow: input.trim() && !loading
+                ? "0 4px 14px rgba(99,102,241,0.35)"
+                : "none",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t("chatbot.sendBtn")}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

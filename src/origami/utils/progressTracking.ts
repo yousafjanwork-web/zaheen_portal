@@ -34,10 +34,25 @@ const STORAGE_KEY_PREFIX = 'zaheen_user_progress_v1';
 // gets recorded or shown for an anonymous session.
 function getCurrentUserStorageKey(): string | null {
   if (typeof window === 'undefined') return null;
+
+  // Try zaheen_auth first — works for ALL login methods
+  // (OTP, credentials, Google) since loginWithUser() always writes it.
+  try {
+    const raw = window.localStorage.getItem('zaheen_auth');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.userId) {
+        return `${STORAGE_KEY_PREFIX}:uid_${parsed.userId}`;
+      }
+    }
+  } catch {
+    // fall through to msisdn fallback
+  }
+
+  // Legacy fallback for OTP users whose zaheen_auth may not have userId yet
   const msisdn = window.localStorage.getItem('msisdn');
   return msisdn ? `${STORAGE_KEY_PREFIX}:${msisdn}` : null;
 }
-
 // Tune these to match your real reward design.
 const XP_PER_VIDEO = 10;
 const XP_PER_CRAFT = 50;

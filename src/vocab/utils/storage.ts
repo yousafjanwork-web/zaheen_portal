@@ -1,4 +1,4 @@
-const STORAGE_KEYS = {
+const BASE_STORAGE_KEYS = {
   USER: 'vocab_user',
   COMPLETED_LESSONS: 'vocab_completed_lessons',
   XP_TRANSACTIONS: 'vocab_xp_transactions',
@@ -17,6 +17,38 @@ const STORAGE_KEYS = {
   FLASHCARD_STATS: 'vocab_flashcard_stats',
 };
 
+// Returns userId from zaheen_auth in localStorage
+function getCurrentUserId(): string {
+  try {
+    const raw = localStorage.getItem('zaheen_auth');
+    if (!raw) return 'guest';
+    const parsed = JSON.parse(raw);
+    return parsed?.userId ? String(parsed.userId) : 'guest';
+  } catch {
+    return 'guest';
+  }
+}
+
+// All keys are namespaced by userId so each user has their own data
+function makeKeys(userId: string) {
+  const prefix = `u${userId}_`;
+  return Object.fromEntries(
+    Object.entries(BASE_STORAGE_KEYS).map(([k, v]) => [k, `${prefix}${v}`])
+  ) as typeof BASE_STORAGE_KEYS;
+}
+
+// STORAGE_KEYS is a getter — always returns keys for the current user
+export const STORAGE_KEYS: typeof BASE_STORAGE_KEYS = new Proxy(
+  {} as typeof BASE_STORAGE_KEYS,
+  {
+    get(_target, prop: string) {
+      const userId = getCurrentUserId();
+      const keys = makeKeys(userId);
+      return keys[prop as keyof typeof BASE_STORAGE_KEYS];
+    },
+  }
+);
+
 export function getItem<T>(key: string, fallback: T): T {
   try {
     const item = localStorage.getItem(key);
@@ -34,4 +66,8 @@ export function setItem<T>(key: string, value: T): void {
   }
 }
 
-export { STORAGE_KEYS };
+// Call this on logout to clear only the current user's vocab data
+export function clearVocabStorageForUser(userId: string): void {
+  const keys = makeKeys(userId);
+  Object.values(keys).forEach(key => localStorage.removeItem(key));
+}

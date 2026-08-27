@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronDown, Menu, X, User, LogOut } from "lucide-react";
+import { ChevronDown, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -31,7 +31,7 @@ const getInitials = (name: string) =>
     .join("");
 
 const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
-  const { msisdn, logout } = useAuth();
+  const { msisdn, userId, isLoggedIn, isKid, logout } = useAuth();
   const displayName = useUserDisplayName();
   const navigate = useNavigate();
 
@@ -128,32 +128,31 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                 {t("menu.home")}
               </Link>
 
-              <div className="relative">
-                <button
-                  onClick={() => { setCoursesOpen(!coursesOpen); setLearningOpen(false); }}
-                  className="flex items-center gap-1 hover:text-white/80"
-                >
-                  {t("menu.courses")} <ChevronDown size={16} />
-                </button>
-                <CoursesMenu open={coursesOpen} onClose={() => setCoursesOpen(false)} />
-              </div>
+             <div className="relative">
+  <button
+    onClick={() => { setCoursesOpen(!coursesOpen); setLearningOpen(false); setIntelligenceOpen(false); }}
+    className="flex items-center gap-1 hover:text-white/80"
+  >
+    {t("menu.courses")} <ChevronDown size={16} />
+  </button>
+  <CoursesMenu open={coursesOpen} onClose={() => setCoursesOpen(false)} />
+</div>
 
-              <div className="relative">
-                <button
-                  onClick={() => { setLearningOpen(!learningOpen); setCoursesOpen(false); }}
-                  className="flex items-center gap-1 hover:text-white/80"
-                >
-                  {t("menu.learningHub")} <ChevronDown size={16} />
-                </button>
-                <LearningMenu open={learningOpen} onClose={() => setLearningOpen(false)} />
-              </div>
+<div className="relative">
+  <button
+    onClick={() => { setLearningOpen(!learningOpen); setCoursesOpen(false); setIntelligenceOpen(false); }}
+    className="flex items-center gap-1 hover:text-white/80"
+  >
+    {t("menu.learningHub")} <ChevronDown size={16} />
+  </button>
+  <LearningMenu open={learningOpen} onClose={() => setLearningOpen(false)} />
+</div>
 
-              {/* Intelligence / AI */}
-              <div className="relative">
-                <button
-                  onClick={() => { setIntelligenceOpen(!intelligenceOpen); setCoursesOpen(false); setLearningOpen(false); }}
-                  className="flex items-center gap-2 hover:text-white/80 transition-colors"
-                >
+<div className="relative">
+  <button
+    onClick={() => { setIntelligenceOpen(!intelligenceOpen); setCoursesOpen(false); setLearningOpen(false); }}
+    className="flex items-center gap-2 hover:text-white/80 transition-colors"
+  >
                   {t("menu.intelligence_engine")}
                   <div className="flex flex-col items-center justify-center -space-y-0.5">
                     <span className="bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-sm shadow-sm uppercase leading-none">
@@ -201,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
             </div>
 
             {/* ── AUTH ── */}
-            {msisdn ? (
+          {isLoggedIn ? (
               /* ── LOGGED IN: Avatar + dropdown ── */
               <div className="relative" ref={profileRef}>
                 <button
@@ -257,13 +256,23 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                           <p className="text-white font-semibold text-sm truncate">
                             {displayName || "Zaheen User"}
                           </p>
-                          <p className="text-slate-500 text-xs truncate">{msisdn}</p>
+                       {msisdn && <p className="text-slate-500 text-xs truncate">{msisdn}</p>}
                         </div>
                       </div>
                     </div>
 
                     {/* Menu items */}
                     <div className="p-2">
+                        <Link
+    to="/dashboard"
+    onClick={() => setProfileOpen(false)}
+    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-white/07 hover:text-white transition-colors"
+  >
+    <LayoutDashboard size={15} className="text-teal-400 flex-shrink-0" />
+    Dashboard
+  </Link>
+
+  <div className="my-1 border-t border-white/06" />
                       <Link
                         to="/profile"
                         onClick={() => setProfileOpen(false)}
@@ -290,27 +299,24 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                   </div>
                 )}
               </div>
-            ) : (
-              /* ── GUEST: Login + Subscribe ── */
-              <>
-                <button
-                  onClick={() => {
-                    const redirect = encodeURIComponent("https://z.zaheen.com.pk/login");
-                    window.location.href = `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
-                  }}
-                  className="border border-white/30 px-5 py-2 rounded-full hover:bg-white/10"
-                >
-                  {t("auth.login")}
-                </button>
-                <button
-                  onClick={() => (window.location.href = "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe")}
-                  className="bg-primary text-white px-5 py-2 rounded-full"
-                >
-                  {t("auth.subscribe")}
-                </button>
-              </>
-            )}
+         ) : (
 
+  /* ── GUEST: Login + Subscribe ── */
+  <>
+    <button
+      onClick={() => navigate("/login")}
+      className="border border-white/30 px-5 py-2 rounded-full hover:bg-white/10"
+    >
+      {t("auth.login")}
+    </button>
+    <button
+      onClick={() => navigate("/subscribe")}
+      className="bg-primary text-white px-5 py-2 rounded-full"
+    >
+      {t("auth.subscribe")}
+    </button>
+  </>
+)}
             {/* Mobile toggle */}
             <button className="lg:hidden text-white" onClick={() => setMenuOpen(!menuOpen)}>
               {menuOpen ? <X size={22} /> : <Menu size={22} />}

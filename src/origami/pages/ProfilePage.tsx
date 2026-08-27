@@ -6,6 +6,7 @@ import { userProfile, achievements } from '../data/crafts';
 import { useApi } from '../hooks/useApi';
 import { fetchAllCrafts } from '../services/origamiApi';
 import { useAuth } from '@/modules/shared/context/AuthContext';
+import { useUserDisplayName } from '@/modules/shared/hooks/useUserDisplayName';
 import { getComputedProfile } from '../utils/progressTracking';
 import { useOrigamiBase } from '../hooks/useOrigamiBase';
 
@@ -17,6 +18,7 @@ const ProfilePage = ({ darkMode }: ProfilePageProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const base = useOrigamiBase();
   const { isLoggedIn } = useAuth();
+  const displayName = useUserDisplayName();
   const { data: allCrafts } = useApi(fetchAllCrafts, []);
 
   // Stats are now derived from real activity tracked in progressTracking
@@ -66,8 +68,8 @@ const ProfilePage = ({ darkMode }: ProfilePageProps) => {
               {displayProfile.avatar}
             </div>
             <div className="text-center sm:text-left">
-              <h1 className="font-fredoka font-bold text-3xl sm:text-4xl mb-1">
-                {displayProfile.name}
+                          <h1 className="font-fredoka font-bold text-3xl sm:text-4xl mb-1">
+                {isLoggedIn && displayName ? displayName : displayProfile.name}
               </h1>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-4">
                 <span className="bg-white/20 px-3 py-1 rounded-lg font-nunito font-bold text-sm flex items-center gap-1">

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import { Heart, Send, Sparkles, Globe } from "lucide-react";
+import { Heart, Facebook, Instagram, Youtube } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
 
 export default function Footer() {
   return (
@@ -75,15 +76,19 @@ export default function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
               Stay connected
             </h4>
-            <div className="flex md:justify-end gap-2">
-              {[Send, Sparkles, Globe].map((Icon, i) => (
-                <button
-                  key={i}
-                  className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:scale-110 transition-all"
-                >
-                  <Icon className="w-4 h-4" />
-                </button>
-              ))}
+          <div className="flex md:justify-end gap-2">
+              <a href="https://www.facebook.com/zaheendigital" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:scale-110 transition-all">
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a href="https://www.instagram.com/zaheendigital" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:scale-110 transition-all">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="https://www.youtube.com/@zaheendigital" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:scale-110 transition-all">
+                <Youtube className="w-4 h-4" />
+              </a>
+              <a href="https://www.tiktok.com/@zaheen_digital" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:scale-110 transition-all">
+                <FaTiktok className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </div>

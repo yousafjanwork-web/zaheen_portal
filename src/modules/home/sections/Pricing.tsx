@@ -61,7 +61,7 @@ const Pricing = () => {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4">
+    <div className="relative z-10 max-w-[1600px] mx-auto px-6 xl:px-10">
 
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">

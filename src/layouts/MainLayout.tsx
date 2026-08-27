@@ -2,17 +2,28 @@ import { useState, useEffect } from "react";
 import Header from "../modules/shared/components/Header/Header";
 import MobileHeader from "@/modules/shared/components/MobileHeader";
 import Footer from "../modules/shared/components/Footer/Footer";
-import MobileMarketingBanner from "@/modules/home/sections/MobileMarketingBanner";
+// import MobileMarketingBanner from "@/modules/home/sections/MobileMarketingBanner";
 import { Outlet, useLocation } from "react-router-dom";
+
+const MINI_APP_PREFIXES = ["/mdcat", "/cosmokid", "/vocab", "/origami", "/pakistan"];
 
 const MainLayout = () => {
   const [isDark, setIsDark] = useState(false);
   const location = useLocation();
 
-  /* Hide mobile header/banner on MZA page — it renders its own via HomeMobile */
   const isMzaPage = location.pathname === "/mza";
 
   const toggleTheme = () => setIsDark(prev => !prev);
+
+  // ── Reset title to "Zaheen | Home" when navigating back from any mini-app ──
+  useEffect(() => {
+    const isMiniApp = MINI_APP_PREFIXES.some(prefix =>
+      location.pathname.startsWith(prefix)
+    );
+    if (!isMiniApp) {
+      document.title = "Zaheen | Home";
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -33,7 +44,9 @@ const MainLayout = () => {
       {/* Mobile Header — hidden on MZA page to avoid duplicate */}
       {!isMzaPage && (
         <div className="lg:hidden relative z-[99] dark:bg-black dark:text-white">
-          <MobileMarketingBanner />
+
+          {/* <MobileMarketingBanner /> */}
+          
           <MobileHeader />
         </div>
       )}

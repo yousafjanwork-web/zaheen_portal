@@ -8,17 +8,16 @@ import {
   makeJazzCashPayment,
 } from "@/modules/shared/services/subscriptionService";
 import { useAuth } from "@/modules/shared/context/AuthContext";
-import { nav } from "framer-motion/client";
+import { getUserProfile } from "@/modules/shared/services/profileService";
+import { getSetupStatus } from "@/modules/shared/services/lmsService";
 
 type SubscriptionType = "ZONG" | "OTHER";
 
 const SubscribePage = () => {
-  const { login } = useAuth();
+  const { login, loginWithUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // NOTE: subscriptionType is locked to "ZONG" for now.
-  // "OTHER" (JazzCash/Other Networks) is temporarily hidden but kept for future use.
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("ZONG");
   const [zongMsisdn, setZongMsisdn] = useState("");
   const [otherMsisdn, setOtherMsisdn] = useState("");
@@ -34,11 +33,11 @@ const SubscribePage = () => {
   const [step, setStep] = useState<"MSISDN" | "OTP" | "SUCCESS">("MSISDN");
   const [isAutoMsisdn, setIsAutoMsisdn] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<"google" | null>(null);
   const [error, setError] = useState("");
   const [timer, setTimer] = useState(30);
 
   useEffect(() => {
-    // Load Fraunces font (matching ThankYouPage)
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href =
@@ -59,13 +58,60 @@ const SubscribePage = () => {
     }
   }, []);
 
-  const packages = [
-    { id: "205", name: "Daily", price: "Rs 5", tax: "+Tax", amount: 5 },
-    { id: "206", name: "Weekly", price: "Rs 15", tax: "+Tax", amount: 15 },
-    { id: "207", name: "Monthly", price: "Rs 50", tax: "+Tax", amount: 50 },
-  ];
+  // const packages = [
+  //   { id: "205", name: "Daily", price: "Rs 5", tax: "+Tax", amount: 5 },
+  //   { id: "206", name: "Weekly", price: "Rs 15", tax: "+Tax", amount: 15 },
+  //   { id: "207", name: "Monthly", price: "Rs 50", tax: "+Tax", amount: 50 },
+  // ];
+  // const selectedPackage = packages.find((pkg) => pkg.id === serviceId);
 
-  const selectedPackage = packages.find((pkg) => pkg.id === serviceId);
+  // ── Shared routing logic after any successful sign-up (mobile OR Google) ──
+  // Same flow: profile → role → grade → dashboard
+  const routeAfterSubscribe = async (resolvedMsisdn: string) => {
+    try {
+      const profile = await getUserProfile(resolvedMsisdn);
+
+      if (!profile) {
+        // Profile doesn't exist yet — log in minimally so ProfilePage doesn't
+        // redirect to /login, then send to profile setup
+        login(resolvedMsisdn);
+        navigate("/profile?setup=true", { replace: true });
+        return;
+      }
+
+      // Full login with userId — sets isLoggedIn = true everywhere
+      const status = await getSetupStatus(profile.id);
+
+      loginWithUser({
+        msisdn:           resolvedMsisdn,
+        userId:           profile.id,
+        isKid:            false,
+        role:             status.role              ?? null,
+        selectedClassId:  status.selected_class_id  ?? null,
+        selectedCourseId: status.selected_course_id ?? null,
+      });
+
+      // Route exactly like LoginPage does
+      if (!status.is_profile_complete) {
+        navigate("/profile?setup=true", { replace: true });
+        return;
+      }
+      if (!status.has_role) {
+        navigate("/setup/role", { replace: true });
+        return;
+      }
+      if ((status.role === "learner" || status.role === "both") && !status.has_grade) {
+        navigate("/setup/grade-course", { replace: true });
+        return;
+      }
+      navigate("/dashboard", { replace: true });
+
+    } catch {
+      // Fallback — log in minimally and send to profile setup
+      login(resolvedMsisdn);
+      navigate("/profile?setup=true", { replace: true });
+    }
+  };
 
   const handleZongSubscribe = async () => {
     if (!msisdn) { setError("Please enter your mobile number"); return; }
@@ -74,9 +120,8 @@ const SubscribePage = () => {
       if (isAutoMsisdn) {
         const sub = await subscribeUser(msisdn, serviceId);
         if (sub.status === "1" || sub.desc?.toLowerCase().includes("already active")) {
-          login(msisdn);
           localStorage.setItem("activeServiceId", serviceId);
-          window.location.href = "/";
+          await routeAfterSubscribe(msisdn);
         } else {
           setError(sub.desc || "Subscription failed");
         }
@@ -132,6 +177,19 @@ const SubscribePage = () => {
     handleZongSubscribe();
   };
 
+  // ── Social sign-up handlers ──
+  const handleGoogleSignUp = () => {
+    setSocialLoading("google");
+    const redirectUri = `${window.location.origin}/social-callback`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  };
+
+  // ── Temporarily hidden: Facebook sign-up — will be added later ──
+  // const handleFacebookSignUp = () => {
+  //   setSocialLoading("facebook");
+  //   window.location.href = "https://api.zaheen.com.pk/v2/api/auth/facebook";
+  // };
+
   const handleVerifyPin = async () => {
     try {
       setLoading(true); setError("");
@@ -139,9 +197,8 @@ const SubscribePage = () => {
       if (verify.status === "SUCCESS") {
         const sub = await subscribeUser(msisdn, serviceId);
         if (sub.status === "1" || sub.desc?.toLowerCase().includes("already active")) {
-          login(msisdn);
           localStorage.setItem("activeServiceId", serviceId);
-          window.location.href = "/";
+          await routeAfterSubscribe(msisdn);
         } else {
           setError(sub.desc || "Subscription failed");
         }
@@ -160,7 +217,6 @@ const SubscribePage = () => {
 
   const handleResend = async () => { setTimer(30); await sendPin(msisdn, serviceId); };
 
-  /* ─── Spark positions ─── */
   const sparks = [
     { top: "12%", left: "8%",  delay: "0s",    dur: "2.6s" },
     { top: "22%", left: "88%", delay: "0.7s",  dur: "2.1s" },
@@ -182,14 +238,11 @@ const SubscribePage = () => {
             style={{ top: s.top, left: s.left, animationDelay: s.delay, animationDuration: s.dur }}
           />
         ))}
-        {/* Subtle radial glow */}
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            width: "600px",
-            height: "600px",
-            background:
-              "radial-gradient(circle, rgba(251,191,36,0.06) 0%, transparent 70%)",
+            width: "600px", height: "600px",
+            background: "radial-gradient(circle, rgba(251,191,36,0.06) 0%, transparent 70%)",
           }}
         />
       </div>
@@ -204,7 +257,6 @@ const SubscribePage = () => {
           boxShadow: "0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(251,191,36,0.08)",
         }}
       >
-        {/* Amber top accent bar */}
         <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #F0B429, #2DD4BF)" }} />
 
         <div className="p-8">
@@ -221,11 +273,71 @@ const SubscribePage = () => {
                   className="text-3xl text-white leading-tight"
                   style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}
                 >
-                  Subscribe to Zaheen
+                  Sign Up
                 </h1>
                 <p className="text-slate-400 text-sm mt-2">
                   Unlock lessons, practice sets, and progress tracking.
                 </p>
+              </div>
+
+              {/* ── Social sign-up buttons ── */}
+              <div className="space-y-3 mb-6">
+                <button
+                  onClick={handleGoogleSignUp}
+                  disabled={!!socialLoading}
+                  className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "#e2e8f0",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                >
+                  {socialLoading === "google" ? (
+                    <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-400/30 border-t-slate-300 animate-spin" />
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
+                      <path d="M43.611 20.083H42V20H24v8h11.303C33.973 32.28 29.418 35 24 35c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" fill="#FFC107"/>
+                      <path d="M6.306 14.691l6.571 4.819C14.655 16.108 19.001 13 24 13c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" fill="#FF3D00"/>
+                      <path d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 35c-5.399 0-9.944-3.647-11.298-8.56l-6.522 5.025C9.505 39.556 16.227 44 24 44z" fill="#4CAF50"/>
+                      <path d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" fill="#1976D2"/>
+                    </svg>
+                  )}
+                  Continue with Google
+                </button>
+
+            {/* ── Temporarily hidden: Facebook sign-up — will be added later ──
+                <button
+                  onClick={handleFacebookSignUp}
+                  disabled={!!socialLoading}
+                  className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "#e2e8f0",
+                    opacity: socialLoading === "google" ? 0.5 : 1,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                >
+                  {socialLoading === "facebook" ? (
+                    <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-400/30 border-t-slate-300 animate-spin" />
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+                      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.883v2.258h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                    </svg>
+                  )}
+                  Continue with Facebook
+                </button>
+                ── End of hidden Facebook button ── */}
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+                <span className="text-xs text-slate-500 font-medium">or sign up with mobile</span>
+                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
               </div>
 
               {/* ── Temporarily hidden: ZONG / OTHER NETWORKS toggle ─────────────
@@ -262,11 +374,7 @@ const SubscribePage = () => {
                 Mobile Number
               </label>
               <div className="relative mb-5">
-                <span
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm select-none"
-                >
-                  📱
-                </span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm select-none">📱</span>
                 <input
                   type="text"
                   value={msisdn}
@@ -318,7 +426,7 @@ const SubscribePage = () => {
               )}
               ── End of hidden CNIC field ── */}
 
-              {/* Package selector */}
+              {/* ── Temporarily hidden: package selector moved to PackagesPage ──
               <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
                 Choose Package
               </label>
@@ -351,10 +459,7 @@ const SubscribePage = () => {
                           ✓
                         </span>
                       )}
-                      <div
-                        className="font-bold text-sm mb-1"
-                        style={{ color: active ? "#F0B429" : "#e2e8f0" }}
-                      >
+                      <div className="font-bold text-sm mb-1" style={{ color: active ? "#F0B429" : "#e2e8f0" }}>
                         {pkg.name}
                       </div>
                       <div className="text-xs" style={{ color: active ? "#fcd34d" : "#64748b" }}>
@@ -367,8 +472,8 @@ const SubscribePage = () => {
                   );
                 })}
               </div>
+              ── End of hidden package selector ── */}
 
-              {/* Error */}
               {error && (
                 <div
                   className="flex items-center gap-2 text-sm mb-4 px-4 py-3 rounded-xl"
@@ -382,15 +487,12 @@ const SubscribePage = () => {
                 </div>
               )}
 
-              {/* CTA */}
               <button
                 onClick={handleSubscribe}
                 disabled={loading}
                 className="group w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2"
                 style={{
-                  background: loading
-                    ? "rgba(240,180,41,0.4)"
-                    : "linear-gradient(135deg, #F0B429, #f59e0b)",
+                  background: loading ? "rgba(240,180,41,0.4)" : "linear-gradient(135deg, #F0B429, #f59e0b)",
                   color: "#0f172a",
                   boxShadow: loading ? "none" : "0 4px 16px rgba(240,180,41,0.35)",
                 }}
@@ -401,8 +503,6 @@ const SubscribePage = () => {
                     Processing…
                   </>
                 ) : isAutoMsisdn ? (
-                  // NOTE: When re-enabling OTHER, restore the ternary:
-                  // subscriptionType === "OTHER" ? "Pay via JazzCash →" : isAutoMsisdn ? "Subscribe Now →" : "Send PIN →"
                   "Subscribe Now →"
                 ) : (
                   "Send PIN →"
@@ -410,8 +510,10 @@ const SubscribePage = () => {
               </button>
 
               <p className="text-center text-xs text-slate-600 mt-4">
-                By subscribing you agree to our{" "}
-                <span onClick={()=> navigate("/terms")} className="text-teal-500 cursor-pointer hover:underline">Terms & Conditions</span>
+                By signing up you agree to our{" "}
+                <span onClick={() => navigate("/terms")} className="text-teal-500 cursor-pointer hover:underline">
+                  Terms & Conditions
+                </span>
               </p>
             </>
           )}
@@ -427,15 +529,11 @@ const SubscribePage = () => {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-400 mb-2">
                   Verification
                 </p>
-                <h1
-                  className="text-2xl text-white"
-                  style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}
-                >
+                <h1 className="text-2xl text-white" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
                   Enter your PIN
                 </h1>
                 <p className="text-slate-400 text-sm mt-2">
-                  We sent a PIN to{" "}
-                  <span className="text-amber-400 font-medium">{msisdn}</span>
+                  We sent a PIN to <span className="text-amber-400 font-medium">{msisdn}</span>
                 </p>
               </div>
 
@@ -473,9 +571,7 @@ const SubscribePage = () => {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
                 style={{
-                  background: loading
-                    ? "rgba(240,180,41,0.4)"
-                    : "linear-gradient(135deg, #F0B429, #f59e0b)",
+                  background: loading ? "rgba(240,180,41,0.4)" : "linear-gradient(135deg, #F0B429, #f59e0b)",
                   color: "#0f172a",
                   boxShadow: loading ? "none" : "0 4px 16px rgba(240,180,41,0.35)",
                 }}
@@ -493,14 +589,10 @@ const SubscribePage = () => {
               <div className="text-center mt-5">
                 {timer > 0 ? (
                   <p className="text-slate-500 text-sm">
-                    Resend PIN in{" "}
-                    <span className="text-amber-400 font-semibold">{timer}s</span>
+                    Resend PIN in <span className="text-amber-400 font-semibold">{timer}s</span>
                   </p>
                 ) : (
-                  <button
-                    onClick={handleResend}
-                    className="text-teal-400 text-sm hover:underline transition-colors"
-                  >
+                  <button onClick={handleResend} className="text-teal-400 text-sm hover:underline transition-colors">
                     Resend PIN
                   </button>
                 )}
@@ -511,7 +603,6 @@ const SubscribePage = () => {
           {/* ── STEP: SUCCESS ── */}
           {step === "SUCCESS" && (
             <div className="text-center py-4">
-              {/* Animated seal (matching ThankYouPage) */}
               <div className="relative mx-auto mb-8 h-28 w-28">
                 <svg viewBox="0 0 120 120" className="h-full w-full">
                   <circle cx="60" cy="60" r="52" fill="none" stroke="#F0B429" strokeOpacity="0.2" strokeWidth="2" />
@@ -534,14 +625,10 @@ const SubscribePage = () => {
                   />
                 </svg>
               </div>
-
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-400 mb-3">
                 Subscription confirmed
               </p>
-              <h1
-                className="text-3xl text-white mb-3"
-                style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}
-              >
+              <h1 className="text-3xl text-white mb-3" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
                 You're all set!
               </h1>
               <p className="text-slate-400 text-sm mb-8 max-w-xs mx-auto">

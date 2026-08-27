@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, X, ChevronDown, User, LogOut } from "lucide-react";
+import { Menu, X, ChevronDown, User, LogOut, LayoutDashboard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import logo from "@/assets/images/ZaheenLogo.png";
@@ -14,7 +14,7 @@ const MobileHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
 
-  const { msisdn, isLoggedIn, logout } = useAuth();
+  const { msisdn, userId, isLoggedIn, logout } = useAuth();
   const displayName = useUserDisplayName();
   const navigate = useNavigate();
 
@@ -113,12 +113,13 @@ const MobileHeader = () => {
       {menuOpen && (
         <nav className="mt-4 pb-2 space-y-1">
 
-          {[
+         {[
             { href: "/",                label: t("menu.home") },
             { href: "/grade-view/k-12", label: t("menu.courses") },
             { href: "/practice",        label: t("learning.practice") },
             { href: "/results",         label: t("learning.boardResults") },
             { href: "/ai",              label: t("menu.ai_tutor") },
+              { href: "/mdcat",           label: t("menu.mdcat_command") },
           ].map(({ href, label }) => (
             <Link
               key={href}
@@ -151,17 +152,26 @@ const MobileHeader = () => {
                     <p className="text-white font-semibold text-sm truncate">
                       {displayName || "Zaheen User"}
                     </p>
-                    <p className="text-slate-500 text-xs truncate">{msisdn}</p>
+                   {msisdn && <p className="text-slate-500 text-xs truncate">{msisdn}</p>}
                   </div>
                 </div>
 
-                <Link
+             <Link
                   to="/profile"
                   onClick={close}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-white/07 hover:text-white transition-colors"
                 >
                   <User size={15} className="text-amber-400 flex-shrink-0" />
                   Edit Profile
+                </Link>
+
+                <Link
+                  to="/dashboard"
+                  onClick={close}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-white/07 hover:text-white transition-colors"
+                >
+                  <LayoutDashboard size={15} className="text-teal-400 flex-shrink-0" />
+                  Dashboard
                 </Link>
 
                 <button
@@ -175,12 +185,8 @@ const MobileHeader = () => {
             ) : (
               <>
                 {/* Login always visible */}
-                <button
-                  onClick={() => {
-                    close();
-                    window.location.href =
-                      "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/login";
-                  }}
+                             <button
+                  onClick={() => { close(); navigate("/login"); }}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold text-white mb-2 transition-colors hover:bg-white/10"
                   style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                 >
@@ -189,21 +195,17 @@ const MobileHeader = () => {
 
                 {/* Subscribe button — hidden for MZA active users */}
                 {!isSubscribed && (
-                  <button
-                    onClick={() => {
-                      close();
-                      window.location.href =
-                        "http://he.zaheen.com.pk/gethe?redirect=https://z.zaheen.com.pk/subscribe";
-                    }}
-                    className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
-                    style={{
-                      background: "linear-gradient(135deg,#F0B429,#f59e0b)",
-                      color: "#0f172a",
-                      boxShadow: "0 4px 12px rgba(240,180,41,0.3)",
-                    }}
-                  >
-                    {t("auth.subscribe")}
-                  </button>
+                                <button
+                  onClick={() => { close(); navigate("/subscribe"); }}
+                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    background: "linear-gradient(135deg,#F0B429,#f59e0b)",
+                    color: "#0f172a",
+                    boxShadow: "0 4px 12px rgba(240,180,41,0.3)",
+                  }}
+                >
+                  {t("auth.subscribe")}
+                </button>
                 )}
               </>
             )}

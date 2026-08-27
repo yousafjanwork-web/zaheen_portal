@@ -18,6 +18,7 @@ import { CollectionPage } from "./pages/CollectionPage";
 import { BadgesPage } from "./pages/BadgesPage";
 import { ProgressPage } from "./pages/ProgressPage";
 import { VideosPage } from "./pages/VideosPage";
+import { VideoPlayerPage } from "./pages/Videoplayerpage";
 import { useEffect } from "react";
 import { useGameStore } from "./store/useGameStore";
 
@@ -59,6 +60,7 @@ function AnimatedRoutes() {
           <Route path="badges" element={<BadgesPage />} />
           <Route path="progress" element={<ProgressPage />} />
           <Route path="videos" element={<VideosPage />} />
+          <Route path="videos/:id" element={<VideoPlayerPage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </motion.div>

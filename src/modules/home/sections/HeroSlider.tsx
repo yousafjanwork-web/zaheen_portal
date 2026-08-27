@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { t } from "@/modules/shared/i18n";
 import { useNavigate } from "react-router-dom";
 
-import tradeBanner from "@/assets/images/tradin-banner.png";
-import kgBanner from "@/assets/images/kg-banner.png";
-import onetofiveBanner from "@/assets/images/grade-1-5.png";
-import webBanner from "@/assets/images/web-banner.png";
-import kgbanner2 from "@/assets/images/kg-banner-2.png";
-import bannerontofive2 from "@/assets/images/grade-1-5-banner-2.png";
-import webBanner2 from "@/assets/images/web-banner-2.png";
-import mdcat from "@/assets/images/md-cat.png";
+import tradeBanner from "@/assets/images/tradbannew.png";
+import kgBanner from "@/assets/images/kgbanr.png";
+import onetofiveBanner from "@/assets/images/grade1-5banr.png";
+import webBanner from "@/assets/images/webdevbaners.png";
+import kgbanner2 from "@/assets/images/kgbannr2.png";
+import bannerontofive2 from "@/assets/images/grade1-5newban2.png";
+import webBanner2 from "@/assets/images/webbanner2.png";
+import mdcat from "@/assets/images/mdcatbanrr.png";
 
 /* ── Shared spark positions (mirrors LoginPage) ── */
 const sparks = [
@@ -94,7 +94,7 @@ const HeroSlider = () => {
           transition={{ duration: 0.7 }}
           className="absolute inset-0 z-10"
         >
-          <div className="max-w-7xl mx-auto px-4 h-full flex items-center">
+         <div className="max-w-7xl mx-auto px-4 h-full flex items-center">
             <div className="grid lg:grid-cols-2 gap-12 items-center w-full">
 
               {/* TEXT */}

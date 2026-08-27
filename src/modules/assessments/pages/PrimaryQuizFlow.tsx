@@ -80,7 +80,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
   const location = useLocation()
   const locationSubjectId = location.state?.subjectId as number | undefined
   const classId   = propClassId ?? (classSlug ? classIdFromSlug(classSlug) : undefined)
-  const studentId = (propId ?? Number(sessionStorage.getItem("studentId"))) || 2
+ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
 
   // ── Phase ──────────────────────────────────────────────────────────────
   const [phase, setPhase] = useState<"select" | "quiz" | "done">("select")

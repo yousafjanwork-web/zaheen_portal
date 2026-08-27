@@ -90,7 +90,7 @@ const SecondaryQuizFlow: React.FC<Props> = ({
   // classId: prop → URL slug → undefined
   const defaultClassId = propClassId ?? (classSlug ? classIdFromSlug(classSlug) : undefined)
 
-  const studentId = (propId ?? Number(sessionStorage.getItem("studentId"))) || 2
+const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
 
   const [phase,      setPhase]      = useState<"select" | "quiz" | "done">("select")
   const [skill,      setSkill]      = useState<Skill | null>(null)

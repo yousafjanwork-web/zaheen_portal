@@ -275,7 +275,7 @@ const SubjectSkillSelector: React.FC<Props> = ({
   const isUrdu = lang === "ur"
   const isRTL  = isUrdu
 
-  const userId = (studentId ?? Number(sessionStorage.getItem("studentId"))) || 2
+const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
 
   const localClassName   = (c: Class)   => (isUrdu && c.urdu_name) ? c.urdu_name : c.name
   const localSubjectName = (s: Subject) => (isUrdu && s.name_ur)   ? s.name_ur   : s.name_en

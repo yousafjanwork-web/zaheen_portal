@@ -85,9 +85,7 @@ const allNavItems = [
             <p className="text-[9px] sm:text-[10px] font-black text-sky-400 tracking-wider">EXAM IN</p>
             <p className="text-[11px] sm:text-xs md:text-sm font-black text-sky-900">{daysLeft} DAYS</p>
           </div>
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-sky-100 border-2 border-white shadow-sm flex items-center justify-center font-display text-xs font-black text-sky-800 shrink-0">
-            ZH
-          </div>
+         
 
           {/* Hamburger toggle — only visible below lg */}
           <button

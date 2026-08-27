@@ -14,7 +14,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useLessonsData } from "../context/LessonsContext";
-import Mascot from "../components/Mascot";
+// import Mascot from "../components/Mascot";
 import { useVocabBase } from "../hooks/useVocabBase";
 
 const juniorLevels = [
@@ -72,7 +72,7 @@ const navigate = useNavigate();
 
   return (
     <div className="space-y-8">
-      {/* Mascot Welcome */}
+      {/* Mascot Welcome
       <Mascot
         message={`Hi there! 👋 Welcome back! You have a ${user.streak}-day learning streak! ${lessons.length > 0 ? "Ready for your next vocabulary adventure?" : ""} 🚀`}
         emotion={user.streak >= 3 ? "excited" : "happy"}
@@ -80,7 +80,7 @@ const navigate = useNavigate();
         position="bottom-right"
         size="md"
         showDismiss
-      />
+      /> */}
 
       {/* Hero Section */}
       <motion.div

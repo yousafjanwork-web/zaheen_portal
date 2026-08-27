@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   password?: string | null;
   msisdn: string;
+   is_kid?: boolean | number | null;
   create_at?: string;
   update_at?: string;
 }
@@ -36,9 +37,27 @@ export const getUserProfile = async (msisdn: string): Promise<UserProfile | null
     if (res.data?.success && res.data?.data) {
       return res.data.data as UserProfile;
     }
+
+    // User not found — auto-create for new subscribers
+    if (!res.data?.success) {
+      const createRes = await axios.post(`${BASE_URL}/api/users`, { msisdn });
+      if (createRes.data?.success && createRes.data?.data) {
+        return createRes.data.data as UserProfile;
+      }
+    }
+
     return null;
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.status === 404) {
+      // 404 also means not found — try to create
+      try {
+        const createRes = await axios.post(`${BASE_URL}/api/users`, { msisdn });
+        if (createRes.data?.success && createRes.data?.data) {
+          return createRes.data.data as UserProfile;
+        }
+      } catch {
+        // creation also failed — user genuinely can't be resolved
+      }
       return null;
     }
     throw err;
@@ -66,12 +85,20 @@ export const updateUserProfile = async (
  * Login with username + password.
  * Returns the full user object on success.
  */
+export interface LoginResult {
+  user: UserProfile;
+  token: string | null;
+}
+
 export const loginWithCredentials = async (
   payload: UsernameLoginPayload
-): Promise<UserProfile> => {
+): Promise<LoginResult> => {
   const res = await axios.post(`${BASE_URL}/api/users/login`, payload);
   if (res.data?.success && res.data?.data?.user) {
-    return res.data.data.user as UserProfile;
+    return {
+      user:  res.data.data.user  as UserProfile,
+      token: res.data.data.token ?? res.data.data.access_token ?? null,
+    };
   }
   throw new Error(res.data?.message || "Invalid username or password");
 };

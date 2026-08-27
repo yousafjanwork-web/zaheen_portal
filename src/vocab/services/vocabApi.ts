@@ -80,6 +80,17 @@ export function fetchDashboardRaw(token: string) {
   });
 }
 
+export function completeLessonWithUserId(
+  lessonId: string,
+  userId: number,
+  payload: CompleteLessonPayload,
+) {
+  return request<any>(VOCAB_API.lessonComplete(lessonId), {
+    method: "POST",
+    body: JSON.stringify({ user_id: userId, ...payload }),
+  });
+}
+
 // ---- 5. Complete a lesson (requires auth) -------------------------------------------------
 export interface CompleteLessonPayload {
   score: number;

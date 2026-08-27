@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
+import { useUserDisplayName } from '@/modules/shared/hooks/useUserDisplayName';
 import Logo from './Logo';
 import {
   BookOpen, Home, Trophy, User, Menu, X, Star, Sun, Moon,
@@ -11,7 +13,9 @@ const juniorLevels = ['Beginner Explorer', 'Word Adventurer', 'Vocabulary Hero',
 const seniorLevels = ['Word Explorer', 'Creative Communicator', 'Language Champion', 'Story Creator', 'Vocabulary Expert'];
 
 export default function Navbar() {
-  const { user } = useAuth();
+    const { user } = useAuth();
+  const { isLoggedIn } = useZaheenAuth();
+  const displayName = useUserDisplayName();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -113,10 +117,20 @@ export default function Navbar() {
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-
-            <div className="hidden sm:flex items-center gap-1.5 pl-2 ml-1 border-l border-slate-200 dark:border-slate-700 px-2 py-1.5">
-              <User className="w-4 h-4 text-slate-400" />
-              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Learner</span>
+            <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l border-slate-200 dark:border-slate-700">
+              <Link
+                to="/vocab/dashboard"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/60 dark:border-blue-700/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 transition-all group shadow-sm"
+              >
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <span className="text-[10px] font-black text-white">
+                    {(isLoggedIn && displayName ? displayName : 'L').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-300 max-w-[80px] truncate">
+                  {isLoggedIn && displayName ? displayName : 'Learner'}
+                </span>
+              </Link>
             </div>
 
             <button

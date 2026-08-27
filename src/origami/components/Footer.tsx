@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, Mail, Camera, Video, MessageCircle } from 'lucide-react';
 import logo from "../../assets/logo/zaheen-origami-logo1 1.png";
 import { useOrigamiBase } from '../hooks/useOrigamiBase';
+import { Navigate } from 'react-router-dom';
 
 interface FooterProps {
   darkMode: boolean;
@@ -9,6 +10,7 @@ interface FooterProps {
 
 const Footer = ({ darkMode }: FooterProps) => {
   const base = useOrigamiBase();
+  const navigate = useNavigate()
   return (
     <footer className={`relative overflow-hidden ${darkMode ? 'bg-[#0a0a1a]' : 'bg-gray-900'} text-white`}>
       {/* Decorative Top Wave */}
@@ -126,9 +128,8 @@ const Footer = ({ darkMode }: FooterProps) => {
             Made with <Heart size={14} className="text-pink fill-pink" /> by Zaheen Origami © {new Date().getFullYear()}
           </p>
           <div className="flex gap-6">
-            <button className="text-gray-500 hover:text-gray-300 font-nunito text-sm transition-colors">Privacy</button>
-            <button className="text-gray-500 hover:text-gray-300 font-nunito text-sm transition-colors">Terms</button>
-            <button className="text-gray-500 hover:text-gray-300 font-nunito text-sm transition-colors">Contact</button>
+            <button onClick={()=>navigate("/privacy")} className="text-gray-500 hover:text-gray-300 font-nunito text-sm transition-colors">Privacy</button>
+            <button onClick={()=>navigate("/terms")} className="text-gray-500 hover:text-gray-300 font-nunito text-sm transition-colors">Terms</button>
           </div>
         </div>
       </div>

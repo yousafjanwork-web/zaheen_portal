@@ -118,7 +118,7 @@ export default function AiTutorPage() {
           id: crypto.randomUUID(),
           role: "error",
           content:
-            err.message || "Couldn't reach Zaheen AI Tutor. Try again in a moment.",
+             "Couldn't reach Zaheen AI Tutor. Try again in a moment.",
         },
       ]);
     } finally {

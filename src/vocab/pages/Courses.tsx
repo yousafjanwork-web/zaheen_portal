@@ -12,7 +12,7 @@ import {
   Sparkles,
   CheckCircle,
 } from "lucide-react";
-import Mascot from "../components/Mascot";
+// import Mascot from "../components/Mascot";
 
 export default function Courses() {
   const { user, completedLessons } = useAuth();
@@ -43,7 +43,7 @@ const navigate = useNavigate();
 
   return (
     <div className="space-y-8">
-      {/* Mascot */}
+      {/* Mascot
       <Mascot
         message={`Welcome to the Course Library! 📚 I see ${availableLessons.length} lessons waiting for you. ${completedLessons.length > 0 ? `You've completed ${completedLessons.length} already — amazing!` : "Let's start your first one!"}`}
         emotion="happy"
@@ -51,7 +51,7 @@ const navigate = useNavigate();
         position="bottom-right"
         size="md"
         showDismiss
-      />
+      /> */}
 
       {/* Hero header */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 p-6 md:p-8 text-white shadow-xl shadow-blue-200/40">

@@ -70,12 +70,17 @@ export default function VocabApp() {
   // const token: string | null = null;
 
   // ─── UNCOMMENT these two lines when handing to frontend developer ─────────
-   const { token } = useZaheenAuth() as { token?: string | null };
+const { isLoggedIn: zaheenLoggedIn, displayName: zaheenDisplayName, token: zaheenToken, isLoading: zaheenLoading } = useZaheenAuth();
   // ─────────────────────────────────────────────────────────────────────────
+
+  // Wait for Zaheen auth to finish reading from localStorage
+  // before mounting vocab AuthProvider — prevents isLoggedIn
+  // from being briefly false and wiping saved progress
+  if (zaheenLoading) return null;
 
   return (
     <LessonsProvider>
-      <AuthProvider token={token}>
+      <AuthProvider isLoggedIn={zaheenLoggedIn} displayName={zaheenDisplayName} token={zaheenToken}>
         <VocabRoutes />
       </AuthProvider>
     </LessonsProvider>
