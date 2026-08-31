@@ -28,7 +28,12 @@ export default function SubscriptionForm({
         </p>
       </div>
 
+<<<<<<< HEAD
       <form onSubmit={handleVerify} className="space-y-6">
+=======
+      {/* ✅ changed onSubmit to e.preventDefault() to stop page refresh */}
+      <form onSubmit={(e) => { e.preventDefault(); handleVerify(); }} className="space-y-6">
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
         <label className="block text-sm font-semibold mb-2">
           Mobile Number
         </label>
@@ -78,7 +83,12 @@ export default function SubscriptionForm({
               ))}
             </div>
 
+<<<<<<< HEAD
             <button className="w-full bg-blue-600 text-white py-3 rounded-full">
+=======
+            {/* ✅ type="submit" so form onSubmit fires */}
+            <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-full">
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
               {loading ? "Verifying..." : "Verify PIN"}
               <ShieldCheck className="inline ml-2" size={18} />
             </button>

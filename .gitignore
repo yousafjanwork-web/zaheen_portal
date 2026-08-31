@@ -54,3 +54,9 @@ coverage/
 
 # Optional eslint cache
 .eslintcache
+
+# Archives & Large Compressed Files
+*.rar
+*.zip
+*.tar
+*.gz

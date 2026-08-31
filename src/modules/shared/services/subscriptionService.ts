@@ -58,6 +58,9 @@ export const verifyPin = async (
   subMethod: string // ✅ add this
 ) => {
 
+  const transactionId = Date.now();
+  const subMethod = "WEB";
+
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/verify-subscribe",
     {
@@ -86,7 +89,10 @@ export const subscribeUser = async (
   const getSubMethod = () => {
     const params = new URLSearchParams(window.location.search);
 
+<<<<<<< HEAD
     // ✅ 1. Check if request is from MyZongApp
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
     if (
       params.get("mza") ||
       params.get("source")?.toLocaleLowerCase() === "mza" ||
@@ -96,14 +102,20 @@ export const subscribeUser = async (
       return "MZA";
     }
 
+<<<<<<< HEAD
     // ✅ 2. Detect Mobile vs Web (basic UA check)
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
       return "MOBILE";
     }
 
+<<<<<<< HEAD
     // ✅ 3. Default
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
     return "WEB";
   };
 
@@ -138,8 +150,6 @@ export const handleSubscribe = async (
 
   try {
 
-    /* STORE PLAN BEFORE REDIRECT */
-
     localStorage.setItem("pendingServiceId", serviceId);
 
     let finalMsisdn = msisdn;
@@ -154,12 +164,9 @@ export const handleSubscribe = async (
 
     if (!finalMsisdn) {
 
-      /* REDIRECT TO HE */
-
-      const redirect = encodeURIComponent(
-        `https://z.zaheen.com.pk/subscribe`
-      );
-
+    const redirect = encodeURIComponent(
+  `${window.location.origin}/subscribe`
+);
       window.location.href =
         `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
 
@@ -168,8 +175,6 @@ export const handleSubscribe = async (
     }
 
     console.log("Using MSISDN:", finalMsisdn);
-
-    /* CHECK SUBSCRIBER */
 
     const statusRes = await checkSubscriberStatus(finalMsisdn, serviceId);
 
@@ -186,8 +191,6 @@ export const handleSubscribe = async (
       return;
 
     }
-
-    /* SUBSCRIBE */
 
     const subRes = await subscribeUser(finalMsisdn, serviceId);
 
@@ -213,5 +216,110 @@ export const handleSubscribe = async (
     console.error("Subscription failed:", error);
 
   }
+
+};
+
+/* =========================================================
+   JAZZCASH / "OTHER SUBSCRIPTION" INTEGRATION (Zaheen API)
+   =========================================================
+   This uses the new /auth/payment-token endpoint, which does NOT
+   require the x-api-key secret — only a user_id. That means it's
+   safe to call directly from the frontend (no secret is exposed).
+   ========================================================= */
+
+const ZAHEEN_BASE_URL = "https://api.zaheen.com.pk/v2/api";
+
+const TOKEN_STORAGE_KEY = "zaheen_access_token";
+const TOKEN_EXPIRY_KEY = "zaheen_access_token_expiry";
+
+/* Normalize any of the accepted mobile number formats into 03XXXXXXXXX,
+   which is the format the JazzCash/Zaheen payment API expects.
+   Accepted inputs: 03123456789 | 923123456789 | 3123456789 */
+
+export const normalizeMsisdn = (raw: string): string => {
+
+  const digits = raw.replace(/\D/g, "");
+
+  // e.g. 923123456789 → strip leading "92", prepend "0"
+  if (digits.length === 12 && digits.startsWith("92")) {
+    return "0" + digits.slice(2);
+  }
+
+  // e.g. 03123456789 → already correct
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return digits;
+  }
+
+  // e.g. 3123456789 → prepend "0"
+  if (digits.length === 10 && digits.startsWith("3")) {
+    return "0" + digits;
+  }
+
+  throw new Error("Please enter a valid mobile number");
+
+};
+
+/* STEP 1 — Get (or reuse cached) access token. Token is valid 7 days. */
+
+export const getZaheenToken = async (): Promise<string> => {
+
+  const cachedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const cachedExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+
+  if (cachedToken && cachedExpiry && Date.now() < Number(cachedExpiry)) {
+    return cachedToken;
+  }
+
+  // TODO: replace user_id with the actual logged-in user's ID from your auth system
+  const res = await axios.post(
+    `${ZAHEEN_BASE_URL}/auth/payment-token`,
+    {
+      user_id: 1
+    },
+    {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const accessToken = res.data?.data?.access_token;
+
+  if (!accessToken) {
+    throw new Error("Failed to obtain JazzCash access token");
+  }
+
+  const expiry = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days from now
+
+  localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, String(expiry));
+
+  return accessToken;
+
+};
+
+/* STEP 2 — Make the JazzCash payment using the token from step 1. */
+
+export const makeJazzCashPayment = async (
+  msisdn: string,
+  amount: number,
+  cnic: string
+) => {
+
+  const normalizedMsisdn = normalizeMsisdn(msisdn);
+
+  const token = await getZaheenToken();
+
+  const res = await axios.post(
+    `${ZAHEEN_BASE_URL}/payment`,
+    { msisdn: normalizedMsisdn, amount, cnic },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return res.data;
 
 };

@@ -7,12 +7,13 @@ import {
 
 import { X } from "lucide-react";
 import { useAuth } from "@/modules/shared/context/AuthContext";
+
 interface Props {
   onClose: () => void;
 }
 
 const SubscribeModal: React.FC<Props> = ({ onClose }) => {
-const { login } = useAuth();
+  const { login } = useAuth();
   const [step, setStep] = useState<"MSISDN" | "OTP" | "SUCCESS">("MSISDN");
 
   const [msisdn, setMsisdn] = useState("");
@@ -26,7 +27,6 @@ const { login } = useAuth();
   useEffect(() => {
 
     if (step !== "OTP") return;
-
     if (timer === 0) return;
 
     const interval = setInterval(() => {
@@ -45,7 +45,7 @@ const { login } = useAuth();
       setLoading(true);
       setError("");
 
-      const res = await sendPin(msisdn);
+      const res = await sendPin(msisdn, "205");
 
       if (res.status === "PIN_SENT") {
         setStep("OTP");
@@ -70,23 +70,24 @@ const { login } = useAuth();
       setLoading(true);
       setError("");
 
-      const verify = await verifyPin(msisdn, pin);
+      const verify = await verifyPin(msisdn, pin, "205");
 
       if (verify.status === "SUCCESS") {
-      const subRes = await subscribeUser(msisdn);
-         // CHECK SUBSCRIPTION RESPONSE
-      if (subRes.status === "1") {
 
-        // subscription success
-        login(msisdn);
-        setStep("SUCCESS");
+        const subRes = await subscribeUser(msisdn, "205");
+
+        if (subRes.status === "1" || subRes.desc?.toLowerCase().includes("already active")) {
+          login(msisdn);
+          window.location.href = "/";
+        } else {
+          setError(subRes.desc || "Subscription failed");
+        }
 
       } else {
 
-        // subscription failed
-        setError(subRes.desc || "Subscription failed");
+        // ✅ show actual API message e.g. "Invalid PIN"
+        setError(verify.message || "Invalid PIN. Please try again.");
 
-      }
       }
 
       setLoading(false);
@@ -104,7 +105,7 @@ const { login } = useAuth();
     setTimer(30);
 
     try {
-      await sendPin(msisdn);
+      await sendPin(msisdn, "205");
     } catch {
       setError("Failed to resend PIN");
     }
@@ -144,9 +145,7 @@ const { login } = useAuth();
             />
 
             {error && (
-              <p className="text-red-500 text-sm mb-3">
-                {error}
-              </p>
+              <p className="text-red-500 text-sm mb-3">{error}</p>
             )}
 
             <button
@@ -178,9 +177,7 @@ const { login } = useAuth();
             />
 
             {error && (
-              <p className="text-red-500 text-sm mb-3">
-                {error}
-              </p>
+              <p className="text-red-500 text-sm mb-3">{error}</p>
             )}
 
             <button
@@ -191,7 +188,6 @@ const { login } = useAuth();
             </button>
 
             <div className="text-center text-sm text-slate-500">
-
               {timer > 0 ? (
                 <p>Resend PIN in {timer}s</p>
               ) : (
@@ -202,7 +198,6 @@ const { login } = useAuth();
                   Resend PIN
                 </button>
               )}
-
             </div>
           </>
         )}
@@ -211,9 +206,7 @@ const { login } = useAuth();
         {step === "SUCCESS" && (
           <div className="text-center">
 
-            <div className="text-green-500 text-5xl mb-4">
-              ✓
-            </div>
+            <div className="text-green-500 text-5xl mb-4">✓</div>
 
             <h2 className="text-2xl font-bold mb-3">
               Subscription Activated

@@ -8,10 +8,17 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
   const [stars, setStars] = useState<any[]>([]);
 
   useEffect(() => {
+<<<<<<< HEAD
     // generate floating stars
     const s = Array.from({ length: 15 }).map((_, i) => ({
       id: i,
       left: Math.random() * 100,
+=======
+    const s = Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
       delay: Math.random() * 5,
       size: Math.random() * 20 + 10,
     }));
@@ -24,10 +31,17 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
       {stars.map((s) => (
         <div
           key={s.id}
+<<<<<<< HEAD
           className="absolute animate-bounce opacity-70"
           style={{
             left: `${s.left}%`,
             top: `${Math.random() * 100}%`,
+=======
+          className="absolute animate-bounce opacity-70 pointer-events-none"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
             fontSize: s.size,
             animationDelay: `${s.delay}s`,
           }}
@@ -54,6 +68,7 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* 🧸 Mascot */}
       {/* 🧸 Mascot (Desktop Only) */}
       <div className="hidden md:block fixed bottom-0 left-[-10px] w-40 md:w-52 z-20 pointer-events-none">
@@ -64,11 +79,23 @@ const GameLayout = ({ children, title = "Game", type }: any) => {
         />
       </div>
       {/* 🧸 Mascot (Mobile Only - Centered at bottom) */}
+=======
+      {/* 🧸 Mascot — DESKTOP (fixed bottom-left) */}
+      <div className="hidden md:block fixed bottom-0 left-[-10px] w-40 md:w-52 z-20 pointer-events-none">
+        <img src={mascot} alt="mascot" className="w-full drop-shadow-2xl" />
+      </div>
+
+      {/* 🧸 Mascot — MOBILE (centered at bottom) */}
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
       <div className="md:hidden flex justify-center pb-6 relative z-20">
         <img
           src={mascot}
           alt="mascot"
+<<<<<<< HEAD
           className="w-28 h-28 object-contain animate-bounce duration-[4000ms] drop-shadow-xl"
+=======
+          className="w-28 h-28 object-contain drop-shadow-xl"
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
         />
       </div>
 

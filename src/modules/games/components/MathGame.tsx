@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 
+<<<<<<< HEAD
 const sounds = {
   correct: new Audio("/sounds/correct.mp3"),
   wrong: new Audio("/sounds/wrong.mp3"),
 };
 
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
 const getRangeByGrade = (grade) => {
   switch (grade) {
     case "KG":
@@ -54,8 +57,12 @@ export default function MathGame({ grade = "KG" }) {
     let a = getRandom(min, max);
     let b = getRandom(min, max);
 
+<<<<<<< HEAD
     // Optional: ensure carry for KG2
     if (grade === "KG2" && (a % 10 + b % 10 < 10)) {
+=======
+    if (grade === "KG2" && (a % 10) + (b % 10) < 10) {
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
       b = getRandom(10, 99);
     }
 
@@ -75,6 +82,7 @@ export default function MathGame({ grade = "KG" }) {
 
   const handleClick = (val) => {
     if (val === correct) {
+<<<<<<< HEAD
       sounds.correct.currentTime = 0;
       sounds.correct.play();
 
@@ -84,6 +92,11 @@ export default function MathGame({ grade = "KG" }) {
       sounds.wrong.currentTime = 0;
       sounds.wrong.play();
 
+=======
+      setScore((s) => s + 10);
+      setAnimate("correct");
+    } else {
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
       setScore((s) => s - 5);
       setAnimate("wrong");
     }
@@ -126,8 +139,11 @@ export default function MathGame({ grade = "KG" }) {
   );
 }
 
+<<<<<<< HEAD
 /* 🎨 Styles */
 
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
 const styles = {
   container: {
     padding: 20,
@@ -177,4 +193,8 @@ const styles = {
     background: "#e74c3c",
     transform: "shake 0.3s",
   },
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0

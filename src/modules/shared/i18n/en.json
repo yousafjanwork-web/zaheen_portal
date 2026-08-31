@@ -3,7 +3,10 @@
     "home": "Home",
     "courses": "Courses",
     "learningHub": "Learning Hub",
-    "aiTutor": "AI Tutor",
+   "intelligence_engine": "Zaheen Intelligence Engine",
+    "ai_tutor": "AI Tutor",
+    "mdcat_command": "MDCAT Command Center",
+
     "practiceCorner": "Practice Corner",
     "boardResults": "Board Results",
     "login": "Login",
@@ -57,6 +60,7 @@
     "support": "Support",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
+    "faq": "FAQ",
     "unsubscribe": "Unsubscribe",
     "contact": "Contact",
     "country": "Pakistan",
@@ -68,9 +72,15 @@
     "slide1": {
       "title": "Kindergarten",
       "highlight": "Learn with Fun and Lead Tomorrow.",
+<<<<<<< HEAD
       "description": "Zaheen turns KG kids’ curiosity into lifelong success.",
       "button": "Start the Journey",
       "link": "/grade-view/kg"
+=======
+      "description": "Zaheen turns KG kids' curiosity into lifelong success.",
+      "button": "Start the Journey",
+      "link": "/class/1"
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
     },
     "slide2": {
       "title": "Grade 1 to 5",
@@ -91,6 +101,7 @@
       "highlight": "Code Your Dreams into Reality.",
       "description": "Zaheen helps you grow from a student into a digital architect.",
       "button": "Secure Your Future",
+<<<<<<< HEAD
       "link": "/skills/300"
     },
     "slide5": {
@@ -112,8 +123,40 @@
       "highlight": "From Graduate to Professional ✨",
       "description": "You’ve got the degree; now get the craft. We bridge the gap between `I’ve graduated` and `I’m hired` with industry-ready Web & App mastery.",
       "button": "Launch Your Career",
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
       "link": "/skills/300"
-    }
+    },
+    "slide5": {
+  "title": "Advanced Kindergarten Learning",
+  "highlight": "Building Bright Minds with Creativity.",
+  "description": "Interactive activities and playful lessons designed for early learners.",
+  "button": "Explore More",
+  "link": "/class/1"
+},
+
+"slide6": {
+  "title": "Grade 1 to 5 Excellence",
+  "highlight": "Empowering Young Learners Every Day.",
+  "description": "A strong educational foundation with engaging and modern learning methods.",
+  "button": "Start Learning",
+  "link": "/grade-view/1-5"
+},
+
+"slide7": {
+  "title": "Modern Web Skills",
+  "highlight": "Become the Developer of Tomorrow.",
+  "description": "Learn modern technologies and create real-world professional websites.",
+  "button": "Join Now",
+  "link": "/skills/300"
+},
+"slide8": {
+  "title": "MDCAT Preparation",
+  "highlight": "Master the MDCAT Secure Your Medical Seat",
+  "description": "Master the Syllabus. Practice Precision. Achieve Excellence.",
+  "button": "Start Preparing",
+  "link": "/mdcat"
+}
   },
   "browseGrade": {
     "title": "Browse by Grade",
@@ -172,55 +215,78 @@
     "monthly": "Monthly",
     "button": "Subscribe Now"
   },
-  "privacy": {
-    "title": "Privacy Policy",
-    "intro": "Thank you for visiting Zaheen.com.pk. At Zaheen, we are committed to protecting your privacy and safeguarding your personal information.",
-    "infoCollect": "Information We Collect",
-    "personalInfo": "Personal Information",
-    "personalInfoText": "When you visit our website we may collect personal information such as your name, email address, and phone number.",
-    "usageInfo": "Usage Information",
-    "usageInfoText": "We may collect non-personal information such as IP address, browser type and operating system.",
-    "cookies": "Cookies",
-    "cookiesText": "We use cookies to enhance your browsing experience and understand website usage.",
-    "useInfo": "How We Use Your Information",
-    "provideServices": "To Provide Services",
-    "provideServicesText": "We use your information to deliver services and features on the platform.",
-    "communication": "To Communicate",
-    "communicationText": "We may contact you about updates, services or offers.",
-    "improveSite": "To Improve Our Website",
-    "improveSiteText": "We analyze usage data to improve our platform.",
-    "marketing": "For Marketing Purposes",
-    "marketingText": "With your consent we may send promotional offers.",
-    "sharing": "Information Sharing",
-    "sharingText": "We do not sell your data but may share with trusted partners for service delivery.",
-    "security": "Data Security",
-    "securityText": "We take reasonable measures to protect your personal information.",
-    "thirdParty": "Third-Party Links",
-    "thirdPartyText": "We are not responsible for privacy practices of third-party sites.",
-    "changes": "Changes to This Privacy Policy",
-    "changesText": "We may update this policy from time to time.",
-    "contact": "Contact Us",
-    "contactText": "If you have questions about this policy please contact us:"
+   "privacy": {
+    "title": "Zaheen Privacy Policy",
+    "intro": "Zaheen is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose and safeguard your information when you use our educational platform.",
+    "collectTitle": "Information We Collect",
+    "collectText": "We may collect your mobile number, account information, subscription details, device/browser information, IP address, usage data, and communications with customer support.",
+    "useTitle": "How We Use Information",
+    "useText": "We use your information to provide and improve our services, manage subscriptions, verify eligibility, process billing through Zong, provide customer support, communicate service updates, and comply with legal obligations.",
+    "zongTitle": "Zong Subscribers",
+    "zongText": "Premium services are available only to eligible Zong subscribers. Subscription and billing information may be shared with Zong solely to activate, manage, renew, or cancel your subscription.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "We may use cookies and similar technologies to improve website functionality, remember preferences, and analyze usage. You can manage cookies through your browser settings.",
+    "sharingTitle": "Information Sharing",
+    "sharingText": "We do not sell your personal information. We may share information with trusted service providers, Zong for subscription management, or where required by law.",
+    "securityTitle": "Data Security",
+    "securityText": "We implement reasonable technical and organizational measures to protect your information, but no online system can guarantee absolute security.",
+    "retentionTitle": "Data Retention",
+    "retentionText": "We retain personal information only for as long as necessary to provide services, meet legal obligations, resolve disputes, and enforce our agreements.",
+    "rightsTitle": "Your Rights",
+    "rightsText": "You may request access to or correction of your personal information and may unsubscribe from promotional communications. Subscription-related records may be retained as required by law.",
+    "childrenTitle": "Children",
+    "childrenText": "Zaheen is available to users of all ages. Where required by law, parents or guardians should supervise minors using the Platform.",
+    "thirdPartyTitle": "Third-Party Links",
+    "thirdPartyText": "Our website may contain links to third-party websites. We are not responsible for their privacy practices.",
+    "updatesTitle": "Policy Updates",
+    "updatesText": "We may update this Privacy Policy from time to time. Changes will be posted on this page with a revised effective date.",
+    "contactTitle": "Contact",
+    "contactEmail": "Email: info@zaheen.com.pk",
+    "contactPhone": "Customer Support: +923 111 114 974"
   },
-  "terms": {
-    "title": "Terms of Service",
-    "intro": "Thank you for using Zaheen.com.pk. These Terms of Service govern your use of the website. By accessing or using the website you agree to comply with these terms.",
-    "useWebsite": "Use of the Website",
-    "ageRequirement": "You must be at least 18 years old to use this website.",
-    "lawfulUse": "You agree to use the website only for lawful purposes and not to violate the rights of others.",
-    "userAccounts": "User Accounts",
-    "accountInfo": "You may be required to create an account and provide accurate information.",
-    "accountSecurity": "You are responsible for maintaining the confidentiality of your account.",
-    "intellectualProperty": "Intellectual Property",
-    "ipText": "All content on this website is the property of Zaheen and protected by copyright laws.",
-    "liability": "Limitation of Liability",
-    "liabilityText": "Zaheen shall not be liable for any damages arising from use of the website.",
-    "changes": "Changes to Terms",
-    "changesText": "We reserve the right to update these terms at any time.",
-    "law": "Governing Law",
-    "lawText": "These terms are governed by the laws of Pakistan.",
-    "contact": "Contact Us",
-    "contactText": "If you have questions regarding these terms please contact us:"
+   "terms": {
+    "title": "Terms & Conditions",
+    "intro": "Welcome to Zaheen. By accessing or using the Zaheen educational platform, you agree to these Terms & Conditions. If you do not agree, please discontinue use of the Platform.",
+    "aboutTitle": "1. About Zaheen",
+    "aboutText": "Zaheen is an online educational platform providing learning resources, quizzes, study materials and other educational content. Premium content requires an active subscription.",
+    "eligibilityTitle": "2. Eligibility",
+    "eligibilityText": "Zaheen is available to users of all ages. Where required by applicable law, minors should use the Platform under the supervision or consent of a parent or legal guardian.",
+    "zongTitle": "3. Zong Subscribers Only",
+    "zongText": "Premium subscription services are exclusively available to Zong Pakistan subscribers with an active Zong SIM.",
+    "trialTitle": " Free Trial & Subscription Plans",
+    "trialText": "New users receive a one (1) day free trial with full premium access. At the end of the trial, the selected subscription automatically becomes active unless cancelled before the trial ends. The free trial is available once per eligible Zong subscriber.",
+    "plansLabel": "Plans:",
+    "plansDaily": "Daily: PKR 5 + applicable taxes",
+    "plansWeekly": "Weekly: PKR 15 + applicable taxes",
+    "plansMonthly": "Monthly: PKR 50 + applicable taxes",
+    "billingTitle": "5. Auto-Renewal & Billing",
+    "billingText": "Subscriptions renew automatically until cancelled. By subscribing, you authorize Zong to deduct applicable charges from your prepaid balance or postpaid bill. If insufficient balance exists, renewal may fail or be retried per Zong policies.",
+    "cancellationTitle": "6. Cancellation",
+    "cancellationText": "You may unsubscribe at any time through SMS or the Zaheen website. Cancelling before the free trial ends prevents any subscription charge. Charges already deducted after the trial are non-refundable except where required by law.",
+    "accountsTitle": " User Accounts",
+    "accountInfo": "Premium access requires subscription.",
+    "accountSecurity": "Users are responsible for maintaining the confidentiality of their account and all activities performed using it.",
+    "acceptableUseTitle": "8. Acceptable Use",
+    "acceptableUseText": "Do not share subscriptions, copy content, attempt unauthorized access, upload malicious software, or use the Platform unlawfully.",
+    "ipTitle": "9. Intellectual Property",
+    "ipText": "All content, logos, study material, graphics, videos and software are the property of Zaheen and may not be copied or redistributed without written permission.",
+    "contentTitle": "10. Educational Content",
+    "contentText": "Content is provided for educational purposes only. Zaheen does not currently provide certificates and does not guarantee examination results or academic success.",
+    "privacyNoticeTitle": "11. Privacy",
+    "privacyNoticeText": "Use of the Platform is also governed by the Zaheen Privacy Policy.",
+    "availabilityTitle": "12. Service Availability",
+    "availabilityText": "Services may be interrupted due to maintenance, technical issues, network outages or circumstances beyond our control.",
+    "liabilityTitle": "13. Limitation of Liability",
+    "liabilityText": "Zaheen shall not be liable for indirect or consequential damages arising from use of the Platform to the fullest extent permitted by law.",
+    "terminationTitle": "14. Termination",
+    "terminationText": "Zaheen may suspend or terminate access for violation of these Terms or fraudulent activity.",
+    "lawTitle": "15. Governing Law",
+    "lawText": "These Terms are governed by the laws of the Islamic Republic of Pakistan.",
+    "contactTitle": "16. Contact",
+    "contactEmail": "Email: info@zaheen.com.pk",
+    "contactPhone": "Customer Support: +923 111 114 974",
+    "acceptanceTitle": "17. Acceptance",
+    "acceptanceText": "By accessing, subscribing to, or using Zaheen, you acknowledge that you have read, understood and agree to these Terms & Conditions."
   },
   "mobileTitle": "Build in-demand skills",
   "mobileSubtitle": "Get access to all courses with one subscription.",
@@ -243,7 +309,544 @@
     "description": "Access all courses with one subscription.",
     "button": "Subscribe Now"
   },
+  "slide4": {
+    "title": "Crack MDCAT with ",
+    "highlight": "Confidence",
+    "description": "Expert Faculty • Smart Practice • Proven Results",
+    "button": "Subscribe Now"
+    
+  },
+  "promo": {
+  "title": "Explore Learning",
+  "cards": [
+    { "title": "KG to Grade 12", "desc": "Complete school learning with videos, quizzes and tests." },
+    { "title": "Professional Skills", "desc": "Digital Marketing, Web Development and Trading courses." },
+    { "title": "AI Tutor", "desc": "Ask questions and learn instantly with AI assistance." },
+    { "title": "Unlimited Learning", "desc": "Access all courses with one subscription." },
+    { "title": "MDCAT Success, Simplified.", "desc": "Expert Faculty • Smart Practice • Proven Results" }
+  ]
+},
   "mob": {
+<<<<<<< HEAD
     "heading1": "Learn Skills from Rs 5+Tax /day"
+=======
+    "heading1": "Learn Skills from Rs 5/day"
+  },
+  "kgClassView": {
+    "home": "Home",
+    "defaultGrade": "Kindergarten",
+    "pageTitle": "Learning World!",
+    "pageSubtitle": "Pick a fun adventure to start learning today!",
+    "soonBadge": "SOON",
+    "subjects": {
+      "english": {
+        "tagline": "Fun stories and A-B-C games!",
+        "btnLabel": "Let's Go!"
+      },
+      "urdu": {
+        "tagline": "Learn Alif Bay Pay with songs!",
+        "btnLabel": "Start"
+      },
+      "math": {
+        "tagline": "Count numbers and find shapes!",
+        "btnLabel": "Explore"
+      },
+      "physics": {
+        "tagline": "Discover how things move!",
+        "btnLabel": "Discover"
+      },
+      "chemistry": {
+        "tagline": "Mix and explore cool reactions!",
+        "btnLabel": "Explore"
+      },
+      "biology": {
+        "tagline": "Learn about plants and animals!",
+        "btnLabel": "Discover"
+      },
+      "islamic": {
+        "tagline": "Quranic stories and lessons!",
+        "btnLabel": "Learn"
+      },
+      "pakistan": {
+        "tagline": "Our beautiful country and history!",
+        "btnLabel": "Explore"
+      },
+      "computer": {
+        "tagline": "Code, play, and create with tech!",
+        "btnLabel": "Create"
+      },
+      "art": {
+        "tagline": "Draw, color, and create magic!",
+        "btnLabel": "Create"
+      },
+      "music": {
+        "tagline": "Sing, clap, and make music!",
+        "btnLabel": "Sing"
+      },
+      "default": {
+        "tagline": "Let's learn something new!",
+        "btnLabel": "Start"
+      }
+    },
+    "quizzes": {
+      "title": "Quizzes",
+      "tagline": "Answer and win shiny stars!",
+      "btnLabel": "Win Stars",
+      "modalTitle": "Quizzes",
+      "modalDesc": "We're crafting exciting quizzes for every subject to help kids test what they've learned and win shiny stars. Stay tuned — they'll be live very soon!"
+    },
+    "funGames": {
+      "title": "Fun Games",
+      "tagline": "Exciting brain games for kids!",
+      "btnLabel": "Play"
+    },
+    "aiBestie": {
+      "title": "AI Bestie",
+      "tagline": "Your magical learning robot friend!",
+      "btnLabel": "Say Hello!"
+    },
+    "cta": {
+      "badge": "Join 10,000+ Happy Friends",
+      "title": "Ready for School?",
+      "desc": "We help children in Pakistan learn in the most fun way possible. Join the Zaheen family today!",
+      "btnLessons": "See All Fun Lessons",
+      "btnApp": "Get the App"
+    },
+    "modal": {
+      "comingSoon": "Coming Soon",
+      "onTheWay": "are on the way!",
+      "gotIt": "Got it, thanks! 🎉"
+    }
+  },
+  "kgLectureView": {
+    "home": "Home",
+    "breadcrumbSep": "›",
+    "hero": {
+      "kgBadge": "KG Foundation",
+      "lessons": "Lessons",
+      "hoursVideo": "3 Hours Video",
+      "mathematics": "Mathematics"
+    },
+    "progress": {
+      "journeyTitle": "Your Learning Journey",
+      "completed": "Completed",
+      "done": "Done",
+      "lessonsCompleted": "lessons completed",
+      "activitiesCompleted": "activities completed"
+    },
+    "taglines": {
+      "english": "Embark on a magical journey through letters, sounds, and stories! Perfect for early learners to build confidence in reading and writing.",
+      "urdu": "Embark on a joyful journey to learn the beautiful Urdu language through stories, songs, and interactive play.",
+      "math": "Embark on a magical adventure through numbers, shapes, and patterns designed specifically for curious young minds.",
+      "islamic": "Learn beautiful duas, Quranic surahs, and Islamic values in a fun and friendly way!",
+      "pakistan": "Discover the beautiful stories, geography and culture of our amazing country Pakistan!",
+      "computer": "Learn to code, create and think like a computer! Tech is for every kid.",
+      "default": "Let's explore and learn together! Every lesson is a new adventure."
+    },
+    "player": {
+      "lectureOf": "Lecture {{current}} of {{total}}",
+      "allLessons": "All Lessons"
+    },
+    "videoCard": {
+      "lecture": "Lecture"
+    },
+    "chapter": {
+      "label": "Chapter"
+    },
+    "videoLessons": {
+      "title": "Video Lessons",
+      "lessonsCount": "Lessons",
+      "videoLessonsLabel": "Video Lessons"
+    },
+    "empty": {
+      "title": "Coming Soon!",
+      "desc": "We're preparing amazing lessons for {{subject}}. Check back soon!"
+    },
+    "back": {
+      "toSubjects": "Back to Subjects"
+    }
+  },
+  "classSubjectsView": {
+    "home": "Home",
+    "curriculumLabel": "Curriculum",
+    "academicYear": "Academic Year 2024-25",
+    "downloadSyllabus": "Download Syllabus",
+    "subjectOverview": "Subject Overview",
+    "pageSubtitle": "Click any subject card to open lectures, or click",
+    "pastPapersHighlight": "PAST PAPERS",
+    "pageSubtitleSuffix": "to jump directly to past papers.",
+    "noSubjectsFound": "No subjects found",
+    "stats": {
+      "lectures": "LECTURES",
+      "quizzes": "QUIZZES",
+      "pastPapers": "PAST PAPERS",
+      "comingSoon": "Coming\nSoon"
+    },
+    "quizModal": {
+      "comingSoon": "Coming Soon",
+      "title": "Quizzes are on the way!",
+      "description": "We're crafting interactive quizzes for every subject to help you test your knowledge. Stay tuned — they'll be live very soon.",
+      "gotIt": "Got it, thanks!"
+    },
+    "subjects": {
+      "physics": {
+        "description": "Explore the fundamental principles governing the physical world."
+      },
+      "math": {
+        "description": "Algebra, geometry, trigonometry, and problem solving."
+      },
+      "chemistry": {
+        "description": "Chemical reactions, atomic structure, and laboratory."
+      },
+      "biology": {
+        "description": "Cellular processes, genetics, and study of living organisms."
+      },
+      "english": {
+        "description": "Literature analysis, advanced grammar, and composition."
+      },
+      "urdu": {
+        "description": "Classical literature, poetry, and advanced linguistics."
+      },
+      "islamic": {
+        "description": "Quranic studies, Hadith, Islamic history and ethics."
+      },
+      "pakistan": {
+        "description": "History, geography, and civics of Pakistan."
+      },
+      "computer": {
+        "description": "Master programming, algorithms, and computational thinking."
+      },
+      "default": {
+        "description": "Course materials and lectures."
+      }
+    }
+  },
+  "subjectLecturesView": {
+    "subjects": {
+      "physics": "Explore the fundamental laws of nature, from space and time to matter and energy.",
+      "math": "Master mathematical concepts, advanced algebra, and analytical geometry.",
+      "chemistry": "Discover the fascinating world of atoms, molecular structures, and chemical reactions.",
+      "biology": "Delve into the study of living organisms, ecological systems, and life processes.",
+      "english": "Enhance your language proficiency, reading comprehension, and literary analysis skills.",
+      "urdu": "Develop deep comprehension of Urdu prose, classical poetry, and advanced grammar.",
+      "islamic": "Understand key Islamic values, historical events, and foundational teachings.",
+      "pakistan": "Examine the history, complex geography, and socio-cultural aspects of Pakistan.",
+      "computer": "Learn core concepts of computer systems, software design, and digital literacy.",
+      "default": "Browse and learn from the active course syllabus and curated lecture videos."
+    },
+    "sidebar": {
+      "title": "Course Manager",
+      "subtitle": "Academic Session 2024",
+      "dashboard": "Dashboard",
+      "myCourses": "My Courses",
+      "assessments": "Assessments",
+      "pastPapers": "Past Papers",
+      "chaptersLabel": "Chapters"
+    },
+    "mobileNav": {
+      "myCourses": "My Courses",
+      "assessments": "Assessments",
+      "pastPapers": "Past Papers",
+      "chapters": "Chapters:"
+    },
+    "breadcrumb": {
+      "home": "Home"
+    },
+    "card": {
+      "upNext": "Up Next",
+      "watched": "Watched",
+      "notStarted": "Not started",
+      "left": "left",
+      "lecture": "Lecture"
+    },
+    "chapter": {
+      "label": "Chapter",
+      "lectures": "lecture",
+      "lecturesPlural": "lectures",
+      "watched": "watched"
+    },
+    "player": {
+      "lectureOf": "Lecture {{current}} of {{total}}",
+      "allLectures": "All Lectures",
+      "allLecturesTitle": "All Lectures",
+      "total": "total"
+    },
+    "grid": {
+      "title": "Video Lectures"
+    },
+    "empty": {
+      "title": "Coming Soon",
+      "desc": "Content for {{subject}} is being prepared. Check back soon!"
+    }
+  },
+  "skillsChaptersPage": {
+    "badges": {
+      "bestseller": "Bestseller",
+      "professional": "Professional Course"
+    },
+    "hero": {
+      "subtitle": "Elevate your skills with our comprehensive, hands-on curriculum designed by industry professionals.",
+      "ratings": "ratings",
+      "students": "students",
+      "lectures": "lectures",
+      "level": "Beginner level",
+      "startBtn": "Start Learning",
+      "back": "Back"
+    },
+    "learnSection": {
+      "title": "What you'll learn",
+      "points": [
+        "Master the core fundamentals from scratch with guided lectures",
+        "Build real-world projects and apply concepts confidently",
+        "Understand industry-standard techniques used by professionals",
+        "Apply advanced strategies to solve complex, real-world problems",
+        "Develop a structured and systematic professional mindset",
+        "Learn through hands-on examples, exercises, and case studies"
+      ]
+    },
+    "requirements": {
+      "title": "Requirements",
+      "items": [
+        "Basic interest in the subject area",
+        "A computer or mobile device with internet access",
+        "No prior experience required — we start from the basics",
+        "Willingness to learn, practice, and grow"
+      ]
+    },
+    "description": {
+      "title": "Description",
+      "text": "This comprehensive course takes you from complete beginner to professional level with a structured, practical curriculum.\n\nYou will explore real-world scenarios guided by step-by-step video lectures that break down complex topics into digestible lessons. Each chapter builds upon the last, ensuring steady and confident progress.\n\nWhether you're looking to upskill for career advancement or simply explore a new domain, this course provides everything you need to succeed and stand out in your field."
+    },
+    "content": {
+      "title": "Course Content",
+      "allLectures": "All Lectures",
+      "lectures": "lectures",
+      "watch": "Watch",
+      "videoLecture": "Video Lecture",
+      "comingSoonTitle": "Lessons Coming Soon",
+      "comingSoonDesc": "We are preparing lessons for this course. Check back soon!"
+    },
+    "watchMode": {
+      "backBtn": "Back to Course",
+      "courseContent": "Course Content",
+      "lectureOf": "Lecture {{current}} of {{total}}",
+      "progress": "Course Progress",
+      "completed": "completed",
+      "chapter": "Chapter"
+    }
+  },
+  "chatbot": {
+    "header": "Zaheen AI Tutor",
+    "topics": {
+      "maths": "Maths",
+      "english": "English",
+      "urdu": "Urdu",
+      "chemistry": "Chemistry",
+      "physics": "Physics",
+      "science": "Science",
+      "computer": "Computer"
+    },
+    "languages": {
+      "english": "English",
+      "urdu": "Urdu"
+    },
+    "placeholder": "Ask your question...",
+    "sendBtn": "Send",
+    "micBtn": "🎤",
+    "thinking": "🤖 AI is thinking...",
+    "queueNotice": "message(s) waiting...",
+    "switchNotice": "🔄 Language switched to English — new session started"
+  },
+  "pastPapersPage": {
+  "sidebar": {
+    "title": "Zaheen",
+    "subtitle": "Learning Management",
+    "home": "Home",
+    "videoLectures": "Video Lectures",
+    "assessments": "Assessments",
+    "pastPapers": "Past Papers",
+    "settings": "Settings"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "pastPapers": "Past Papers"
+  },
+  "header": {
+    "title": "Past Papers",
+    "subtitle": "Browse and watch past exam papers with video solutions. Filter by subject, year, or paper type to find what you need."
+  },
+  "filters": {
+    "subjectLabel": "Subject",
+    "yearLabel": "Year",
+    "typeLabel": "Type",
+    "allSubjects": "All Subjects",
+    "allYears": "All Years",
+    "allTypes": "All Types",
+    "applyBtn": "Apply Filters",
+    "active": "Active Filters:",
+    "clearAll": "Clear All",
+    "clearFilters": "Clear Filters"
+  },
+  "results": {
+    "noPapersFound": "No papers found.",
+    "papersFound": "{{count}} paper(s) found"
+  },
+  "card": {
+    "watchVideo": "Watch Video",
+    "watchVideoShort": "Watch",
+    "downloadPdf": "Download PDF"
+  },
+  "yearHeading": {
+    "pastPapers": "Past Papers",
+    "paper": "paper",
+    "papers": "papers"
+  },
+  "player": {
+    "backToPapers": "Back to Papers",
+    "noVideo": "No video available for this paper.",
+    "videoError": "Video error code",
+    "openInTab": "Open in New Tab",
+    "retry": "Retry",
+    "morePapers": "More Papers",
+    "noPapers": "No other papers available."
+  },
+  "empty": {
+    "title": "No Papers Found",
+    "desc": "No past papers match your current filters. Try adjusting or clearing the filters."
+  },
+  "error": {
+    "title": "Failed to Load",
+    "desc": "Something went wrong while fetching past papers. Please try again.",
+    "retry": "Retry"
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
   }
+},
+"quiz": {
+    "title": "Chapter 1 Quiz: The Magic Alphabet!",
+    "progress": "Progress",
+    "earned": "Earned",
+    "loading": "Loading questions...",
+    "retry": "Retry",
+    "empty": "No questions found.",
+    "results": "Quiz Complete!",
+    "retryQuiz": "Try Again",
+    "prev": "Previous",
+    "next": "Next",
+    "finish": "Finish",
+    "rewards": "Rewards",
+    "locked": "Locked",
+    "goal": "Answer more questions to unlock!",
+    "tipLabel": "Tip",
+    "tipText": "Take your time and read each question carefully before answering."
+  },
+
+  "mdcat_banner": {
+    "title_part1": "Your AI-Powered Path to",
+    "title_part2": "Medical Excellence.",
+    "tagline": "Study Smarter, Not Harder – The AI Edge.",
+    "button": "Start Your Preparation Now"
+  },
+  "mdcat_banner_small": {
+    "badge": "New Feature",
+    "title": "AI Featured MDCAT"
+  },
+  "summer_camp_banner": {
+  "title_part1": "Turn Summer Break into a",
+  "title_part2": "Learning Adventure!",
+  "tagline": "Help your child build a stronger vocabulary, communicate confidently, and enjoy learning every day.",
+  "button": "Enroll Now"
+},
+"summer_camp_banner_mob": {
+    "badge": "New",
+    "title": "Zaheen Summer Camp"
+  },
+  "origami_camp_banner": {
+    "title_part1": "Fold Paper into",
+    "title_part2": "Amazing Creations!",
+    "tagline": "A Fun Summer Camp Where Kids Learn, Create & Explore Through Origami.",
+    "button": "Join the Camp"
+  },
+  "origami_camp_banner_mob": {
+    "badge": "SUMMER CAMP",
+    "title": "Fold Paper into Amazing Creations!"
+  },
+  "summerBreak": {
+  "title": "Summer Break",
+  "subtitle": "Learn, Play, Grow"
+},
+"subjectSkillSelector": {
+    "steps": {
+      "selectClass": {
+        "icon": "🎒",
+        "title": "Select Your Class",
+        "subtitle": "Choose your grade to explore available subjects and quizzes"
+      },
+      "selectSubject": {
+        "icon": "📚",
+        "title": "Choose a Subject",
+        "subtitleWithClass": "What would you like to practise in {{className}}?",
+        "subtitleDefault": "Pick a subject to explore"
+      },
+      "selectSkill": {
+        "icon": "📋",
+        "title": "Choose a Chapter",
+        "subtitleDefault": "Pick the chapter you want to practise"
+      },
+      "confirm": {
+        "title": "Ready to Start?",
+        "subtitle": "Review your quiz details below"
+      }
+    },
+    "confirmDetails": {
+      "class": "Class",
+      "subject": "Subject",
+      "chapter": "Chapter",
+      "quizType": "Quiz Type",
+      "quizTypeValue": "Adaptive Quiz",
+      "difficulty": "Difficulty",
+      "difficultyValue": "Auto-adjusts to you"
+    },
+    "actions": {
+      "startQuiz": "Start Quiz →",
+      "startPractising": "Start Practising",
+      "back": "← Back",
+      "tryAgain": "Try Again",
+      "start": "Start →",
+      "comingSoon": "Soon"
+    },
+    "loading": {
+      "classes": "Loading classes…",
+      "subjects": "Loading subjects…",
+      "skills": "Loading chapters…"
+    },
+    "errors": {
+      "classes": "Could not load classes. Please try again.",
+      "subjects": "Could not load subjects. Please try again.",
+      "skills": "Could not load skills. Please try again."
+    },
+    "empty": {
+      "classesTitle": "No classes available",
+      "classesSubtitle": "Please check back later.",
+      "subjectsTitle": "No subjects yet",
+      "subjectsSubtitle": "Content for this class is coming soon!",
+      "skillsTitle": "No quizzes available yet",
+      "skillsSubtitle": "Check back soon — content is being added!"
+    },
+    "badges": {
+      "chapters": "{{count}} chapters",
+      "questions": "{{count}} Qs"
+    },
+    "subjectConfig": {
+      "BookOpen": "English",
+      "Sigma": "Math",
+      "Languages": "Language",
+      "Calculator": "Math",
+      "Atom": "Science",
+      "Leaf": "Biology",
+      "TaskConical": "Studies",
+      "Cpu": "Tech",
+      "default": "Subject"
+    }
+  }
+
 }

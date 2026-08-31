@@ -33,7 +33,10 @@ export const useSubscription = () => {
     return digits;
   };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
   const getSubMethod = (msisdnFromParams: string | null) => {
     const params = new URLSearchParams(window.location.search);
 
@@ -66,7 +69,12 @@ export const useSubscription = () => {
   useEffect(() => {
     const urlMsisdn = params.get("msisdn");
     const urlTransactionId = params.get("transaction_id");
+<<<<<<< HEAD
     const urlPin = params.get("pin");
+=======
+
+  const urlPin = params.get("pin");
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
 
     if (urlMsisdn && urlMsisdn.trim() !== "") {
       setMsisdn(urlMsisdn);
@@ -137,8 +145,13 @@ export const useSubscription = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
+=======
+  const handleVerify = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
 
     const fullPin = pin.join("");
 
@@ -154,13 +167,18 @@ export const useSubscription = () => {
       const urlMsisdn = params.get("msisdn");
       const subMethod = getSubMethod(urlMsisdn);
 
+<<<<<<< HEAD
       console.log("VERIFY SUBMETHOD:", subMethod); // ✅ testing log
+=======
+      console.log("VERIFY SUBMETHOD:", subMethod);
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
 
       const res = await verifyPin(
         formatted,
         fullPin,
         serviceId,
         txid,
+<<<<<<< HEAD
         subMethod // ✅ pass this
       );
 
@@ -169,6 +187,14 @@ export const useSubscription = () => {
 
         resetForm();
         window.location.href = "/thanks-for-subscribing";
+=======
+        subMethod
+      );
+
+      if (res.status === "SUCCESS") {
+        // ✅ Redirect immediately to /thankyou — no resetForm() delay before redirect
+        window.location.href = "/thankyou";
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
       } else {
         setAlert({ type: "error", message: "Invalid PIN" });
       }
@@ -181,7 +207,11 @@ export const useSubscription = () => {
 
   const handleResend = async () => {
     setTimer(30);
+<<<<<<< HEAD
     await sendPin(msisdn, serviceId);
+=======
+    await sendPin(normalizeMsisdn(msisdn), serviceId);
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
   };
 
   return {

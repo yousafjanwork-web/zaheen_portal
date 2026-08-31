@@ -1,9 +1,15 @@
 import { motion } from "motion/react";
+<<<<<<< HEAD
+=======
+import { classSlugFromId } from "@/config/classSlugs";
+
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
 
 const GradeCard = ({ grade, navigate, type }: any) => {
   return (
     <motion.div
       whileHover={{ y: -8 }}
+<<<<<<< HEAD
       onClick={() =>
         navigate(`/class/${grade.id}`, {
           state: { gradeType: type },
@@ -18,6 +24,22 @@ const GradeCard = ({ grade, navigate, type }: any) => {
             grade.id <= 6 ? "object-contain bg-slate-50 p-2" : "object-cover"
           }`}
         />
+=======
+    onClick={() => {
+        // Yeh direct usey usi class ke slug par bhejega jo clicked hai
+        navigate(`/${classSlugFromId(grade.id)}`, {
+          state: { gradeType: type === "k-12" ? undefined : type }, // k-12 ke waqt undefined bhejenge taake router khud check kare
+        });
+      }}
+      className="bg-white rounded-3xl p-5 border border-slate-200 hover:shadow-xl cursor-pointer"
+    >
+    <div className="h-52 sm:h-44 rounded-2xl overflow-hidden mb-4 relative">
+       <img
+  src={grade.image}
+  className="w-full h-full object-cover"
+  alt={grade.title}
+/>
+>>>>>>> c30dad3035bc685687766d655829ba3a37a7dcc0
         <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold text-primary border">
           {grade.lessons}
         </div>

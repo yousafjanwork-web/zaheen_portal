@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-slate-900 text-slate-300 py-20 mt-20">
+    <footer className="bg-slate-900 text-slate-300 py-20">
 
       <div className="max-w-7xl mx-auto px-4">
 
@@ -153,6 +153,12 @@ const Footer: React.FC = () => {
                   {t("footer.terms")}
                 </Link>
               </li>
+              <li>
+      <Link to="/faqzaheen" className="hover:text-white">
+        {t("footer.faq")} 
+      </Link>
+    </li>
+    
 
             </ul>
 

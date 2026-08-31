@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.zaheen.com.pk/mdcat/sitemap.xml

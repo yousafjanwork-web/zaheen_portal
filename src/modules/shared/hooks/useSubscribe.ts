@@ -7,29 +7,23 @@ export const useSubscribe = () => {
   const handleSubscribe = () => {
 
     /* Check if user came from MZA */
-
     const mzaMsisdn = sessionStorage.getItem("mzaMsisdn");
 
     if (mzaMsisdn) {
-
-      console.log("MZA user detected:", mzaMsisdn);
-
       navigate(`/subscribe?msisdn=${mzaMsisdn}`);
-
       return;
-
     }
 
-    /* Otherwise redirect to HE */
+    /* Mobile: use HE redirect (auto-detects msisdn) */
+    /* Desktop: go directly to clean /subscribe URL */
+    const isMobile = window.innerWidth < 1024;
 
-    console.log("Redirecting to HE");
-
-    const redirect = encodeURIComponent(
-      "https://z.zaheen.com.pk/subscribe"
-    );
-
-    window.location.href =
-      `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
+    if (isMobile) {
+      const redirect = encodeURIComponent(`${window.location.origin}/subscribe`);
+      window.location.href = `http://he.zaheen.com.pk/gethe?redirect=${redirect}`;
+    } else {
+      navigate("/subscribe");
+    }
 
   };
 

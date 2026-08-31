@@ -1,6 +1,6 @@
 import axios from "axios"
 import { SubmitPayload } from "../types/adaptive"
-const API = "https://zai.zaheen.com.pk/api/adaptive"
+const API = "https://api.zaheen.com.pk/api/adaptive"
 
 export const getAllSkills = async () => {
 
@@ -16,17 +16,16 @@ export const getAllSkills = async () => {
 
 export const getNextQuestion = async (
   studentId: number,
-  chapterId: number,
   skillId:number
 ) => {
 
-  console.log("GET Question", studentId, chapterId, skillId)
+  console.log("GET Question", studentId, skillId)
 
   const res = await axios.get(`${API}/next`, {
-    params: { studentId, chapterId, skillId }
+    params: { studentId, skillId }
   })
 
-  console.log("Question Response:", res.data)
+  console.log("Question Response:", res.data.prompt, res)
 
   return res.data
 }
