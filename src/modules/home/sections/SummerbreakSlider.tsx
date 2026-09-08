@@ -9,10 +9,10 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import cosmokidImg from "@/assets/images/solar2.png";
-import pakdesk from "@/assets/images/pakdesk.png";
-import origami from "@/assets/images/origami.png";
-import vocabImg from "@/assets/images/vocab1.png";
+const cosmokidImg = "https://cdn.zaheen.com.pk/zaheen-web-img/solar2.png";
+const pakdesk = "https://cdn.zaheen.com.pk/zaheen-web-img/pakdesk.png";
+const origami = "https://cdn.zaheen.com.pk/zaheen-web-img/origami.png";
+const vocabImg = "https://cdn.zaheen.com.pk/zaheen-web-img/vocab1.png";
 
 const lang = localStorage.getItem("lang") || "en";
 

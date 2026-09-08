@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, Mail, Camera, Video, MessageCircle } from 'lucide-react';
-import logo from "../../assets/logo/zaheen-origami-logo1 1.png";
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/zaheen-origami-logo1-1.png";
 import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import { Navigate } from 'react-router-dom';
 

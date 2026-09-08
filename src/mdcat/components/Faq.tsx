@@ -239,14 +239,7 @@ return (
         width: "auto",
       }}
     >
-{onBack && (
-  <button
-    onClick={onBack}
-    className="flex items-center gap-1 text-[10px] font-black uppercase text-sky-200 hover:text-white transition-colors absolute left-6 md:left-10 top-6 md:top-13"
-  >
-    <ArrowLeft className="w-3.5 h-3.5" /> Back
-  </button>
-)}
+
 
       <div className="flex items-center gap-2 flex-wrap justify-center">
         <span className="px-3 py-1 text-[10px] font-black uppercase text-amber-300 bg-amber-500/15 border border-amber-400/30 rounded-md tracking-wider">

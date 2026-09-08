@@ -1,5 +1,5 @@
 import React from "react";
-import zaheenAppImage from "../../../assets/images/zaheenplaystore.png";
+const zaheenAppImage = "https://cdn.zaheen.com.pk/zaheen-web-img/zaheenplaystore.png";
 
 const ZaheenAppDesktop = () => {
   const playStoreUrl =

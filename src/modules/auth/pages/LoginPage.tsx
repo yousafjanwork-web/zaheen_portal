@@ -57,11 +57,40 @@ const Spinner = () => (
 
 // ─── LoginPage ──────────────────────────────────────────────────────────────
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  /**
+   * Optional. When provided (e.g. rendered inside MDCAT's login
+   * overlay), this is called instead of navigating away once the
+   * MDCAT fast-track login succeeds. When omitted, behavior is
+   * 100% unchanged — Zaheen's own /login route does not pass this.
+   */
+  onAuthSuccess?: () => void;
+  /**
+   * Optional. When provided, the "Subscribe now" link calls this
+   * instead of navigating to /subscribe (used by MDCAT's overlay to
+   * switch modes in place). When omitted, the link behaves as before.
+   */
+  onNavigateToSubscribe?: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onAuthSuccess, onNavigateToSubscribe }) => {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
   const location       = useLocation();
   const { loginWithUser } = useAuth();
+
+  // Save MDCAT return info to sessionStorage as soon as login page loads
+  // Only overwrite if not already set — prevents second visit from clearing first
+  useEffect(() => {
+    const fromState = location.state as { from?: string; mdcat?: boolean } | null;
+    if (fromState?.mdcat === true) {
+      // Always overwrite with the latest MDCAT page they came from
+      localStorage.setItem("mdcat_return", JSON.stringify({
+        from: fromState.from ?? "/mdcat",
+        mdcat: true,
+      }));
+    }
+  }, []);
 
   const [mode,    setMode]    = useState<LoginMode>("CREDENTIALS");
   const [msisdn,  setMsisdn]  = useState("");
@@ -80,8 +109,12 @@ const [loading,       setLoading]       = useState(false);
 
   const handleGoogleLogin = () => {
     setSocialLoading(true);
+    const fromState = location.state as { from?: string; mdcat?: boolean } | null;
+    const mdcatState = fromState?.mdcat === true
+      ? encodeURIComponent(JSON.stringify({ from: fromState.from ?? "/mdcat", mdcat: true }))
+      : "";
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${mdcatState}`;
   };
 
   /* OTP countdown */
@@ -112,6 +145,42 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
       console.log("[routeAfterLogin] userId =", userId, "msisdn =", resolvedMsisdn);
       const status = await getSetupStatus(userId);
       console.log("[routeAfterLogin] setup status =", status);
+
+      // ── MDCAT fast-track ──────────────────────────────────────────────────
+      // location.state carries this on a full-page redirect (Zaheen flow).
+      // When rendered inside MDCAT's overlay there is no navigation, so we
+      // also fall back to the same localStorage flag SubscribePage already uses.
+      const fromState = location.state as { from?: string; mdcat?: boolean } | null;
+      let mdcatFastTrack = fromState?.mdcat === true ? fromState : null;
+      if (!mdcatFastTrack) {
+        try {
+          const stored = localStorage.getItem("mdcat_return");
+          const parsed = stored ? JSON.parse(stored) : null;
+          if (parsed?.mdcat === true) mdcatFastTrack = parsed;
+        } catch {
+          mdcatFastTrack = null;
+        }
+      }
+      if (mdcatFastTrack?.mdcat === true) {
+        loginWithUser({
+          msisdn:           resolvedMsisdn,
+          userId,
+          isKid:            false,
+          role:             "learner",
+          selectedClassId:  status.selected_class_id ?? null,
+          selectedCourseId: status.selected_course_id ?? null,
+          token:            token ?? null,
+        });
+        localStorage.removeItem("mdcat_return");
+        if (onAuthSuccess) {
+          onAuthSuccess();
+        } else {
+          setRoutingStatus("Opening your account…");
+          navigate(mdcatFastTrack.from ?? "/mdcat", { replace: true });
+        }
+        return;
+      }
+      // ── end MDCAT fast-track ──────────────────────────────────────────────
 
          loginWithUser({
         msisdn:           resolvedMsisdn,
@@ -273,7 +342,27 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
             token,
           });
         }
-        navigate("/dashboard", { replace: true });
+              const fromState = location.state as { from?: string; mdcat?: boolean } | null;
+        let kidMdcatFastTrack = fromState?.mdcat === true ? fromState : null;
+        if (!kidMdcatFastTrack) {
+          try {
+            const stored = localStorage.getItem("mdcat_return");
+            const parsed = stored ? JSON.parse(stored) : null;
+            if (parsed?.mdcat === true) kidMdcatFastTrack = parsed;
+          } catch {
+            kidMdcatFastTrack = null;
+          }
+        }
+        if (kidMdcatFastTrack?.mdcat === true) {
+          localStorage.removeItem("mdcat_return");
+          if (onAuthSuccess) {
+            onAuthSuccess();
+          } else {
+            navigate(kidMdcatFastTrack.from ?? "/mdcat", { replace: true });
+          }
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
         return;
       }
 
@@ -603,9 +692,18 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
           >
             <p className="text-slate-500 text-xs">
               Don't have an account?{" "}
+              {onNavigateToSubscribe ? (
+                <span
+                  onClick={onNavigateToSubscribe}
+                  className="text-teal-400 hover:underline cursor-pointer"
+                >
+                  Subscribe now
+                </span>
+              ) : (
               <Link to="/subscribe" className="text-teal-400 hover:underline">
                 Subscribe now
               </Link>
+              )}
             </p>
           </div>
 

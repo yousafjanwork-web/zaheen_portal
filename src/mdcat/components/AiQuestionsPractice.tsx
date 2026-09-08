@@ -249,11 +249,11 @@ const navigate = useNavigate();
                <button
                   onClick={() => {
                     if (!isLoggedIn) {
-                      navigate("/login", { state: { from: location.pathname } });
+                    navigate("/login", { state: { from: location.pathname, mdcat: true } });
                       return;
                     }
                     setActiveQuiz({ ...quiz, id: 9999 });
-                    navigate("/mdcat/ai-quiz");
+                    navigate(location.pathname.includes("mdcat-mobile") ? "/mdcat-mobile/ai-quiz" : "/mdcat/ai-quiz");
                     window.scrollTo({ top: 0, behavior: "instant" });
                   }}
                   className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-[11px] tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition card-shadow"

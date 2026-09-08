@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import ZaheenLogo from "../../assets/logo/ZaheenLogo.png";
+const ZaheenLogo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 interface LogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   showText?: boolean;

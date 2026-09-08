@@ -24,6 +24,7 @@ import { MDCATSubject, Quiz } from "../types";
 import { MDCAT_AI_API, mdcatAiApi, mdcatApi } from "../config";
 import SEO from "./SEO";
 import AIQuestionsPractice from "./AiQuestionsPractice";
+import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
 import { body } from "motion/react-client";
 
 interface AIQuizGeneratorProps {
@@ -40,6 +41,7 @@ export default function AIQuizGenerator({
 const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { openOverlay } = useMdcatAuthOverlay();
   const [subject, setSubject] = useState<MDCATSubject>("Biology");
   const [subTopic, setSubTopic] = useState("");
   const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">(
@@ -78,7 +80,7 @@ const { isLoggedIn } = useAuth();
   const handleGenerate = async (e: FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      navigate("/login", { state: { from: location.pathname } });
+     openOverlay("login");
       return;
     }
     setIsGenerating(true);
@@ -436,7 +438,7 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
         </div>
 
         <span className="text-[10px] text-sky-400 font-bold uppercase tracking-widest flex items-center gap-1.5 justify-center">
-          <Cpu className="w-3.5 h-3.5 text-sky-500" /> Powered by Gemini AI
+          <Cpu className="w-3.5 h-3.5 text-sky-500" /> Powered by Zaheen AI
         </span>
       </motion.div>
     )}

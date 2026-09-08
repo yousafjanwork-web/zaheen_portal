@@ -14,7 +14,7 @@ import {
   Calculator, Cpu,
 } from "lucide-react";
 
-import labImg from "../../../assets/images/lab2.png";
+const labImg = "https://cdn.zaheen.com.pk/zaheen-web-img/lab2.png";
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
 

@@ -2,9 +2,9 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
+ 
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation,Link } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import { mdcatAiApi } from "../config";
 import { useAuth } from "@/modules/shared/context/AuthContext";
@@ -23,21 +23,23 @@ import {
 } from "lucide-react";
 import { Quiz } from "../types";
 import { useAppNavigate } from "../hooks/useAppNavigate";
-
+import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
+ 
 interface PastPapersProps {
   quizzes: Quiz[];
   onSelectQuiz: (id: number) => void;
 }
-
+ 
 export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
   const { isLoggedIn } = useAuth();
  const { navigate } = useAppNavigate();
  const loginNavigate = useNavigate();
   const location = useLocation();
+  const { openOverlay } = useMdcatAuthOverlay();
   const [selectedYear, setSelectedYear] = useState<string>("All");
   const [selectedRegion, setSelectedRegion] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
-
+ 
   // AI Chat states
   const [chatSubject, setChatSubject] = useState<string>("Biology");
   const [chatLanguage, setChatLanguage] = useState<string>(
@@ -47,14 +49,14 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
   const [chatReply, setChatReply] = useState<string>("");
   const [isAskingAI, setIsAskingAI] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
-
+ 
   useEffect(()=>
     {
       window.scrollTo(0,0)
     },[])
-
+ 
   const pastPapers = quizzes.filter((q) => !!q.isPastPaper);
-
+ 
   const availableYears = Array.from(
     new Set(
       pastPapers
@@ -62,7 +64,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
         .map((p) => p.pastPaperYear!.toString()),
     ),
   ).sort((a, b) => Number(b) - Number(a));
-
+ 
   const availableRegions = Array.from(
     new Set(
       pastPapers
@@ -70,7 +72,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
         .map((p) => p.pastPaperRegion!),
     ),
   ).sort();
-
+ 
   const filteredPapers = pastPapers.filter((paper) => {
     const matchesYear =
       selectedYear === "All" ||
@@ -84,15 +86,51 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
       paper.subTopic.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesYear && matchesRegion && matchesSearch;
   });
-
+ 
+    const REGION_ORDER = [
+  "Punjab / UHS",
+  "Punjab (UHS)",
+  "Sindh / DUHS",
+  "KPK (KMU)",
+  "KPK / ETEA",
+  "Federal / FMDC",
+  "Pakistan (NUMS)",
+  "Balochistan",
+  "Other Regional",
+];
+ 
+const filteredRegions = Array.from(
+  new Set(
+    filteredPapers
+      .filter((p) => p.pastPaperRegion)
+      .map((p) => p.pastPaperRegion!),
+  ),
+).sort((a, b) => {
+  const indexA = REGION_ORDER.indexOf(a);
+  const indexB = REGION_ORDER.indexOf(b);
+ 
+  // If a region isn't in REGION_ORDER, push it to the end
+  if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+  if (indexA === -1) return 1;
+  if (indexB === -1) return -1;
+ 
+  return indexA - indexB;
+});
+ 
+  const getRegionPapers = (pastPapers: any, region: string) => {
+    return pastPapers
+      .filter((paper: any) => paper.pastPaperRegion === region)
+      .sort((a: any, b: any) => (b.pastPaperYear ?? 0) - (a.pastPaperYear ?? 0));
+  }
+ 
   const handleAskAI = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatQuestion.trim()) return;
-
+ 
     setIsAskingAI(true);
     setAiError(null);
     setChatReply("");
-
+ 
     try {
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
@@ -103,9 +141,9 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
           language: chatLanguage,
         }),
       });
-
+ 
       if (!response.ok) throw new Error("Failed to retrieve AI explanation");
-
+ 
       const data = await response.json();
       setChatReply(data.data?.reply ?? data.reply);
     } catch (err: any) {
@@ -114,7 +152,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
       setIsAskingAI(false);
     }
   };
-
+ 
   const presetDoubts = [
     { text: "Why are transition elements colored?", subj: "Chemistry" },
     { text: "Help me memorize active transport rules", subj: "Biology" },
@@ -123,7 +161,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
       subj: "Physics",
     },
   ];
-
+ 
   return (
     <div className="animate-fade-in ">
       {/* Cover Card */}
@@ -149,22 +187,22 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
           <span>MDCAT</span>
           <span className="bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">Past Papers by Year</span>
         </h2>
-
+ 
         <p className="text-sm text-sky-200/80 font-semibold leading-relaxed max-w-xl">
           Browse through {availableYears.length || "multiple"} years of MDCAT
           papers. Each paper includes complete solutions and detailed
           explanations for every question.
         </p>
       </div>
-
+ 
       {/* ── SECTION 1: Past Papers ── */}
       <div className="bg-white py-10 md:py-14">
         <div className="space-y-6">
           <span className="block text-center text-[13px] font-black uppercase tracking-[0.3em] text-sky-500">
             Practice papers
           </span>
-
-
+ 
+ 
           {/* Search bar + filters */}
           <div className="flex flex-col sm:flex-row gap-3 max-w-3xl mx-auto px-4">
             <div className="group relative flex-1 flex items-center gap-2.5 h-12 md:h-14 px-4 md:px-5 rounded-full bg-white border border-sky-100 card-shadow focus-within:rounded-md overflow-hidden">
@@ -186,7 +224,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
               </button>
               <span className="pointer-events-none absolute left-0 bottom-0 h-[2px] w-full origin-center scale-x-0 bg-sky-950 rounded-full transition-transform duration-300 group-focus-within:scale-x-100" />
             </div>
-
+ 
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
@@ -199,7 +237,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
                 </option>
               ))}
             </select>
-
+ 
             <select
               value={selectedRegion}
               onChange={(e) => setSelectedRegion(e.target.value)}
@@ -212,8 +250,20 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
                 </option>
               ))}
             </select>
+ 
+              <Link
+             to="../repeated-questions"
+                className="relative inline-flex overflow-hidden rounded-full p-[2px]"
+              >
+                <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#7DD3FC_0%,#7DD3FC_50%,#000000_50%,#000000_100%)]" />
+                <span className="relative inline-flex items-center justify-center rounded-full bg-sky-700 px-5 py-2.5 text-xs font-bold text-white">
+                  Repeated Questions
+                </span>
+              </Link>
+              
           </div>
-
+ 
+ 
           {/* Papers grid */}
           {filteredPapers.length === 0 ? (
             <div className="py-16 text-center space-y-2">
@@ -228,70 +278,80 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 max-w-6xl mx-auto">
-              {filteredPapers.map((paper) => (
-                // change to — bolder, clearly visible gradient
-                <div
-                  key={paper.id}
-                  className="p-6 rounded-3xl bg-gradient-to-br from-sky-50 via-white to-sky-100 border border-sky-100 card-shadow flex flex-col gap-5 hover:border-sky-300 hover:shadow-lg transition-all"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-                        <Calendar className="w-5 h-5" />
+              {filteredRegions.map((region) =>
+                <div key={region} className="col-span-full">
+                  <h1 className="font-bold text-4xl my-5 ml-3">{region}</h1>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {getRegionPapers(filteredPapers, region).map((paper: any) => (
+                      // change to — bolder, clearly visible gradient
+                     
+                      <div
+                        key={paper.id}
+                        className="p-6 rounded-3xl bg-gradient-to-br from-sky-50 via-white to-sky-100 border border-sky-100 card-shadow flex flex-col gap-5 hover:border-sky-300 hover:shadow-lg transition-all"
+                      >
+                     
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                              <Calendar className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-black text-sky-950 leading-tight">
+                                MDCAT {paper.pastPaperYear ?? ""}
+                              </h3>
+                              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">
+                                {paper.pastPaperRegion ?? "Conducted"}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="px-2.5 py-1 text-[9px] font-black uppercase text-sky-700 bg-sky-50 rounded-md shrink-0">
+                            {paper.pastPaperRegion ?? "PMC"}
+                          </span>
+                        </div>
+ 
+                        <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
+                          <span className="flex items-center gap-1.5">
+                            <ClipboardList className="w-3.5 h-3.5 text-sky-400" />
+                            {paper.subject}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <Target className="w-3.5 h-3.5 text-sky-400" />
+                            {paper.subTopic}
+                          </span>
+                        </div>
+ 
+                        <ul className="space-y-2 flex-1">
+                          <li className="flex items-start gap-2 text-xs text-slate-600 font-semibold leading-relaxed">
+                            <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                            <span>{paper.title}</span>
+                          </li>
+                        </ul>
+ 
+                                            <button
+                          onClick={() => {
+                            if (!isLoggedIn) {
+                              openOverlay("login");
+                              return;
+                            }
+                            onSelectQuiz(paper.id);
+                            window.scrollTo({ top: 0, behavior: "instant" });
+                          }}
+                          className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-[11px] tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition card-shadow"
+                        >
+                          Practice online
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-black text-sky-950 leading-tight">
-                          MDCAT {paper.pastPaperYear ?? ""}
-                        </h3>
-                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide">
-                          {paper.pastPaperRegion ?? "Conducted"}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 text-[9px] font-black uppercase text-sky-700 bg-sky-50 rounded-md shrink-0">
-                      {paper.pastPaperRegion ?? "PMC"}
-                    </span>
+                    ))}
+ 
                   </div>
-
-                  <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
-                    <span className="flex items-center gap-1.5">
-                      <ClipboardList className="w-3.5 h-3.5 text-sky-400" />
-                      {paper.subject}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Target className="w-3.5 h-3.5 text-sky-400" />
-                      {paper.subTopic}
-                    </span>
-                  </div>
-
-                  <ul className="space-y-2 flex-1">
-                    <li className="flex items-start gap-2 text-xs text-slate-600 font-semibold leading-relaxed">
-                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-                      <span>{paper.title}</span>
-                    </li>
-                  </ul>
-
-                <button
-                    onClick={() => {
-                      if (!isLoggedIn) {
-                        loginNavigate("/login", { state: { from: location.pathname } });
-                        return;
-                      }
-                      onSelectQuiz(paper.id);
-                      window.scrollTo({ top: 0, behavior: "instant" });
-                    }}
-                    className="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-[11px] tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition card-shadow"
-                  >
-                    Practice online
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-              ))}
+           )}
             </div>
           )}
         </div>
       </div>
-
+ 
       {/* ── SECTION 2: 180-Question Quiz ── */}
       <div
         className="bg-slate-50 py-10 md:py-14"
@@ -318,17 +378,17 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full border-8 border-white/10" />
             <div className="absolute -bottom-14 -left-14 w-48 h-48 rounded-full border-8 border-white/10" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),_transparent_60%)]" />
-
+ 
             <div className="relative z-10 flex flex-col items-center gap-4">
               <span className="px-3 py-1 text-[10px] font-black uppercase text-orange-700 bg-white rounded-full tracking-wider">
                 PMDC standard simulation
               </span>
-
+ 
               <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-snug">
                 180 questions complete
                 <br className="hidden sm:block" /> paper style quiz
               </h3>
-
+ 
               <p className="text-xs md:text-sm text-white/85 font-bold max-w-md leading-relaxed">
                 Take a complete syllabus exam composed of{" "}
                 <b className="text-white">
@@ -338,7 +398,7 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
                 questions. Includes a dynamic 210-minute (3.5 hours)
                 countdown board timer!
               </p>
-
+ 
               <div className="flex flex-wrap items-center justify-center gap-4 text-white/90 text-[10px] font-black uppercase tracking-wider pt-1">
                 <span>180 MCQs</span>
                 <span className="w-1 h-1 rounded-full bg-white/50" />
@@ -346,11 +406,11 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
                 <span className="w-1 h-1 rounded-full bg-white/50" />
                 <span>5 subjects</span>
               </div>
-
+ 
              <button
                 onClick={() => {
                   if (!isLoggedIn) {
-                    navigate("/login", { state: { from: location.pathname } });
+                   openOverlay("login");
                     return;
                   }
                   onSelectQuiz(1800);
@@ -367,3 +427,4 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
     </div>
   );
 }
+ 

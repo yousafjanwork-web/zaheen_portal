@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
-import mdcatImage from "../../../assets/images/mdcatnewbanerdesk.png";
+const mdcatImage = "https://cdn.zaheen.com.pk/zaheen-web-img/mdcatnewbanerdesk.png";
 
 const MDCATDesktopBanner = () => {
   const navigate = useNavigate();

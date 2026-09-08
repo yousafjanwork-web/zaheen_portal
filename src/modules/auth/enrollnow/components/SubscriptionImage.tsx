@@ -1,4 +1,4 @@
-import image from '@/assets/images/landingPageBanner.png';
+const image = "https://cdn.zaheen.com.pk/zaheen-web-img/landingPageBanner.png";
 
 export default function SubscriptionImage() {
   return (

@@ -19,7 +19,7 @@ import { useGameStore } from "../../store/useGameStore";
 import { cn } from "../../utils/cn";
 import { sfx } from "../../utils/audio";
 import { usePakistanBase } from "../../hooks/usePakistanBase";
-import zaheenLogo from "../../../assets/logo/zaheen-pak.png"; // ← update path if needed
+const zaheenLogo = "https://cdn.zaheen.com.pk/zaheen-web-img/zaheen-pak.png";
 
 function isLinkActive(pathname: string, to: string, base: string) {
   if (to === base) {

@@ -2,9 +2,9 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
+ 
 import { useState, useEffect } from "react";
-
+ 
 import { motion, AnimatePresence } from "motion/react";
 import {
   PerformanceStats,
@@ -14,14 +14,15 @@ import {
 } from "./types";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/modules/shared/context/AuthContext";
-
+ 
 import { mdcatApi } from "./config";
 import Dashboard from "./components/Home";
 import DashBoard1 from "./components/Dashboard";
 import QuizSession from "./components/QuizSession";
 import AIQuizGenerator from "./components/AIQuizGenerator";
+import SolvedPaper from "./components/SolvedPapers";
 import PastPapers from "./components/PastPapers";
-import ZaheenLogo from "./components/ZaheenLogo";
+const ZaheenLogo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 // import FocusTimer from "./components/FocusTimer";
 import StudyNotes from "./components/StudyNotes";
 import FAQ from "./components/Faq";
@@ -32,7 +33,10 @@ import Header from "./components/Header";
 import LoadingFrame from "./components/LoadingFrame";
 import AiTutorPage from "./components/AiTutorPage";
 import SEO from "./components/SEO";
-
+import RepeatedQuestions from "./components/RepeatedQuestions";
+import { MdcatAuthOverlayProvider, useMdcatAuthOverlay } from "./context/MdcatAuthOverlayContext";
+import MdcatAuthOverlay from "./components/MdcatAuthOverlay";
+ 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
   ...q,
@@ -43,7 +47,7 @@ const mapQuiz = (q: any): Quiz => ({
   pastPaperRegion: q.pastPaperRegion ?? q.past_paper_region ?? null,
   createdAt: q.createdAt ?? q.created_at ?? null,
 });
-
+ 
 // ─── Helper: map snake_case question fields ───
 const mapQuestion = (q: any) => ({
   ...q,
@@ -55,7 +59,7 @@ const mapQuestion = (q: any) => ({
   correctOption: q.correctOption ?? q.correct_option ?? "A",
   subTopic: q.subTopic ?? q.sub_topic ?? "",
 });
-
+ 
 function PageTransition({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
@@ -70,11 +74,11 @@ function PageTransition({ children }: { children: React.ReactNode }) {
     </motion.div>
   );
 }
-
+ 
 function AIQuizRoute({ quiz, onAttemptFinished }: {
   quiz: Quiz | null;
   onAttemptFinished: (...args: any[]) => void;
-
+ 
 }) {
   const navigate = useNavigate();
   if (!quiz) return <Navigate to="/mdcat/ai-prep" replace />;
@@ -83,13 +87,13 @@ function AIQuizRoute({ quiz, onAttemptFinished }: {
       quiz={quiz}
       onBack={() => navigate("/mdcat/ai-prep")}
       onAttemptFinished={onAttemptFinished}
-      
+     
     />
   );
 }
-
+ 
  function QuizSessionRoute({
-  
+ 
   loading,
   onAttemptFinished,
  
@@ -97,17 +101,17 @@ function AIQuizRoute({ quiz, onAttemptFinished }: {
   quizzes: Quiz[];
   loading: boolean;
   onAttemptFinished: (...args: any[]) => void;
-
+ 
 }) {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const [fullQuiz, setFullQuiz] = useState<Quiz | null>(null);
   const [fetchingQuiz, setFetchingQuiz] = useState(true);
-
+ 
   useEffect(() => {
     let cancelled = false;
     setFetchingQuiz(true);
-
+ 
     fetch(mdcatApi(`/api/mdcat/quizzes/${quizId}`))
       .then((res) => res.json())
       .then((json) => {
@@ -125,20 +129,20 @@ function AIQuizRoute({ quiz, onAttemptFinished }: {
       .finally(() => {
         if (!cancelled) setFetchingQuiz(false);
       });
-
+ 
     return () => {
       cancelled = true;
     };
   }, [quizId]);
-
+ 
   if (loading || fetchingQuiz) {
     return <LoadingFrame />;
   }
-
+ 
   if (!fullQuiz) {
     return <Navigate to="/" replace />;
   }
-
+ 
   return (
     <QuizSession
       quiz={fullQuiz}
@@ -148,7 +152,7 @@ function AIQuizRoute({ quiz, onAttemptFinished }: {
     />
   );
 }
-
+ 
 interface Question {
   quiz_id: 9999;
   questionText: string;
@@ -160,7 +164,7 @@ interface Question {
   subTopic?: string;
   explanation?: string;
 }
-
+ 
 async function addNewAIQuestions(questions:Question[])
 {
     const url = mdcatApi("/api/mdcat/quizzes/AddAIQuestions");
@@ -181,11 +185,11 @@ async function addNewAIQuestions(questions:Question[])
       alert("could not upload questions");
       console.log(e);
     }
-
-  
-    
-
-
+ 
+ 
+   
+ 
+ 
 }
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
@@ -195,18 +199,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   return <>{children}</>;
 }
-
-export default function MdcatApp() {
+ 
+function MdcatAppInner() {
+  const { isOpen } = useMdcatAuthOverlay();
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "ai-generator" | "past-papers" | "notes" | "faq"
+    "dashboard" | "ai-generator" | "past-papers" | "notes" | "repeated-questions"
   >("dashboard");
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [allRepeatedQuestions, setAllRepeatedQuestions] = useState<any[]>([]);
+  const [repeatedVisibleCount, setRepeatedVisibleCount] = useState(20);
+  const REPEATED_PAGE_SIZE = 20;
 
+  const repeatedQuestions = allRepeatedQuestions.slice(0, repeatedVisibleCount);
+  const repeatedHasMore = repeatedVisibleCount < allRepeatedQuestions.length;
+  const repeatedLoading_more = false;
+ 
   const navigate = useNavigate();
   const location = useLocation();
-
+ 
   // Performance tracking states
   const [performanceStats, setPerformanceStats] = useState<PerformanceStats>({
     totalAttempts: 0,
@@ -215,15 +227,16 @@ export default function MdcatApp() {
     subTopicList: [],
     attemptHistory: [],
   });
-
+ 
   // AI recommendations state
   const [recommendations, setRecommendations] = useState<StudyRecommendation[]>(
     [],
   );
-
+ 
   // UI state
   const [loading, setLoading] = useState(true);
-
+  const [repeatedLoading,setRepeatedLoading] = useState(true)
+ 
   // Load all foundational data on startup
   const fetchAllData = async () => {
     try {
@@ -232,7 +245,7 @@ export default function MdcatApp() {
         fetch(mdcatApi("/api/mdcat/performance")),
         fetch(mdcatApi("/api/mdcat/recommendations")),
       ]);
-
+ 
       // Quizzes
       if (quizzesRes.ok) {
         const quizzesData = await quizzesRes.json();
@@ -241,7 +254,7 @@ export default function MdcatApp() {
           : [];
         setQuizzes(rawQuizzes.map(mapQuiz));
       }
-
+ 
       // Performance
       if (statsRes.ok) {
         const statsData = await statsRes.json();
@@ -282,11 +295,45 @@ export default function MdcatApp() {
   useEffect(() => {
     fetchAllData();
   }, []);
+ 
+   const fetchRepeatedQuestions = async () => {
+    try {
+      setRepeatedLoading(true);
+      const res = await fetch(mdcatApi("/api/mdcat/repeated-questions"));
+      if (res.ok) {
+        const json = await res.json();
+        const raw = Array.isArray(json)
+          ? json
+          : Array.isArray(json.data)
+          ? json.data
+          : [];
+        setAllRepeatedQuestions(raw);
+        setRepeatedVisibleCount(REPEATED_PAGE_SIZE); // reset to first 20
+      } else {
+        setAllRepeatedQuestions([]);
+      }
+    } catch (e) {
+      console.error("[App] Failed to fetch repeated questions:", e);
+      setAllRepeatedQuestions([]);
+    } finally {
+      setRepeatedLoading(false);
+    }
+  };
 
+  const loadMoreRepeated = () => {
+    setRepeatedVisibleCount((prev) =>
+      Math.min(prev + REPEATED_PAGE_SIZE, allRepeatedQuestions.length)
+    );
+  };
+
+  useEffect(() => {
+    fetchRepeatedQuestions();
+  }, []);
+ 
   // Fetch a single quiz with its full list of detailed questions
   const handleSelectQuiz = async (id: number) => {
       navigate(`/mdcat/quiz/${id}`);
-      
+     
     };
   // Callback when a dynamic AI quiz is compiled successfully
   const handleQuizGenerated = (newQuiz: Quiz) => {
@@ -301,14 +348,14 @@ export default function MdcatApp() {
     setSelectedQuizId(quiz.id);
     addNewAIQuestions(newQuiz.questions);
     navigate("/mdcat/ai-quiz");
-    
+   
   };
-
+ 
   // Refresh stats after attempt is saved
   const handleAttemptFinished = async () => {
     await fetchAllData();
   };
-
+ 
   // Subject color helper
   const getSubjectColorBadge = (subject: string) => {
     switch (subject) {
@@ -332,19 +379,19 @@ export default function MdcatApp() {
     0,
     Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
-
-
+ 
+ 
   // Small wrapper so every page gets the same enter/exit motion without repeating it 5 times
  
-
+ 
   // Quiz session needs the id from the URL, not from local state
-
+ 
   return (
-    <div className="min-h-screen  bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200">
+    <div className={`min-h-screen  bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200 transition-[filter] duration-200 ${isOpen ? "blur-md pointer-events-none select-none" : ""}`}>
       {/* Platform Header */}
       <Header setActiveQuiz={setActiveQuiz} activeTab={activeTab} setActiveTab={setActiveTab} daysLeft={daysLeft} selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />
-
-
+ 
+ 
 <div className="grid flex-1 grid-rows-[minmax(0,1fr)] overflow-x-hidden min-h-0">
   <AnimatePresence mode="wait">
     <Routes location={location} key={location.pathname}>
@@ -378,6 +425,7 @@ export default function MdcatApp() {
           </PageTransition>
         }
       />
+     
       <Route
         path="/ai-prep"
         element={
@@ -409,19 +457,29 @@ export default function MdcatApp() {
           </PageTransition>
         }
       />
-      <Route
-        path="/faq"
+    
+     
+       <Route
+        path="/repeated-questions"
         element={
-          <PageTransition>
-            <SEO
-              title="FAQs"
-              description="Frequently asked questions about Zaheen MDCAT Prep — quizzes, study notes, past papers, and AI tools."
-              path="/faq"
-            />
-            <FAQ onBack={() => navigate("/mdcat")} />
-          </PageTransition>
+          repeatedLoading ? <LoadingFrame /> :
+          <RepeatedQuestions
+            data={repeatedQuestions}
+            loading={false}
+            hasMore={repeatedHasMore}
+            onLoadMore={loadMoreRepeated}
+          />
+          
         }
+        
       />
+      <Route
+      path="/guess-paper"
+      element={
+        <SolvedPaper/>
+      }
+      />
+ 
       <Route
         path="/quiz/:quizId"
         element={
@@ -444,21 +502,26 @@ export default function MdcatApp() {
         path="/"
         element={
           <PageTransition>
-            <SEO
-              title="Dashboard"
-              description="Your MDCAT prep dashboard — track performance, countdown to your test date, and jump into practice quizzes."
-              path="/"
-            />
-            {loading ? (
-              <LoadingFrame />
-            ) : (
-              <Dashboard
-                testDate={examDate}
-                setActiveTab={setActiveTab}
-                performanceStats={performanceStats}
-                getSubjectColorBadge={getSubjectColorBadge}
+            <div className="overflow-y-auto h-full">
+              <SEO
+                title="Dashboard"
+                description="Your MDCAT prep dashboard — track performance, countdown to your test date, and jump into practice quizzes."
+                path="/"
               />
-            )}
+              {loading ? (
+                <LoadingFrame />
+              ) : (
+                <>
+                  <Dashboard
+                    testDate={examDate}
+                    setActiveTab={setActiveTab}
+                    performanceStats={performanceStats}
+                    getSubjectColorBadge={getSubjectColorBadge}
+                  />
+                  <FAQ onBack={() => navigate("/mdcat")} />
+                </>
+              )}
+            </div>
           </PageTransition>
         }
       />
@@ -504,10 +567,20 @@ export default function MdcatApp() {
         path="/dashboard"
       />
     </Routes>
-
+ 
 </AnimatePresence>
 </div>
       <Footer />
   </div>
   );
 }
+
+export default function MdcatApp() {
+  return (
+    <MdcatAuthOverlayProvider>
+      <MdcatAppInner />
+      <MdcatAuthOverlay />
+    </MdcatAuthOverlayProvider>
+  );
+}
+ 

@@ -12,12 +12,12 @@ import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
-import heroImg300 from "../../../assets/images/web-development.png";
-import heroImg301 from "../../../assets/images/auto-cad.png";
-import heroImg302 from "../../../assets/images/excel.png";
-import heroImg303 from "../../../assets/images/video-editing.png";
-import heroImg304 from "../../../assets/images/makeup.png";
-import heroImg305 from "../../../assets/images/trading-professional-skill-banner.jpeg";
+const heroImg300 = "https://cdn.zaheen.com.pk/zaheen-web-img/web-development.png";
+const heroImg301 = "https://cdn.zaheen.com.pk/zaheen-web-img/auto-cad.png";
+const heroImg302 = "https://cdn.zaheen.com.pk/zaheen-web-img/excel.png";
+const heroImg303 = "https://cdn.zaheen.com.pk/zaheen-web-img/video-editing.png";
+const heroImg304 = "https://cdn.zaheen.com.pk/zaheen-web-img/makeup.png";
+const heroImg305 = "https://cdn.zaheen.com.pk/zaheen-web-img/trading-professional-skill-banner.jpeg";
 
 const heroImages: Record<number, string> = {
   300: heroImg300,

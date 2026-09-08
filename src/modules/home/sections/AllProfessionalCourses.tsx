@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import background from "@/assets/images/Background.png"
+const background  = "https://cdn.zaheen.com.pk/zaheen-web-img/Background.png";
 import { useNavigate } from "react-router-dom";
 import {
   Star,
@@ -16,12 +16,12 @@ import { getLanguage } from "@/modules/shared/i18n";
 import { getSlugByClassId } from "@/modules/shared/utils/skillsCourseSlugs";
 
 // Same local card images used on the homepage slider (ProfessionalCourses.tsx)
-import sliderImg1 from "../../../assets/images/web-development-s.png";
-import sliderImg2 from "../../../assets/images/auto-cad-s.png";
-import sliderImg3 from "../../../assets/images/excel-s.png";
-import sliderImg4 from "../../../assets/images/video-editing-s.png";
-import sliderImg5 from "../../../assets/images/makeup-s.png";
-import sliderImg6 from "../../../assets/images/trading-professional-skill-banner-ss.jpeg";
+const sliderImg1 = "https://cdn.zaheen.com.pk/zaheen-web-img/web-development-s.png";
+const sliderImg2 = "https://cdn.zaheen.com.pk/zaheen-web-img/auto-cad-s.png";
+const sliderImg3 = "https://cdn.zaheen.com.pk/zaheen-web-img/excel-s.png";
+const sliderImg4 = "https://cdn.zaheen.com.pk/zaheen-web-img/video-editing-s.png";
+const sliderImg5 = "https://cdn.zaheen.com.pk/zaheen-web-img/makeup-s.png";
+const sliderImg6 = "https://cdn.zaheen.com.pk/zaheen-web-img/trading-professional-skill-banner-ss.jpeg";
 
 /* ─────────────────────────────────────────
    v2 Courses API

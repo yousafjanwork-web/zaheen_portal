@@ -4,7 +4,7 @@ import { Play, Clock, Star, Heart, ChevronRight, Sparkles, BookOpen, Users, Down
 import { ageGroups, whyOrigami } from '../data/crafts';
 import { useApi } from '../hooks/useApi';
 import { slugify } from '../utils/slugify';
-import kids from "../../assets/images/hero-kids-origami.jpg"
+const kids = "https://cdn.zaheen.com.pk/zaheen-web-img/hero-kids-origami.jpg"
 import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import {
   fetchCategories,

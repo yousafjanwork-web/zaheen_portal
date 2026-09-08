@@ -52,10 +52,20 @@ export default function Dashboard({ testDate = '2026-08-16', setActiveTab, perfo
     <div
       className="min-h-screen bg-white w-full overflow-x-hidden">
         
-      <SEO
-      title="Zaheen MDCAT Prep — AI Practice Exams, Notes & Merit Calculator"
-      description="Prepare for MDCAT 2026 with AI-generated practice exams, PMDC-aligned syllabus notes, verified FAQs, and a free merit calculator to estimate your admission chances."
+       <SEO
+      title="MDCAT Preparation Online in Pakistan | MDCAT MCQs & Video Lessons"
+      description="Prepare for MDCAT online with Zaheen. Access Biology, Chemistry and Physics video lessons, MDCAT MCQs, practice questions and learning resources for students across Pakistan."
       path="/"
+      keywords={[
+        "MDCAT preparation in Pakistan",
+        "Online MDCAT preparation",
+        "MDCAT online classes",
+        "MDCAT MCQs",
+        "MDCAT Biology preparation",
+        "MDCAT Chemistry preparation",
+        "MDCAT Physics preparation",
+        "MDCAT past papers",
+      ]}
       />
       {/* Hero */}
       <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen min-h-screen bg-white overflow-hidden">
@@ -105,10 +115,10 @@ export default function Dashboard({ testDate = '2026-08-16', setActiveTab, perfo
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
 
             <button
-              onClick={() => { setActiveTab('notes'); navigate("/mdcat/study-notes") }}
+              onClick={() => { setActiveTab('notes'); navigate("/mdcat/ai-prep") }}
               className="px-8 my-6 mb-10 py-4 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-sky-600/30 hover:shadow-xl hover:shadow-sky-600/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
             >
-              Explore Syllabus
+             Start Practice
 
             </button>
           </div>

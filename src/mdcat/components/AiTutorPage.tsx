@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { mdcatAiApi } from "../config";
+import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
 
 interface AiTutorPageProps {
   onBack?: () => void;
@@ -53,6 +54,7 @@ export default function AiTutorPage() {
  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { openOverlay } = useMdcatAuthOverlay();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatSubject, setChatSubject] = useState("Biology");
@@ -77,7 +79,7 @@ export default function AiTutorPage() {
  const sendQuestion = async (text: string, subject: string) => {
     if (!text.trim() || isAskingAI) return;
     if (!isLoggedIn) {
-      navigate("/login", { state: { from: location.pathname } });
+      openOverlay("login");
       return;
     }
     const userMsg: ChatMessage = {

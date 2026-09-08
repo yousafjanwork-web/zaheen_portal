@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircle2, Users, ShieldCheck, RefreshCw } from "lucide-react";
-import logo from "@/assets/images/ZaheenLogo.png";
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png"
 import { t } from "@/modules/shared/i18n";
 import { useNavigate } from "react-router-dom";
 

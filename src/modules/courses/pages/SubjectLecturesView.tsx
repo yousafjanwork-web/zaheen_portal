@@ -32,7 +32,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useClassSubjects, fetchVideoDetail } from "@/modules/shared/hooks/useClassSubjects";
-import thumbnail from "../../../assets/images/physics.png";
+const thumbnail = "https://cdn.zaheen.com.pk/zaheen-web-img/physics.png"
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
 

@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
 import { useUserDisplayName } from '@/modules/shared/hooks/useUserDisplayName';
 import Logo from './Logo';
 import {
   BookOpen, Home, Trophy, User, Menu, X, Star, Sun, Moon,
-  Target, Sparkles, Trees, Library, Award
+  Target, Sparkles, Trees, Library, Award, LogOut, ChevronDown
 } from 'lucide-react';
 
 const juniorLevels = ['Beginner Explorer', 'Word Adventurer', 'Vocabulary Hero', 'Story Builder', 'Word Master'];
@@ -14,11 +14,20 @@ const seniorLevels = ['Word Explorer', 'Creative Communicator', 'Language Champi
 
 export default function Navbar() {
     const { user } = useAuth();
-  const { isLoggedIn } = useZaheenAuth();
+  const { isLoggedIn, logout } = useZaheenAuth();
   const displayName = useUserDisplayName();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    setIsOpen(false);
+    logout();
+    navigate('/vocab');
+  };
 
   if (!user) return null;
 
@@ -117,22 +126,60 @@ export default function Navbar() {
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l border-slate-200 dark:border-slate-700">
-              <Link
-                to="/vocab/dashboard"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/60 dark:border-blue-700/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 transition-all group shadow-sm"
-              >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                  <span className="text-[10px] font-black text-white">
-                    {(isLoggedIn && displayName ? displayName : 'L').charAt(0).toUpperCase()}
+                   <div className="hidden sm:flex items-center gap-2 pl-2 ml-1 border-l border-slate-200 dark:border-slate-700">
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen((prev) => !prev)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/60 dark:border-blue-700/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 transition-all group shadow-sm"
+                >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <span className="text-[10px] font-black text-white">
+                      {(isLoggedIn && displayName ? displayName : 'L').charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300 max-w-[80px] truncate">
+                    {isLoggedIn && displayName ? displayName : 'Learner'}
                   </span>
-                </div>
-                <span className="text-xs font-bold text-blue-700 dark:text-blue-300 max-w-[80px] truncate">
-                  {isLoggedIn && displayName ? displayName : 'Learner'}
-                </span>
-              </Link>
+                  <ChevronDown
+                    className={`w-3 h-3 text-blue-500 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {/* Desktop dropdown */}
+                {profileOpen && (
+                  <div className="absolute right-0 top-11 w-48 rounded-2xl overflow-hidden z-50 shadow-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                    {isLoggedIn ? (
+                      <>
+                        <Link
+                          to="/vocab/dashboard"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          <User className="w-4 h-4 flex-shrink-0" />
+                          Dashboard
+                        </Link>
+                        <div className="border-t border-slate-100 dark:border-slate-700" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4 flex-shrink-0" />
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <Link
+                        to="/login"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        <User className="w-4 h-4 flex-shrink-0" />
+                        Login
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="lg:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -143,7 +190,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Nav */}
+              {/* Mobile Nav */}
         {isOpen && (
           <div className="lg:hidden py-4 border-t border-slate-200 dark:border-slate-700 space-y-1 animate-slide-up">
             {[...navItems, ...moreItems].map(({ to, label, icon: Icon }) => (
@@ -161,6 +208,37 @@ export default function Navbar() {
                 {label}
               </Link>
             ))}
+                     <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+            {isLoggedIn ? (
+              <>
+                <div className="flex items-center gap-3 px-4 py-2">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm shrink-0">
+                    <span className="text-[11px] font-black text-white">
+                      {(displayName || 'L').charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
+                    {displayName || 'Learner'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut className="w-5 h-5 flex-shrink-0" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                <User className="w-5 h-5 flex-shrink-0" />
+                Login
+              </Link>
+            )}
           </div>
         )}
       </div>

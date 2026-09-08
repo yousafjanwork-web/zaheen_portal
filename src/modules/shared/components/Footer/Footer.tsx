@@ -1,6 +1,6 @@
 import React from "react";
 import { Mail, Phone, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
-import logo from "@/assets/images/ZaheenLogo.png";
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import axios from "axios";
 import { Link } from "react-router-dom";

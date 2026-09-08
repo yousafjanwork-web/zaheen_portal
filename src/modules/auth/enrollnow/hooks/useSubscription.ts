@@ -66,7 +66,7 @@ export const useSubscription = () => {
     const urlMsisdn = params.get("msisdn");
     const urlTransactionId = params.get("transaction_id");
 
-  const urlPin = params.get("pin");
+    const urlPin = params.get("pin");
 
     if (urlMsisdn && urlMsisdn.trim() !== "") {
       setMsisdn(urlMsisdn);

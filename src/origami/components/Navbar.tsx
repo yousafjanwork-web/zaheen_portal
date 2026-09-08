@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useOrigamiBase } from '../hooks/useOrigamiBase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, Sun, Moon, User, Home, Grid3X3, Play, BarChart3 } from 'lucide-react';
+import { Search, Menu, X, Sun, Moon, User, Home, Grid3X3, Play, BarChart3, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth as useZaheenAuth } from '@/modules/shared/context/AuthContext';
 import { useUserDisplayName } from '@/modules/shared/hooks/useUserDisplayName';
-import logo from "../../assets/logo/zaheen-origami-logo1 1.png"
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/zaheen-origami-logo1-1.png";
 
 interface NavbarProps {
   darkMode: boolean;
@@ -22,8 +22,16 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
   // Phone number the user actually logged in with, straight from the
   // shared auth context — no separate "name" field exists, so this is
   // the identity we show in the navbar per sir's instruction.
-  const { msisdn, isLoggedIn } = useZaheenAuth();
+  const { msisdn, isLoggedIn, logout } = useZaheenAuth();
   const displayName = useUserDisplayName();
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    setMobileOpen(false);
+    logout();
+    navigate(`${base}`);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,16 +117,52 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
               </motion.button>
 
               {/* Profile */}
-             {isLoggedIn ? (
-                <Link to={`${base}/profile`}>
-                                   <motion.div
+              {isLoggedIn ? (
+                <div className="relative hidden sm:block">
+                  <motion.button
                     whileHover={{ scale: 1.05 }}
-                    className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-primary to-pink px-4 py-2 rounded-xl text-white font-nunito font-bold text-sm"
+                    onClick={() => setProfileOpen((prev) => !prev)}
+                    className="flex items-center gap-2 bg-gradient-to-r from-primary to-pink px-4 py-2 rounded-xl text-white font-nunito font-bold text-sm"
                   >
                     <span>🦊</span>
                     <span>{displayName || msisdn}</span>
-                  </motion.div>
-                </Link>
+                    <ChevronDown
+                      size={14}
+                      className="transition-transform duration-200"
+                      style={{ transform: profileOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    />
+                  </motion.button>
+
+                  {/* Desktop dropdown */}
+                  {profileOpen && (
+                    <div className={`absolute right-0 top-12 w-48 rounded-2xl overflow-hidden z-50 shadow-xl border ${
+                      darkMode
+                        ? 'bg-[#16213e] border-white/10'
+                        : 'bg-white border-gray-100'
+                    }`}>
+                      <Link
+                        to={`${base}/profile`}
+                        onClick={() => setProfileOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 text-sm font-nunito font-semibold transition-colors ${
+                          darkMode
+                            ? 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            : 'text-gray-700 hover:bg-primary/5 hover:text-primary'
+                        }`}
+                      >
+                        <User size={15} className="flex-shrink-0" />
+                        My Profile
+                      </Link>
+                      <div className={`border-t ${darkMode ? 'border-white/10' : 'border-gray-100'}`} />
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm font-nunito font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={15} className="flex-shrink-0" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Link
                   to="/login"
@@ -170,15 +214,26 @@ const Navbar = ({ darkMode, setDarkMode }: NavbarProps) => {
                   </Link>
                 ))}
                 {/* Mobile Profile */}
-              {isLoggedIn ? (
-                  <Link
-                    to={`${base}/profile`}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 bg-gradient-to-r from-primary to-pink px-4 py-3 rounded-2xl text-white font-nunito font-bold mt-2"
-                  >
-                    <span className="text-xl">🦊</span>
-                                       <span>{displayName || msisdn}</span>
-                  </Link>
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      to={`${base}/profile`}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 bg-gradient-to-r from-primary to-pink px-4 py-3 rounded-2xl text-white font-nunito font-bold mt-2"
+                    >
+                      <span className="text-xl">🦊</span>
+                      <span>{displayName || msisdn}</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl font-nunito font-semibold text-red-500 mt-1 transition-colors ${
+                        darkMode ? 'hover:bg-white/10' : 'hover:bg-red-50'
+                      }`}
+                    >
+                      <LogOut size={20} className="flex-shrink-0" />
+                      Logout
+                    </button>
+                  </>
                 ) : (
                   <Link
                     to="/login"

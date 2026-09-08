@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ShieldCheck } from 'lucide-react';
-import image from '../../../../assets/images/mdcat prep.png';
-import zaheenLogo from '../../../../assets/logo/ZaheenLogo.png';
+const image = "https://cdn.zaheen.com.pk/zaheen-web-img/mdcat prep.png";
+const zaheenLogo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 
 const features = [
   { icon: '🧠', title: 'AI-Powered Practice', desc: 'Smart MCQs & Explanations' },

@@ -5,7 +5,7 @@
 
 import React from 'react';
 // @ts-ignore
-import logoUrl from '../../assets/images/zaheen_logo.png';
+const logoUrl = "https://cdn.zaheen.com.pk/zaheen-web-img/zaheen_logo.png";
 
 interface ZaheenLogoProps {
   className?: string;

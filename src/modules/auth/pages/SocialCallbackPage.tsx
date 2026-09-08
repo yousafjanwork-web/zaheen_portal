@@ -32,6 +32,12 @@ const SocialCallbackPage: React.FC = () => {
       const userId = searchParams.get("user_id");
       const name   = searchParams.get("name")  ?? "";
       const email  = searchParams.get("email") ?? "";
+      // Read MDCAT state from URL param (passed through OAuth, survives domain change)
+      const stateParam = searchParams.get("state");
+      const parsedState = stateParam ? JSON.parse(decodeURIComponent(stateParam)) : null;
+      if (parsedState?.mdcat === true) {
+        localStorage.setItem("mdcat_return", JSON.stringify(parsedState));
+      }
 
       // ── Guard: missing params ──
       if (!token || !userId) {
@@ -46,8 +52,33 @@ const SocialCallbackPage: React.FC = () => {
       try {
         const setupStatus = await getSetupStatus(userIdNum);
 
-        // ── Log in via AuthContext — this persists to zaheen_auth in localStorage ──
-             loginWithUser({
+        setStatus("Opening your account…");
+
+        // ── MDCAT fast-track — check FIRST before any loginWithUser call ──
+        const storedMdcat = localStorage.getItem("mdcat_return");
+        const parsedMdcat = storedMdcat ? JSON.parse(storedMdcat) : null;
+        localStorage.removeItem("mdcat_return");
+
+        if (parsedMdcat?.mdcat === true) {
+          // User came from MDCAT — set as learner, skip ALL LMS setup
+          // regardless of whether profile exists or not
+          loginWithUser({
+            msisdn:           "",
+            userId:           userIdNum,
+            isKid:            false,
+            role:             "learner",
+            selectedClassId:  setupStatus.selected_class_id  ?? null,
+            selectedCourseId: setupStatus.selected_course_id ?? null,
+            displayName:      name.trim() || email.trim(),
+            token,
+          });
+          navigate(parsedMdcat.from ?? "/mdcat", { replace: true });
+          return;
+        }
+        // ── end MDCAT fast-track ──────────────────────────────────────────
+
+        // ── Normal flow: log in then route based on profile completion ──
+        loginWithUser({
           msisdn:           "",
           userId:           userIdNum,
           isKid:            false,
@@ -58,10 +89,6 @@ const SocialCallbackPage: React.FC = () => {
           token,
         });
 
-        setStatus("Opening your account…");
-
-        // ── Route based on profile completion ──
-     // ── Route based on profile completion ──
         if (!setupStatus.is_profile_complete) {
           navigate("/profile?setup=true", { replace: true });
         } else if (!setupStatus.has_role) {

@@ -153,7 +153,16 @@ const setSelectedGrade = (classId: number | null, courseId?: number | null) => {
       msisdn, userId, isKid, role,
       displayName, token,
       selectedClassId, selectedCourseId,
-      isLoggedIn: !!userId,
+      // Check both React state AND localStorage so isLoggedIn is never
+      // false during the one-render gap after loginWithUser + navigate
+      isLoggedIn: !!userId || (() => {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const stored = JSON.parse(raw);
+          return !!stored.userId;
+        } catch { return false; }
+      })(),
       isLoading,
       loginWithUser, login, logout, setRole, setSelectedGrade,
     }}>

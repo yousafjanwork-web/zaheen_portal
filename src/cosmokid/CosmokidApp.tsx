@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import logo from "../assets/logo/space-logo-zaheen1.png";
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/space-logo-zaheen1.png";
 import { useNavigate } from "react-router-dom";
 import {
   Rocket,

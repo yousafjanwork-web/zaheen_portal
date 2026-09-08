@@ -1,19 +1,19 @@
 import type { Province } from "../types";
 
-import nihari from "../assets/images/food/nihari.png";
-import lassi from "../assets/images/food/lassi.png";
-import samosa from "../assets/images/food/samosa.png";
-import briyani from "../assets/images/food/biryani.png";
-import sai from "../assets/images/food/sai.jpg";
-import chaplikebab from "../assets/images/food/chapli-kebab.png";
-import kabuliPulao from "../assets/images/food/kabuli-pulao.png";
-import saji from "../assets/images/food/sajji.png";
-import kaakBread from "../assets/images/food/kaak.webp";
-import mamtu from "../assets/images/food/mamtu.png";
-import driedApricots from "../assets/images/food/dried-apricots.webp";
-import trout from "../assets/images/food/trout.png";
-import noonChai from "../assets/images/food/noon-chai.png";
-import hilltopBBQ from "../assets/images/food/hilltop-bbq.png";
+const nihari       = "https://cdn.zaheen.com.pk/zaheen-web-img/nihari.png";
+const lassi        = "https://cdn.zaheen.com.pk/zaheen-web-img/lassi.png";
+const samosa       = "https://cdn.zaheen.com.pk/zaheen-web-img/samosa.png";
+const briyani      = "https://cdn.zaheen.com.pk/zaheen-web-img/biryani.png";
+const sai          = "https://cdn.zaheen.com.pk/zaheen-web-img/sai.jpg";
+const chaplikebab  = "https://cdn.zaheen.com.pk/zaheen-web-img/chapli-kebab.png";
+const kabuliPulao  = "https://cdn.zaheen.com.pk/zaheen-web-img/kabuli-pulao.png";
+const saji         = "https://cdn.zaheen.com.pk/zaheen-web-img/sajji.png";
+const kaakBread    = "https://cdn.zaheen.com.pk/zaheen-web-img/kaak.webp";
+const mamtu        = "https://cdn.zaheen.com.pk/zaheen-web-img/mamtu.png";
+const driedApricots = "https://cdn.zaheen.com.pk/zaheen-web-img/dried-apricots.webp";
+const trout        = "https://cdn.zaheen.com.pk/zaheen-web-img/trout.png";
+const noonChai     = "https://cdn.zaheen.com.pk/zaheen-web-img/noon-chai.png";
+const hilltopBBQ   = "https://cdn.zaheen.com.pk/zaheen-web-img/hilltop-bbq.png";
 
 export const provinces: Province[] = [
   {

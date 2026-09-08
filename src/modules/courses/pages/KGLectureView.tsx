@@ -8,9 +8,9 @@ import React, {
 import { classIdFromSlug } from "../../../config/classSlugs";
 import { findSubjectBySlug } from "../../../config/subjectSlug";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import owl from "../../../assets/images/owl.png";
-import orange from "../../../assets/images/orange.png";
-import one from "../../../assets/images/123.png";
+const owl = "https://cdn.zaheen.com.pk/zaheen-web-img/owl.png";
+const orange = "https://cdn.zaheen.com.pk/zaheen-web-img/orange.png"
+const one = "https://cdn.zaheen.com.pk/zaheen-web-img/123.png";
 import {
   BookOpen,
   CheckCircle2,
@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import { fetchVideoDetail } from "@/modules/shared/services/classService";
-import fallbackThumbnail from "../../../assets/images/physics.png";
+const fallbackThumbnail = "https://cdn.zaheen.com.pk/zaheen-web-img/physics.png";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
 
@@ -998,16 +998,14 @@ const ChapterSection = ({
 
       <div className="flex items-center gap-3">
         {/* Prev-page arrow — only shown once there's a previous page */}
-        {totalPages > 1 && (
-          <button
-            onClick={goPrevPage}
-            disabled={page === 0}
-            aria-label="Previous videos"
-            className="hidden sm:flex w-10 h-10 shrink-0 rounded-full border border-slate-200 bg-white items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
-          >
-            {isRtl ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          </button>
-        )}
+        <button
+          onClick={goPrevPage}
+          disabled={page === 0}
+          aria-label="Previous videos"
+          className={`hidden sm:flex w-10 h-10 shrink-0 rounded-full border border-slate-200 bg-white items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm ${totalPages > 1 ? "" : "invisible pointer-events-none"}`}
+        >
+          {isRtl ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
 
         <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait" initial={false}>
@@ -1043,16 +1041,14 @@ const ChapterSection = ({
         </div>
 
         {/* Next-page arrow — advances 4 more videos within this chapter */}
-        {totalPages > 1 && (
-          <button
-            onClick={goNextPage}
-            disabled={page === totalPages - 1}
-            aria-label="Next videos"
-            className="hidden sm:flex w-10 h-10 shrink-0 rounded-full border border-slate-200 bg-white items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
-          >
-            {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-          </button>
-        )}
+        <button
+          onClick={goNextPage}
+          disabled={page === totalPages - 1}
+          aria-label="Next videos"
+          className={`hidden sm:flex w-10 h-10 shrink-0 rounded-full border border-slate-200 bg-white items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm ${totalPages > 1 ? "" : "invisible pointer-events-none"}`}
+        >
+          {isRtl ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+        </button>
       </div>
 
       {/* Mobile pagination controls (arrows hidden above sm, shown here) */}

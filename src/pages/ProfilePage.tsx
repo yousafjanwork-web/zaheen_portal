@@ -85,23 +85,46 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
   /* ── Fetch profile on mount ── */
   /* ── Fetch profile on mount ── */
   useEffect(() => {
-    if (!msisdn && !authUserId) return;
+    const hasValidMsisdn = msisdn && msisdn.trim().length > 0;
+    // authUserId from context may not be set yet due to React state batching
+    // fall back to localStorage which is written synchronously by loginWithUser
+    const localStorageUserId = (() => {
+      try {
+        const raw = localStorage.getItem("zaheen_auth");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return parsed.userId && parsed.userId > 0 ? parsed.userId : null;
+        }
+        return null;
+      } catch { return null; }
+    })();
+    const resolvedUserId = (authUserId && authUserId > 0) ? authUserId : localStorageUserId;
+    const hasValidUserId = resolvedUserId && resolvedUserId > 0;
+    if (!hasValidMsisdn && !hasValidUserId) return;
     setLoading(true);
     setError("");
-const fetchPromise = (msisdn && msisdn.trim().length > 0)
-  ? getUserProfile(msisdn)
-  : getDashboard(authUserId!)
-      .then((data) => data?.user ?? null);
+    const fetchPromise = hasValidMsisdn
+      ? getUserProfile(msisdn)
+      : getDashboard(resolvedUserId!)
+          .then((data) => data?.user ?? null);
     fetchPromise
       .then((profile) => {
         if (profile) {
           populateForm(profile);
         } else {
+          // New Google user — no profile yet, show empty form
           setHasProfile(false);
-          setUserId(null);
+          // Set userId from resolvedUserId so Save button works
+          if (resolvedUserId) setUserId(resolvedUserId);
         }
       })
-      .catch(() => setError("Could not load your profile. Please try again."))
+      .catch(() => {
+        // 404 = new Google user with no LMS profile yet — show empty form
+        setHasProfile(false);
+        setError(""); // clear error, empty form is correct for new users
+        // Set userId so Save button works even when profile doesn't exist yet
+        if (resolvedUserId) setUserId(resolvedUserId);
+      })
       .finally(() => setLoading(false));
   }, [msisdn, authUserId]);
 

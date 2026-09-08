@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import mascot from "@/assets/images/mascot.png";
+const mascot = "https://cdn.zaheen.com.pk/zaheen-web-img/mascot.png";
 
 const GameLayout = ({ children, title = "Game", type }: any) => {
   const navigate = useNavigate();

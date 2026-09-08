@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Star, Users, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
-import sliderImg1 from "../../../assets/images/web-development-s.png";
-import sliderImg2 from "../../../assets/images/auto-cad-s.png";
-import sliderImg3 from "../../../assets/images/excel-s.png";
-import sliderImg4 from "../../../assets/images/video-editing-s.png";
-import sliderImg5 from "../../../assets/images/makeup-s.png";
-import sliderImg6 from "../../../assets/images/trading-professional-skill-banner-ss.jpeg";
+const sliderImg1 = "https://cdn.zaheen.com.pk/zaheen-web-img/web-development-s.png";
+const sliderImg2 = "https://cdn.zaheen.com.pk/zaheen-web-img/auto-cad-s.png";
+const sliderImg3 = "https://cdn.zaheen.com.pk/zaheen-web-img/excel-s.png";
+const sliderImg4 = "https://cdn.zaheen.com.pk/zaheen-web-img/video-editing-s.png";
+const sliderImg5 = "https://cdn.zaheen.com.pk/zaheen-web-img/makeup-s.png";
+const sliderImg6 = "https://cdn.zaheen.com.pk/zaheen-web-img/trading-professional-skill-banner-ss.jpeg";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, Mousewheel, Pagination } from "swiper/modules";

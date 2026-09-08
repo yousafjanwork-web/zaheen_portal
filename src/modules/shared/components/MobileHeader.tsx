@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Menu, X, ChevronDown, User, LogOut, LayoutDashboard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import logo from "@/assets/images/ZaheenLogo.png";
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useUserDisplayName, clearDisplayNameCache } from "@/modules/shared/hooks/useUserDisplayName";

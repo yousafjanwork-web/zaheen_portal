@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import mascot from "@/assets/images/mascot.png";
+const mascot = "https://cdn.zaheen.com.pk/zaheen-web-img/mascot.png";
 
 // ─── KG Game card images ───────────────────────────────────────
 import alphabetMatchImg from "@/assets/images/games/kg/cards/alphabet-match.png";

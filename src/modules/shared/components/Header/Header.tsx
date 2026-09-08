@@ -3,7 +3,7 @@ import { ChevronDown, Menu, X, User, LogOut, LayoutDashboard } from "lucide-reac
 import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 
 import { Link, useNavigate } from "react-router-dom";
-import logo from "@/assets/images/ZaheenLogo.png";
+const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 
 import CoursesMenu from "@/modules/shared/components/Header/CoursesMenu";
 import LearningMenu from "@/modules/shared/components/Header/LearningMenu";

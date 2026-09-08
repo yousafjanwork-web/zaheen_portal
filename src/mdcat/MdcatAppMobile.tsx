@@ -20,7 +20,8 @@ import DashBoard1 from "./components/Dashboard";
 import QuizSession from "./components/QuizSession";
 import AIQuizGenerator from "./components/AIQuizGenerator";
 import PastPapers from "./components/PastPapers";
-import ZaheenLogo from "./components/ZaheenLogo";
+import SolvedPaper from "./components/SolvedPapers";
+const ZaheenLogo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 // import FocusTimer from "./components/FocusTimer";
 import StudyNotes from "./components/StudyNotes";
 import FAQ from "./components/Faq";
@@ -32,6 +33,9 @@ import LoadingFrame from "./components/LoadingFrame";
 import AiTutorPage from "./components/AiTutorPage";
 import SEO from "./components/SEO";
 import { useAppNavigate } from "./hooks/useAppNavigate";
+import RepeatedQuestions from "./components/RepeatedQuestions";
+import { MdcatAuthOverlayProvider, useMdcatAuthOverlay } from "./context/MdcatAuthOverlayContext";
+import MdcatAuthOverlay from "./components/MdcatAuthOverlay";
 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
@@ -108,7 +112,7 @@ function AIQuizRoute({ quiz, onAttemptFinished }: {
     let cancelled = false;
     setFetchingQuiz(true);
 
-    fetch(mdcatApi(`/api/mdcat-mobile/quizzes/${quizId}`))
+    fetch(mdcatApi(`/api/mdcat/quizzes/${quizId}`))
       .then((res) => res.json())
       .then((json) => {
         if (cancelled) return;
@@ -187,9 +191,10 @@ async function addNewAIQuestions(questions:Question[])
 
 
 }
-export default function MdcatAppMobile() {
+function MdcatAppMobileInner() {
+  const { isOpen } = useMdcatAuthOverlay();
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "ai-generator" | "past-papers" | "notes" | "faq"
+    "dashboard" | "ai-generator" | "past-papers" | "notes" | "repeated-questions"
   >("dashboard");
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
@@ -214,6 +219,46 @@ export default function MdcatAppMobile() {
 
   // UI state
   const [loading, setLoading] = useState(true);
+  const [allRepeatedQuestions, setAllRepeatedQuestions] = useState<any[]>([]);
+  const [repeatedVisibleCount, setRepeatedVisibleCount] = useState(20);
+  const [repeatedLoading, setRepeatedLoading] = useState(true);
+  const REPEATED_PAGE_SIZE = 20;
+
+  const repeatedQuestions = allRepeatedQuestions.slice(0, repeatedVisibleCount);
+  const repeatedHasMore = repeatedVisibleCount < allRepeatedQuestions.length;
+
+  const fetchRepeatedQuestions = async () => {
+    try {
+      const res = await fetch(mdcatApi("/api/mdcat/repeated-questions"));
+      if (res.ok) {
+        const json = await res.json();
+        const raw = Array.isArray(json)
+          ? json
+          : Array.isArray(json.data)
+          ? json.data
+          : [];
+        setAllRepeatedQuestions(raw);
+        setRepeatedVisibleCount(REPEATED_PAGE_SIZE);
+      } else {
+        setAllRepeatedQuestions([]);
+      }
+    } catch (e) {
+      console.error("[App] Failed to fetch repeated questions:", e);
+      setAllRepeatedQuestions([]);
+    } finally {
+      setRepeatedLoading(false);
+    }
+  };
+
+  const loadMoreRepeated = () => {
+    setRepeatedVisibleCount((prev) =>
+      Math.min(prev + REPEATED_PAGE_SIZE, allRepeatedQuestions.length)
+    );
+  };
+
+  useEffect(() => {
+    fetchRepeatedQuestions();
+  }, []);
 
   // Load all foundational data on startup
   const fetchAllData = async () => {
@@ -331,7 +376,7 @@ export default function MdcatAppMobile() {
   // Quiz session needs the id from the URL, not from local state
 
   return (
-    <div className="min-h-screen  bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200">
+    <div className={`min-h-screen  bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200 transition-[filter] duration-200 ${isOpen ? "blur-md pointer-events-none select-none" : ""}`}>
      
 
 <div className="grid flex-1 grid-rows-[minmax(0,1fr)] overflow-x-hidden min-h-0">
@@ -398,18 +443,27 @@ export default function MdcatAppMobile() {
           </PageTransition>
         }
       />
-      <Route
-        path="/faq"
+     
+           <Route
+        path="/repeated-questions"
         element={
-          <PageTransition>
-            <SEO
-              title="FAQs"
-              description="Frequently asked questions about Zaheen MDCAT Prep — quizzes, study notes, past papers, and AI tools."
-              path="/faq"
+          repeatedLoading ? (
+            <LoadingFrame />
+          ) : (
+            <RepeatedQuestions
+              data={repeatedQuestions}
+              loading={false}
+              hasMore={repeatedHasMore}
+              onLoadMore={loadMoreRepeated}
             />
-            <FAQ onBack={() => navigate("/mdcat")} />
-          </PageTransition>
+          )
         }
+      />
+      <Route
+      path="/guess-paper"
+      element={
+        <SolvedPaper/>
+      }
       />
       <Route
         path="/quiz/:quizId"
@@ -433,21 +487,26 @@ export default function MdcatAppMobile() {
         path="/"
         element={
           <PageTransition>
-            <SEO
-              title="Dashboard"
-              description="Your MDCAT prep dashboard — track performance, countdown to your test date, and jump into practice quizzes."
-              path="/"
-            />
-            {loading ? (
-              <LoadingFrame />
-            ) : (
-              <Dashboard
-                testDate={examDate}
-                setActiveTab={setActiveTab}
-                performanceStats={performanceStats}
-                getSubjectColorBadge={getSubjectColorBadge}
+            <div className="overflow-y-auto h-full">
+              <SEO
+                title="Dashboard"
+                description="Your MDCAT prep dashboard — track performance, countdown to your test date, and jump into practice quizzes."
+                path="/"
               />
-            )}
+              {loading ? (
+                <LoadingFrame />
+              ) : (
+                <>
+                  <Dashboard
+                    testDate={examDate}
+                    setActiveTab={setActiveTab}
+                    performanceStats={performanceStats}
+                    getSubjectColorBadge={getSubjectColorBadge}
+                  />
+                  <FAQ onBack={() => navigate("/mdcat-mobile")} />
+                </>
+              )}
+            </div>
           </PageTransition>
         }
       />
@@ -496,5 +555,14 @@ export default function MdcatAppMobile() {
 </div>
 
   </div>
+  );
+}
+
+export default function MdcatAppMobile() {
+  return (
+    <MdcatAuthOverlayProvider>
+      <MdcatAppMobileInner />
+      <MdcatAuthOverlay />
+    </MdcatAuthOverlayProvider>
   );
 }

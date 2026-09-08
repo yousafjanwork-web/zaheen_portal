@@ -4,15 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { t } from "@/modules/shared/i18n";
 import { useNavigate } from "react-router-dom";
 
-import tradeBanner from "@/assets/images/tradbannew.png";
-import kgBanner from "@/assets/images/kgbanr.png";
-import onetofiveBanner from "@/assets/images/grade1-5banr.png";
-import webBanner from "@/assets/images/webdevbaners.png";
-import kgbanner2 from "@/assets/images/kgbannr2.png";
-import bannerontofive2 from "@/assets/images/grade1-5newban2.png";
-import webBanner2 from "@/assets/images/webbanner2.png";
-import mdcat from "@/assets/images/mdcatbanrr.png";
-
 /* ── Shared spark positions (mirrors LoginPage) ── */
 const sparks = [
   { top: "12%", left: "8%",  delay: "0s",   dur: "2.6s" },
@@ -24,14 +15,14 @@ const sparks = [
 ];
 
 const slides = [
-  { id: 1, image: kgBanner },
-  { id: 2, image: onetofiveBanner },
-  { id: 3, image: tradeBanner },
-  { id: 4, image: webBanner },
-  { id: 5, image: kgbanner2 },
-  { id: 6, image: bannerontofive2 },
-  { id: 7, image: webBanner2 },
-  { id: 8, image: mdcat },
+  { id: 1, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbanr.png" },
+  { id: 2, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5banr.png" },
+  { id: 3, image: "https://cdn.zaheen.com.pk/zaheen-web-img/tradbannew.png" },
+  { id: 4, image: "https://cdn.zaheen.com.pk/zaheen-web-img/webdevbaners.png" },
+  { id: 5, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbannr2.png" },
+  { id: 6, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5newban2.png" },
+  { id: 7, image: "https://cdn.zaheen.com.pk/zaheen-web-img/webbanner2.png" },
+  { id: 8, image: "https://cdn.zaheen.com.pk/zaheen-web-img/mdcatbanrr.png" },
 ];
 
 const HeroSlider = () => {
@@ -103,8 +94,6 @@ const HeroSlider = () => {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-              
-
                 <h1 className="text-4xl md:text-6xl font-extrabold mb-4 text-white leading-tight">
                   {t(`${slideKey}.title`)}{" "}
                   <br />

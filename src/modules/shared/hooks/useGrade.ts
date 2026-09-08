@@ -22,19 +22,19 @@
  */
 import { useEffect, useState } from "react";
 import { fetchGrades, fetchSubjectsByClass } from "@/modules/shared/services/gradeService";
-import kg from "../../../assets/images/kg.png"
-import grade1 from "../../../assets/images/grade-1.png"
-import grade2 from "../../../assets/images/grade-2.png"
-import grade3 from "../../../assets/images/grade-3.png"
-import grade4 from "../../../assets/images/grade-4.png"
-import grade5 from "../../../assets/images/grade-5.png"
-import grade6 from "../../../assets/images/grade-6.png"
-import grade7 from "../../../assets/images/grade-7.png"
-import grade8 from "../../../assets/images/grade-8.png"
-import grade9 from "../../../assets/images/grade-9.png"
-import grade10 from "../../../assets/images/grade-10.png"
-import grade11 from "../../../assets/images/grade-11.png"
-import grade12 from "../../../assets/images/grade-12.png"
+const kg     = "https://cdn.zaheen.com.pk/zaheen-web-img/kg.png";
+const grade1 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-1.png";
+const grade2 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-2.png";
+const grade3 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-3.png";
+const grade4 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-4.png";
+const grade5 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-5.png";
+const grade6 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-6.png";
+const grade7 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-7.png";
+const grade8 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-8.png";
+const grade9 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-9.png";
+const grade10 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-10.png";
+const grade11 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-11.png";
+const grade12 = "https://cdn.zaheen.com.pk/zaheen-web-img/grade-12.png";
 
 
 const gradeImages: Record<number, string> = {

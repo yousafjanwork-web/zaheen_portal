@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
-import physicsBanner from "../../../assets/images/physics.png";
+const physicsBanner = "https://cdn.zaheen.com.pk/zaheen-web-img/physics.png";
 
 import { classIdFromSlug } from "../../../config/classSlugs";
 import { findSubjectBySlug } from "../../../config/subjectSlug";

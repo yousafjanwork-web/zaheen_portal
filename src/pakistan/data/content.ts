@@ -10,16 +10,16 @@ import type {
 } from "../types";
 
 // Hero images
-import jinnah from "../assets/images/heros/jinnah.png";
-import iqbal from "../assets/images/heros/iqbal.png";
-import fatima from "../assets/images/heros/fatima.png";
-import liaquat from "../assets/images/heros/liaquat.png";
-import edhi from "../assets/images/heros/edhi.png";
-import sarwar from "../assets/images/heros/sarwar.png";
-import tufail from "../assets/images/heros/tufail.png";
-import aziz from "../assets/images/heros/aziz.png";
-import rashid from "../assets/images/heros/rashid.png";
-import shabbir from "../assets/images/heros/shabbir.png";
+const jinnah  = "https://cdn.zaheen.com.pk/zaheen-web-img/jinnah.png";
+const iqbal   = "https://cdn.zaheen.com.pk/zaheen-web-img/iqbal.png";
+const fatima  = "https://cdn.zaheen.com.pk/zaheen-web-img/fatima.png";
+const liaquat = "https://cdn.zaheen.com.pk/zaheen-web-img/liaquat.png";
+const edhi    = "https://cdn.zaheen.com.pk/zaheen-web-img/edhi.png";
+const sarwar  = "https://cdn.zaheen.com.pk/zaheen-web-img/sarwar.png";
+const tufail  = "https://cdn.zaheen.com.pk/zaheen-web-img/tufail.png";
+const aziz    = "https://cdn.zaheen.com.pk/zaheen-web-img/aziz.png";
+const rashid  = "https://cdn.zaheen.com.pk/zaheen-web-img/rashid.png";
+const shabbir = "https://cdn.zaheen.com.pk/zaheen-web-img/shabbir.png";
 
 export const heroes: Hero[] = [
   {
@@ -194,14 +194,14 @@ export const heroes: Hero[] = [
 ];
 
 // Symbols images
-import flag from "../assets/images/symbols/flag.png"
-import markhorSymbol from "../assets/images/symbols/markhor.png"
-import chukar from "../assets/images/symbols/chukar.png"
-import jasmine from "../assets/images/symbols/jasmine.png"
-import deodar from "../assets/images/symbols/deodar.png"
-import anthem from "../assets/images/symbols/anthem.png"
-import crescentStar from "../assets/images/symbols/crescent-star.png"
-import minar from "../assets/images/symbols/minar.png"
+const flag         = "https://cdn.zaheen.com.pk/zaheen-web-img/flag.png";
+const markhorSymbol = "https://cdn.zaheen.com.pk/zaheen-web-img/markhor.png";
+const chukar       = "https://cdn.zaheen.com.pk/zaheen-web-img/chukar.png";
+const jasmine      = "https://cdn.zaheen.com.pk/zaheen-web-img/jasmine.png";
+const deodar       = "https://cdn.zaheen.com.pk/zaheen-web-img/deodar.png";
+const anthem       = "https://cdn.zaheen.com.pk/zaheen-web-img/anthem.png";
+const crescentStar = "https://cdn.zaheen.com.pk/zaheen-web-img/crescent-star.png";
+const minar        = "https://cdn.zaheen.com.pk/zaheen-web-img/minar.png";
 
 export const nationalSymbols: SymbolItem[] = [
   {
@@ -281,18 +281,18 @@ export const nationalSymbols: SymbolItem[] = [
 ];
 
 // Animal images
-import markhor from "../assets/images/animals/markhor2.png";
-import leopard from "../assets/images/animals/snow-leopard2.png";
-import indusDolphin from "../assets/images/animals/indus-dolphin.png";
-import camel from "../assets/images/animals/camel2.png";
-import peacock from "../assets/images/animals/peacock2.png";
-import turtle from "../assets/images/animals/turtle2.png";
-import yak from "../assets/images/animals/yak2.png";
-import monkey from "../assets/images/animals/monkey2.png";
-import eagle from "../assets/images/animals/eagle2.png";
-import fishPalla from "../assets/images/animals/fish-palla2.png";
-import butterfly from "../assets/images/animals/butterfly.png";
-import sparrow from "../assets/images/animals/sparrow.png";
+const markhor      = "https://cdn.zaheen.com.pk/zaheen-web-img/markhor2.png";
+const leopard      = "https://cdn.zaheen.com.pk/zaheen-web-img/snow-leopard2.png";
+const indusDolphin = "https://cdn.zaheen.com.pk/zaheen-web-img/indus-dolphin.png";
+const camel        = "https://cdn.zaheen.com.pk/zaheen-web-img/camel2.png";
+const peacock      = "https://cdn.zaheen.com.pk/zaheen-web-img/peacock2.png";
+const turtle       = "https://cdn.zaheen.com.pk/zaheen-web-img/turtle2.png";
+const yak          = "https://cdn.zaheen.com.pk/zaheen-web-img/yak2.png";
+const monkey       = "https://cdn.zaheen.com.pk/zaheen-web-img/monkey2.png";
+const eagle        = "https://cdn.zaheen.com.pk/zaheen-web-img/eagle2.png";
+const fishPalla    = "https://cdn.zaheen.com.pk/zaheen-web-img/fish-palla2.png";
+const butterfly    = "https://cdn.zaheen.com.pk/zaheen-web-img/butterfly.png";
+const sparrow      = "https://cdn.zaheen.com.pk/zaheen-web-img/sparrow.png";
 
 export const allAnimals: Animal[] = [
   {

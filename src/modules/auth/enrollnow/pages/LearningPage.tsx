@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { ShieldCheck, Star, Zap, Heart } from 'lucide-react';
-import image from '@/assets/images/learning.png'; // 👈 Add your image here
+const image = "https://cdn.zaheen.com.pk/zaheen-web-img/learning.png";
 import { useEffect } from 'react';
 
 export function LearningPage() {

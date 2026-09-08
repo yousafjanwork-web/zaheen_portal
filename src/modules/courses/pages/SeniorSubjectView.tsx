@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import physicsSection from "../../../assets/images/physics.png"
+const physicsSection = "https://cdn.zaheen.com.pk/zaheen-web-img/physics.png";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   BookOpen,

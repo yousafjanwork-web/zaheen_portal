@@ -15,19 +15,21 @@ interface SEOProps {
   path: string; // e.g. "/past-papers" or "/study-notes/biology/bio-ch1" — relative to /mdcat
   noIndex?: boolean; // for pages you don't want search engines to index (e.g. an active quiz session)
   structuredData?: object; // optional JSON-LD schema object (e.g. FAQPage)
+  keywords?: string[]; // optional target keywords for this page
 }
 
-export default function SEO({ title, description, path, noIndex = false, structuredData }: SEOProps) {
+export default function SEO({ title, description, path, noIndex = false, structuredData, keywords }: SEOProps) {
   const fullTitle = `${title} | ${SITE_NAME}`;
-  const canonicalUrl = `${BASE_URL}${path}`;
-
+const canonicalUrl = `${BASE_URL}${path}`;
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {keywords && keywords.length > 0 && (
+        <meta name="keywords" content={keywords.join(", ")} />
+      )}
       <link rel="canonical" href={canonicalUrl} />
       {noIndex && <meta name="robots" content="noindex, follow" />}
-
       {/* Open Graph (WhatsApp, Facebook, LinkedIn previews) */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
@@ -35,13 +37,11 @@ export default function SEO({ title, description, path, noIndex = false, structu
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:image" content={DEFAULT_IMAGE} />
-
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={DEFAULT_IMAGE} />
-
       {/* Structured data (JSON-LD) — e.g. FAQPage schema */}
       {structuredData && (
         <script type="application/ld+json">

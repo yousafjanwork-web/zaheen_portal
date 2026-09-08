@@ -184,10 +184,21 @@ export const getCourses = async (): Promise<Course[]> => {
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
 /** GET /lms/dashboard/:id */
-export const getDashboard = async (userId: number): Promise<DashboardData> => {
-  const res = await axios.get(`${BASE}/lms/dashboard/${userId}`);
-  if (res.data?.success) return res.data.data as DashboardData;
-  throw new Error("Failed to fetch dashboard");
+export const getDashboard = async (userId: number): Promise<DashboardData | null> => {
+  try {
+    const res = await axios.get(`${BASE}/lms/dashboard/${userId}`);
+    if (res.data?.success) return res.data.data as DashboardData;
+    return null;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const status = err.response?.status;
+      if (status === 404 || status === 400) {
+        // New user — no LMS record yet, return null so ProfilePage shows empty form
+        return null;
+      }
+    }
+    throw err;
+  }
 };
 
 // ─── Parent ──────────────────────────────────────────────────────────────────

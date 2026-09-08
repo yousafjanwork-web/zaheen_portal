@@ -13,7 +13,7 @@ import {
   Sigma, Globe, BookMarked, Layers,
 } from "lucide-react";
 
-import labImage from "../../../assets/images/lab.png";
+const labImage = "https://cdn.zaheen.com.pk/zaheen-web-img/lab.png";
 
 /* ── Reactive language hook ── */
 const useLang = () => {

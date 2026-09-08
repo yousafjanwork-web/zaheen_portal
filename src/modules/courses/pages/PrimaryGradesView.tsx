@@ -4,8 +4,8 @@ import { getLanguage } from "@/modules/shared/i18n";
 import { classSlugFromId } from "@/config/classSlugs";
 import { useGrades } from "@/modules/shared/hooks/useGrade";
 
-import CourseImage1 from "../../../assets/images/vocab1.png";
-import CourseImage2 from "../../../assets/images/solar2.png";
+const CourseImage1 = "https://cdn.zaheen.com.pk/zaheen-web-img/vocab1.png";
+const CourseImage2 = "https://cdn.zaheen.com.pk/zaheen-web-img/solar2.png";
 
 /* ── Reactive language hook ── */
 const useLang = () => {

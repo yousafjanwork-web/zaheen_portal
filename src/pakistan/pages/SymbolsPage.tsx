@@ -7,7 +7,7 @@ import { Button } from "../components/ui/Button";
 import { NarrationBar } from "../components/layout/NarrationBar";
 import { useGameStore } from "../store/useGameStore";
 import { sfx } from "../utils/audio";
-import flag from "../assets/images/symbols/flag.png";
+const flag = "https://cdn.zaheen.com.pk/zaheen-web-img/flag.png";
 
 export function SymbolsPage() {
   const [active, setActive] = useState<string | null>(null);

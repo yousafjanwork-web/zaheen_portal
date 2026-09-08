@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { CheckCircle, Lightbulb, ShieldCheck } from 'lucide-react';
-import image from '@/assets/images/landingPageBanner.png';
+const image = "https://cdn.zaheen.com.pk/zaheen-web-img/landingPageBanner.png";
 import '@/styles/landingpage.css';
 import { useEffect } from 'react';
 export function EnrollmentLandingPage() {

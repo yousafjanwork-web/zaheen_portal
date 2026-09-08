@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { classIdFromSlug, classSlugFromId, gradeNumberFromSlug } from "@/config/classSlugs";
 import { slugifySubject } from "../../../config/subjectSlug";
-import student from "../../../assets/images/boy.png";
+const student = "https://cdn.zaheen.com.pk/zaheen-web-img/boy.png";
 import {
   BookOpen, Languages, Sigma, Gamepad2, Bot, Trophy,
   Atom, FlaskConical, Leaf, Landmark, Globe, Cpu,

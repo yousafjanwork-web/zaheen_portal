@@ -14,9 +14,9 @@ import { useClassSubjects, fetchVideoDetail } from "@/modules/shared/hooks/useCl
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";   // ← same hook as KG
 
-import heroEnglish from "../../../assets/images/owls.png";
-import heroDefault  from "../../../assets/images/owls.png";
-import robotImg     from "../../../assets/images/rebort.png";
+const heroEnglish = "https://cdn.zaheen.com.pk/zaheen-web-img/owls.png";
+const heroDefault  = "https://cdn.zaheen.com.pk/zaheen-web-img/owls.png";
+const robotImg  = "https://cdn.zaheen.com.pk/zaheen-web-img/rebort.png";
 
 /* ─────────────────────────────────────────────────────────────
    Language hook
