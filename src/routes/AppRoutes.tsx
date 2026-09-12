@@ -82,9 +82,12 @@ import SetupGradeCoursePage from "../modules/lms/pages/setup/SetupGradeCoursePag
 import SetupAddChildPage    from "../modules/lms/pages/setup/SetupAddChildPage";
 import DashboardPage        from "../modules/lms/pages/dashboard/DashboardPage";
 import SetupGuard           from "../modules/lms/components/SetupGuard";
-// import PackagesPage from "../modules/auth/pages/PackagesPage";
-// import PaymentPage  from "../modules/auth/pages/PaymentPage";
 import SocialCallbackPage from "../modules/auth/pages/SocialCallbackPage";
+import PaymentPage        from "../payment/payment";
+import CardPaymentPage    from "../payment/CardPaymentPage";
+import MwalletRecurring   from "../payment/MwalletRecurring";
+import RecurringSuccess   from "../payment/RecurringSuccess";
+import PaymentWithoutCnic from "../payment/PaymentWithoutCnic";
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -136,13 +139,19 @@ const AppRoutes = () => {
           <Route path="/games/:type/play/:game"      element={<PlayGamePage />} />
           <Route path="/ai"                          element={<Chatbot />} />
 
+          {/* ── Payment ── */}
+          <Route path="/pay-with-jazzcash"                                     element={<PaymentPage />} />
+          <Route path="/pay-with-jazzcash/card"                                element={<CardPaymentPage />} />
+          <Route path="/pay-with-jazzcash/mwallet-recurring"                   element={<MwalletRecurring />} />
+          <Route path="/pay-with-jazzcash/mwallet-recurring/recurring-success" element={<RecurringSuccess />} />
+          <Route path="/pay-with-jazzcash/mwallet-withoutcnic"                 element={<PaymentWithoutCnic />} />
+
           {/* ── Login ── */}
           <Route path="/login" element={<LoginPage />} />
 
           {/* ── Profile (works in both normal and setup mode) ── */}
           <Route path="/profile" element={<ProfilePage />} />
-          {/* <Route path="/packages" element={<PackagesPage />} />
-          <Route path="/payment"  element={<PaymentPage />} /> */}
+        
            <Route path="/social-callback" element={<SocialCallbackPage />} />
 
           {/* ── ✅ Protected: Setup flow ── */}

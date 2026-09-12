@@ -29,15 +29,22 @@ export function MdcatEnrollmentLandingPage() {
     if (pubid) localStorage.setItem('pubid', pubid);
   }, []);
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     const transactionId = localStorage.getItem('transaction_id') || Date.now();
     const afflid = localStorage.getItem('afflid') || '';
     const pubid = localStorage.getItem('pubid') || '';
+    const data = await navigator.userAgentData.getHighEntropyValues([
+      'model',
+      'platform',
+      'platformVersion',
+    ]);
+    const device = encodeURIComponent(JSON.stringify(data));
     window.location.href =
       `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/sub_enrollnow` +
       `&transaction_id=${transactionId}` +
       `&affid=${afflid}` +
       `&pubid=${pubid}` +
+      `&device=${device}` +
       `&page_name=enrollnow&service_id=205`;
   };
 

@@ -15,10 +15,11 @@ const sparks = [
 ];
 
 const slides = [
-  { key: "slide1", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner1.jpeg", plan: "205" },
-  { key: "slide2", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner2.jpeg", plan: "206" },
-  { key: "slide3", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner3.jpeg", plan: "207" },
-  { key: "slide4", image: "https://cdn.zaheen.com.pk/zaheen-web-img/MDCAT.png", plan: "208" },
+   { key: "slide1", image: "https://cdn.zaheen.com.pk/zaheen-web-img/MDCAT.png", plan: "208" },
+  { key: "slide2", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner1.jpeg", plan: "205" },
+  { key: "slide3", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner2.jpeg", plan: "206" },
+  { key: "slide4", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner3.jpeg", plan: "207" },
+ 
 ];
 
 const HeroMobile = () => {
@@ -89,9 +90,7 @@ const HeroMobile = () => {
               backdropFilter: "blur(12px)",
             }}
           >
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-400 mb-2">
-              Zaheen Learning
-            </p>
+           
 
             <h2 className="text-2xl font-bold text-white mb-2">
               {t(`${slides[current].key}.title`)}{" "}

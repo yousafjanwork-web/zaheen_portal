@@ -283,7 +283,7 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
               {/* Fields */}
               <div className="space-y-4 mb-6">
                 {[
-                  { field: "name",     label: "Full Name",     placeholder: "e.g. Ali Hassan",               type: "text",  icon: "👤", required: true  },
+                  { field: "name",     label: "Full Name",     placeholder: "Your Name",               type: "text",  icon: "👤", required: true  },
                   { field: "username", label: "Username",      placeholder: "Choose a username (for login)",  type: "text",  icon: "🏷️", required: false },
                   { field: "email",    label: "Gmail / Email", placeholder: "you@gmail.com",                 type: "email", icon: "✉️", required: true  },
                 ].map(({ field, label, placeholder, type, icon, required }) => (

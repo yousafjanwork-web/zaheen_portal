@@ -166,12 +166,16 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                     <Link to="/ai" onClick={() => setIntelligenceOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
                       {t("menu.ai_tutor")}
                     </Link>
-                    <Link to="/mdcat?tab=ai-generator" onClick={() => setIntelligenceOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+                    <Link to="/mdcat" onClick={() => setIntelligenceOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
                       {t("menu.mdcat_command")}
                     </Link>
                   </div>
                 )}
               </div>
+
+              <Link to="/mdcat" onClick={closeMenus} className="hover:text-white/80">
+                MDCAT Prep
+              </Link>
 
             </nav>
           </div>

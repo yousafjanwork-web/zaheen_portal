@@ -202,6 +202,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
  
 function MdcatAppInner() {
   const { isOpen } = useMdcatAuthOverlay();
+  const { loginWithUser } = useAuth();
+
+  // ── SMS Auto-Login ──────────────────────────────────────────────
+  useEffect(() => {
+    const smsToken = localStorage.getItem("zaheen_sms_token");
+    if (smsToken) {
+      localStorage.removeItem("zaheen_sms_token");
+      try {
+        const payload = JSON.parse(atob(smsToken.split(".")[1]));
+        loginWithUser({
+          msisdn:      payload.msisdn ?? "",
+          userId:      payload.user_id ?? payload.id,
+          isKid:       false,
+          role:        payload.role ?? null,
+          token:       smsToken,
+        });
+      } catch {
+        console.warn("[SMS auto-login] Invalid token — ignored.");
+      }
+    }
+  }, []);
+  // ───────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "ai-generator" | "past-papers" | "notes" | "repeated-questions"
   >("dashboard");

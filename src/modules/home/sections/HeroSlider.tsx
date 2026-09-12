@@ -15,14 +15,15 @@ const sparks = [
 ];
 
 const slides = [
-  { id: 1, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbanr.png" },
-  { id: 2, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5banr.png" },
-  { id: 3, image: "https://cdn.zaheen.com.pk/zaheen-web-img/tradbannew.png" },
-  { id: 4, image: "https://cdn.zaheen.com.pk/zaheen-web-img/webdevbaners.png" },
-  { id: 5, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbannr2.png" },
-  { id: 6, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5newban2.png" },
-  { id: 7, image: "https://cdn.zaheen.com.pk/zaheen-web-img/webbanner2.png" },
-  { id: 8, image: "https://cdn.zaheen.com.pk/zaheen-web-img/mdcatbanrr.png" },
+  { id: 1, image: "https://cdn.zaheen.com.pk/zaheen-web-img/mdcatbanrr.png" },
+  { id: 2, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbanr.png" },
+  { id: 3, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5banr.png" },
+  { id: 4, image: "https://cdn.zaheen.com.pk/zaheen-web-img/tradbannew.png" },
+  { id: 5, image: "https://cdn.zaheen.com.pk/zaheen-web-img/webdevbaners.png" },
+  { id: 6, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbannr2.png" },
+  { id: 7, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5newban2.png" },
+  { id: 8, image: "https://cdn.zaheen.com.pk/zaheen-web-img/webbanner2.png" },
+  
 ];
 
 const HeroSlider = () => {

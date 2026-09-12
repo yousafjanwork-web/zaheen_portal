@@ -70,42 +70,49 @@
   },
   "hero": {
     "slide1": {
+  "title": "MDCAT Preparation",
+  "highlight": "Master the MDCAT Secure Your Medical Seat",
+  "description": "Master the Syllabus. Practice Precision. Achieve Excellence.",
+  "button": "Start Preparing",
+  "link": "/mdcat"
+},
+    "slide2": {
       "title": "Kindergarten",
       "highlight": "Learn with Fun and Lead Tomorrow.",
       "description": "Zaheen turns KG kids' curiosity into lifelong success.",
       "button": "Start the Journey",
-      "link": "/class/1"
+      "link": "/kg"
     },
-    "slide2": {
+    "slide3": {
       "title": "Grade 1 to 5",
       "highlight": "Smart Start for Bright Hearts.",
       "description": "Interactive, engaging, and built to help your child grow beyond the books.",
       "button": "Start Your Growth",
       "link": "/grade-view/1-5"
     },
-    "slide3": {
+    "slide4": {
       "title": "Become A ",
       "highlight": "Professional Trader",
       "description": "Master the Financial Markets, Trade Smart, Earn Consistently.",
       "button": "Start Learning",
       "link": "/skills/305"
     },
-    "slide4": {
+    "slide5": {
       "title": "Web Development Course",
       "highlight": "Code Your Dreams into Reality.",
       "description": "Zaheen helps you grow from a student into a digital architect.",
       "button": "Secure Your Future",
       "link": "/skills/300"
     },
-    "slide5": {
+    "slide6": {
   "title": "Advanced Kindergarten Learning",
   "highlight": "Building Bright Minds with Creativity.",
   "description": "Interactive activities and playful lessons designed for early learners.",
   "button": "Explore More",
-  "link": "/class/1"
+  "link": "/kg"
 },
 
-"slide6": {
+"slide7": {
   "title": "Grade 1 to 5 Excellence",
   "highlight": "Empowering Young Learners Every Day.",
   "description": "A strong educational foundation with engaging and modern learning methods.",
@@ -113,20 +120,14 @@
   "link": "/grade-view/1-5"
 },
 
-"slide7": {
+"slide8": {
   "title": "Modern Web Skills",
   "highlight": "Become the Developer of Tomorrow.",
   "description": "Learn modern technologies and create real-world professional websites.",
   "button": "Join Now",
   "link": "/skills/300"
-},
-"slide8": {
-  "title": "MDCAT Preparation",
-  "highlight": "Master the MDCAT Secure Your Medical Seat",
-  "description": "Master the Syllabus. Practice Precision. Achieve Excellence.",
-  "button": "Start Preparing",
-  "link": "/mdcat"
 }
+
   },
   "browseGrade": {
     "title": "Browse by Grade",
@@ -261,31 +262,34 @@
   "mobileTitle": "Build in-demand skills",
   "mobileSubtitle": "Get access to all courses with one subscription.",
   "subscribe": "Subscribe Now",
-  "slide1": {
-    "title": "Learn from Pakistan's",
-    "highlight": "Best Teachers",
-    "description": "KG to Grade 12 learning with video lectures and quizzes.",
-    "button": "Subscribe Now"
-  },
-  "slide2": {
-    "title": "Master",
-    "highlight": "AI & Digital Skills",
-    "description": "Future-ready skills for students and professionals.",
-    "button": "Subscribe Now"
-  },
-  "slide3": {
-    "title": "Unlimited Learning",
-    "highlight": "Rs 5 / Day",
-    "description": "Access all courses with one subscription.",
-    "button": "Subscribe Now"
-  },
-  "slide4": {
+
+   "slide1": {
     "title": "Crack MDCAT with ",
     "highlight": "Confidence",
     "description": "Expert Faculty • Smart Practice • Proven Results",
     "button": "Subscribe Now"
     
   },
+
+  "slide2": {
+    "title": "Learn from Pakistan's",
+    "highlight": "Best Teachers",
+    "description": "KG to Grade 12 learning with video lectures and quizzes.",
+    "button": "Subscribe Now"
+  },
+  "slide3": {
+    "title": "Master",
+    "highlight": "AI & Digital Skills",
+    "description": "Future-ready skills for students and professionals.",
+    "button": "Subscribe Now"
+  },
+  "slide4": {
+    "title": "Unlimited Learning",
+    "highlight": "Rs 5 / Day",
+    "description": "Access all courses with one subscription.",
+    "button": "Subscribe Now"
+  },
+ 
   "promo": {
   "title": "Explore Learning",
   "cards": [
