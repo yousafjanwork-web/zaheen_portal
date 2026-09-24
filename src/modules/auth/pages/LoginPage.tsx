@@ -7,7 +7,7 @@
  *   3. Route:
  *        is_kid = true            → /dashboard
  *        is_profile_complete = 0  → /profile?setup=true
- *        is_profile_complete = 1  → check has_role
+ *        is_profile_complete = 1  → check has_role 
  *          has_role = false       → /setup/role
  *          has_role = true        → /dashboard
  */
@@ -57,40 +57,12 @@ const Spinner = () => (
 
 // ─── LoginPage ──────────────────────────────────────────────────────────────
 
-interface LoginPageProps {
-  /**
-   * Optional. When provided (e.g. rendered inside MDCAT's login
-   * overlay), this is called instead of navigating away once the
-   * MDCAT fast-track login succeeds. When omitted, behavior is
-   * 100% unchanged — Zaheen's own /login route does not pass this.
-   */
-  onAuthSuccess?: () => void;
-  /**
-   * Optional. When provided, the "Subscribe now" link calls this
-   * instead of navigating to /subscribe (used by MDCAT's overlay to
-   * switch modes in place). When omitted, the link behaves as before.
-   */
-  onNavigateToSubscribe?: () => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onAuthSuccess, onNavigateToSubscribe }) => {
+const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
   const location       = useLocation();
   const { loginWithUser } = useAuth();
 
-  // Save MDCAT return info to sessionStorage as soon as login page loads
-  // Only overwrite if not already set — prevents second visit from clearing first
-  useEffect(() => {
-    const fromState = location.state as { from?: string; mdcat?: boolean } | null;
-    if (fromState?.mdcat === true) {
-      // Always overwrite with the latest MDCAT page they came from
-      localStorage.setItem("mdcat_return", JSON.stringify({
-        from: fromState.from ?? "/mdcat",
-        mdcat: true,
-      }));
-    }
-  }, []);
 
   const [mode,    setMode]    = useState<LoginMode>("CREDENTIALS");
   const [msisdn,  setMsisdn]  = useState("");
@@ -109,12 +81,8 @@ const [loading,       setLoading]       = useState(false);
 
   const handleGoogleLogin = () => {
     setSocialLoading(true);
-    const fromState = location.state as { from?: string; mdcat?: boolean } | null;
-    const mdcatState = fromState?.mdcat === true
-      ? encodeURIComponent(JSON.stringify({ from: fromState.from ?? "/mdcat", mdcat: true }))
-      : "";
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${mdcatState}`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
   };
 
   /* OTP countdown */
@@ -145,42 +113,6 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
       console.log("[routeAfterLogin] userId =", userId, "msisdn =", resolvedMsisdn);
       const status = await getSetupStatus(userId);
       console.log("[routeAfterLogin] setup status =", status);
-
-      // ── MDCAT fast-track ──────────────────────────────────────────────────
-      // location.state carries this on a full-page redirect (Zaheen flow).
-      // When rendered inside MDCAT's overlay there is no navigation, so we
-      // also fall back to the same localStorage flag SubscribePage already uses.
-      const fromState = location.state as { from?: string; mdcat?: boolean } | null;
-      let mdcatFastTrack = fromState?.mdcat === true ? fromState : null;
-      if (!mdcatFastTrack) {
-        try {
-          const stored = localStorage.getItem("mdcat_return");
-          const parsed = stored ? JSON.parse(stored) : null;
-          if (parsed?.mdcat === true) mdcatFastTrack = parsed;
-        } catch {
-          mdcatFastTrack = null;
-        }
-      }
-      if (mdcatFastTrack?.mdcat === true) {
-        loginWithUser({
-          msisdn:           resolvedMsisdn,
-          userId,
-          isKid:            false,
-          role:             "learner",
-          selectedClassId:  status.selected_class_id ?? null,
-          selectedCourseId: status.selected_course_id ?? null,
-          token:            token ?? null,
-        });
-        localStorage.removeItem("mdcat_return");
-        if (onAuthSuccess) {
-          onAuthSuccess();
-        } else {
-          setRoutingStatus("Opening your account…");
-          navigate(mdcatFastTrack.from ?? "/mdcat", { replace: true });
-        }
-        return;
-      }
-      // ── end MDCAT fast-track ──────────────────────────────────────────────
 
          loginWithUser({
         msisdn:           resolvedMsisdn,
@@ -218,7 +150,7 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
   /**
    * OTP login path — msisdn is always available, so getUserProfile is safe.
    */
-  const handlePostLoginOtp = async (resolvedMsisdn: string) => {
+  const handlePostLoginOtp = async (resolvedMsisdn: string, token?: string | null) => {
     setRoutingStatus("Checking your account…");
     try {
       const profile = await getUserProfile(resolvedMsisdn);
@@ -227,7 +159,7 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
         setRoutingStatus("");
         return;
       }
-      await routeAfterLogin(profile, resolvedMsisdn);
+      await routeAfterLogin(profile, resolvedMsisdn, token ?? null);
     } catch (err) {
       console.error("Post-login routing error:", err);
       setError("Login succeeded but we couldn't load your account. Please try again.");
@@ -276,6 +208,8 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
         setLoading(false);
         return;
       }
+       const otpToken = verify.token ?? null;
+      console.log("[OTP verify response]", verify); // ← TEMP: remove after debugging
 
       /* Confirm still subscribed */
       const statusCheck = await loginPin(msisdn);
@@ -287,7 +221,7 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
       }
 
       /* OTP verified — msisdn is available, safe to call getUserProfile */
-      await handlePostLoginOtp(msisdn);
+      await handlePostLoginOtp(msisdn, otpToken);
     } catch {
       setError("Verification failed. Please try again.");
     }
@@ -692,18 +626,9 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
           >
             <p className="text-slate-500 text-xs">
               Don't have an account?{" "}
-              {onNavigateToSubscribe ? (
-                <span
-                  onClick={onNavigateToSubscribe}
-                  className="text-teal-400 hover:underline cursor-pointer"
-                >
-                  Subscribe now
-                </span>
-              ) : (
               <Link to="/subscribe" className="text-teal-400 hover:underline">
                 Subscribe now
               </Link>
-              )}
             </p>
           </div>
 

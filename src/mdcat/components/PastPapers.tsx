@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Quiz } from "../types";
 import { useAppNavigate } from "../hooks/useAppNavigate";
-import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
+
  
 interface PastPapersProps {
   quizzes: Quiz[];
@@ -35,7 +35,6 @@ export default function PastPapers({ quizzes, onSelectQuiz }: PastPapersProps) {
  const { navigate } = useAppNavigate();
  const loginNavigate = useNavigate();
   const location = useLocation();
-  const { openOverlay } = useMdcatAuthOverlay();
   const [selectedYear, setSelectedYear] = useState<string>("All");
   const [selectedRegion, setSelectedRegion] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -330,7 +329,8 @@ const filteredRegions = Array.from(
                                             <button
                           onClick={() => {
                             if (!isLoggedIn) {
-                              openOverlay("login");
+                              localStorage.setItem("mdcat_return", JSON.stringify({ from: window.location.pathname, mdcat: true }));
+                              window.location.href = "/mdcat-login";
                               return;
                             }
                             onSelectQuiz(paper.id);
@@ -410,7 +410,8 @@ const filteredRegions = Array.from(
              <button
                 onClick={() => {
                   if (!isLoggedIn) {
-                   openOverlay("login");
+                   localStorage.setItem("mdcat_return", JSON.stringify({ from: window.location.pathname, mdcat: true }));
+                   window.location.href = "/mdcat-login";
                     return;
                   }
                   onSelectQuiz(1800);

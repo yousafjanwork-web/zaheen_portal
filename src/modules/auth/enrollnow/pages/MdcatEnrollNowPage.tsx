@@ -173,6 +173,7 @@ export function MdcatEnrollmentLandingPage() {
 
         /* PRICE BADGE */
         .mdcat-price-row {
+        flex-direction: column;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -367,10 +368,17 @@ export function MdcatEnrollmentLandingPage() {
           <button className="mdcat-btn" onClick={handleEnroll}>
             Join Now
           </button>
-          <div className="mdcat-price-row">
-            <ShieldCheck size={16} color="#2e7d32" />
-            <span>Only For Rs. 5+Tax / Week</span>
-          </div>
+       <div className="mdcat-price-row">
+  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <span>🎁</span>
+    <span>Get one Day Free Trial</span>
+  </div>
+  
+  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <ShieldCheck size={16} color="#2e7d32" />
+    <span>Only For Rs. 5+Tax / Day</span>
+  </div>
+</div>
         </motion.div>
 
         {/* FEATURES GRID */}
@@ -399,7 +407,7 @@ export function MdcatEnrollmentLandingPage() {
         {/* TERMS & CONDITIONS */}
         <footer className="mdcat-footer">
           <section className="mdcat-tnc">
-            <div className="mdcat-tnc-price">Only For Rs. 5+Tax / Week</div>
+          
             <h2 className="mdcat-tnc-title">Terms and Conditions</h2>
             <ul className="mdcat-tnc-list">
               {tncItems.map((item, i) => (

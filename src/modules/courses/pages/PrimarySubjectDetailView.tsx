@@ -127,6 +127,12 @@ const { classInfo, subjects, chapters, chapterVideos, loading } =
 
   const theme     = getSubjectTheme(subject?.name || "");
   const heroTitle = isUrdu ? theme.heroTitle.ur : theme.heroTitle.en;
+
+  useEffect(() => {
+    if (subjectName) {
+      document.title = `Zaheen | ${subjectName}`;
+    }
+  }, [subjectName]);
 const tagline = isUrdu ? subject?.urdu_desc || "" : subject?.desc || "";
 
 const subjectChapters: Chapter[] = useMemo(() =>

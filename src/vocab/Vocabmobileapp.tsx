@@ -1,9 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LessonsProvider } from "./context/LessonsContext";
-// ─── UNCOMMENT when handing to frontend developer (Zaheen's shared auth) ─────
- import { useAuth as useZaheenAuth } from "@/modules/shared/context/AuthContext";
-// ─────────────────────────────────────────────────────────────────────────────
+import { useAuth as useZaheenAuth } from "@/modules/shared/context/AuthContext";
+import { useMobileAutoLogin } from "@/modules/shared/hooks/useMobileAutoLogin";
 import MobileLayout from "./components/MobileLayout";
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
@@ -64,16 +63,24 @@ function VocabMobileRoutes() {
 }
 
 export default function VocabMobileApp() {
-  // ─── LOCAL DEV: no Zaheen auth available, run as guest ───────────────────
-  // const token: string | null = null;
+  const { ready } = useMobileAutoLogin();
+  const { token, isLoggedIn, displayName } = useZaheenAuth() as {
+    token?: string | null;
+    isLoggedIn: boolean;
+    displayName?: string | null;
+  };
 
-  // ─── UNCOMMENT these two lines when handing to frontend developer ─────────
-   const { token } = useZaheenAuth() as { token?: string | null };
-  // ─────────────────────────────────────────────────────────────────────────
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <LessonsProvider>
-      <AuthProvider token={token}>
+      <AuthProvider token={token} isLoggedIn={isLoggedIn} displayName={displayName ?? null}>
         <VocabMobileRoutes />
       </AuthProvider>
     </LessonsProvider>

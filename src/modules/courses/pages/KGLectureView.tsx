@@ -1181,6 +1181,12 @@ const { classInfo, chapters, chapterVideos, subjects, loading } =
   const gradeName =
     (isRtl ? classInfo?.urdu_name : classInfo?.name) || classInfo?.name || "";
 
+  useEffect(() => {
+    if (subjectName) {
+      document.title = `Zaheen | ${subjectName}`;
+    }
+  }, [subjectName]);
+
   /**
    * Hero tagline — comes from the v2 subject description fields.
    * Falls back to the t() translation key only if the API returns nothing,

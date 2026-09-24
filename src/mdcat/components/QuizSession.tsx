@@ -26,6 +26,7 @@ import { Quiz, Question, QuizAttempt } from "../types";
 import { mdcatApi, mdcatAiApi } from "../config";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 
 const markdownComponents = {
   h1: ({ children }: any) => (
@@ -93,6 +94,15 @@ export default function QuizSession({
   submitQuizId
   
 }: QuizSessionProps) {
+  const { token: authToken } = useAuth();
+
+  // Get freshest token including localStorage fallback
+  const getToken = () => {
+    const stored = localStorage.getItem("zaheen_auth");
+    const parsed = stored ? JSON.parse(stored) : null;
+    return authToken ?? parsed?.token ?? "";
+  };
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<number, "A" | "B" | "C" | "D">
@@ -149,6 +159,10 @@ export default function QuizSession({
     setIsExplainingMap((prev) => ({ ...prev, [q.id]: true }));
     try {
       const qText = `Question: "${q.questionText}"\nOptions:\nA: ${q.optionA}\nB: ${q.optionB}\nC: ${q.optionC}\nD: ${q.optionD}\nCorrect Option: ${q.correctOption}\nExisting Explanation: ${q.explanation}`;
+      const _storedEx = localStorage.getItem("zaheen_auth");
+      const _parsedEx = _storedEx ? JSON.parse(_storedEx) : null;
+      const _userIdEx = _parsedEx?.userId ?? null;
+
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -156,6 +170,7 @@ export default function QuizSession({
           question: `Provide an extremely deep, highly analytical conceptual breakdown of this MDCAT biology/physics/chemistry question. State step-by-step why the correct option is indeed correct, why other options are incorrect, and share a clever mnemonic/memory trick for this specific concept. Keep it formatted nicely with bullet points.\n\n${qText}`,
           subject: q.subject,
           language: "Bilingual (Urdu + Eng)",
+          userId: _userIdEx,
         }),
       });
       if (response.ok) {
@@ -177,6 +192,10 @@ export default function QuizSession({
     setIsSummarizingMap((prev) => ({ ...prev, [q.id]: true }));
     try {
       const qText = `Question: "${q.questionText}"\nOptions:\nA: ${q.optionA}\nB: ${q.optionB}\nC: ${q.optionC}\nD: ${q.optionD}\nCorrect Option: ${q.correctOption}\nExisting Explanation: ${q.explanation}`;
+      const _storedCs = localStorage.getItem("zaheen_auth");
+      const _parsedCs = _storedCs ? JSON.parse(_storedCs) : null;
+      const _userIdCs = _parsedCs?.userId ?? null;
+
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,6 +213,7 @@ Formatting: Use exactly 3 to 4 bullet points with bold sub-headers. Keep it clea
 ${qText}`,
           subject: q.subject,
           language: "Bilingual (Urdu + Eng)",
+          userId: _userIdCs,
         }),
       });
       if (response.ok) {
@@ -224,6 +244,10 @@ ${qText}`,
         )
         .join("\n");
 
+      const _storedMs = localStorage.getItem("zaheen_auth");
+      const _parsedMs = _storedMs ? JSON.parse(_storedMs) : null;
+      const _userIdMs = _parsedMs?.userId ?? null;
+
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -245,6 +269,7 @@ Format your response exactly as follows:
 Ensure it is entirely composed of easy-to-read, concise, and highly professional bulleted explanations.`,
           subject: quizSnapshot.subject,
           language: "Bilingual (Urdu + Eng)",
+          userId: _userIdMs,
         }),
       });
 
@@ -267,6 +292,32 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
   // Sound/Vibe feedback logic
   const currentQuestion = questionsList[currentQuestionIndex];
 
+  // Abandon handler — fires on tab close OR back button while quiz is in progress
+  const fireAbandon = () => {
+    if (quizStatus !== "taking") return;
+    const _stored = localStorage.getItem("zaheen_auth");
+    const _parsed = _stored ? JSON.parse(_stored) : null;
+    const _token = authToken ?? _parsed?.token ?? null;
+    const _userId = _parsed?.userId ?? null;
+    const payload = JSON.stringify({
+      quizId: quizSnapshot.id,
+      questionsAnswered: Object.keys(selectedAnswers).length,
+      lastQuestionId: currentQuestion?.id ?? null,
+      ...(_userId ? { userId: _userId } : {}),
+    });
+    // sendBeacon can't send custom headers — token goes in body for OTP users;
+    // JWT users: backend reads Bearer from header (not possible with beacon, so
+    // we pass userId as fallback — ensure backend abandonAttempt uses flexAuth)
+    navigator.sendBeacon(
+      mdcatApi("/api/mdcat/attempts/abandon"),
+      new Blob([payload], { type: "application/json" }),
+    );
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", fireAbandon);
+    return () => window.removeEventListener("beforeunload", fireAbandon);
+  }, [quizStatus, selectedAnswers, currentQuestion]);
   // Start timer
   useEffect(() => {
     if (quizStatus === "taking" && totalQuestions > 0) {
@@ -325,18 +376,39 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
       };
 
      
-      
+      const token = getToken();
+      const stored = localStorage.getItem("zaheen_auth");
+      const parsed = stored ? JSON.parse(stored) : null;
+      const freshToken = parsed?.token ?? token ?? null;
+      const fallbackUserId = parsed?.userId ?? null;
+
       const res = await fetch(mdcatApi("/api/mdcat/attempts"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyPayload),
+        headers: {
+          "Content-Type": "application/json",
+          ...(freshToken ? { Authorization: `Bearer ${freshToken}` } : {}),
+        },
+        body: JSON.stringify({
+          ...bodyPayload,
+          ...(!freshToken && fallbackUserId ? { userId: fallbackUserId } : {}),
+        }),
       });
 
-
+      // AI quizzes (id 9999) may not exist in DB — calculate score locally on failure
       if (!res.ok) {
-          
-          throw new Error("Could not compute quiz attempts on backend");
-          
+        if (quizSnapshot.isAiGenerated || quizSnapshot.id === 9999) {
+          const score = responses.filter((r) => {
+            const q = questionsList.find((q) => q.id === r.questionId);
+            return q && r.selectedOption === q.correctOption;
+          }).length;
+          const total = responses.length;
+          const percentage = parseFloat(((score / total) * 100).toFixed(1));
+          setAttemptResult({ id: 0, score, totalQuestions: total, percentage } as any);
+          setQuizStatus("submitted");
+          await onAttemptFinished();
+          return;
+        }
+        throw new Error("Could not compute quiz attempts on backend");
       }
 
       
@@ -395,7 +467,7 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
           configurations.
         </p>
         <button
-          onClick={onBack}
+        onClick={() => { fireAbandon(); onBack(); }}
           className="px-5 py-3 bg-sky-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-sky-700"
         >
           Go Back
@@ -412,7 +484,7 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
     <div className="flex-1 min-h-0 flex flex-col gap-4 m-6">
       <div className="flex items-center justify-between gap-4 py-2 border-b border-sky-100 flex-wrap shrink-0">
     <button
-      onClick={onBack}
+     onClick={() => { fireAbandon(); onBack(); }}
       className="text-sky-950 hover:text-sky-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider "
     >
       <ArrowLeft className="w-4 h-4" /> Back
@@ -548,7 +620,7 @@ Ensure it is entirely composed of easy-to-read, concise, and highly professional
 >
   {/* Back button, overlaid top-left */}
   <button
-    onClick={onBack}
+   onClick={() => { fireAbandon(); onBack(); }}
     className="absolute top-6 left-6 md:top-8 md:left-8 z-20 text-sky-950 hover:text-sky-600 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider"
   >
     <ArrowLeft className="w-4 h-4" /> Back

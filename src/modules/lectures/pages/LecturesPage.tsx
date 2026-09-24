@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getLanguage } from "@/modules/shared/i18n";
+import NotFound from "@/pages/NotFound";
 
 /* ─────────────────────────────────────────────
    Types
@@ -301,12 +302,24 @@ const LecturesPage = () => {
 
       } catch (err) {
         console.error("Failed to fetch videos:", err);
+        setVideos([]);
       }
       setLoadingVideos(false);
     };
 
+    if (!chapterId || isNaN(Number(chapterId))) {
+      // ✅ Invalid chapterId in URL — show 404 immediately
+      setLoadingVideos(false);
+      return;
+    }
+
     fetchVideos();
   }, [chapterId]);
+
+  // ✅ Show 404 for invalid chapterId
+  if (!loadingVideos && (!chapterId || isNaN(Number(chapterId)))) {
+    return <NotFound />;
+  }
 
   /* ── Change Video ── */
   const changeVideo = (video: Video) => {

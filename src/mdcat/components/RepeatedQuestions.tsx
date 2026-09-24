@@ -3,7 +3,6 @@ import QuestionCard, { type RepeatedQuestion } from "./Questioncard";
 import RepeatedQuestionsDetail from "./Repeatedquestionsdetail";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
 
 export interface RepeatedQuestionsProps {
   data?: RepeatedQuestion[];
@@ -18,7 +17,6 @@ export default function RepeatedQuestions({ data, loading, hasMore, onLoadMore }
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { openOverlay } = useMdcatAuthOverlay();
 
   const handleBack = () => {
     setSelected(null);
@@ -56,7 +54,8 @@ export default function RepeatedQuestions({ data, loading, hasMore, onLoadMore }
                   item={item}
                   onSelect={(q) => {
                     if (!isLoggedIn) {
-                      openOverlay("login");
+                      localStorage.setItem("mdcat_return", JSON.stringify({ from: window.location.pathname, mdcat: true }));
+                      window.location.href = "/mdcat-login";
                       return;
                     }
                     setSelected(q);

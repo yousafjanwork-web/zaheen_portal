@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Sparkles, FileText, Download } from "lucide-react";
 import { useParams, useLocation } from "react-router-dom";
+import NotFound from "@/pages/NotFound";
 import { getLanguage } from "@/modules/shared/i18n";
 
 import { Worker, Viewer } from "@react-pdf-viewer/core";
@@ -27,6 +28,7 @@ const WorksheetsPage = () => {
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [pdfError, setPdfError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const zoomPluginInstance = zoomPlugin();
   const fullScreenPluginInstance = fullScreenPlugin();
@@ -58,10 +60,12 @@ const WorksheetsPage = () => {
 
         if (res.ok && Array.isArray(data)) {
           setWorksheets(data);
-
           if (data.length > 0) {
             setSelectedWorksheet(data[0]);
           }
+        } else if (!res.ok) {
+          // ✅ Invalid subjectId — API returned an error
+          setNotFound(true);
         } else {
           setWorksheets([]);
         }
@@ -134,6 +138,9 @@ const WorksheetsPage = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  // ✅ Show 404 if API rejected the subjectId
+  if (notFound) return <NotFound />;
 
   return (
     <section className="bg-slate-50 min-h-screen py-10 md:py-16">

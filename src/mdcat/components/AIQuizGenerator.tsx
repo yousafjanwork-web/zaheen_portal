@@ -24,7 +24,6 @@ import { MDCATSubject, Quiz } from "../types";
 import { MDCAT_AI_API, mdcatAiApi, mdcatApi } from "../config";
 import SEO from "./SEO";
 import AIQuestionsPractice from "./AiQuestionsPractice";
-import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
 import { body } from "motion/react-client";
 
 interface AIQuizGeneratorProps {
@@ -41,7 +40,6 @@ export default function AIQuizGenerator({
 const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { openOverlay } = useMdcatAuthOverlay();
   const [subject, setSubject] = useState<MDCATSubject>("Biology");
   const [subTopic, setSubTopic] = useState("");
   const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">(
@@ -80,7 +78,8 @@ const { isLoggedIn } = useAuth();
   const handleGenerate = async (e: FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn) {
-     openOverlay("login");
+     localStorage.setItem("mdcat_return", JSON.stringify({ from: window.location.pathname, mdcat: true }));
+     window.location.href = "/mdcat-login";
       return;
     }
     setIsGenerating(true);
@@ -114,6 +113,10 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
 
     try {
       
+      const _stored = localStorage.getItem("zaheen_auth");
+      const _parsed = _stored ? JSON.parse(_stored) : null;
+      const _userId = _parsed?.userId ?? null;
+
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), {
         signal:AbortSignal.timeout(20000),
         method: "POST",
@@ -122,6 +125,7 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
           question: prompt,
           subject: subject,
           language: "English",
+          userId: _userId,
         }),
       });
       
@@ -172,13 +176,18 @@ Return ONLY a valid JSON object with no extra text, no markdown, no code fences.
         try
         {
 
+          const _stored2 = localStorage.getItem("zaheen_auth");
+          const _parsed2 = _stored2 ? JSON.parse(_stored2) : null;
+          const _userId2 = _parsed2?.userId ?? null;
+
           const response = await fetch(mdcatApi("/api/mdcat/quizzes/AISubstituteQuestions"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               subject: subject,
               subTopic: subTopic,
-              questionCount:questionCount
+              questionCount: questionCount,
+              userId: _userId2,
             }),
           });
           if(!response.ok)

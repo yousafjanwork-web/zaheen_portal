@@ -6,6 +6,8 @@ import { useAuth } from "@/modules/shared/context/AuthContext";
 import KGClassView from "./KGClassView";
 import ClassSubjectsView from "./ClassSubjectsView";
 import PrimarySubjectsView from "./PrimarySubjectsView";
+import NotFound from "@/pages/NotFound";
+import { useEffect } from "react";
 
 const MiddleSubjectsView = React.lazy(() =>
   import("./MiddleSubjectsView").catch(() => ({
@@ -37,11 +39,28 @@ const ClassSubjectsRouter = () => {
 
   const requestedClassId = classIdFromSlug(classSlug ?? "");
 
-
-
   const gradeType = location.state?.gradeType as string | undefined;
   const needsApiCheck = !gradeType;
   const { classInfo, loading } = useClassSubjects(needsApiCheck ? (requestedClassId ?? 0) : 0);
+
+  useEffect(() => {
+    if (classInfo?.name) {
+      document.title = `Zaheen | ${classInfo.name}`;
+    } else if (classSlug) {
+      const formatted = classSlug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      document.title = `Zaheen | ${formatted}`;
+    }
+  }, [classInfo?.name, classSlug]);
+
+  // ✅ Unknown slug — show 404 immediately, no spinner
+  if (!requestedClassId && !gradeType) {
+    return <NotFound />;
+  }
+
+  // ✅ API returned nothing for this ID — show 404
+  if (needsApiCheck && !loading && !classInfo) {
+    return <NotFound />;
+  }
 
   if (gradeType) {
     if (isKindergartenClass(gradeType)) return <KGClassView />;

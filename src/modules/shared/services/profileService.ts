@@ -64,6 +64,7 @@ export const getUserProfile = async (msisdn: string): Promise<UserProfile | null
   }
 };
 
+
 /**
  * PUT /api/users/:id
  * Update an existing user's profile fields.

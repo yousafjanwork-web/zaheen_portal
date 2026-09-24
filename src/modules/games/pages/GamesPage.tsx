@@ -7,6 +7,7 @@ import urduMatchImg from "@/assets/images/games/kg/cards/urdu-match.JFIF";
 import howManyImg from "@/assets/images/games/kg/cards/how-many.png";
 import animalAlphabetImg from "@/assets/images/games/kg/cards/animal-alphabet.png";
 import urduAnimalImg from "@/assets/images/games/kg/cards/urdu-animal-alphabet.png";
+import NotFound from "@/pages/NotFound";
 
 const GamesPage = () => {
   const navigate = useNavigate();
@@ -357,20 +358,8 @@ const GamesPage = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center bg-gradient-to-b from-purple-200 to-pink-200 p-6">
-      <div className="text-6xl mb-4 animate-bounce">🎮</div>
-      <h1 className="text-3xl font-black text-purple-800 mb-3">
-        Games Coming Soon!
-      </h1>
-      <button
-        onClick={() => navigate(-1)}
-        className="bg-white px-6 py-3 rounded-full shadow-lg font-bold"
-      >
-        ⬅ Back
-      </button>
-    </div>
-  );
+  // ✅ Unknown game type — show 404 instead of "Coming Soon"
+  return <NotFound />;
 };
 
 // ─── Types ────────────────────────────────────────────────────

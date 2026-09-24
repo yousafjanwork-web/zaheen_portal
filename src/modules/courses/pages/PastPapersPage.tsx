@@ -2,6 +2,7 @@ import React, {
   useEffect, useState, useMemo, useRef, useCallback,
 } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
+import NotFound from "@/pages/NotFound";
 import {
   BookOpen, FlaskConical, Atom, Leaf, Languages,
   Sigma, Landmark, Globe, Calculator, Cpu,
@@ -768,6 +769,9 @@ const PastPapersPage = () => {
   // Resolve the numeric classId from the slug (same helper used elsewhere)
   const classId = classIdFromSlug(classSlug ?? "");
 
+  // ✅ Unknown slug — show 404 immediately
+  if (!classId) return <NotFound />;
+
   // Pull subjects for this class so we can resolve subjectSlug -> real subject/id
   const { classInfo, subjects } = useClassSubjects(classId ?? 0);
 
@@ -815,6 +819,12 @@ const PastPapersPage = () => {
 
   const displayClassTitle   = pick(classTitle,   urduClassTitle,   isRtl);
   const displaySubjectLabel = pick(subjectName,  urduSubjectName,  isRtl);
+
+  useEffect(() => {
+    if (subjectName) {
+      document.title = `Zaheen | ${subjectName} Past Papers`;
+    }
+  }, [subjectName]);
 
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [yearFilter,    setYearFilter]    = useState("all");

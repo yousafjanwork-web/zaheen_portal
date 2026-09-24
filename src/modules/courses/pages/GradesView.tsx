@@ -5,6 +5,7 @@ import Sidebar from "@/modules/shared/components/GradeView/SideBar";
 import GradeCard from "@/modules/shared/components/GradeView/GradeCard";
 import { useGrades } from "@/modules/shared/hooks/useGrade";
 import GradeCardSkeleton from "@/modules/shared/components/GradeView/GradeCardSkeleton";
+import NotFound from "@/pages/NotFound";
 import WelcomeCard from "@/modules/shared/components/GradeView/WelcomeCard";
 import React from "react";
 
@@ -31,9 +32,12 @@ const GradesView = () => {
   const title = welcomeTitles[type] || welcomeTitles["1-5"];
 
   // ✅ 2. EARLY RETURNS CODES KO HOOKS KE BAAD NICHE RAKHA HAI
-  
+
   if (type === "1-5") return <PrimaryGradesView />;
   if (type === "6-8") return <MiddleGradesView />;
+
+  // ✅ Unknown grade type — show 404
+  if (!loading && !welcomeTitles[type]) return <NotFound />;
 
   return (
     <section className="py-20 bg-slate-50">

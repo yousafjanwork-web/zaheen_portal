@@ -5,7 +5,6 @@ import {
   ArrowRight, ShieldCheck, Zap, ClipboardList, Timer, Bot, FileText, Calculator,
 } from 'lucide-react';
 import bgImage from "../../mdcat/assets/images/HomePageBackGround.png";
-import MdcatCountdown from './FlipCountDown';
 import SubjectsGrid from './SubjectsGrid';
 import ProgressBar from './ProgressBar';
 import SubjectsSection from './SubjectsSection'
@@ -37,13 +36,12 @@ import DownloadSection from './DownloadSection';
 import { useAppNavigate } from '../hooks/useAppNavigate';
 
 interface DashBoardProps {
-  testDate?: string | Date;
   setActiveTab: any;
   performanceStats: PerformanceStats;
   getSubjectColorBadge: (subject: string) => string;
 }
 
-export default function Dashboard({ testDate = '2026-08-16', setActiveTab, performanceStats, getSubjectColorBadge }: DashBoardProps) {
+export default function Dashboard({ setActiveTab, performanceStats, getSubjectColorBadge }: DashBoardProps) {
    const { navigate } = useAppNavigate()
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -124,9 +122,7 @@ export default function Dashboard({ testDate = '2026-08-16', setActiveTab, perfo
           </div>
 
 
-          <div className="pt-20 flex justify-center">
-            <MdcatCountdown testDate={testDate} />
-          </div>
+
         </div>
       </section>
 

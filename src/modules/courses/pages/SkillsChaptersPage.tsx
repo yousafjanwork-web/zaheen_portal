@@ -9,6 +9,7 @@ import { getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { resolveClassIdFromParam, getSlugByClassId } from "@/modules/shared/utils/skillsCourseSlugs";
 import { useVideoProgress } from "../../shared/hooks/Usevideoprogress";
+import NotFound from "@/pages/NotFound";
 
 import enTranslations from "@/modules/shared/i18n/en.json";
 import urTranslations from "@/modules/shared/i18n/ur.json";
@@ -329,6 +330,12 @@ const SkillsChaptersPage = () => {
     ? (isRtl ? courseOverride.ur || courseOverride.en : courseOverride.en)
     : "";
 
+  useEffect(() => {
+    if (courseName) {
+      document.title = `Zaheen | ${courseName}`;
+    }
+  }, [courseName]);
+
   const isTradingCourse = classId === 305;
 
   const getModuleStartingAt = (globalIdx: number) =>
@@ -354,6 +361,10 @@ const SkillsChaptersPage = () => {
      course.id == parent_id (confirmed by backend team), so we key
      both calls off the same CLASS_TO_PARENT_ID value.
   ──────────────────────────────────────────────────────────────── */
+  // ✅ Unknown slug — show 404 immediately
+  if (!loadingCourse && classId === null) return <NotFound />;
+  if (!loadingCourse && classId !== null && !CLASS_TO_PARENT_ID[classId]) return <NotFound />;
+
   useEffect(() => {
     if (classId === null) { setLoadingCourse(false); return; }
     const parentId = CLASS_TO_PARENT_ID[classId];

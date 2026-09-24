@@ -113,6 +113,12 @@ const { classSlug, subjectSlug } = useParams<{ classSlug: string; subjectSlug: s
   const theme       = getSubjectTheme(subject?.name || "");
   const ThemeIcon   = theme.icon;
 
+  useEffect(() => {
+    if (subjectName) {
+      document.title = `Zaheen | ${subjectName}`;
+    }
+  }, [subjectName]);
+
   const heroTitle = isUrdu ? theme.heroTitle.ur : theme.heroTitle.en;
   const tagline = isUrdu ? (subject?.urdu_desc || theme.tagline.ur) : (subject?.desc || theme.tagline.en);
 

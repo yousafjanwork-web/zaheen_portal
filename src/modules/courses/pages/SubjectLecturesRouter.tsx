@@ -5,6 +5,8 @@ import { classIdFromSlug } from "@/config/classSlugs";
 import SubjectLecturesView from "./SubjectLecturesView";
 import PrimarySubjectDetailView from "./PrimarySubjectDetailView";
 import MiddleSubjectDetailView from "./MiddleSubjectDetailView";
+import NotFound from "@/pages/NotFound";
+import { useEffect } from "react";
 
 const KGLectureView = React.lazy(() =>
   import("./KGLectureView").catch(() => ({
@@ -142,15 +144,32 @@ const SubjectLecturesRouter = () => {
   const { classSlug } = useParams<{ classSlug: string }>();
   const classId = classIdFromSlug(classSlug ?? "");
 
-  // SPECIFIC CHANGE 1: Purani fastTarget aur skipFetch wali saari lines hata kar sirf yeh call rakhein
   const { classInfo, loading } = useClassSubjects(classId ?? 0);
 
-  // SPECIFIC CHANGE 2: Jab tak loading chal rahi hai YA classInfo ka data sahi se nahi aaya, skeleton dikha kar block rakhein
+   useEffect(() => {
+    if (classInfo?.name) {
+      document.title = `Zaheen | ${classInfo.name}`;
+    }
+  }, [classInfo?.name]);
+
+  // ✅ Unknown slug — show 404 immediately, no spinner
+  if (!classId) {
+    return <NotFound />;
+  }
+
+  // ✅ Still loading — show skeleton
   if (loading || !classInfo || !classInfo.name) {
     return <RouterSkeleton />;
   }
 
+  // ✅ API returned nothing for this ID — show 404
+  if (!loading && (!classInfo || !classInfo.name)) {
+    return <NotFound />;
+  }
+
   // SPECIFIC CHANGE 3: Ab data pakka aa chuka hai, ab direct check chalayein
+
+
   const target = resolveTarget(undefined, classInfo.name);
 
   if (target === "kg") {

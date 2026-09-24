@@ -6,7 +6,6 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
 import { FaTiktok } from "react-icons/fa";
-
 const Footer: React.FC = () => {
 
   const { msisdn, logout } = useAuth();
@@ -114,7 +113,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2 text-sm">
 
               <li><a href="/grade-view/k-12">{t("footer.k12")}</a></li>
-              <li><a href="/skills/300">{t("footer.prof")}</a></li>
+              <li><a href="/all-professional-courses">{t("footer.prof")}</a></li>
               <li><a href="/practice">{t("footer.worksheet")}</a></li>
               <li><a href="/ai">{t("footer.ai")}</a></li>
 

@@ -60,6 +60,7 @@ export interface DashboardData {
     msisdn: string;
     role: string;
     is_kid: number;
+    source?: string | null;
   };
   grade: { id: number; name: string; thumbnail: string; urdu_name: string } | null;
   course: { id: number; title_en: string; title_ur: string } | null;
@@ -182,6 +183,21 @@ export const getCourses = async (): Promise<Course[]> => {
 };
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
+
+/** PUT /lms/users/:id/mdcat-profile */
+export const setMdcatProfile = async (
+  userId: number,
+  payload: {
+    msisdn?: string;
+    username?: string;
+    password?: string;
+    name?: string;
+    email?: string;
+  }
+): Promise<void> => {
+  const res = await axios.put(`${BASE}/lms/users/${userId}/mdcat-profile`, payload);
+  if (!res.data?.success) throw new Error(res.data?.message || "Failed to save MDCAT profile");
+};
 
 /** GET /lms/dashboard/:id */
 export const getDashboard = async (userId: number): Promise<DashboardData | null> => {

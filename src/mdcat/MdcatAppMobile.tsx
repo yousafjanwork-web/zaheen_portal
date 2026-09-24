@@ -36,6 +36,7 @@ import { useAppNavigate } from "./hooks/useAppNavigate";
 import RepeatedQuestions from "./components/RepeatedQuestions";
 import { MdcatAuthOverlayProvider, useMdcatAuthOverlay } from "./context/MdcatAuthOverlayContext";
 import MdcatAuthOverlay from "./components/MdcatAuthOverlay";
+import { useMobileAutoLogin } from "@/modules/shared/hooks/useMobileAutoLogin";
 
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
@@ -192,7 +193,7 @@ async function addNewAIQuestions(questions:Question[])
 
 }
 function MdcatAppMobileInner() {
-  const { isOpen } = useMdcatAuthOverlay();
+  const { isOpen, openProfileSetup } = useMdcatAuthOverlay();
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "ai-generator" | "past-papers" | "notes" | "repeated-questions"
   >("dashboard");
@@ -229,7 +230,19 @@ function MdcatAppMobileInner() {
 
   const fetchRepeatedQuestions = async () => {
     try {
-      const res = await fetch(mdcatApi("/api/mdcat/repeated-questions"));
+      setRepeatedLoading(true);
+      const _stored = localStorage.getItem("zaheen_auth");
+      const _parsed = _stored ? JSON.parse(_stored) : null;
+      const _token = _parsed?.token ?? null;
+      const _userId = _parsed?.userId ?? null;
+      const repeatedUrl = _token
+        ? mdcatApi("/api/mdcat/repeated-questions")
+        : _userId
+        ? mdcatApi(`/api/mdcat/repeated-questions?userId=${_userId}`)
+        : mdcatApi("/api/mdcat/repeated-questions");
+      const res = await fetch(repeatedUrl, {
+        headers: _token ? { Authorization: `Bearer ${_token}` } : {},
+      });
       if (res.ok) {
         const json = await res.json();
         const raw = Array.isArray(json)
@@ -262,11 +275,27 @@ function MdcatAppMobileInner() {
 
   // Load all foundational data on startup
   const fetchAllData = async () => {
+    const stored = localStorage.getItem("zaheen_auth");
+    const parsed = stored ? JSON.parse(stored) : null;
+    const freshToken = parsed?.token ?? null;
+    const freshUserId = parsed?.userId ?? null;
+
+    const authHeaders: HeadersInit = freshToken
+      ? { Authorization: `Bearer ${freshToken}` }
+      : {};
+
+    const withUserId = (url: string) => {
+      if (freshToken) return url;
+      if (!freshUserId) return url;
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}userId=${freshUserId}`;
+    };
+
     try {
-      const [quizzesRes, statsRes, recsRes] = await Promise.all([
+       const [quizzesRes, statsRes, recsRes] = await Promise.all([
         fetch(mdcatApi("/api/mdcat/quizzes")),
-        fetch(mdcatApi("/api/mdcat/performance")),
-        fetch(mdcatApi("/api/mdcat/recommendations")),
+        fetch(withUserId(mdcatApi("/api/mdcat/performance")), { headers: authHeaders }),
+        fetch(withUserId(mdcatApi("/api/mdcat/recommendations")), { headers: authHeaders }),
       ]);
 
       // Quizzes
@@ -280,7 +309,8 @@ function MdcatAppMobileInner() {
 
       // Performance
       if (statsRes.ok) {
-        const statsData = await statsRes.json();
+        const statsJson = await statsRes.json();
+        const statsData = statsJson.data ?? statsJson;
         setPerformanceStats({
           totalAttempts: statsData.totalAttempts || 0,
           averageScorePercent: statsData.averageScorePercent || 0,
@@ -360,14 +390,7 @@ function MdcatAppMobileInner() {
         return "bg-rose-500";
     }
   };
-  // Dynamic MDCAT countdown — exam date: 20 septemper 2026
-  const examDate = new Date("2026-09-20T00:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const daysLeft = Math.max(
-    0,
-    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
-  );
+
 
 
   // Small wrapper so every page gets the same enter/exit motion without repeating it 5 times
@@ -444,26 +467,38 @@ function MdcatAppMobileInner() {
         }
       />
      
-           <Route
+      <Route
         path="/repeated-questions"
         element={
-          repeatedLoading ? (
-            <LoadingFrame />
-          ) : (
-            <RepeatedQuestions
-              data={repeatedQuestions}
-              loading={false}
-              hasMore={repeatedHasMore}
-              onLoadMore={loadMoreRepeated}
+          <PageTransition>
+            <SEO
+              title="Repeated Questions"
+              description="Browse MDCAT questions that have appeared across multiple past paper years — high-yield topics for your exam prep."
+              path="/repeated-questions"
             />
-          )
+            {repeatedLoading ? <LoadingFrame /> :
+              <RepeatedQuestions
+                data={repeatedQuestions}
+                loading={false}
+                hasMore={repeatedHasMore}
+                onLoadMore={loadMoreRepeated}
+              />
+            }
+          </PageTransition>
         }
       />
       <Route
-      path="/guess-paper"
-      element={
-        <SolvedPaper/>
-      }
+        path="/guess-paper"
+        element={
+          <PageTransition>
+            <SEO
+              title="AI 2026 Practice"
+              description="Practice with the AI-predicted NUMS MDCAT 2026 paper — 200 fully solved questions with explanations."
+              path="/guess-paper"
+            />
+            <SolvedPaper/>
+          </PageTransition>
+        }
       />
       <Route
         path="/quiz/:quizId"
@@ -498,7 +533,6 @@ function MdcatAppMobileInner() {
               ) : (
                 <>
                   <Dashboard
-                    testDate={examDate}
                     setActiveTab={setActiveTab}
                     performanceStats={performanceStats}
                     getSubjectColorBadge={getSubjectColorBadge}
@@ -558,11 +592,21 @@ function MdcatAppMobileInner() {
   );
 }
 
+function MdcatAutoLoginGate() {
+  const { ready } = useMobileAutoLogin();
+  if (!ready) return <LoadingFrame />;
+  return (
+    <>
+      <MdcatAppMobileInner />
+      <MdcatAuthOverlay />
+    </>
+  );
+}
+
 export default function MdcatAppMobile() {
   return (
     <MdcatAuthOverlayProvider>
-      <MdcatAppMobileInner />
-      <MdcatAuthOverlay />
+      <MdcatAutoLoginGate />
     </MdcatAuthOverlayProvider>
   );
 }

@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   sendPin,
   verifyPin,
@@ -13,20 +13,9 @@ import { getSetupStatus } from "@/modules/shared/services/lmsService";
 
 type SubscriptionType = "ZONG" | "OTHER";
 
-interface SubscribePageProps {
-  /**
-   * Optional. When provided (e.g. rendered inside MDCAT's subscribe
-   * overlay), this is called instead of navigating away once the
-   * MDCAT fast-track subscribe succeeds. When omitted, behavior is
-   * 100% unchanged — Zaheen's own /subscribe route does not pass this.
-   */
-  onSubscribeSuccess?: () => void;
-}
-
-const SubscribePage = ({ onSubscribeSuccess }: SubscribePageProps = {}) => {
+const SubscribePage = () => {
   const { login, loginWithUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("ZONG");
@@ -80,47 +69,7 @@ const SubscribePage = ({ onSubscribeSuccess }: SubscribePageProps = {}) => {
   // Same flow: profile → role → grade → dashboard
   const routeAfterSubscribe = async (resolvedMsisdn: string) => {
     try {
-      // ── MDCAT fast-track — check sessionStorage FIRST ────────────────────
-      const storedMdcat = localStorage.getItem("mdcat_return");
-      const parsedMdcat = storedMdcat ? JSON.parse(storedMdcat) : null;
-      const isMdcatUser = parsedMdcat?.mdcat === true;
-      const mdcatReturnPath = parsedMdcat?.from ?? "/mdcat";
-
-      if (isMdcatUser) {
-        localStorage.removeItem("mdcat_return");
-        // Get profile — may not exist for new accounts, that's fine
-        let userId: number | null = null;
-        try {
-          const profile = await getUserProfile(resolvedMsisdn);
-          if (profile) {
-            const status = await getSetupStatus(profile.id);
-            userId = profile.id;
-            loginWithUser({
-              msisdn:           resolvedMsisdn,
-              userId:           profile.id,
-              isKid:            false,
-              role:             "learner",
-              selectedClassId:  status.selected_class_id  ?? null,
-              selectedCourseId: status.selected_course_id ?? null,
-            });
-          } else {
-            // New account — log in minimally as learner
-            login(resolvedMsisdn);
-          }
-        } catch {
-          login(resolvedMsisdn);
-        }
-        // Always go back to MDCAT regardless of profile state
-        if (onSubscribeSuccess) {
-          onSubscribeSuccess();
-        } else {
-          navigate(mdcatReturnPath, { replace: true });
-        }
-        return;
-      }
-      // ── end MDCAT fast-track ──────────────────────────────────────────────
-
-      // ── Normal LMS flow (unchanged) ───────────────────────────────────────
+      // ── Normal LMS flow ───────────────────────────────────────────────────
       const profile = await getUserProfile(resolvedMsisdn);
 
       if (!profile) {
@@ -227,20 +176,8 @@ const SubscribePage = ({ onSubscribeSuccess }: SubscribePageProps = {}) => {
   // ── Social sign-up handlers ──
   const handleGoogleSignUp = () => {
     setSocialLoading("google");
-    const fromState = location.state as { from?: string; mdcat?: boolean } | null;
-    // Read sessionStorage as fallback (set by LoginPage if user came via login first)
-    const storedMdcat = localStorage.getItem("mdcat_return");
-    const parsedStored = storedMdcat ? JSON.parse(storedMdcat) : null;
-    const mdcatFrom = fromState?.mdcat === true
-      ? { from: fromState.from ?? "/mdcat", mdcat: true }
-      : parsedStored?.mdcat === true
-      ? parsedStored
-      : null;
-    const mdcatState = mdcatFrom
-      ? encodeURIComponent(JSON.stringify(mdcatFrom))
-      : "";
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${mdcatState}`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&screen_hint=signup`;
   };
 
   // ── Temporarily hidden: Facebook sign-up — will be added later ──
@@ -363,7 +300,7 @@ const SubscribePage = ({ onSubscribeSuccess }: SubscribePageProps = {}) => {
                       <path d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" fill="#1976D2"/>
                     </svg>
                   )}
-                  Continue with Google
+                  Sign up with Google
                 </button>
 
             {/* ── Temporarily hidden: Facebook sign-up — will be added later ──

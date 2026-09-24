@@ -5,7 +5,6 @@ import Footer from "../modules/shared/components/Footer/Footer";
 // import MobileMarketingBanner from "@/modules/home/sections/MobileMarketingBanner";
 import { Outlet, useLocation } from "react-router-dom";
 
-const MINI_APP_PREFIXES = ["/mdcat", "/cosmokid", "/vocab", "/origami", "/pakistan"];
 
 const MainLayout = () => {
   const [isDark, setIsDark] = useState(false);
@@ -15,15 +14,6 @@ const MainLayout = () => {
 
   const toggleTheme = () => setIsDark(prev => !prev);
 
-  // ── Reset title to "Zaheen | Home" when navigating back from any mini-app ──
-  useEffect(() => {
-    const isMiniApp = MINI_APP_PREFIXES.some(prefix =>
-      location.pathname.startsWith(prefix)
-    );
-    if (!isMiniApp) {
-      document.title = "Zaheen | Home";
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     const root = window.document.documentElement;

@@ -12,12 +12,13 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
-type OverlayMode = "login" | "subscribe" | null;
+type OverlayMode = "login" | "subscribe" | "profile" | null;
 
 interface MdcatAuthOverlayContextType {
   mode: OverlayMode;
   isOpen: boolean;
   openOverlay: (mode: "login" | "subscribe") => void;
+  openProfileSetup: () => void;
   closeOverlay: () => void;
 }
 
@@ -28,9 +29,6 @@ export const MdcatAuthOverlayProvider = ({ children }: { children: React.ReactNo
   const location = useLocation();
 
   const openOverlay = useCallback((next: "login" | "subscribe") => {
-    // LoginPage / SubscribePage already read this exact key for their
-    // existing "MDCAT fast-track" logic — this is the same contract,
-    // just set here instead of via router state (since we don't navigate).
     localStorage.setItem(
       "mdcat_return",
       JSON.stringify({ from: location.pathname, mdcat: true })
@@ -38,19 +36,23 @@ export const MdcatAuthOverlayProvider = ({ children }: { children: React.ReactNo
     setMode(next);
   }, [location.pathname]);
 
+  const openProfileSetup = useCallback(() => {
+    setMode("profile");
+  }, []);
+
   const closeOverlay = useCallback(() => {
     setMode(null);
+    localStorage.removeItem("mdcat_return");
   }, []);
 
   return (
     <MdcatAuthOverlayContext.Provider
-      value={{ mode, isOpen: mode !== null, openOverlay, closeOverlay }}
+      value={{ mode, isOpen: mode !== null, openOverlay, openProfileSetup, closeOverlay }}
     >
       {children}
     </MdcatAuthOverlayContext.Provider>
   );
 };
-
 export const useMdcatAuthOverlay = () => {
   const ctx = useContext(MdcatAuthOverlayContext);
   if (!ctx) {

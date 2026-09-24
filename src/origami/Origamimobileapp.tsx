@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { useMobileAutoLogin } from '@/modules/shared/hooks/useMobileAutoLogin';
 import FloatingElements from './components/FloatingElements';
 import HomePage from './pages/HomePage';
 import CraftDetailPage from './pages/CraftDetailPage';
@@ -29,6 +30,7 @@ function ScrollToTop() {
  * No API, no auth needed — fully static data from data/crafts.ts
  */
 export default function OrigamiMobileApp() {
+  const { ready } = useMobileAutoLogin();
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -42,6 +44,14 @@ export default function OrigamiMobileApp() {
       document.documentElement.classList.remove('dark');
     };
   }, [darkMode]);
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className={`origami-module min-h-screen overflow-x-hidden isolate transition-colors duration-300 ${darkMode ? 'bg-[#0f0f23] text-gray-100' : 'bg-[#F9FAFB] text-gray-900'}`}>

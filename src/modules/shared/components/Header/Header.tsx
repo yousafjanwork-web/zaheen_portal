@@ -173,9 +173,9 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                 )}
               </div>
 
-              <Link to="/mdcat" onClick={closeMenus} className="hover:text-white/80">
-                MDCAT Prep
-              </Link>
+            <Link to="/prep-exam" onClick={closeMenus} className="hover:text-white/80">
+  Test Prep
+</Link>
 
             </nav>
           </div>

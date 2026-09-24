@@ -47,7 +47,7 @@ export default function MdcatEntryCard({ onEnter }: MdcatEntryCardProps) {
 
       {/* Feature pills */}
       <div className="relative mt-4 flex flex-wrap gap-2">
-        {["Past Papers", "AI Quizzes", "Study Notes", "Focus Timer"].map((f) => (
+        {["Past Papers", "AI Quizzes", "Study Notes"].map((f) => (
           <span
             key={f}
             className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-100"

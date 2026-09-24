@@ -61,7 +61,17 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
 
   /* ── State ── */
   const [userId, setUserId]   = useState<number | null>(null);
-  const [form, setForm]       = useState({ name: "", username: "", email: "", password: "" });
+  const [form, setForm]       = useState({ name: "", username: "", email: "", password: "", mobile: "" });
+
+  // MDCAT mode — read return path from localStorage
+  const isMdcatSetup = isSetupMode === "mdcat";
+  const mdcatReturnPath = (() => {
+    try {
+      const stored = localStorage.getItem("mdcat_return");
+      const parsed = stored ? JSON.parse(stored) : null;
+      return parsed?.from ?? "/mdcat";
+    } catch { return "/mdcat"; }
+  })();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
@@ -79,6 +89,7 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
       username: isMsisdn(rawUsername, profile.msisdn) ? "" : rawUsername,
       email:    profile.email ?? "",
       password: "",
+      mobile:   "",
     });
   };
 
@@ -141,6 +152,11 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) {
       setError("Please enter a valid email address"); return;
     }
+    // Mobile number is mandatory for MDCAT Google users (no msisdn in context)
+    const isGoogleUser = !msisdn || msisdn.trim().length === 0;
+    if (isMdcatSetup && isGoogleUser && !form.mobile.trim()) {
+      setError("Mobile number is required for MDCAT access"); return;
+    }
     if (!userId) {
       setError("Profile ID not found. Please refresh and try again."); return;
     }
@@ -149,53 +165,93 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
       setSaving(true);
       setError("");
 
-      const saved = await updateUserProfile(userId, {
-        name:  form.name.trim(),
-        email: form.email.trim(),
-        ...(form.username.trim() ? { username: form.username.trim() } : {}),
-        ...(form.password        ? { password: form.password }        : {}),
-      });
+      if (isMdcatSetup) {
+        // ── MDCAT flow — use dedicated mdcat-profile endpoint ──────────────
+        const { setMdcatProfile } = await import("@/modules/shared/services/lmsService");
 
-      populateForm(saved);
-      setSuccess(true);
+        if (isGoogleUser) {
+          // Google user — msisdn required, other fields optional
+          await setMdcatProfile(userId, {
+            msisdn:   form.mobile.trim(),
+            ...(form.username.trim() ? { username: form.username.trim() } : {}),
+            ...(form.password        ? { password: form.password }        : {}),
+          });
+        } else {
+          // Zong/OTP user — msisdn already known, other fields optional
+          await setMdcatProfile(userId, {
+            ...(form.name.trim()     ? { name: form.name.trim() }         : {}),
+            ...(form.email.trim()    ? { email: form.email.trim() }       : {}),
+            ...(form.username.trim() ? { username: form.username.trim() } : {}),
+            ...(form.password        ? { password: form.password }        : {}),
+          });
+        }
 
-   if (msisdn) {
-        notifyNameChanged(msisdn, saved.name?.trim() || form.name.trim());
-      } else if (authUserId) {
-        // Update displayName in context — preserve isKid correctly from context
+        // Update display name in context
         loginWithUser({
-          msisdn:          "",
-          userId:          authUserId,
-          isKid:           isKid,  // ✅ use actual isKid from context, not hardcoded true
+          msisdn:          isGoogleUser ? form.mobile.trim() : (msisdn ?? ""),
+          userId:          userId,
+          isKid:           isKid,
           role:            role ?? "learner",
           selectedClassId,
           selectedCourseId,
-          displayName:     saved.name?.trim() || form.name.trim(),
+          displayName:     form.name.trim(),
         });
+
+        // Go back to the exact MDCAT page
+        localStorage.removeItem("mdcat_return");
+        navigate(mdcatReturnPath, { replace: true });
+
+      } else {
+        // ── Normal LMS flow ────────────────────────────────────────────────
+        // New Google users (hasProfile=false) have no row in users table yet.
+        // Use POST to create the row first, then continue normally.
+        // Existing users (hasProfile=true) → PUT to update.
+        const profilePayload = {
+          name:  form.name.trim(),
+          email: form.email.trim(),
+          ...(form.username.trim() ? { username: form.username.trim() } : {}),
+          ...(form.password        ? { password: form.password }        : {}),
+        };
+        const saved = await updateUserProfile(userId, profilePayload);
+
+        populateForm(saved);
+        setSuccess(true);
+
+        if (msisdn) {
+          notifyNameChanged(msisdn, saved.name?.trim() || form.name.trim());
+        } else if (authUserId) {
+          loginWithUser({
+            msisdn:          "",
+            userId:          authUserId,
+            isKid:           isKid,
+            role:            role ?? "learner",
+            selectedClassId,
+            selectedCourseId,
+            displayName:     saved.name?.trim() || form.name.trim(),
+          });
+        }
+
+        if (isSetupMode === "subscribe") {
+          navigate("/");
+        } else if (isSetupMode) {
+          try {
+            const { setGradeAndCourse } = await import("@/modules/shared/services/lmsService");
+            await setGradeAndCourse(userId, null, null);
+          } catch {
+            // Non-fatal
+          }
+          navigate("/setup/role");
+        } else {
+          navigate("/dashboard");
+        }
       }
 
-    // Route depends on which setup flow triggered this page
-// Route depends on which setup flow triggered this page
-    if (isSetupMode === "subscribe") {
-      navigate("/");
-    } else if (isSetupMode) {
-      try {
-        const { setGradeAndCourse } = await import("@/modules/shared/services/lmsService");
-        await setGradeAndCourse(userId, null, null);
-      } catch {
-        // Non-fatal
-      }
-      navigate("/setup/role");
-    } else {
-      navigate("/dashboard");
-    }
     } catch (err: any) {
       setError(err?.message || "Failed to save profile. Please try again.");
     } finally {
       setSaving(false);
     }
   };
-
   /* ── Render ── */
   return (
     <div className="relative min-h-screen bg-slate-900 overflow-hidden flex items-center justify-center px-4 py-16">
@@ -224,8 +280,8 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
 
         <div className="p-8">
 
-          {/* Setup mode progress bar */}
-          {isSetupMode && (
+          {/* Setup mode progress bar — hidden for MDCAT (no multi-step LMS setup) */}
+          {isSetupMode && !isMdcatSetup && (
             <div className="mb-6">
               <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
                 <span className="text-amber-400 font-semibold">Step 1 of 3</span>
@@ -234,6 +290,13 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
               <div className="h-1 w-full rounded-full bg-white/10">
                 <div className="h-1 rounded-full bg-amber-400" style={{ width: "33%" }} />
               </div>
+            </div>
+          )}
+          {isMdcatSetup && (
+            <div className="mb-6 flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.15)" }}>
+              <span className="text-sky-400 text-lg">🩺</span>
+              <span className="text-sky-300 text-xs font-semibold uppercase tracking-wider">MDCAT Profile Setup</span>
             </div>
           )}
 
@@ -273,7 +336,13 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
               </div>
 
               {/* Setup mode notice */}
-              {isSetupMode && (
+              {isMdcatSetup && (
+                <div className="mb-5 px-4 py-3 rounded-xl text-sm"
+                  style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)", color: "#7dd3fc" }}>
+                  📋 Complete your profile to access MDCAT. Your mobile number is required for verification.
+                </div>
+              )}
+              {isSetupMode && !isMdcatSetup && (
                 <div className="mb-5 px-4 py-3 rounded-xl text-sm"
                   style={{ background: "rgba(240,180,41,0.08)", border: "1px solid rgba(240,180,41,0.2)", color: "#fcd34d" }}>
                   ℹ Fill in your details to continue. After this you'll choose your role and select your grade.
@@ -283,9 +352,10 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
               {/* Fields */}
               <div className="space-y-4 mb-6">
                 {[
-                  { field: "name",     label: "Full Name",     placeholder: "Your Name",               type: "text",  icon: "👤", required: true  },
-                  { field: "username", label: "Username",      placeholder: "Choose a username (for login)",  type: "text",  icon: "🏷️", required: false },
-                  { field: "email",    label: "Gmail / Email", placeholder: "you@gmail.com",                 type: "email", icon: "✉️", required: true  },
+                  { field: "name",     label: "Full Name",     placeholder: "Your Name",                    type: "text",  icon: "👤", required: true  },
+                  { field: "username", label: "Username",      placeholder: "Choose a username (for login)", type: "text",  icon: "🏷️", required: false },
+                  { field: "email",    label: "Gmail / Email", placeholder: "you@gmail.com",                type: "email", icon: "✉️", required: true  },
+                  ...(isMdcatSetup ? [{ field: "mobile", label: "Mobile Number", placeholder: "923XXXXXXXXX", type: "text", icon: "📱", required: true }] : []),
                 ].map(({ field, label, placeholder, type, icon, required }) => (
                   <div key={field}>
                     <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1.5">

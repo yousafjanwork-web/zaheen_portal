@@ -249,7 +249,8 @@ const navigate = useNavigate();
                <button
                   onClick={() => {
                     if (!isLoggedIn) {
-                    navigate("/login", { state: { from: location.pathname, mdcat: true } });
+                    localStorage.setItem("mdcat_return", JSON.stringify({ from: window.location.pathname, mdcat: true }));
+                    window.location.href = "/mdcat-login";
                       return;
                     }
                     setActiveQuiz({ ...quiz, id: 9999 });

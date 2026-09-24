@@ -12,7 +12,6 @@ interface HeaderProps {
   setSelectedQuizId: (quizID: number | null) => void;
   selectedQuizId: number | null;
   setActiveQuiz: (quiz: Quiz | null) => void;
-  daysLeft: number | null;
 }
 
 const Header = ({
@@ -21,7 +20,6 @@ const Header = ({
   setSelectedQuizId,
   selectedQuizId,
   setActiveQuiz,
-  daysLeft,
 }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -157,32 +155,6 @@ const Header = ({
         {/* User Profile & Countdown Status Section */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
 
-          {/* Exam countdown */}
-          {daysLeft !== null && (
-            <div
-              className="relative hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500 shadow-md"
-              style={{ boxShadow: "0 0 10px rgba(249,115,22,0.5), 0 0 20px rgba(249,115,22,0.25)" }}
-            >
-              <span className="text-[8px] font-black text-orange-100 uppercase tracking-widest leading-none">Exam</span>
-              <span className="text-[8px] font-black text-orange-100 uppercase tracking-widest leading-none">in</span>
-              <span
-                className="text-sm font-black text-white leading-none mx-0.5"
-                style={{ animation: "countdown-pop 2s ease-in-out infinite" }}
-              >
-                {daysLeft}
-              </span>
-              <span className="text-[8px] font-black text-orange-100 uppercase tracking-widest leading-none">days</span>
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 border border-white">
-                <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-75" />
-              </span>
-              <style>{`
-                @keyframes countdown-pop {
-                  0%, 100% { transform: scale(1); text-shadow: 0 0 6px rgba(255,255,255,0.4); }
-                  50%       { transform: scale(1.18); text-shadow: 0 0 12px rgba(255,255,255,0.9); }
-                }
-              `}</style>
-            </div>
-          )}
 
           {/* User dropdown */}
           {isLoggedIn && displayName ? (
@@ -221,13 +193,6 @@ const Header = ({
                     <LayoutDashboard className="w-4 h-4 shrink-0" />
                     Dashboard
                   </button>
-                  {daysLeft !== null && (
-                    <div className="flex items-center gap-2 px-4 py-2.5 border-t border-sky-50">
-                      <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest">
-                        Exam in {daysLeft} days
-                      </span>
-                    </div>
-                  )}
                   <div className="border-t border-sky-50" />
                   <button
                     onClick={handleLogout}
@@ -286,11 +251,7 @@ const Header = ({
                   </span>
                 </div>
                 <span className="text-xs font-black text-sky-900 truncate">{displayName}</span>
-                {daysLeft !== null && (
-                  <span className="ml-auto text-[9px] font-black text-orange-500 uppercase tracking-widest whitespace-nowrap">
-                    Exam in {daysLeft}d
-                  </span>
-                )}
+
               </div>
               <button
                 onClick={() => { goTo("dash-board", "/mdcat/dashboard"); setMenuOpen(false); }}

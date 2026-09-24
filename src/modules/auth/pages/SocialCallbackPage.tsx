@@ -2,15 +2,10 @@
  * SocialCallbackPage.tsx
  *
  * Handles the redirect back from Google / Facebook OAuth.
- * Backend redirects to:
- *   https://z.zaheen.com.pk/social-callback?token=JWT&user_id=123&name=John&email=john@gmail.com
+ * Works for BOTH normal Zaheen users AND MDCAT users.
  *
- * This page:
- *   1. Reads token, user_id, name, email from URL params
- *   2. Calls getSetupStatus(user_id) to check profile completion
- *   3. Logs user in via loginWithUser() — same as normal login flow
- *   4. Routes to /profile?setup=subscribe  (no profile yet)
- *         or  /packages                    (profile complete)
+ * MDCAT users are identified by the `state` param passed through Google OAuth.
+ * Normal Zaheen users have no `state` param — their flow is unchanged.
  */
 
 import React, { useEffect, useState } from "react";
@@ -32,11 +27,18 @@ const SocialCallbackPage: React.FC = () => {
       const userId = searchParams.get("user_id");
       const name   = searchParams.get("name")  ?? "";
       const email  = searchParams.get("email") ?? "";
-      // Read MDCAT state from URL param (passed through OAuth, survives domain change)
+
+      // Check if this login came from MDCAT via state param
       const stateParam = searchParams.get("state");
-      const parsedState = stateParam ? JSON.parse(decodeURIComponent(stateParam)) : null;
-      if (parsedState?.mdcat === true) {
-        localStorage.setItem("mdcat_return", JSON.stringify(parsedState));
+      let mdcatReturn: { from: string; mdcat: true } | null = null;
+      if (stateParam) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(stateParam));
+          if (parsed?.mdcat === true) {
+            mdcatReturn = parsed;
+            localStorage.setItem("mdcat_return", JSON.stringify(parsed));
+          }
+        } catch { /* ignore */ }
       }
 
       // ── Guard: missing params ──
@@ -47,37 +49,45 @@ const SocialCallbackPage: React.FC = () => {
 
       const userIdNum = Number(userId);
 
-      // ── Check setup status ──
       setStatus("Checking your account…");
       try {
         const setupStatus = await getSetupStatus(userIdNum);
-
         setStatus("Opening your account…");
 
-        // ── MDCAT fast-track — check FIRST before any loginWithUser call ──
-        const storedMdcat = localStorage.getItem("mdcat_return");
-        const parsedMdcat = storedMdcat ? JSON.parse(storedMdcat) : null;
-        localStorage.removeItem("mdcat_return");
-
-        if (parsedMdcat?.mdcat === true) {
-          // User came from MDCAT — set as learner, skip ALL LMS setup
-          // regardless of whether profile exists or not
+        // ── MDCAT fast-track ──────────────────────────────────────────────
+        if (mdcatReturn?.mdcat === true) {
           loginWithUser({
             msisdn:           "",
             userId:           userIdNum,
             isKid:            false,
             role:             "learner",
-            selectedClassId:  setupStatus.selected_class_id  ?? null,
-            selectedCourseId: setupStatus.selected_course_id ?? null,
+            selectedClassId:  null,
+            selectedCourseId: null,
             displayName:      name.trim() || email.trim(),
             token,
           });
-          navigate(parsedMdcat.from ?? "/mdcat", { replace: true });
+          setStatus("Checking your MDCAT profile…");
+          try {
+            const { getDashboard } = await import("@/modules/shared/services/lmsService");
+            const dashboard = await getDashboard(userIdNum);
+            const userMsisdn = dashboard?.user?.msisdn ?? null;
+            if (userMsisdn) {
+              // Already has mobile — go straight to MDCAT page
+              const returnPath = mdcatReturn.from ?? "/mdcat";
+              localStorage.removeItem("mdcat_return");
+              navigate(returnPath, { replace: true });
+            } else {
+              // No mobile — go to MDCAT profile page to collect it
+              navigate("/mdcat-profile", { replace: true });
+            }
+          } catch {
+            navigate("/mdcat-profile", { replace: true });
+          }
           return;
         }
         // ── end MDCAT fast-track ──────────────────────────────────────────
 
-        // ── Normal flow: log in then route based on profile completion ──
+        // ── Normal Zaheen flow ────────────────────────────────────────────
         loginWithUser({
           msisdn:           "",
           userId:           userIdNum,
@@ -107,39 +117,26 @@ const SocialCallbackPage: React.FC = () => {
     run();
   }, []);
 
-  // ── Error screen ──
   if (error) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-6 px-4">
-        <div
-          className="w-full max-w-sm px-6 py-5 rounded-2xl text-sm flex items-start gap-3"
-          style={{
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.25)",
-            color: "#fca5a5",
-          }}
-        >
+        <div className="w-full max-w-sm px-6 py-5 rounded-2xl text-sm flex items-start gap-3"
+          style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#fca5a5" }}>
           <span className="mt-0.5">⚠</span>
           <div>
             <p className="font-semibold mb-1">Sign-in failed</p>
             <p>{error}</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate("/subscribe", { replace: true })}
+        <button onClick={() => navigate("/subscribe", { replace: true })}
           className="px-6 py-3 rounded-xl font-semibold text-sm"
-          style={{
-            background: "linear-gradient(135deg,#F0B429,#f59e0b)",
-            color: "#0f172a",
-          }}
-        >
+          style={{ background: "linear-gradient(135deg,#F0B429,#f59e0b)", color: "#0f172a" }}>
           ← Back to Sign Up
         </button>
       </div>
     );
   }
 
-  // ── Loading screen ──
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-6">
       <div className="w-10 h-10 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />

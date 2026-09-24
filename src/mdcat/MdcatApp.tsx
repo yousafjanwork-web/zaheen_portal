@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
  
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
  
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -34,8 +34,6 @@ import LoadingFrame from "./components/LoadingFrame";
 import AiTutorPage from "./components/AiTutorPage";
 import SEO from "./components/SEO";
 import RepeatedQuestions from "./components/RepeatedQuestions";
-import { MdcatAuthOverlayProvider, useMdcatAuthOverlay } from "./context/MdcatAuthOverlayContext";
-import MdcatAuthOverlay from "./components/MdcatAuthOverlay";
  
 // ─── Helper: map snake_case quiz fields from DB to camelCase for frontend ───
 const mapQuiz = (q: any): Quiz => ({
@@ -105,14 +103,29 @@ function AIQuizRoute({ quiz, onAttemptFinished }: {
 }) {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const { token: authToken } = useAuth();
   const [fullQuiz, setFullQuiz] = useState<Quiz | null>(null);
   const [fetchingQuiz, setFetchingQuiz] = useState(true);
+
+  const getToken = () => {
+    try { return authToken ?? JSON.parse(localStorage.getItem("zaheen_auth") || "{}").token ?? ""; }
+    catch { return ""; }
+  };
  
   useEffect(() => {
     let cancelled = false;
     setFetchingQuiz(true);
- 
-    fetch(mdcatApi(`/api/mdcat/quizzes/${quizId}`))
+    const stored = localStorage.getItem("zaheen_auth");
+    const parsed = stored ? JSON.parse(stored) : null;
+    const token = parsed?.token ?? authToken ?? "";
+    const userId = parsed?.userId ?? null;
+    const quizUrl = token
+      ? mdcatApi(`/api/mdcat/quizzes/${quizId}`)
+      : mdcatApi(`/api/mdcat/quizzes/${quizId}?userId=${userId ?? ""}`);
+
+    fetch(quizUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then((res) => res.json())
       .then((json) => {
         if (cancelled) return;
@@ -194,15 +207,51 @@ async function addNewAIQuestions(questions:Question[])
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
   const location = useLocation();
-  if (!isLoggedIn) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  }
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      // Save where the user came from so we can return them after login
+      localStorage.setItem("mdcat_return", JSON.stringify({
+        from: location.pathname + location.search,
+        mdcat: true,
+      }));
+      window.location.href = "/mdcat-login";
+    }
+  }, [isLoggedIn]);
+
+  if (!isLoggedIn) return null;
   return <>{children}</>;
 }
  
 function MdcatAppInner() {
-  const { isOpen } = useMdcatAuthOverlay();
-  const { loginWithUser } = useAuth();
+  const { loginWithUser, token: authToken, userId } = useAuth();
+
+  // Helper: always get the freshest token
+    const getToken = (): string => {
+    const stored = localStorage.getItem("zaheen_auth");
+    const parsed = stored ? JSON.parse(stored) : null;
+    return authToken ?? parsed?.token ?? "";
+  };
+
+  // Helper: for flexAuth routes — append ?userId= when no JWT is available
+  const flexAuthUrl = (url: string): string => {
+    const token = getToken();
+    if (token) return url; // JWT present, Bearer header will carry it
+    const id = userId;
+    if (!id) return url;
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}userId=${id}`;
+  };
+
+
+  // ── MDCAT Google post-OAuth profile check ──────────────────────
+  // After Google OAuth, SocialCallbackPage navigates back here with
+  // ?mdcat_profile_needed=1 when the MDCAT profile is not yet complete.
+  // We open MdcatProfileSetup inside the overlay so the user never
+  // leaves the MDCAT module.
+
+  // ───────────────────────────────────────────────────────────────
 
   // ── SMS Auto-Login ──────────────────────────────────────────────
   useEffect(() => {
@@ -261,11 +310,27 @@ function MdcatAppInner() {
  
   // Load all foundational data on startup
   const fetchAllData = async () => {
+    const stored = localStorage.getItem("zaheen_auth");
+    const parsed = stored ? JSON.parse(stored) : null;
+    const freshToken = parsed?.token ?? authToken ?? null;
+    const freshUserId = parsed?.userId ?? userId ?? null;
+
+    const authHeaders: HeadersInit = freshToken
+      ? { Authorization: `Bearer ${freshToken}` }
+      : {};
+
+    const withUserId = (url: string) => {
+      if (freshToken) return url;
+      if (!freshUserId) return url;
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}userId=${freshUserId}`;
+    };
+
     try {
-      const [quizzesRes, statsRes, recsRes] = await Promise.all([
+       const [quizzesRes, statsRes, recsRes] = await Promise.all([
         fetch(mdcatApi("/api/mdcat/quizzes")),
-        fetch(mdcatApi("/api/mdcat/performance")),
-        fetch(mdcatApi("/api/mdcat/recommendations")),
+        fetch(withUserId(mdcatApi("/api/mdcat/performance")), { headers: authHeaders }),
+        fetch(withUserId(mdcatApi("/api/mdcat/recommendations")), { headers: authHeaders }),
       ]);
  
       // Quizzes
@@ -279,7 +344,8 @@ function MdcatAppInner() {
  
       // Performance
       if (statsRes.ok) {
-        const statsData = await statsRes.json();
+        const statsJson = await statsRes.json();
+        const statsData = statsJson.data ?? statsJson;
         setPerformanceStats({
           totalAttempts: statsData.totalAttempts || 0,
           averageScorePercent: statsData.averageScorePercent || 0,
@@ -321,7 +387,18 @@ function MdcatAppInner() {
    const fetchRepeatedQuestions = async () => {
     try {
       setRepeatedLoading(true);
-      const res = await fetch(mdcatApi("/api/mdcat/repeated-questions"));
+      const _stored = localStorage.getItem("zaheen_auth");
+      const _parsed = _stored ? JSON.parse(_stored) : null;
+      const _token = _parsed?.token ?? authToken ?? null;
+      const _userId = _parsed?.userId ?? userId ?? null;
+      const repeatedUrl = _token
+        ? mdcatApi("/api/mdcat/repeated-questions")
+        : _userId
+        ? mdcatApi(`/api/mdcat/repeated-questions?userId=${_userId}`)
+        : mdcatApi("/api/mdcat/repeated-questions");
+      const res = await fetch(repeatedUrl, {
+        headers: _token ? { Authorization: `Bearer ${_token}` } : {},
+      });
       if (res.ok) {
         const json = await res.json();
         const raw = Array.isArray(json)
@@ -393,14 +470,6 @@ function MdcatAppInner() {
         return "bg-rose-500";
     }
   };
-  // Dynamic MDCAT countdown — exam date: 20 September 2026
-  const examDate = new Date("2026-09-20T00:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const daysLeft = Math.max(
-    0,
-    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
-  );
  
  
   // Small wrapper so every page gets the same enter/exit motion without repeating it 5 times
@@ -409,9 +478,9 @@ function MdcatAppInner() {
   // Quiz session needs the id from the URL, not from local state
  
   return (
-    <div className={`min-h-screen  bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200 transition-[filter] duration-200 ${isOpen ? "blur-md pointer-events-none select-none" : ""}`}>
+    <div className="min-h-screen bg-brand-50/70 text-slate-800 flex flex-col font-sans selection:bg-brand-200">
       {/* Platform Header */}
-      <Header setActiveQuiz={setActiveQuiz} activeTab={activeTab} setActiveTab={setActiveTab} daysLeft={daysLeft} selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />
+      <Header setActiveQuiz={setActiveQuiz} activeTab={activeTab} setActiveTab={setActiveTab} selectedQuizId={selectedQuizId} setSelectedQuizId={setSelectedQuizId} />
  
  
 <div className="grid flex-1 grid-rows-[minmax(0,1fr)] overflow-x-hidden min-h-0">
@@ -484,22 +553,35 @@ function MdcatAppInner() {
        <Route
         path="/repeated-questions"
         element={
-          repeatedLoading ? <LoadingFrame /> :
-          <RepeatedQuestions
-            data={repeatedQuestions}
-            loading={false}
-            hasMore={repeatedHasMore}
-            onLoadMore={loadMoreRepeated}
-          />
-          
+          <PageTransition>
+            <SEO
+              title="Repeated Questions"
+              description="Browse MDCAT questions that have appeared across multiple past paper years — high-yield topics for your exam prep."
+              path="/repeated-questions"
+            />
+            {repeatedLoading ? <LoadingFrame /> :
+              <RepeatedQuestions
+                data={repeatedQuestions}
+                loading={false}
+                hasMore={repeatedHasMore}
+                onLoadMore={loadMoreRepeated}
+              />
+            }
+          </PageTransition>
         }
-        
       />
       <Route
-      path="/guess-paper"
-      element={
-        <SolvedPaper/>
-      }
+        path="/guess-paper"
+        element={
+          <PageTransition>
+            <SEO
+              title="AI 2026 Practice"
+              description="Practice with the AI-predicted NUMS MDCAT 2026 paper — 200 fully solved questions with explanations."
+              path="/guess-paper"
+            />
+            <SolvedPaper/>
+          </PageTransition>
+        }
       />
  
       <Route
@@ -535,7 +617,6 @@ function MdcatAppInner() {
               ) : (
                 <>
                   <Dashboard
-                    testDate={examDate}
                     setActiveTab={setActiveTab}
                     performanceStats={performanceStats}
                     getSubjectColorBadge={getSubjectColorBadge}
@@ -598,11 +679,6 @@ function MdcatAppInner() {
 }
 
 export default function MdcatApp() {
-  return (
-    <MdcatAuthOverlayProvider>
-      <MdcatAppInner />
-      <MdcatAuthOverlay />
-    </MdcatAuthOverlayProvider>
-  );
+  return <MdcatAppInner />;
 }
  

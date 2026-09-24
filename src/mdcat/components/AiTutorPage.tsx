@@ -15,7 +15,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { mdcatAiApi } from "../config";
-import { useMdcatAuthOverlay } from "../context/MdcatAuthOverlayContext";
 
 interface AiTutorPageProps {
   onBack?: () => void;
@@ -54,7 +53,6 @@ export default function AiTutorPage() {
  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { openOverlay } = useMdcatAuthOverlay();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatSubject, setChatSubject] = useState("Biology");
@@ -79,7 +77,8 @@ export default function AiTutorPage() {
  const sendQuestion = async (text: string, subject: string) => {
     if (!text.trim() || isAskingAI) return;
     if (!isLoggedIn) {
-      openOverlay("login");
+      localStorage.setItem("mdcat_return", JSON.stringify({ from: window.location.pathname, mdcat: true }));
+      window.location.href = "/mdcat-login";
       return;
     }
     const userMsg: ChatMessage = {
@@ -93,6 +92,10 @@ export default function AiTutorPage() {
     setIsAskingAI(true);
 
     try {
+      const _stored = localStorage.getItem("zaheen_auth");
+      const _parsed = _stored ? JSON.parse(_stored) : null;
+      const _userId = _parsed?.userId ?? null;
+
       const response = await fetch(mdcatAiApi("/api/mdcat/chat"), 
       {
         method: "POST",
@@ -101,6 +104,7 @@ export default function AiTutorPage() {
           question: text,
           subject,
           language: chatLanguage,
+          userId: _userId,
         }),
       });
 

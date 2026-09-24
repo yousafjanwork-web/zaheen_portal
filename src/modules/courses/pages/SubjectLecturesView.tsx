@@ -1063,6 +1063,12 @@ const { classInfo, chapters, chapterVideos, subjects, loading } =
       : selectedSubject.name || "";
   }, [selectedSubject, isRtl]);
 
+  useEffect(() => {
+    if (subjectName) {
+      document.title = `Zaheen | ${subjectName}`;
+    }
+  }, [subjectName]);
+
   const gradeDisplayName = useMemo(() => {
     if (!classInfo) return "";
     return isRtl

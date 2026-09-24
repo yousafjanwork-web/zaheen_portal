@@ -21,7 +21,6 @@ import {
     Star,
     Flame,
     History,
-    Timer,
     FileText,
     BarChart3, 
     Dna, 
@@ -38,6 +37,7 @@ import { SUBJECT_ICON, SUBJECT_THEME } from "./ProgressBar";
 import { motion, AnimatePresence } from "motion/react";
 import { PerformanceStats, StudyRecommendation, MDCATSubject } from "../types";
 import { mdcatApi, mdcatAiApi } from "../config";
+import { useAuth } from "@/modules/shared/context/AuthContext";
 
 interface DashboardProps {
     stats: PerformanceStats;
@@ -67,6 +67,7 @@ export default function Dashboard1({
         studyStreak: stats?.studyStreak || 0,
     } as any;
 
+   const { token: authToken, userId: authUserId } = useAuth();
     const [isGeneratingRec, setIsGeneratingRec] = useState(false);
     const [recError, setRecError] = useState<string | null>(null);
     const [selectedSubjectFilter, setSelectedSubjectFilter] =
@@ -110,14 +111,19 @@ export default function Dashboard1({
         setIsGeneratingRec(true);
         setRecError(null);
         try {
-            const response = await fetch(
-                mdcatApi("/api/mdcat/recommendations/generate"),
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+              const stored = localStorage.getItem("zaheen_auth");
+            const parsed = stored ? JSON.parse(stored) : null;
+            const token = authToken ?? parsed?.token ?? "";
+            const uid = authUserId ?? parsed?.userId ?? null;
+            const recsBase = mdcatApi("/api/mdcat/recommendations/generate");
+            const recsUrl = !token && uid ? `${recsBase}?userId=${uid}` : recsBase;
+            const response = await fetch(recsUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
-            );
-            if (!response.ok) {
+            });           if (!response.ok) {
                 const errData = await response.json();
                 throw new Error(errData.error || "Failed to generate recommendations");
             }
