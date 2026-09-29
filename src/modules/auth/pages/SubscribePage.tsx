@@ -19,6 +19,22 @@ const SubscribePage = () => {
   const [searchParams] = useSearchParams();
 
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("ZONG");
+
+  // Temporary: HE server always lands on /subscribe — detect portal from ?page param
+  // and redirect to the correct subscribe page until HE server is updated
+  useEffect(() => {
+    const page = searchParams.get("page") ?? "";
+    if (page.includes("mdcat")) {
+      const params = new URLSearchParams(window.location.search);
+      navigate(`/mdcat-subscribe?${params.toString()}`, { replace: true });
+      return;
+    }
+    if (page.includes("issb")) {
+      const params = new URLSearchParams(window.location.search);
+      navigate(`/issb/subscribe?${params.toString()}`, { replace: true });
+      return;
+    }
+  }, []);
   const [zongMsisdn, setZongMsisdn] = useState("");
   const [otherMsisdn, setOtherMsisdn] = useState("");
   const [cnic, setCnic] = useState("");
@@ -177,7 +193,7 @@ const SubscribePage = () => {
   const handleGoogleSignUp = () => {
     setSocialLoading("google");
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&screen_hint=signup`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&portal=web`;
   };
 
   // ── Temporarily hidden: Facebook sign-up — will be added later ──

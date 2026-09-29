@@ -15,7 +15,7 @@ const sparks = [
 ];
 
 const slides = [
-   { key: "slide1", image: "https://cdn.zaheen.com.pk/zaheen-web-img/MDCAT.png", plan: "208" },
+   { key: "slide1", image: "https://cdn.zaheen.com.pk/images/issbmobilebanner.png", plan: "208" },
   { key: "slide2", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner1.jpeg", plan: "205" },
   { key: "slide3", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner2.jpeg", plan: "206" },
   { key: "slide4", image: "https://cdn.zaheen.com.pk/zaheen-web-img/banner3.jpeg", plan: "207" },

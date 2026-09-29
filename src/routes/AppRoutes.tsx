@@ -84,7 +84,9 @@ import SetupAddChildPage    from "../modules/lms/pages/setup/SetupAddChildPage";
 import DashboardPage        from "../modules/lms/pages/dashboard/DashboardPage";
 import SetupGuard           from "../modules/lms/components/SetupGuard";
 import SocialCallbackPage       from "../modules/auth/pages/SocialCallbackPage";
+import SocialAuthPage           from "../modules/auth/pages/SocialAuthPage";
 import MdcatLoginPage           from "../mdcat/pages/MdcatLoginPage";
+import MdcatSubscribePage       from "../mdcat/pages/MdcatSubscribePage";
 import MdcatSocialCallbackPage  from "../mdcat/pages/MdcatSocialCallbackPage";
 import MdcatProfilePage         from "../mdcat/pages/MdcatProfilePage";
 import PaymentPage        from "../payment/payment";
@@ -162,7 +164,9 @@ const AppRoutes = () => {
 
           {/* ── Callbacks ── */}
           <Route path="/social-callback"      element={<><TitleSetter title="Zaheen | Connecting..." /><SocialCallbackPage /></>} />
+<Route path="/social-auth"          element={<><TitleSetter title="Zaheen | Setting up…"  /><SocialAuthPage /></>} />
           <Route path="/mdcat-login"           element={<><TitleSetter title="Zaheen | MDCAT Login" /><MdcatLoginPage /></>} />
+<Route path="/mdcat-subscribe"       element={<><TitleSetter title="Zaheen | MDCAT Subscribe" /><MdcatSubscribePage /></>} />
           <Route path="/mdcat-social-callback" element={<><TitleSetter title="Zaheen | MDCAT Connecting..." /><MdcatSocialCallbackPage /></>} />
           <Route path="/mdcat-profile"         element={<><TitleSetter title="Zaheen | MDCAT Profile" /><MdcatProfilePage /></>} />
 

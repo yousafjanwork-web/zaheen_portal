@@ -59,6 +59,8 @@ export const verifyPin = async (
   const transactionId = Date.now();
   const subMethod = "WEB";
 
+  const subBy = new URLSearchParams(window.location.search).get("page") || "";
+
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/verify-subscribe",
     {
@@ -67,7 +69,8 @@ export const verifyPin = async (
         serviceId,
         pin,
         transactionId,
-        subMethod
+        subMethod,
+        subBy
       }
     }
   );
@@ -109,6 +112,8 @@ export const subscribeUser = async (
 
   console.log(subMethod, "onsubmethod");
 
+  const subBy = new URLSearchParams(window.location.search).get("page") || "";
+
   const res = await axios.get(
     "https://subgateway.fitsworld.com.pk/zongcharging/api/subscribe",
     {
@@ -116,7 +121,8 @@ export const subscribeUser = async (
         msisdn,
         serviceId,
         subMethod,
-        transactionId: Date.now()
+        transactionId: Date.now(),
+        subBy
       }
     }
   );

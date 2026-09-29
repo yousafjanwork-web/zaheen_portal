@@ -6,7 +6,12 @@
    "intelligence_engine": "Zaheen Intelligence Engine",
     "ai_tutor": "AI Tutor",
     "mdcat_command": "MDCAT Command Center",
+    "mdcat_prep" : "MDCAT Prep",
     "test_prep": "Test Prep",
+     "all_test_prep":"All Test Prep",
+    "issb":"ISSB",
+    "nat":"NAT",
+    "mdcat":"MDCAT",
 
     "practiceCorner": "Practice Corner",
     "boardResults": "Board Results",
@@ -70,12 +75,12 @@
     "copyright": "© 2024 Zaheen Educational Portal"
   },
   "hero": {
-    "slide1": {
-  "title": "MDCAT Preparation",
-  "highlight": "Master the MDCAT Secure Your Medical Seat",
-  "description": "Master the Syllabus. Practice Precision. Achieve Excellence.",
-  "button": "Start Preparing",
-  "link": "/mdcat"
+  "slide1": {
+  "title": "ISSB Preparation",
+  "highlight": "Prepare. Perform. Succeed.",
+  "description": "Psychological Tests • Intelligence Tests • Mock Tests",
+  "button": "Start ISSB Prep",
+  "link": "https://z.zaheen.com.pk/issb"
 },
     "slide2": {
       "title": "Kindergarten",
@@ -105,10 +110,10 @@
       "button": "Secure Your Future",
       "link": "/skills/300"
     },
-    "slide6": {
-  "title": "Advanced Kindergarten Learning",
-  "highlight": "Building Bright Minds with Creativity.",
-  "description": "Interactive activities and playful lessons designed for early learners.",
+   "slide6": {
+  "title": "Advanced Kindergarten",
+  "highlight": "Learn. Play. Grow.",
+  "description": "Advanced, fun & interactive learning for kids.",
   "button": "Explore More",
   "link": "/kg"
 },
@@ -264,13 +269,12 @@
   "mobileSubtitle": "Get access to all courses with one subscription.",
   "subscribe": "Subscribe Now",
 
-   "slide1": {
-    "title": "Crack MDCAT with ",
-    "highlight": "Confidence",
-    "description": "Expert Faculty • Smart Practice • Proven Results",
-    "button": "Subscribe Now"
-    
-  },
+ "slide1": {
+  "title": "Crack ISSB with",
+  "highlight": "Confidence",
+  "description": "Smart Practice • Psychological Tests • Complete Preparation",
+  "button": "Start Preparing"
+},
 
   "slide2": {
     "title": "Learn from Pakistan's",

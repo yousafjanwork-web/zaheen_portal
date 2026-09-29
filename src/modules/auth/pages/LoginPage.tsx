@@ -82,7 +82,13 @@ const [loading,       setLoading]       = useState(false);
   const handleGoogleLogin = () => {
     setSocialLoading(true);
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const path = window.location.pathname;
+  const portal = path.startsWith('/mdcat') ? 'mdcat'
+             : path.startsWith('/issb')  ? 'issb'
+             : path.startsWith('/nat')   ? 'nat'
+             : 'web';
+   // window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${portal}`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&portal=${portal}`;
   };
 
   /* OTP countdown */

@@ -30,6 +30,11 @@ const getInitials = (name: string) =>
     .map((w) => w[0].toUpperCase())
     .join("");
 
+const issbBadgeStyle: React.CSSProperties = {
+  background: "linear-gradient(90deg,#ef4444,#f97316)",
+  animation: "issbPulse 1.4s ease-in-out infinite, issbWiggle 2.5s ease-in-out infinite",
+};
+
 const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   const { msisdn, userId, isLoggedIn, isKid, logout } = useAuth();
   const displayName = useUserDisplayName();
@@ -46,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
   const [selectedBoard, setSelectedBoard] = useState("boards.federal");
   const [languageOpen, setLanguageOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false); // ← NEW
+const [prepOpen, setPrepOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null); // ← NEW
@@ -59,6 +65,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
         setLearningOpen(false);
         setLanguageOpen(false);
         setIntelligenceOpen(false);
+        setPrepOpen(false);
       }
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
@@ -84,6 +91,18 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
   return (
     <>
+      <style>{`
+        @keyframes issbPulse {
+          0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+          50% { opacity: 0.75; box-shadow: 0 0 14px rgba(249,115,22,1); }
+        }
+        @keyframes issbWiggle {
+          0%, 100% { transform: rotate(-2deg) scale(1); }
+          25% { transform: rotate(2deg) scale(1.08); }
+          50% { transform: rotate(-1deg) scale(1.04); }
+          75% { transform: rotate(1.5deg) scale(1.06); }
+        }
+      `}</style>
       <header className="hidden lg:block sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border-b border-white/10">
         <div
           ref={dropdownRef}
@@ -130,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
              <div className="relative">
   <button
-    onClick={() => { setCoursesOpen(!coursesOpen); setLearningOpen(false); setIntelligenceOpen(false); }}
+    onClick={() => { setCoursesOpen(!coursesOpen); setLearningOpen(false); setIntelligenceOpen(false); setPrepOpen(false); }}
     className="flex items-center gap-1 hover:text-white/80"
   >
     {t("menu.courses")} <ChevronDown size={16} />
@@ -140,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
 <div className="relative">
   <button
-    onClick={() => { setLearningOpen(!learningOpen); setCoursesOpen(false); setIntelligenceOpen(false); }}
+    onClick={() => { setLearningOpen(!learningOpen); setCoursesOpen(false); setIntelligenceOpen(false); setPrepOpen(false); }}
     className="flex items-center gap-1 hover:text-white/80"
   >
     {t("menu.learningHub")} <ChevronDown size={16} />
@@ -150,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
 
 <div className="relative">
   <button
-    onClick={() => { setIntelligenceOpen(!intelligenceOpen); setCoursesOpen(false); setLearningOpen(false); }}
+    onClick={() => { setIntelligenceOpen(!intelligenceOpen); setCoursesOpen(false); setLearningOpen(false); setPrepOpen(false); }}
     className="flex items-center gap-2 hover:text-white/80 transition-colors"
   >
                   {t("menu.intelligence_engine")}
@@ -173,9 +192,41 @@ const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
                 )}
               </div>
 
-            <Link to="/prep-exam" onClick={closeMenus} className="hover:text-white/80">
-  Test Prep
-</Link>
+            <div className="relative">
+  <button
+    onClick={() => { setPrepOpen(!prepOpen); setCoursesOpen(false); setLearningOpen(false); setIntelligenceOpen(false); }}
+    className="flex items-center gap-1 hover:text-white/80 transition-colors"
+  >
+              {t("menu.test_prep")}
+      <span className="relative flex items-center">
+        <ChevronDown size={16} />
+        <span
+          className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase leading-none whitespace-nowrap"
+          dir="ltr"
+          style={issbBadgeStyle}
+        >
+          🔥 ISSB
+        </span>
+      </span>
+  </button>
+  {prepOpen && (
+    <div className="absolute left-0 top-10 w-48 bg-white text-slate-900 shadow-xl border rounded-xl p-2 z-50">
+      <Link to="/prep-exam" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm font-medium text-slate-700">
+       {t("menu.all_test_prep")}
+      </Link>
+      <div className="my-1 border-t border-slate-100" />
+      <a href="https://z.zaheen.com.pk/issb" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+         {t("menu.issb")}
+      </a>
+      <a href="https://z.zaheen.com.pk/nat" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+         {t("menu.nat")}
+      </a>
+      <Link to="/mdcat" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+         {t("menu.mdcat")}
+      </Link>
+    </div>
+  )}
+</div>
 
             </nav>
           </div>

@@ -40,12 +40,12 @@ export function MdcatEnrollmentLandingPage() {
     ]);
     const device = encodeURIComponent(JSON.stringify(data));
     window.location.href =
-      `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/sub_enrollnow` +
+      `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/mdcat-subscribe` +
       `&transaction_id=${transactionId}` +
       `&affid=${afflid}` +
       `&pubid=${pubid}` +
       `&device=${device}` +
-      `&page_name=enrollnow&service_id=205`;
+      `&page_name=enrollnow_mdcat&service_id=205`;
   };
 
   return (

@@ -55,7 +55,7 @@ const LearningMenu: React.FC<LearningMenuProps> = ({ open, onClose }) => {
             onClick={onClose}
            className="block px-3 py-2 rounded-md hover:bg-slate-100"
           >
-            MDCAT Prep
+            {t("menu.mdcat_prep")}
           </Link>
         </li>
 

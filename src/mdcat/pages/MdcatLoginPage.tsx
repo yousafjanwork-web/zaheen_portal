@@ -80,7 +80,7 @@ const MdcatLoginPage: React.FC = () => {
       mdcat: true,
     }));
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${mdcatState}`;
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&portal=mdcat`;
   };
 
   // After successful OTP/credentials login → go back to MDCAT page directly
@@ -316,7 +316,16 @@ const MdcatLoginPage: React.FC = () => {
             </>
           )}
 
-          <div className="mt-6 pt-5 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="mt-6 pt-5 text-center space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <p className="text-slate-500 text-xs">
+              Don't have an account?{" "}
+              <button
+                onClick={() => navigate("/mdcat-subscribe")}
+                className="text-sky-400 hover:underline"
+              >
+                Subscribe now
+              </button>
+            </p>
             <button onClick={() => navigate("/mdcat", { replace: true })}
               className="text-slate-500 text-xs hover:text-slate-400">
               ← Back to MDCAT

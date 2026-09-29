@@ -15,7 +15,7 @@ const sparks = [
 ];
 
 const slides = [
-  { id: 1, image: "https://cdn.zaheen.com.pk/zaheen-web-img/mdcatbanrr.png" },
+  { id: 1, image: "https://cdn.zaheen.com.pk/images/issbbanner.png" },
   { id: 2, image: "https://cdn.zaheen.com.pk/zaheen-web-img/kgbanr.png" },
   { id: 3, image: "https://cdn.zaheen.com.pk/zaheen-web-img/grade1-5banr.png" },
   { id: 4, image: "https://cdn.zaheen.com.pk/zaheen-web-img/tradbannew.png" },
@@ -86,8 +86,8 @@ const HeroSlider = () => {
           transition={{ duration: 0.7 }}
           className="absolute inset-0 z-10"
         >
-         <div className="max-w-7xl mx-auto px-4 h-full flex items-center">
-            <div className="grid lg:grid-cols-2 gap-12 items-center w-full">
+         <div className="max-w-7xl mx-auto px-4 h-full flex items-center pb-16">
+            <div className="grid lg:grid-cols-2 gap-12 items-center w-full -mt-12">
 
               {/* TEXT */}
               <motion.div
@@ -109,7 +109,15 @@ const HeroSlider = () => {
 
                 {/* Yellow button — matches LoginPage PrimaryBtn */}
                 <button
-                  onClick={() => navigate(t(`${slideKey}.link`))}
+                  onClick={() => {
+  const link = t(`${slideKey}.link`);
+
+  if (link.startsWith("http://") || link.startsWith("https://")) {
+    window.location.href = link;
+  } else {
+    navigate(link);
+  }
+}}
                   className="px-8 py-4 rounded-xl font-bold text-sm transition-all hover:scale-105"
                   style={{
                     background: "linear-gradient(135deg, #F0B429, #f59e0b)",

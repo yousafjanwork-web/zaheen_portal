@@ -119,7 +119,7 @@ const MobileHeader = () => {
             { href: "/practice",        label: t("learning.practice") },
             { href: "/results",         label: t("learning.boardResults") },
             { href: "/ai",              label: t("menu.ai_tutor") },
-              { href: "/prep-exam",           label: t("menu.test_prep") },
+            { href: "/prep-exam",           label: t("menu.test_prep") },
           ].map(({ href, label }) => (
             <Link
               key={href}
