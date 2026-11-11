@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Enroll Now - Zaheen</title>
+
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS STYLING - Same as React */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #050a07;
+        }
+
+        .trd-page {
+            min-height: 100dvh;
+            background: #050a07;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .trd-wrapper {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100dvh;
+            background:
+                radial-gradient(ellipse at 85% 0%, rgba(0,230,118,0.14) 0%, transparent 50%),
+                radial-gradient(ellipse at 10% 40%, rgba(255,193,7,0.08) 0%, transparent 45%),
+                #07110b;
+            overflow-x: hidden;
+            font-family: 'Open Sans', sans-serif;
+            color: #e8f5e9;
+        }
+
+        /* HERO */
+        .trd-hero { padding: 16px 20px 0; }
+        .trd-hero-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(0,230,118,0.3);
+            box-shadow: 0 10px 40px rgba(0,230,118,0.15);
+        }
+        .trd-hero-img { width: 100%; display: block; height: auto; }
+
+        /* CTA */
+        .trd-cta { padding: 16px 22px 0; text-align: center; }
+        .trd-btn {
+            position: relative;
+            width: 100%;
+            padding: 17px 20px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #04130a;
+            background: linear-gradient(135deg, #ffc107 0%, #ffd54f 40%, #00e676 100%);
+            background-size: 200% 200%;
+            animation: trdGradient 4s ease infinite, trdGlow 2.2s ease-in-out infinite;
+            transition: transform 0.2s ease;
+        }
+        .trd-btn:hover { transform: translateY(-2px); }
+        .trd-btn:active { transform: translateY(0) scale(0.98); }
+        @keyframes trdGradient { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes trdGlow {
+            0%,100% { box-shadow: 0 0 0 0 rgba(0,230,118,0.45), 0 6px 22px rgba(255,193,7,0.3); }
+            50%     { box-shadow: 0 0 18px 5px rgba(0,230,118,0.35), 0 6px 22px rgba(255,193,7,0.4); }
+        }
+
+        .trd-price {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 0 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #9bb8a5;
+        }
+        .trd-price-row { display: flex; align-items: center; gap: 6px; }
+
+        /* FEATURES */
+        .trd-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 16px 22px 20px;
+        }
+        .trd-feature {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(0,230,118,0.18);
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .trd-feature-icon {
+            width: 32px; height: 32px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,230,118,0.12);
+            color: #00e676;
+        }
+        .trd-feature-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.25;
+        }
+        .trd-feature-desc { font-size: 10px; color: #7f9d8a; line-height: 1.4; margin-top: 2px; }
+
+        /* SLOGAN */
+        .trd-slogan {
+            background: linear-gradient(90deg, #00e676, #ffc107);
+            padding: 13px 20px;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #04130a;
+        }
+
+        /* T&C */
+        .trd-footer { padding: 18px 22px 10px; }
+        .trd-tnc {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 18px;
+        }
+        .trd-tnc-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        .trd-tnc-list { list-style: none; padding: 0; margin: 0; }
+        .trd-tnc-list li {
+            position: relative;
+            padding-left: 14px;
+            margin-bottom: 6px;
+            font-size: 11.5px;
+            line-height: 1.7;
+            color: #7f9d8a;
+        }
+        .trd-tnc-list li::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 8px;
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: #00e676;
+        }
+        .trd-tnc-list a { color: #00e676; font-weight: 700; text-decoration: none; }
+        .trd-tnc-list a:hover { text-decoration: underline; }
+        .trd-tnc-list strong { color: #c8e6c9; }
+
+        .trd-bottom {
+            text-align: center;
+            padding: 8px 24px 28px;
+            font-size: 11px;
+            color: #4f6b58;
+        }
+    </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1570212090604983');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1570212090604983&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+
+    <div class="trd-page">
+        <div class="trd-wrapper">
+
+            <!-- HERO -->
+            <div class="trd-hero">
+                <div class="trd-hero-card">
+                    <img
+                        src="https://cdn.zaheen.com.pk/images/zaheen-trading.png"
+                        alt="How To Become A Professional Trader"
+                        class="trd-hero-img"
+                    />
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="trd-cta">
+               <button class="trd-btn" onclick="handleEnroll()">
+                    ٹریڈنگ ابھی شروع کریں
+                </button>
+                <div class="trd-price">
+                    <div class="trd-price-row">
+                        <span>🎁</span>
+                        <span>Get one Day Free Trial</span>
+                    </div>
+                    <div class="trd-price-row">
+                        <!-- ShieldCheck Icon SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                        <span>Only For Rs. 5+Tax / Day — Zong Users</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FEATURES -->
+            <div class="trd-features">
+                <div class="trd-feature">
+                    <div class="trd-feature-icon">
+                        <!-- BookOpen Icon SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+                    </div>
+                    <div>
+                        <div class="trd-feature-title">28 Video Lectures</div>
+                        <div class="trd-feature-desc">Step-by-step, hands-on lessons</div>
+                    </div>
+                </div>
+                <div class="trd-feature">
+                    <div class="trd-feature-icon">
+                        <!-- TrendingUp Icon SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                    </div>
+                    <div>
+                        <div class="trd-feature-title">Beginner Friendly</div>
+                        <div class="trd-feature-desc">Start from zero, no experience</div>
+                    </div>
+                </div>
+                <div class="trd-feature">
+                    <div class="trd-feature-icon">
+                        <!-- BarChart3 Icon SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                    </div>
+                    <div>
+                        <div class="trd-feature-title">Read the Charts</div>
+                        <div class="trd-feature-desc">Learn how markets really move</div>
+                    </div>
+                </div>
+                <div class="trd-feature">
+                    <div class="trd-feature-icon">
+                        <!-- Wallet Icon SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+                    </div>
+                    <div>
+                        <div class="trd-feature-title">Earn Online</div>
+                        <div class="trd-feature-desc">Build a real income skill</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLOGAN -->
+            <div class="trd-slogan">Learn · Trade · Earn · Grow</div>
+
+            <!-- T&C -->
+            <footer class="trd-footer">
+                <section class="trd-tnc">
+                    <h2 class="trd-tnc-title">Terms and Conditions</h2>
+                    <ul class="trd-tnc-list">
+                        <li>This is a mobile content subscription service.</li>
+                        <li>This service is applicable for Zong users only on those mobile phones which support GPRS settings.</li>
+                        <li>User will subscribe to Zaheen for 5 + tax PKR/week.</li>
+                        <li>User will be given a free subscription for one day, after which the user will be charged on the next day as per the subscription fee. Users will be able to access educational content, quizzes, and learning materials available on Zaheen at any time!</li>
+                        <li>
+                            To unsubscribe from Zaheen,
+                            <a href="https://z.zaheen.com.pk/skills/how-to-become-a-professional-trader">Click Here</a>
+                            or send <strong>Unsub</strong> to <strong>7323</strong>.
+                        </li>
+                        <li>
+                            For help:
+                            <a href="mailto:support@zaheen.com.pk">support@zaheen.com.pk</a>
+                        </li>
+                        <li>
+                            For Complaints: <a href="tel:03111444974">03 111 444 974</a>
+                        </li>
+                    </ul>
+                </section>
+            </footer>
+
+            <div class="trd-bottom">© 2026 Zaheen. All rights reserved.</div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. URL Parameters Logic (Same as React useEffect)
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const txid = params.get('txid');
+            const afflid = params.get('affid');
+            const pubid = params.get('pubid');
+            
+            if (txid) localStorage.setItem('transaction_id', txid);
+            if (afflid) localStorage.setItem('afflid', afflid);
+            if (pubid) localStorage.setItem('pubid', pubid);
+        })();
+
+      
+        function handleEnroll() {
+            // Track button click in Meta Pixel
+            if (typeof fbq === 'function') {
+                fbq('track', 'Lead');
+            }
+
+            const transactionId = localStorage.getItem('transaction_id') || Date.now();
+            const afflid = localStorage.getItem('afflid') || '';
+            const pubid = localStorage.getItem('pubid') || '';
+            
+                 var redirectUrl = "https://z.zaheen.com.pk/sub_enrollnow" +
+
+        "?page=enrollnow_trading&source=fb&service_id=205";
+        
+      window.location.href =
+        "http://he.zaheen.com.pk/he?redirect=" + encodeURIComponent(redirectUrl) +
+        "&transaction_id=" + transactionId +
+        "&affid=" + afflid +
+        "&pubid=" + pubid;
+        }
+    </script>
+
+</body>
+</html>

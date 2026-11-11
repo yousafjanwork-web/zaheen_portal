@@ -2,8 +2,8 @@ import HeroSlider from "../sections/HeroSlider";
 import BrowseByGrade from "../sections/BrowseByGrade";
 import ProfessionalCourses from "../sections/ProfessionalCourses";
 import Pricing from "../sections/Pricing";
-import CTASection from "../sections/CTASection";
-import MDCATDesktopBanner from "../sections/MDCATDesktopBanner";
+// import MDCATDesktopBanner from "../sections/MDCATDesktopBanner";
+import PrepExamSlider from "../sections/PrepExamSlider";
 import ZaheenAppDesktop from "../sections/ZaheenAppDesktop"
 import SummerBreak from "../sections/SummerbreakSlider"
 
@@ -14,10 +14,10 @@ const HomeDesktop = () => {
       <BrowseByGrade />
       <SummerBreak/>
       <ProfessionalCourses />
-      <MDCATDesktopBanner/>
+      {/* <MDCATDesktopBanner/> */}
+      <PrepExamSlider />
       <ZaheenAppDesktop />
       <Pricing />
-      <CTASection />
 
     </>
   );

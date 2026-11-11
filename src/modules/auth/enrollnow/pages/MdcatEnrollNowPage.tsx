@@ -29,23 +29,16 @@ export function MdcatEnrollmentLandingPage() {
     if (pubid) localStorage.setItem('pubid', pubid);
   }, []);
 
-  const handleEnroll = async () => {
+    const handleEnroll = () => {
     const transactionId = localStorage.getItem('transaction_id') || Date.now();
     const afflid = localStorage.getItem('afflid') || '';
     const pubid = localStorage.getItem('pubid') || '';
-    const data = await navigator.userAgentData.getHighEntropyValues([
-      'model',
-      'platform',
-      'platformVersion',
-    ]);
-    const device = encodeURIComponent(JSON.stringify(data));
     window.location.href =
-      `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/mdcat-subscribe` +
+      `http://he.zaheen.com.pk/he?redirect=https://z.zaheen.com.pk/sub_enrollnow` +
       `&transaction_id=${transactionId}` +
       `&affid=${afflid}` +
       `&pubid=${pubid}` +
-      `&device=${device}` +
-      `&page_name=enrollnow_mdcat&service_id=205`;
+      `&page=enrollnow_mdcat&source=fb&service_id=205`;
   };
 
   return (
@@ -415,7 +408,7 @@ export function MdcatEnrollmentLandingPage() {
               ))}
               <li>
                 To unsubscribe from Zaheen,{' '}
-                <a href="#">Click Here</a> or send <strong>Unsub</strong> to{' '}
+                <a href="https://z.zaheen.com.pk/mdcat">Click Here</a> or send <strong>Unsub</strong> to{' '}
                 <strong>7323</strong>.
               </li>
               <li>

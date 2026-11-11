@@ -16,7 +16,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import axios from "axios"
+import quizHttp from "../../../modules/shared/services/quizHttp"
 import { useParams, useLocation } from "react-router-dom"
 import { classIdFromSlug } from "@/config/classSlugs"
 import SubjectSkillSelector, { Skill } from "../../assessments/pages/SubjectSkillSelector"
@@ -130,7 +130,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
           clearInterval(timerRef.current!)
           // time up: submit with no answer
           if (question) {
-            axios.post(`${BASE}/api/quiz/adaptive/submit`, {
+            quizHttp.post(`${BASE}/api/quiz/adaptive/submit`, {
               userId: studentId, questionId: question.id, timeTaken: TIMER_SECS,
             }).catch(() => {})
           }
@@ -158,7 +158,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
   async function fetchQuizResult(skillId: number) {
     setQuizResultLoading(true); setQuizResultError(null)
     try {
-      const res = await axios.get<{ success: boolean; data: QuizResult }>(
+      const res = await quizHttp.get<{ success: boolean; data: QuizResult }>(
         `${BASE}/api/quiz/adaptive/quiz-result`, { params: { skillId, userId: studentId } }
       )
       setQuizResult(res.data.data)
@@ -171,7 +171,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
     if (!skill) return
     setResetting(true)
     try {
-      await axios.post(`${BASE}/api/quiz/adaptive/reset-skill`, { userId: studentId, skillId: skill.id })
+      await quizHttp.post(`${BASE}/api/quiz/adaptive/reset-skill`, { userId: studentId, skillId: skill.id })
     } catch { /* non-fatal */ } finally { setResetting(false) }
     setAnswered(0); setCorrect(0); setIncorrect(0); setStars(0); setXp(0)
     setMastery(0); setStreak(0); setSessionQ(0); setIsLast(false)
@@ -189,7 +189,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
     setTimer(TIMER_SECS); setQuestion(null)
     startRef.current = Date.now()
     try {
-      const res = await axios.get<NextResponse>(
+      const res = await quizHttp.get<NextResponse>(
         `${BASE}/api/quiz/adaptive/next-by-skill`,
         { params: { userId: studentId, skillId } }
       )
@@ -201,7 +201,11 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
       } else {
         setLoadError("Could not load question.")
       }
-    } catch { setLoadError("Request failed. Check your connection.") }
+    } catch (err: any) {
+      setLoadError(err?.response?.status === 401
+        ? "Your session expired. Please log in again."
+        : "Request failed. Check your connection.")
+    }
     finally { setLoading(false) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId])
@@ -213,7 +217,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
     // Fetch existing progress from API
     let prev: SkillProgress | null = null
     try {
-      const res = await axios.get<{ success: boolean; data: { user_progress: SkillProgress | null } }>(
+      const res = await quizHttp.get<{ success: boolean; data: { user_progress: SkillProgress | null } }>(
         `${BASE}/api/quiz/adaptive/skill-info`, { params: { skillId: s.id, userId: studentId } }
       )
       prev = res.data?.data?.user_progress ?? null
@@ -243,7 +247,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
       if (optionId !== null) body.selectedOptionId = optionId
     }
     try {
-      const res = await axios.post<SubmitResponse>(`${BASE}/api/quiz/adaptive/submit`, body)
+      const res = await quizHttp.post<SubmitResponse>(`${BASE}/api/quiz/adaptive/submit`, body)
       const d = res.data.data
       setFeedback(d); setMastery(d.masteryScore); setStreak(d.streak)
       const newSessionQ = sessionQ + 1
@@ -389,7 +393,7 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
         <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 96, zIndex: 300, pointerEvents: "none" }}>⭐</div>
       )}
 
-      <div className="pqf-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 60px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 20 }}>
+      <div className="pqf-grid" style={{ maxWidth: 860, margin: "0 auto", padding: "16px 16px 40px", display: "grid", gridTemplateColumns: "1fr 240px", gap: 16 }}>
 
         {/* ── LEFT ── */}
         <div>
@@ -452,9 +456,15 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
           {/* Question */}
           {!loading && !loadError && question && (
             <>
-              <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 4px 24px rgba(37,99,235,0.10)", padding: "24px", marginBottom: 16 }}>
-                {question.image_url && <img src={question.image_url} alt="" style={{ maxWidth: "100%", borderRadius: 12, marginBottom: 16 }} />}
-                <p style={{ fontSize: 20, fontWeight: 800, color: "#111827", lineHeight: 1.5, margin: 0 }}>{question.prompt}</p>
+              <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 4px 24px rgba(37,99,235,0.10)", padding: "16px", marginBottom: 12 }}>
+                {question.image_url && (
+  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+    <img src={question.image_url} alt=""
+      onError={e => { (e.currentTarget as HTMLElement).style.display = "none" }}
+      style={{ width: "auto", height: "auto", maxWidth: 220, maxHeight: 180, objectFit: "contain", borderRadius: 12 }} />
+  </div>
+)}
+                <p style={{ fontSize: 18, fontWeight: 800, color: "#111827", lineHeight: 1.4, margin: 0, textAlign: "center" }}>{question.prompt}</p>
               </div>
 
               {/* 2×2 option grid */}
@@ -474,12 +484,21 @@ const PrimaryQuizFlow: React.FC<Props> = ({ studentId: propId, subjectId: propSu
                     return (
                       <button key={opt.id} className="pqf-opt"
                         onClick={() => handleOptionClick(opt.id)} disabled={locked}
-                        style={{ background: bg, opacity, color: "#fff", border, borderRadius: 18, padding: "20px 16px", cursor: locked ? "default" : "pointer", textAlign: "left", fontFamily: "inherit" }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.25)", borderRadius: "50%", width: 30, height: 30, fontWeight: 900, fontSize: 14, marginBottom: 10 }}>
+                        style={{ background: bg, opacity, color: "#fff", border, borderRadius: 14, padding: "10px 12px", cursor: locked ? "default" : "pointer", textAlign: "left", fontFamily: "inherit" }}>
+                        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.25)", borderRadius: "50%", width: 24, height: 24, fontWeight: 900, fontSize: 12, marginBottom: 6 }}>
                           {String.fromCharCode(65 + i)}
                         </div>
-                        {opt.image_url && <img src={opt.image_url} alt="" style={{ width: "100%", borderRadius: 8, marginBottom: 8 }} />}
-                        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.4 }}>{opt.option_text}</p>
+                       
+                        {opt.image_url && (
+  <div style={{ background: "#fff", borderRadius: 10, padding: 6, marginBottom: 6, height: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <img src={opt.image_url} alt={opt.option_text}
+      onError={e => { (e.currentTarget.parentElement as HTMLElement).style.display = "none" }}
+      style={{ maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain" }} />
+  </div>
+)}
+{(!opt.image_url || opt.option_text.trim().length > 1) && (
+  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, lineHeight: 1.3 }}>{opt.option_text}</p>
+)}
                         {hasFb && isSel && <div style={{ marginTop: 8, fontSize: 22 }}>{feedback!.correct ? "✓" : "✗"}</div>}
                       </button>
                     )

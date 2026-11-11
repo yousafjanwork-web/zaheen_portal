@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Star, Users, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { t } from "@/modules/shared/i18n";
+import { getSlugByClassId } from "@/modules/shared/utils/skillsCourseSlugs";
 const sliderImg1 = "https://cdn.zaheen.com.pk/zaheen-web-img/web-development-s.png";
 const sliderImg2 = "https://cdn.zaheen.com.pk/zaheen-web-img/auto-cad-s.png";
 const sliderImg3 = "https://cdn.zaheen.com.pk/zaheen-web-img/excel-s.png";
 const sliderImg4 = "https://cdn.zaheen.com.pk/zaheen-web-img/video-editing-s.png";
 const sliderImg5 = "https://cdn.zaheen.com.pk/zaheen-web-img/makeup-s.png";
 const sliderImg6 = "https://cdn.zaheen.com.pk/zaheen-web-img/trading-professional-skill-banner-ss.jpeg";
+const sliderImg7 = "https://cdn.zaheen.com.pk/images/amazon-affiliate-banner-small.jpeg";
+const sliderImg8 = "https://cdn.zaheen.com.pk/images/stitching-course-small.png";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, Mousewheel, Pagination } from "swiper/modules";
@@ -24,6 +27,8 @@ const COURSE_IMAGES: Record<number, string> = {
   4: sliderImg3,
   5: sliderImg4,
   6: sliderImg5,
+  67: sliderImg7,
+  68: sliderImg8,
 };
 
 const PARENT_ID_TO_CLASS_ID: Record<number, number> = {
@@ -33,6 +38,8 @@ const PARENT_ID_TO_CLASS_ID: Record<number, number> = {
   4: 302,
   5: 303,
   6: 304,
+  67: 306,
+  68: 307,
 };
 
 const DISPLAY_ORDER: Record<number, number> = {
@@ -42,6 +49,8 @@ const DISPLAY_ORDER: Record<number, number> = {
   4: 3,
   5: 4,
   6: 5,
+  67: 6,
+  68: 7,
 };
 
 const lang = localStorage.getItem("lang") || "en";
@@ -183,13 +192,14 @@ const ProfessionalCourses = () => {
         >
           {courses.map((course) => {
             const classId = PARENT_ID_TO_CLASS_ID[course.id];
+            const slug = classId ? getSlugByClassId(classId) : null;
             const image = COURSE_IMAGES[course.id];
             const lectureCount = lectureCounts[course.id] ?? course.total_lectures ?? 0;
 
             return (
               <SwiperSlide key={course.id} className="py-5 !h-auto">
                 <div
-                  onClick={() => classId && navigate(`/skills/${classId}`)}
+                  onClick={() => classId && navigate(`/skills/${slug ?? classId}`)}
                   className="rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full transition-all duration-300"
                   style={{
                     background: "rgba(255,255,255,0.04)",

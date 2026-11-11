@@ -15,6 +15,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { loginPin, verifyLoginPin } from "@/modules/shared/services/loginService";
+import { trackPinSent } from "../../../../src/modules/shared/utils/metaPixel";
 import {
   loginWithCredentials,
   getUserProfile,
@@ -88,6 +89,7 @@ const [loading,       setLoading]       = useState(false);
              : path.startsWith('/nat')   ? 'nat'
              : 'web';
    // window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&state=${portal}`;
+    sessionStorage.setItem("social_portal", JSON.stringify({ portal, ts: Date.now() }));
     window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&portal=${portal}`;
   };
 
@@ -189,6 +191,7 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
       if (res.status === "PIN_SENT") {
         setOtpStep("OTP");
         setTimer(30);
+        trackPinSent();
       } else {
         setError(normaliseStatus(res.status) ?? "Failed to send PIN");
       }

@@ -17,7 +17,7 @@ export default function TermsSection() {
         Users will be able to access educational content, quizzes, and learning materials available on Zaheen at any time!<br />
 
         To unsubscribe from Zaheen,<br />
-        <a href="https://z.zaheen.com.pk" className="text-blue-600 underline">
+        <a href="https://zaheen.com.pk" className="text-blue-600 underline">
           Click Here
         </a><br />
 

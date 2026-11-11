@@ -19,6 +19,8 @@ const heroImg302 = "https://cdn.zaheen.com.pk/zaheen-web-img/excel.png";
 const heroImg303 = "https://cdn.zaheen.com.pk/zaheen-web-img/video-editing.png";
 const heroImg304 = "https://cdn.zaheen.com.pk/zaheen-web-img/makeup.png";
 const heroImg305 = "https://cdn.zaheen.com.pk/zaheen-web-img/trading-professional-skill-banner.jpeg";
+const heroImg306 = "https://cdn.zaheen.com.pk/images/amazon-affiliate-banner.jpeg";
+const heroImg307 = "https://cdn.zaheen.com.pk/images/stitching-course.png";
 
 const heroImages: Record<number, string> = {
   300: heroImg300,
@@ -27,6 +29,8 @@ const heroImages: Record<number, string> = {
   303: heroImg303,
   304: heroImg304,
   305: heroImg305,
+  306: heroImg306,
+  307: heroImg307,
 };
 
 const translations: Record<string, any> = {
@@ -196,6 +200,8 @@ const TRADING_MODULES = [
 // it was verified endpoint-by-endpoint on 2026-07-15.
 const CLASS_TO_PARENT_ID: Record<number, number> = {
   305: 1, // Trading            -> "How To Become A Professional Trader"
+  306: 67, // Profit Pulse Amazon Affiliate Course
+  307: 68, // Professional Cutting & Tailoring Course
   300: 2, // Full Stack Web Dev -> "Software Installation", "What is HTML?", ...
   301: 3, // AutoCAD 2D         -> "Auto Cad 2D Lecture 1", "Software Interface & Features", ...
   302: 4, // Microsoft Excel    -> "Microsoft Excel Lecture 1-4"
@@ -211,6 +217,8 @@ const COURSE_DISPLAY_NAMES: Record<number, { en: string; ur?: string }> = {
   303: { en: "Professional Production Editing Course" },
   304: { en: "Professional Makeup Course" },
   305: { en: "How To Become A Professional Trader" },
+  306: { en: "Profit Pulse Amazon Affiliate Course" },
+  307: { en: "Professional Cutting & Tailoring Course" },
 };
 
 const DescriptionBlock = ({ desc, isRtl }: { desc: string; isRtl: boolean }) => {
@@ -272,7 +280,7 @@ const SkillsChaptersPage = () => {
   const [isWatchMode,     setIsWatchMode]     = useState(false);
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
   const [videoUrl,        setVideoUrl]        = useState("");
-  const [openModules,     setOpenModules]     = useState<Set<number>>(new Set([1]));
+ const [openModules,     setOpenModules]     = useState<Set<number>>(new Set([1]));
 
   const videoRef          = useRef<HTMLVideoElement>(null);
   const resumePositionRef = useRef<number>(0);
@@ -342,6 +350,7 @@ const SkillsChaptersPage = () => {
     isTradingCourse ? TRADING_MODULES.find((m) => m.start - 1 === globalIdx) ?? null : null;
 
   const getModuleForIdx = (globalIdx: number) => {
+    if (!isTradingCourse) return null;
     const position = globalIdx + 1;
     return TRADING_MODULES.find((m) => position >= m.start && position <= m.end) ?? null;
   };

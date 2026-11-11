@@ -15,11 +15,28 @@ export interface UserProfile {
   update_at?: string;
 }
 
+export const ensureUser = async (msisdn: string): Promise<void> => {
+  try {
+    await axios.post(`${BASE_URL}/api/users`, {
+      msisdn,
+      role: "learner",
+      operator: "zong",
+      status: "active",
+      page: new URLSearchParams(window.location.search).get("page") || "",
+    });
+  } catch {
+    /* already exists or failed: getUserProfile after this decides */
+  }
+};
+
 export interface UpdateProfilePayload {
+  operator?: "zong" | "other";
   name?: string;
   username?: string;
   email?: string;
   password?: string;
+  msisdn?: string;
+  city?: string;
 }
 
 export interface UsernameLoginPayload {
@@ -31,18 +48,29 @@ export interface UsernameLoginPayload {
  * GET /api/users?msisdn=XXXX
  * Returns the full user object (including id) or null if not found.
  */
+const unwrapUser = (d: any): UserProfile | null => {
+  if (!d) return null;
+  return (d.user ? { ...d.user, token: d.token } : d) as UserProfile;
+};
+
 export const getUserProfile = async (msisdn: string): Promise<UserProfile | null> => {
   try {
     const res = await axios.get(`${BASE_URL}/api/users`, { params: { msisdn } });
     if (res.data?.success && res.data?.data) {
-      return res.data.data as UserProfile;
+      return unwrapUser(res.data.data);
     }
 
     // User not found — auto-create for new subscribers
     if (!res.data?.success) {
-      const createRes = await axios.post(`${BASE_URL}/api/users`, { msisdn });
+      const createRes = await axios.post(`${BASE_URL}/api/users`, {
+        msisdn,
+        role: "learner",
+        operator: "zong",
+        status: "active",
+        page: new URLSearchParams(window.location.search).get("page") || "",
+      });
       if (createRes.data?.success && createRes.data?.data) {
-        return createRes.data.data as UserProfile;
+        return unwrapUser(createRes.data.data);
       }
     }
 
@@ -53,7 +81,7 @@ export const getUserProfile = async (msisdn: string): Promise<UserProfile | null
       try {
         const createRes = await axios.post(`${BASE_URL}/api/users`, { msisdn });
         if (createRes.data?.success && createRes.data?.data) {
-          return createRes.data.data as UserProfile;
+          return unwrapUser(createRes.data.data);
         }
       } catch {
         // creation also failed — user genuinely can't be resolved
@@ -73,13 +101,7 @@ export const getUserProfile = async (msisdn: string): Promise<UserProfile | null
 export const updateUserProfile = async (
   id: number,
   payload: UpdateProfilePayload
-): Promise<UserProfile> => {
-  const res = await axios.put(`${BASE_URL}/api/users/${id}`, payload);
-  if (res.data?.success && res.data?.data) {
-    return res.data.data as UserProfile;
-  }
-  throw new Error(res.data?.message || "Failed to update profile");
-};
+): Promise<void> => {  const res = await axios.put(`${BASE_URL}/api/users/${id}`, payload);  if (res.data?.success) {    return;  }  throw new Error(res.data?.message || "Failed to update profile");};
 
 /**
  * POST /api/users/login

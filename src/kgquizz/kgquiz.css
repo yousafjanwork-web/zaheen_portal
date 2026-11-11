@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap');
+
+.font-urdu {
+  font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', 'Jameel Noori Nastaleeq', 'Segoe UI', serif;
+  line-height: 2.2;
+}
+.font-fun {
+  font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif;
+}

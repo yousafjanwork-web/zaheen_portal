@@ -98,6 +98,8 @@ const PrepExamPage: React.FC = () => {
           --issb-glow: rgba(201,162,39,0.22);
           --nat: #3b6fd4;
           --nat-glow: rgba(59,111,212,0.22);
+          --uni: #a855f7;
+          --uni-glow: rgba(168,85,247,0.22);
 
           position: relative;
           min-height: 100vh;
@@ -301,7 +303,7 @@ const PrepExamPage: React.FC = () => {
           width: 100%;
           padding: 40px 48px 48px;
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 22px;
           align-items: start;
         }
@@ -314,6 +316,7 @@ const PrepExamPage: React.FC = () => {
         .prep-exam-page .card-wrap:nth-child(1) { animation-delay: 0.45s; }
         .prep-exam-page .card-wrap:nth-child(2) { animation-delay: 0.6s; }
         .prep-exam-page .card-wrap:nth-child(3) { animation-delay: 0.75s; }
+        .prep-exam-page .card-wrap:nth-child(4) { animation-delay: 0.9s; }
 
         @keyframes prepCardIn {
           to { opacity: 1; transform: translateY(0); }
@@ -508,6 +511,7 @@ const PrepExamPage: React.FC = () => {
           z-index: 2;
         }
         .prep-exam-page .card:hover .card-shimmer { left: 150%; }
+        .prep-exam-page .card[data-exam="uni"] { --card-accent: var(--uni); --card-glow: var(--uni-glow); }
 
         /* ── Scoped page footer ── */
         .prep-exam-page .prep-footer {
@@ -537,7 +541,7 @@ const PrepExamPage: React.FC = () => {
         @media (max-width: 1024px) and (min-width: 861px) {
           .prep-exam-page .topbar { padding: 20px 32px; }
           .prep-exam-page .hero { padding: 28px 32px 0; }
-          .prep-exam-page .cards-section { padding: 32px 32px 44px; gap: 16px; }
+          .prep-exam-page .cards-section { padding: 32px 32px 44px; gap: 16px; grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -575,7 +579,7 @@ const PrepExamPage: React.FC = () => {
           </div>
           <h1>Where preparation meets purpose.</h1>
           <p>
-            Three national exams, three routes into a career. Choose the exam you're preparing for and
+            Four routes into your next step. Choose the exam you're preparing for and
             enter its full preparation pathway.
           </p>
         </header>
@@ -584,7 +588,7 @@ const PrepExamPage: React.FC = () => {
         <main className="cards-section">
           {/* MDCAT */}
           <div className="card-wrap">
-            <a className="card" href="https://z.zaheen.com.pk/mdcat" data-exam="mdcat">
+            <a className="card" href="https://zaheen.com.pk/mdcat" data-exam="mdcat">
               <div className="card-shimmer" />
               <div className="card-header">
                 <div className="card-top-row">
@@ -617,7 +621,7 @@ const PrepExamPage: React.FC = () => {
 
           {/* ISSB */}
           <div className="card-wrap">
-            <a className="card" href="https://z.zaheen.com.pk/issb" data-exam="issb" target="_blank" rel="noopener noreferrer">
+            <a className="card" href="https://zaheen.com.pk/issb/" data-exam="issb" target="_blank" rel="noopener noreferrer">
               <div className="card-shimmer" />
               <div className="card-header">
                 <div className="card-top-row">
@@ -650,7 +654,7 @@ const PrepExamPage: React.FC = () => {
 
           {/* NAT */}
           <div className="card-wrap">
-            <a className="card" href="https://z.zaheen.com.pk/nat" data-exam="nat" target="_blank" rel="noopener noreferrer">
+            <a className="card" href="https://zaheen.com.pk/nat/" data-exam="nat" target="_blank" rel="noopener noreferrer">
               <div className="card-shimmer" />
               <div className="card-header">
                 <div className="card-top-row">
@@ -668,6 +672,39 @@ const PrepExamPage: React.FC = () => {
                 <div className="card-title">National Aptitude Test</div>
                 <div className="card-desc">
                   For candidates preparing for the National Aptitude Test, covering verbal, quantitative, and analytical reasoning.
+                </div>
+                <div className="card-cta">
+                  <span className="card-cta-text">Enter pathway</span>
+                  <span className="card-arrow">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          </div>
+                  {/* University Preparation */}
+          <div className="card-wrap">
+            <a className="card" href="https://zaheen.com.pk/uniprep/" data-exam="uni" target="_blank" rel="noopener noreferrer">
+              <div className="card-shimmer" />
+              <div className="card-header">
+                <div className="card-top-row">
+                  <div className="card-code">UNI</div>
+                  <div className="card-icon">
+                    <svg className="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 10L12 5 2 10l10 5 10-5z" />
+                      <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="card-serial">2026 · University Admissions</div>
+              </div>
+              <div className="card-divider" />
+              <div className="card-body">
+                <div className="card-title">University Preparation</div>
+                <div className="card-desc">
+                  For students preparing for university admissions, with guided preparation for the next step after school.
                 </div>
                 <div className="card-cta">
                   <span className="card-cta-text">Enter pathway</span>

@@ -16,7 +16,15 @@ const SocialCallbackPage: React.FC = () => {
     const name                 = searchParams.get("name")                  ?? "";
     const email                = searchParams.get("email")                 ?? "";
     const isNewAccount         = searchParams.get("is_new_account")        === "true";
-      const portal        = searchParams.get("portal")         ?? "web";
+    // Portal from backend; if missing/"web", fall back to the portal the entry page saved before going to Google
+    const rawPortal = searchParams.get("portal") ?? "";
+    let portal = rawPortal || "web";
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("social_portal") || "null");
+      if (saved?.portal && Date.now() - saved.ts < 5 * 60 * 1000 && (!rawPortal || rawPortal === "web")) {
+        portal = saved.portal;
+      }
+    } catch { /* ignore */ }
     const googleIdExists       = searchParams.get("google_id_exists")      === "true";
     const subscriptionPlanCode = searchParams.get("subscription_plan_code") ?? "";
     const subscriptionStatus   = searchParams.get("subscription_status")   ?? "";

@@ -38,5 +38,4 @@ const GradeCard = ({ grade, navigate, type }: any) => {
     </motion.div>
   );
 };
-
 export default GradeCard;

@@ -3,7 +3,7 @@ const zaheenAppImage = "https://cdn.zaheen.com.pk/zaheen-web-img/zaheenappmobile
 
 const ZaheenAppMobile = () => {
   const playStoreUrl =
-    "https://play.google.com/store/apps/details?id=pk.zaheen.app&pcampaignid=web_share";
+    "https://play.google.com/store/apps/details?id=pk.zaheen.app&referrer=utm_source%3Dwebsite%26utm_medium%3Dwebsite";
 
   return (
     <section

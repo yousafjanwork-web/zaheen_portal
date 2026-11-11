@@ -46,7 +46,7 @@ const Footer: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4">
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-10 mb-16">
 
           {/* Logo */}
           <div>
@@ -116,6 +116,48 @@ const Footer: React.FC = () => {
               <li><a href="/all-professional-courses">{t("footer.prof")}</a></li>
               <li><a href="/practice">{t("footer.worksheet")}</a></li>
               <li><a href="/ai">{t("footer.ai")}</a></li>
+
+            </ul>
+
+          </div>
+
+          {/* Learning Hub */}
+          <div>
+
+            <h4 className="text-white font-bold mb-4">
+              {t("menu.learningHub")}
+            </h4>
+
+            <ul className="space-y-2 text-sm">
+
+              <li>
+                <Link to="/practice" className="hover:text-white">
+                  {t("learning.practice")}
+                </Link>
+              </li>
+
+              <li>
+                <a
+                  href="https://blog.zaheen.com.pk/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white"
+                >
+                  {t("learning.studyMaterial")}
+                </a>
+              </li>
+
+              <li>
+                <Link to="/results" className="hover:text-white">
+                  {t("learning.boardResults")}
+                </Link>
+              </li>
+
+              <li>
+                <Link to="/scholarship" className="hover:text-white">
+                  {t("footer.scholarships")}
+                </Link>
+              </li>
 
             </ul>
 

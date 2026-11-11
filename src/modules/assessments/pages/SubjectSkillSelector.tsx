@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
-import axios from "axios"
+import quizHttp from "../../../modules/shared/services/quizHttp"
 import { getLanguage } from "@/modules/shared/i18n"
+import { useNavigate, useLocation } from "react-router-dom"
+import { useAuth } from "@/modules/shared/context/AuthContext"
 
 import enTranslations from "@/modules/shared/i18n/en.json"
 import urTranslations from "@/modules/shared/i18n/ur.json"
@@ -98,6 +100,19 @@ const DEFAULT_CONFIG = {
   iconBg:   "rgba(255,255,255,0.25)",
   emoji:    "📚",
 }
+
+const CHAPTER_GRADIENTS = [
+  "linear-gradient(135deg,#667eea 0%,#764ba2 100%)",
+  "linear-gradient(135deg,#f857a6 0%,#ff5858 100%)",
+  "linear-gradient(135deg,#00c6ff 0%,#0072ff 100%)",
+  "linear-gradient(135deg,#11998e 0%,#38ef7d 100%)",
+  "linear-gradient(135deg,#ff6a00 0%,#ee0979 100%)",
+  "linear-gradient(135deg,#8e2de2 0%,#4a00e0 100%)",
+  "linear-gradient(135deg,#fc4a1a 0%,#f7b733 100%)",
+  "linear-gradient(135deg,#00b4db 0%,#0083b0 100%)",
+  "linear-gradient(135deg,#b24592 0%,#f15f79 100%)",
+  "linear-gradient(135deg,#0ba360 0%,#3cba92 100%)",
+]
 
 function getSubjectConfig(thumbnail: string) {
   return SUBJECT_CONFIG[thumbnail] ?? DEFAULT_CONFIG
@@ -271,6 +286,15 @@ const SubjectSkillSelector: React.FC<Props> = ({
   studentId,
 }) => {
   const t      = useT()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { isLoggedIn } = useAuth()
+
+  function requireLogin(): boolean {
+    if (isLoggedIn) return true
+    navigate("/login", { state: { from: location.pathname } })
+    return false
+  }
   const lang   = getLanguage()
   const isUrdu = lang === "ur"
   const isRTL  = isUrdu
@@ -361,7 +385,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
     if (effectiveClassId) {
       ;(async () => {
         try {
-          const res = await axios.get<{ success: boolean; data: Class[] }>(
+          const res = await quizHttp.get<{ success: boolean; data: Class[] }>(
             `${BASE}/api/quiz/adaptive/classes`
           )
           const fetched = res.data.data ?? []
@@ -375,7 +399,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
     ;(async () => {
       setClassesLoading(true); setClassesError(null)
       try {
-        const res = await axios.get<{ success: boolean; data: Class[] }>(
+        const res = await quizHttp.get<{ success: boolean; data: Class[] }>(
           `${BASE}/api/quiz/adaptive/classes`
         )
         setClasses(res.data.data ?? [])
@@ -397,6 +421,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
   // ── Fetch skills when subjectId is known ───────────────────────────────────
   useEffect(() => {
     if (!defaultSubjectId) return
+    if (!requireLogin()) return
     setStep("skills")
     loadSkills(defaultSubjectId)
   }, [defaultSubjectId])
@@ -404,7 +429,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
   async function loadSubjects(classId: number) {
     setSubjectsLoading(true); setSubjectsError(null); setSubjects([])
     try {
-      const res = await axios.get<{ success: boolean; data: Subject[] }>(
+      const res = await quizHttp.get<{ success: boolean; data: Subject[] }>(
         `${BASE}/api/quiz/adaptive/subjects-by-class`,
         { params: { classId } }
       )
@@ -420,7 +445,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
     setSkillsLoading(true); setSkillsError(null); setSkills([])
     setSkillProgressMap({})
     try {
-      const res = await axios.get<{ success: boolean; data: Skill[] }>(
+      const res = await quizHttp.get<{ success: boolean; data: Skill[] }>(
         `${BASE}/api/quiz/adaptive/skills-by-subject`,
         { params: { subjectId } }
       )
@@ -445,7 +470,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
     setProgressLoading(true)
     const results = await Promise.allSettled(
       available.map(s =>
-        axios.get<{
+        quizHttp.get<{
           success: boolean
           data: {
             skill_id: number
@@ -492,6 +517,7 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
   }
 
   function handleSubjectPick(s: Subject) {
+    if (!requireLogin()) return
     setActiveSubject(s); setStep("skills"); loadSkills(s.subject_id)
   }
 
@@ -755,20 +781,20 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
     )
   }
 
-  // ── STEP: skills ───────────────────────────────────────────────────────────
+    // ── STEP: skills ───────────────────────────────────────────────────────────
   if (step === "skills") {
     const cfg = activeSubject ? getSubjectConfig(activeSubject.thumbnail) : DEFAULT_CONFIG
     return (
       <div className={`sss-root${isRTL ? " sss-rtl" : ""}`} style={wrap}>
         <style>{CSS}</style>
-        <div style={{ width: "100%", maxWidth: 640 }}>
+        <div style={{ width: "100%", maxWidth: 1100 }}>
           <Breadcrumb />
           <PageHeader
             icon={t("subjectSkillSelector.steps.selectSkill.icon")}
             title={t("subjectSkillSelector.steps.selectSkill.title")}
             subtitle={activeSubject ? localSubjectName(activeSubject) : t("subjectSkillSelector.steps.selectSkill.subtitleDefault")}
           />
-          <div style={{ background: "#fff", borderRadius: 24, boxShadow: "0 4px 32px rgba(0,0,0,0.07)", padding: "24px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ background: "#fff", borderRadius: 24, boxShadow: "0 4px 32px rgba(0,0,0,0.07)", padding: "36px" }}>
             {skillsLoading && <LoadingSpinner text={t("subjectSkillSelector.loading.skills")} />}
             {!skillsLoading && skillsError && (
               <ErrorState message={skillsError} onRetry={() => activeSubject && loadSkills(activeSubject.subject_id)} />
@@ -785,94 +811,75 @@ const userId = (studentId ?? Number(localStorage.getItem("user_id"))) || 2
               </div>
             )}
 
-            {!skillsLoading && !skillsError && skills.map((skill, i) => {
-              const ok        = skill.has_questions === 1
-              // Use resolveTotal: prefers api_total_questions from /skill-info
-              // so secondary-quiz skills with null in the list show correctly
-              const totalQ    = resolveTotal(skill.id, skill) || skill.total_questions || skill.number_question
-              const progress  = skillProgressMap[skill.id]
-              const status    = progress?.status ?? "not_started"
-              const completed = isSkillCompleted(skill.id, skill)
-              const pct       = completionPct(skill.id, skill)
+            {!skillsLoading && !skillsError && skills.length > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
+                {skills.map((skill, i) => {
+                  const ok        = skill.has_questions === 1
+                  const totalQ    = resolveTotal(skill.id, skill) || skill.total_questions || skill.number_question
+                  const progress  = skillProgressMap[skill.id]
+                  const started   = !!progress && progress.status !== "not_started"
+                  const completed = isSkillCompleted(skill.id, skill)
+                  const pct       = completionPct(skill.id, skill)
+                  const headerBg  = completed ? "linear-gradient(135deg,#16a34a 0%,#22c55e 100%)" : CHAPTER_GRADIENTS[i % CHAPTER_GRADIENTS.length]
+                  const footerLabel = !ok
+                    ? t("subjectSkillSelector.actions.comingSoon")
+                    : completed ? "View Results"
+                    : started   ? "Continue"
+                    : t("subjectSkillSelector.actions.start")
 
-              // CSS class: completed → green border, progressing → blue border
-              const rowClass = !ok
-                ? "skill-row unavailable"
-                : completed
-                  ? "skill-row available completed"
-                  : status === "progressing"
-                    ? "skill-row available progressing"
-                    : "skill-row available"
+                  return (
+                    <div
+                      key={skill.id}
+                      className={ok ? "subject-card" : undefined}
+                      onClick={() => { if (ok && requireLogin()) onStart(skill) }}
+                      style={ok ? undefined : { borderRadius: 20, overflow: "hidden", opacity: 0.55, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
+                    >
+                      {/* Header */}
+                      <div style={{ background: ok ? headerBg : "#d1d5db", padding: "26px 24px 22px", position: "relative", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", top: -24, right: -24, width: 110, height: 110, borderRadius: "50%", background: "rgba(255,255,255,0.12)" }} />
+                        <div style={{ position: "absolute", bottom: -36, left: -14, width: 90, height: 90, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+                        <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexDirection: isRTL ? "row-reverse" : "row" }}>
+                          <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.22)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: completed ? 28 : 24, fontWeight: 900, color: "#fff", boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}>
+                            {completed ? "✓" : i + 1}
+                          </div>
+                          {ok && started && progress && (
+                            <span style={{ background: "rgba(255,255,255,0.95)", color: completed ? "#16a34a" : "#2563eb", fontSize: 11, fontWeight: 800, padding: "5px 12px", borderRadius: 99, whiteSpace: "nowrap" }}>
+                              {completed ? "✓ Completed" : `▶ ${progress.total_attempted} done`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-              return (
-                <div
-                  key={skill.id}
-                  className={rowClass}
-                  onClick={() => { if (ok) { setPicked(skill); setStep("confirm") } }}
-                  style={{ flexDirection: isRTL ? "row-reverse" : "row" }}
-                >
-                  {/* Number badge — green ✓ when completed, blue when in progress */}
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                    background: completed
-                      ? "#22c55e"
-                      : status === "progressing"
-                        ? "#3b82f6"
-                        : ok ? cfg.gradient : "#e5e7eb",
-                    color: ok ? "#fff" : "#9ca3af",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 800,
-                    fontSize: completed ? 20 : 15,
-                    boxShadow: ok ? "0 4px 12px rgba(0,0,0,0.15)" : "none",
-                    transition: "background 0.2s",
-                  }}>
-                    {completed ? "✓" : i + 1}
-                  </div>
+                      {/* Body */}
+                      <div style={{ background: "#fff", padding: "20px 22px" }}>
+                        <p style={{ margin: "0 0 12px", fontWeight: 800, fontSize: 16, color: "#111827", lineHeight: 1.3, textAlign: isRTL ? "right" : "left" }}>
+                          {localSkillName(skill)}
+                        </p>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flexDirection: isRTL ? "row-reverse" : "row" }}>
+                          {ok && totalQ != null && totalQ > 0 && (
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, background: "#f3f4f6", color: "#374151" }}>
+                              ❓ {totalQ} questions
+                            </span>
+                          )}
+                          {ok && started && progress && totalQ != null && totalQ > 0 && (
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 99, background: completed ? "#f0fdf4" : "#eff6ff", color: completed ? "#16a34a" : "#2563eb" }}>
+                              {progress.total_attempted}/{totalQ} done ({pct}%)
+                            </span>
+                          )}
+                        </div>
+                        {ok && <SkillProgressBar skillId={skill.id} skill={skill} />}
+                      </div>
 
-                  {/* Name + question count + completion bar */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: ok ? "#111827" : "#6b7280", lineHeight: 1.3, textAlign: isRTL ? "right" : "left" }}>
-                      {localSkillName(skill)}
-                    </p>
-
-                    {ok && totalQ != null && (
-                      <p style={{ margin: "3px 0 2px", fontSize: 12, color: "#9ca3af", fontWeight: 500, textAlign: isRTL ? "right" : "left" }}>
-                        ❓ {totalQ} questions
-                        {progress && progress.status !== "not_started" && (
-                          <span style={{ marginLeft: 8, color: completed ? "#16a34a" : "#3b82f6", fontWeight: 600 }}>
-                            · {progress.total_attempted}/{totalQ} done ({pct}%)
-                          </span>
-                        )}
-                      </p>
-                    )}
-
-                    {/* Completion-based progress bar */}
-                    {ok && <SkillProgressBar skillId={skill.id} skill={skill} />}
-                  </div>
-
-                  {/* Right badge */}
-                  {!ok ? (
-                    <span style={{ background: "#f3f4f6", color: "#9ca3af", fontSize: 11, fontWeight: 700, padding: "6px 12px", borderRadius: 99, whiteSpace: "nowrap", flexShrink: 0 }}>
-                      {t("subjectSkillSelector.actions.comingSoon")}
-                    </span>
-                  ) : progressLoading && !progress ? (
-                    <span style={{ background: "#f3f4f6", color: "#9ca3af", fontSize: 11, fontWeight: 600, padding: "6px 12px", borderRadius: 99, whiteSpace: "nowrap", flexShrink: 0 }}>
-                      …
-                    </span>
-                  ) : (
-                    <>
-                      <SkillStatusBadge skillId={skill.id} skill={skill} />
-                      {/* Show "Start" pill only when no progress at all */}
-                      {(!progress || progress.status === "not_started") && (
-                        <span style={{ background: accentLight, color: accent, fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 99, whiteSpace: "nowrap", border: `1.5px solid ${accentBorder}`, flexShrink: 0 }}>
-                          {t("subjectSkillSelector.actions.start")}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              )
-            })}
+                      {/* Footer */}
+                      <div style={{ background: ok ? headerBg : "#e5e7eb", padding: "13px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", flexDirection: isRTL ? "row-reverse" : "row" }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: ok ? "#fff" : "#6b7280" }}>{footerLabel}</span>
+                        {ok && <span style={{ fontSize: 18, color: "#fff" }}>{isRTL ? "←" : "→"}</span>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

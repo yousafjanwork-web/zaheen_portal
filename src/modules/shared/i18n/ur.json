@@ -3,15 +3,17 @@
     "home": "ہوم",
     "courses": "کورسز",
     "learningHub": "لرننگ ہب",
-    "intelligence_engine": "ذہین انٹیلیجنس انجن",
-    "ai_tutor": "AI ٹیوٹر",
-    "mdcat_command": "ایم ڈی کیٹ کمانڈ سینٹر",
+    "skills": "مہارتیں",
+    "intelligence_engine": " انٹیلیجنس انجن",
+    "ai_tutor": "اے آئی ٹیوٹر",
+   "ai_counselor": "اے آئی اسٹوڈنٹ ایڈوائزر",
     "mdcat_prep": "ایم ڈی کیٹ کی تیاری",
-    "test_prep": "امتحان کی تیاری ",
+    "test_prep": " ایگزام انٹیلیجنس",
     "all_test_prep": "تمام ٹیسٹ کی تیاری",
     "issb": "آئی ایس ایس بی",
     "nat": "این اے ٹی",
-    "mdcat": "ایم ڈی کیٹ" 
+    "mdcat": "ایم ڈی کیٹ",
+    "uniprep": "یونیورسٹی کی تیاری" 
   },
   "auth": {
     "login": "لاگ اِن",
@@ -41,6 +43,12 @@
     "webDevelopment": "ویب ڈیویلپمنٹ",
     "ai": "اے آئی اور آٹومیشن"
   },
+  "skills": {
+    "technical": "ٹیکنیکل سیگمنٹ",
+    "women": "خواتین کا سیگمنٹ",
+    "trading": "ٹریڈنگ اور فنانس سیگمنٹ",
+    "comingSoon": "جلد آ رہا ہے"
+  },
   "learning": {
     "practice": "پریکٹس کارنر",
     "studyMaterial": "مطالعہ مواد",
@@ -66,6 +74,7 @@
     "country": "پاکستان",
     "unsubscribeSuccess": "کامیابی سے ان سبسکرائب ہو گیا",
     "unsubscribeFail": "ان سبسکرائب ناکام",
+    "scholarships": "اسکالرشپس",
     "copyright": "© 2024 ذہین تعلیمی پورٹل"
   },
   "hero": {
@@ -74,7 +83,7 @@
   "highlight": "تیاری کریں۔ بہترین کارکردگی دکھائیں۔ کامیاب ہوں۔",
   "description": "نفسیاتی ٹیسٹس • ذہانت کے ٹیسٹس • موک ٹیسٹس",
   "button": "آئی ایس ایس بی کی تیاری شروع کریں",
-  "link": "https://z.zaheen.com.pk/issb"
+  "link": "https://zaheen.com.pk/issb/"
 },
     "slide2": {
       "title": "کنڈرگارٹن کے لیے",

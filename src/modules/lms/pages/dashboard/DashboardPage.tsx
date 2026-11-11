@@ -11,6 +11,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/modules/shared/context/AuthContext";
+import PaymentPage from "../../../../payment/payment";
 import {
   getDashboard,
   getChildren,
@@ -29,6 +30,9 @@ const amberBdr = "rgba(240,180,41,0.28)";
 const blue    = "#3B82F6";
 const blueDim  = "rgba(59,130,246,0.12)";
 const blueBdr  = "rgba(59,130,246,0.28)";
+const green    = "#10B981";
+const greenDim  = "rgba(16,185,129,0.12)";
+const greenBdr  = "rgba(16,185,129,0.28)";
 const surface  = "rgba(15,23,42,0.92)";
 const surfaceEl = "rgba(255,255,255,0.04)";
 const surfaceBdr = "rgba(255,255,255,0.07)";
@@ -95,6 +99,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "children",     label: "My Children",   icon: "👧", roles: ["parent", "both"] },
   { id: "addchild",     label: "Add Child",     icon: "➕", roles: ["parent", "both"] },
   { id: "profile",      label: "Profile",       icon: "👤", roles: ["learner", "parent", "both", "kid"] },
+  { id: "payment",      label: "Payment",       icon: "💳", roles: ["learner", "parent", "both"] },
   { id: "setup-role",   label: "Change Role",   icon: "🎭", roles: ["learner", "parent", "both"] },
   { id: "setup-grade",  label: "Change Grade",  icon: "🎓", roles: ["learner", "both"] },
   { id: "setup-course", label: "Change Course", icon: "🎯", roles: ["learner", "both"] },
@@ -562,9 +567,9 @@ const Sidebar: React.FC<{
               onClick={() => onNavigate(item.id)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
               style={{
-                background: active ? (item.id === "addchild" ? amberDim : blueDim) : "transparent",
-                color: active ? (item.id === "addchild" ? amber : blue) : "#64748b",
-                border: active ? `1px solid ${item.id === "addchild" ? amberBdr : blueBdr}` : "1px solid transparent",
+                background: active ? (item.id === "addchild" ? amberDim : item.id === "payment" ? greenDim : blueDim) : "transparent",
+                color: active ? (item.id === "addchild" ? amber : item.id === "payment" ? green : blue) : "#64748b",
+                border: active ? `1px solid ${item.id === "addchild" ? amberBdr : item.id === "payment" ? greenBdr : blueBdr}` : "1px solid transparent",
               }}
             >
               <span className="text-base">{item.icon}</span>
@@ -648,8 +653,8 @@ const MobileTabBar: React.FC<{
             onClick={() => onNavigate(item.id)}
             className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all"
             style={{
-              color: active ? (item.id === "addchild" ? amber : blue) : "#475569",
-              background: active ? (item.id === "addchild" ? amberDim : blueDim) : "transparent",
+              color: active ? (item.id === "addchild" ? amber : item.id === "payment" ? green : blue) : "#475569",
+              background: active ? (item.id === "addchild" ? amberDim : item.id === "payment" ? greenDim : blueDim) : "transparent",
             }}
           >
             <span className="text-lg">{item.icon}</span>
@@ -713,6 +718,9 @@ const handleNavigate = (panelId: string) => {
     setActivePanel(panelId);
   };
   const renderContent = () => {
+    // Payment panel
+    if (activePanel === "payment") return <PaymentPage />;
+
     // Learner panels
     if (["overview", "progress", "courses"].includes(activePanel) && showLearner) {
       return <LearnerSection userId={userId} isKid={isKid} panel={activePanel} />;

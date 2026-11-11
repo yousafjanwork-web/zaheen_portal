@@ -1,46 +1,41 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   sendPin,
   verifyPin,
   subscribeUser,
-  makeJazzCashPayment,
 } from "@/modules/shared/services/subscriptionService";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { getUserProfile } from "@/modules/shared/services/profileService";
 import { getSetupStatus } from "@/modules/shared/services/lmsService";
+import { trackPinSent, trackSubscription } from "../../../../src/modules/shared/utils/metaPixel";
 
-type SubscriptionType = "ZONG" | "OTHER";
 
 const SubscribePage = () => {
   const { login, loginWithUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("ZONG");
-
-  // Temporary: HE server always lands on /subscribe — detect portal from ?page param
-  // and redirect to the correct subscribe page until HE server is updated
   useEffect(() => {
-    const page = searchParams.get("page") ?? "";
-    if (page.includes("mdcat")) {
-      const params = new URLSearchParams(window.location.search);
-      navigate(`/mdcat-subscribe?${params.toString()}`, { replace: true });
-      return;
-    }
+    const page   = searchParams.get("page")   ?? "";
+    const source = searchParams.get("source") ?? "";
+
+    if (source) localStorage.setItem("source", source);
+    if (page)   localStorage.setItem("page_name", page);
+
     if (page.includes("issb")) {
-      const params = new URLSearchParams(window.location.search);
-      navigate(`/issb/subscribe?${params.toString()}`, { replace: true });
-      return;
+      sessionStorage.setItem("subscribe_return_portal", "issb");
+    } else if (page.includes("mdcat")) {
+      sessionStorage.setItem("subscribe_return_portal", "mdcat");
+    } else if (page.includes("trading")) {
+      sessionStorage.setItem("subscribe_return_portal", "trading");
+    } else if (page.includes("nat")) {
+      sessionStorage.setItem("subscribe_return_portal", "nat");
+    } else if (page.includes("uniprep")) {
+      sessionStorage.setItem("subscribe_return_portal", "uniprep");
     }
   }, []);
-  const [zongMsisdn, setZongMsisdn] = useState("");
-  const [otherMsisdn, setOtherMsisdn] = useState("");
-  const [cnic, setCnic] = useState("");
-
-  const msisdn = subscriptionType === "ZONG" ? zongMsisdn : otherMsisdn;
-  const setMsisdn = subscriptionType === "ZONG" ? setZongMsisdn : setOtherMsisdn;
+  const [msisdn, setMsisdn] = useState("");
 
   const [serviceId, setServiceId] = useState<string>(
     searchParams.get("plan") ?? "205"
@@ -74,18 +69,109 @@ const SubscribePage = () => {
     }
   }, []);
 
-  // const packages = [
-  //   { id: "205", name: "Daily", price: "Rs 5", tax: "+Tax", amount: 5 },
-  //   { id: "206", name: "Weekly", price: "Rs 15", tax: "+Tax", amount: 15 },
-  //   { id: "207", name: "Monthly", price: "Rs 50", tax: "+Tax", amount: 50 },
-  // ];
-  // const selectedPackage = packages.find((pkg) => pkg.id === serviceId);
 
   // ── Shared routing logic after any successful sign-up (mobile OR Google) ──
   // Same flow: profile → role → grade → dashboard
   const routeAfterSubscribe = async (resolvedMsisdn: string) => {
+    // Check if user came from ISSB or MDCAT Enroll Now
+    const returnPortal = sessionStorage.getItem("subscribe_return_portal");
+    if (returnPortal === "issb") {
+      sessionStorage.removeItem("subscribe_return_portal");
+      login(resolvedMsisdn);
+      // Sync with ISSB backend so user is logged into ISSB on arrival
+      try {
+        const profile = await getUserProfile(resolvedMsisdn);
+        if (profile) {
+          const syncRes = await fetch(
+            "https://api.zaheen.com.pk/testprep/api/auth/zaheen-sync",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                zaheen_id: String(profile.id),
+                name:      profile.name  || "",
+                email:     profile.email || "",
+                phone:     resolvedMsisdn,
+              }),
+            }
+          );
+          const syncJson = await syncRes.json();
+          if (syncJson?.success) {
+            // Write issb_auth so ISSB project reads it on load
+            const issbAuth = {
+              issbUserId: String(syncJson.data.issb_user_id),
+              zaheenId:   String(profile.id),
+              msisdn:     resolvedMsisdn,
+              name:       syncJson.data.name || profile.name || "",
+            };
+            localStorage.setItem("issb_auth",    JSON.stringify(issbAuth));
+            localStorage.setItem("issb_user_id", String(syncJson.data.issb_user_id));
+          }
+        }
+      } catch {
+        // Non-critical — redirect anyway, user can log in manually if sync fails
+      }
+      window.location.href = "https://zaheen.com.pk/issb/";
+      return;
+    }
+    if (returnPortal === "nat") {
+      sessionStorage.removeItem("subscribe_return_portal");
+      login(resolvedMsisdn);
+      try {
+        const profile = await getUserProfile(resolvedMsisdn);
+        if (profile) {
+          localStorage.setItem("nat_auth", JSON.stringify({
+            userId: profile.id,
+            msisdn: resolvedMsisdn,
+            name:   profile.name || "",
+          }));
+          localStorage.setItem("zaheen_user_id",   String(profile.id));
+          localStorage.setItem("user_id",          String(profile.id));
+          localStorage.setItem("zaheen_user_name", profile.name || "");
+        }
+      } catch { /* non-critical */ }
+      window.location.replace("/nat/");
+      return;
+    }
+    if (returnPortal === "mdcat") {
+      sessionStorage.removeItem("subscribe_return_portal");
+      login(resolvedMsisdn);
+      window.location.href = "https://zaheen.com.pk/mdcat";
+      return;
+    }
+    if (returnPortal === "uniprep") {
+      sessionStorage.removeItem("subscribe_return_portal");
+      login(resolvedMsisdn);
+      window.location.href = "https://zaheen.com.pk/uniprep/";
+      return;
+    }
+    if (returnPortal === "trading") {
+      sessionStorage.removeItem("subscribe_return_portal");
+      try {
+        const profile = await getUserProfile(resolvedMsisdn);
+        if (profile) {
+          const status = await getSetupStatus(profile.id);
+          loginWithUser({
+            msisdn:           resolvedMsisdn,
+            userId:           profile.id,
+            isKid:            false,
+            role:             status.role              ?? null,
+            selectedClassId:  status.selected_class_id  ?? null,
+            selectedCourseId: status.selected_course_id ?? null,
+          });
+        } else {
+          login(resolvedMsisdn);
+        }
+      } catch {
+        login(resolvedMsisdn);
+      }
+      // Trading lives inside Zaheen (Professional Skills), so use the router, not a full reload
+      navigate("/skills/how-to-become-a-professional-trader", { replace: true });
+      return;
+    }
+
     try {
-      // ── Normal LMS flow ───────────────────────────────────────────────────
+      // ── Normal Zaheen LMS flow ────────────────────────────────────────────
       const profile = await getUserProfile(resolvedMsisdn);
 
       if (!profile) {
@@ -139,52 +225,13 @@ const SubscribePage = () => {
         }
       } else {
         const res = await sendPin(msisdn, serviceId);
-        if (res.status === "PIN_SENT") { setStep("OTP"); setTimer(30); }
+        if (res.status === "PIN_SENT") { setStep("OTP"); setTimer(30); trackPinSent(); }
         else setError("Failed to send PIN");
       }
     } catch { setError("Operation failed"); }
     setLoading(false);
   };
 
-  // ── Temporarily disabled: JazzCash / Other Networks handler ──────────────
-  // To re-enable, uncomment this function and restore the OTHER toggle + CNIC field below.
-  //
-  // const handleJazzCashSubscribe = async () => {
-  //   if (!msisdn) { setError("Please enter your mobile number"); return; }
-  //   if (!/^\d{6}$/.test(cnic)) { setError("Please enter the last 6 digits of your CNIC"); return; }
-  //   if (!selectedPackage) { setError("Please select a package"); return; }
-  //   try {
-  //     setLoading(true); setError("");
-  //     const result = await makeJazzCashPayment(msisdn, selectedPackage.amount, cnic);
-  //     const isSuccess =
-  //       result?.success === true ||
-  //       result?.status === "success" ||
-  //       result?.status === 1 ||
-  //       result?.status === "1";
-  //     if (isSuccess) {
-  //       login(msisdn);
-  //       localStorage.setItem("activeServiceId", serviceId);
-  //       setStep("SUCCESS");
-  //     } else {
-  //       setError(result?.message || result?.desc || "Payment failed");
-  //     }
-  //   } catch (err) {
-  //     if (axios.isAxiosError(err)) {
-  //       const serverMessage = err.response?.data?.message || err.response?.data?.desc;
-  //       setError(serverMessage || "Invalid mobile number or CNIC. Please check and try again.");
-  //     } else if (err instanceof Error) {
-  //       setError(err.message);
-  //     } else {
-  //       setError("Payment failed. Please try again.");
-  //     }
-  //   }
-  //   setLoading(false);
-  // };
-
-  // NOTE: When re-enabling OTHER, restore this to:
-  // const handleSubscribe = () => {
-  //   subscriptionType === "ZONG" ? handleZongSubscribe() : handleJazzCashSubscribe();
-  // };
   const handleSubscribe = () => {
     handleZongSubscribe();
   };
@@ -193,14 +240,18 @@ const SubscribePage = () => {
   const handleGoogleSignUp = () => {
     setSocialLoading("google");
     const redirectUri = `${window.location.origin}/social-callback`;
-    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&portal=web`;
+    const page   = new URLSearchParams(window.location.search).get("page")   ?? "";
+    const source = new URLSearchParams(window.location.search).get("source") ?? "";
+    const portal = page.includes("mdcat")    ? "mdcat"
+                 : page.includes("issb")     ? "issb"
+                 : page.includes("nat")      ? "nat"
+                 : page.includes("trading")  ? "trading"
+                 : page.includes("uniprep")  ? "uniprep"
+                 : "web";
+    sessionStorage.setItem("social_portal", JSON.stringify({ portal, ts: Date.now() }));
+    window.location.href = `https://api.zaheen.com.pk/v2/api/auth/google?redirect_uri=${encodeURIComponent(redirectUri)}&portal=${portal}&page=${encodeURIComponent(page)}&source=${encodeURIComponent(source)}`;
   };
 
-  // ── Temporarily hidden: Facebook sign-up — will be added later ──
-  // const handleFacebookSignUp = () => {
-  //   setSocialLoading("facebook");
-  //   window.location.href = "https://api.zaheen.com.pk/v2/api/auth/facebook";
-  // };
 
   const handleVerifyPin = async () => {
     try {
@@ -210,6 +261,7 @@ const SubscribePage = () => {
         const sub = await subscribeUser(msisdn, serviceId);
         if (sub.status === "1" || sub.desc?.toLowerCase().includes("already active")) {
           localStorage.setItem("activeServiceId", serviceId);
+          trackSubscription(5);
           await routeAfterSubscribe(msisdn);
         } else {
           setError(sub.desc || "Subscription failed");
@@ -319,30 +371,6 @@ const SubscribePage = () => {
                   Sign up with Google
                 </button>
 
-            {/* ── Temporarily hidden: Facebook sign-up — will be added later ──
-                <button
-                  onClick={handleFacebookSignUp}
-                  disabled={!!socialLoading}
-                  className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "#e2e8f0",
-                    opacity: socialLoading === "google" ? 0.5 : 1,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-                >
-                  {socialLoading === "facebook" ? (
-                    <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-400/30 border-t-slate-300 animate-spin" />
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
-                      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.491 0-1.956.93-1.956 1.883v2.258h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
-                    </svg>
-                  )}
-                  Continue with Facebook
-                </button>
-                ── End of hidden Facebook button ── */}
               </div>
 
               {/* Divider */}
@@ -352,34 +380,6 @@ const SubscribePage = () => {
                 <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
               </div>
 
-              {/* ── Temporarily hidden: ZONG / OTHER NETWORKS toggle ─────────────
-                   To re-enable, uncomment the block below and also uncomment
-                   handleJazzCashSubscribe() and the CNIC field further down.
-
-              <div
-                className="flex mb-6 rounded-xl p-1"
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                {(["ZONG", "OTHER"] as SubscriptionType[]).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => { setSubscriptionType(type); setError(""); }}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
-                    style={
-                      subscriptionType === type
-                        ? {
-                            background: "linear-gradient(135deg, #F0B429, #f59e0b)",
-                            color: "#0f172a",
-                            boxShadow: "0 2px 8px rgba(240,180,41,0.35)",
-                          }
-                        : { color: "#94a3b8" }
-                    }
-                  >
-                    {type === "ZONG" ? "Zong" : "Other Networks"}
-                  </button>
-                ))}
-              </div>
-              ── End of hidden toggle ── */}
 
               {/* Mobile input */}
               <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
@@ -403,89 +403,6 @@ const SubscribePage = () => {
                   onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
                 />
               </div>
-
-              {/* ── Temporarily hidden: CNIC field for OTHER network (JazzCash) ──
-                   To re-enable, uncomment this block along with the toggle and
-                   handleJazzCashSubscribe() above.
-
-              {subscriptionType === "OTHER" && (
-                <>
-                  <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
-                    CNIC — Last 6 Digits <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative mb-5">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm select-none">
-                      🪪
-                    </span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={cnic}
-                      onChange={(e) => setCnic(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="XXXXXX"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl text-white placeholder-slate-500 text-sm transition-all"
-                      style={{
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        outline: "none",
-                      }}
-                      onFocus={(e) => (e.target.style.borderColor = "#F0B429")}
-                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
-                    />
-                  </div>
-                </>
-              )}
-              ── End of hidden CNIC field ── */}
-
-              {/* ── Temporarily hidden: package selector moved to PackagesPage ──
-              <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">
-                Choose Package
-              </label>
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {packages.map((pkg) => {
-                  const active = serviceId === pkg.id;
-                  return (
-                    <button
-                      key={pkg.id}
-                      onClick={() => setServiceId(pkg.id)}
-                      className="relative p-4 rounded-xl text-center transition-all duration-200 group"
-                      style={
-                        active
-                          ? {
-                              background: "linear-gradient(135deg, rgba(240,180,41,0.15), rgba(45,212,191,0.1))",
-                              border: "1px solid rgba(240,180,41,0.5)",
-                              boxShadow: "0 0 16px rgba(240,180,41,0.15)",
-                            }
-                          : {
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.08)",
-                            }
-                      }
-                    >
-                      {active && (
-                        <span
-                          className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                          style={{ background: "#F0B429", color: "#0f172a" }}
-                        >
-                          ✓
-                        </span>
-                      )}
-                      <div className="font-bold text-sm mb-1" style={{ color: active ? "#F0B429" : "#e2e8f0" }}>
-                        {pkg.name}
-                      </div>
-                      <div className="text-xs" style={{ color: active ? "#fcd34d" : "#64748b" }}>
-                        {pkg.price}
-                      </div>
-                      <div className="text-[10px] mt-0.5" style={{ color: active ? "#94a3b8" : "#475569" }}>
-                        {pkg.tax}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              ── End of hidden package selector ── */}
-
               {error && (
                 <div
                   className="flex items-center gap-2 text-sm mb-4 px-4 py-3 rounded-xl"

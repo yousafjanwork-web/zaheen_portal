@@ -22,6 +22,8 @@ const sliderImg3 = "https://cdn.zaheen.com.pk/zaheen-web-img/excel-s.png";
 const sliderImg4 = "https://cdn.zaheen.com.pk/zaheen-web-img/video-editing-s.png";
 const sliderImg5 = "https://cdn.zaheen.com.pk/zaheen-web-img/makeup-s.png";
 const sliderImg6 = "https://cdn.zaheen.com.pk/zaheen-web-img/trading-professional-skill-banner-ss.jpeg";
+const sliderImg7 = "https://cdn.zaheen.com.pk/images/amazon-affiliate-banner-small.jpeg";
+const sliderImg8 = "https://cdn.zaheen.com.pk/images/stitching-course-small.png";
 
 /* ─────────────────────────────────────────
    v2 Courses API
@@ -51,6 +53,8 @@ const COURSE_IMAGES: Record<number, string> = {
   4: sliderImg3, // Excel (parent_id 4)
   5: sliderImg4, // Video Editing (parent_id 5)
   6: sliderImg5, // Makeup (parent_id 6)
+  67: sliderImg7, // Amazon Affiliate (parent_id 67)
+  68: sliderImg8, // Cutting & Tailoring (parent_id 68)
 };
 
 // v2 course.id → classId (for navigation)
@@ -62,6 +66,8 @@ const PARENT_ID_TO_CLASS_ID: Record<number, number> = {
   4: 302, // Excel
   5: 303, // Video Editing
   6: 304, // Makeup
+  67: 306, // Amazon Affiliate
+  68: 307, // Cutting & Tailoring
 };
 
 // Display order: Trading first, Web Dev second, rest after
@@ -73,6 +79,8 @@ const DISPLAY_ORDER: Record<number, number> = {
   4: 3, // Excel
   5: 4, // Video Editing
   6: 5, // Makeup
+  67: 6, // Amazon Affiliate
+  68: 7, // Cutting & Tailoring
 };
 
 // The /v2/api/courses endpoint's total_lectures field isn't reliable, so the

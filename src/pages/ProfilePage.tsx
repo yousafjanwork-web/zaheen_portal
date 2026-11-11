@@ -78,12 +78,14 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
   const [error,   setError]   = useState("");
   const [success, setSuccess] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
+  const [profileMsisdn, setProfileMsisdn] = useState("");
 
   /* ── Populate form from profile ── */
   const populateForm = (profile: UserProfile) => {
     const rawUsername = profile.username ?? "";
     setUserId(profile.id);
     setHasProfile(true);
+    setProfileMsisdn(profile.msisdn ?? "");
     setForm({
       name:     profile.name  ?? "",
       username: isMsisdn(rawUsername, profile.msisdn) ? "" : rawUsername,
@@ -157,6 +159,16 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
     if (isMdcatSetup && isGoogleUser && !form.mobile.trim()) {
       setError("Mobile number is required for MDCAT access"); return;
     }
+    // Web Google users (no msisdn yet) must add a valid Pakistani mobile number
+    let normalizedMobile = "";
+    if (!isMdcatSetup && isGoogleUser && !profileMsisdn) {
+      const d = form.mobile.replace(/\D/g, "");
+      if (!d) { setError("Mobile number is required"); return; }
+      if (d.length === 12 && d.startsWith("92"))      normalizedMobile = d;
+      else if (d.length === 11 && d.startsWith("0"))  normalizedMobile = "92" + d.slice(1);
+      else if (d.length === 10 && d.startsWith("3"))  normalizedMobile = "92" + d;
+      else { setError("Please enter a valid Pakistani mobile number (e.g. 923XXXXXXXXX)"); return; }
+    }
     if (!userId) {
       setError("Profile ID not found. Please refresh and try again."); return;
     }
@@ -209,25 +221,24 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
         const profilePayload = {
           name:  form.name.trim(),
           email: form.email.trim(),
+          ...(normalizedMobile ? { msisdn: normalizedMobile } : {}),
           ...(form.username.trim() ? { username: form.username.trim() } : {}),
           ...(form.password        ? { password: form.password }        : {}),
         };
-        const saved = await updateUserProfile(userId, profilePayload);
-
-        populateForm(saved);
+        await updateUserProfile(userId, profilePayload);
         setSuccess(true);
 
         if (msisdn) {
-          notifyNameChanged(msisdn, saved.name?.trim() || form.name.trim());
+          notifyNameChanged(msisdn, form.name.trim());
         } else if (authUserId) {
           loginWithUser({
-            msisdn:          "",
+            msisdn:          normalizedMobile,
             userId:          authUserId,
             isKid:           isKid,
             role:            role ?? "learner",
             selectedClassId,
             selectedCourseId,
-            displayName:     saved.name?.trim() || form.name.trim(),
+            displayName:     form.name.trim(),
           });
         }
 
@@ -355,7 +366,7 @@ const isSetupMode = searchParams.get("setup"); // "true" | "subscribe" | null
                   { field: "name",     label: "Full Name",     placeholder: "Your Name",                    type: "text",  icon: "👤", required: true  },
                   { field: "username", label: "Username",      placeholder: "Choose a username (for login)", type: "text",  icon: "🏷️", required: false },
                   { field: "email",    label: "Gmail / Email", placeholder: "you@gmail.com",                type: "email", icon: "✉️", required: true  },
-                  ...(isMdcatSetup ? [{ field: "mobile", label: "Mobile Number", placeholder: "923XXXXXXXXX", type: "text", icon: "📱", required: true }] : []),
+                  ...((isMdcatSetup || (!msisdn && !profileMsisdn)) ? [{ field: "mobile", label: "Mobile Number", placeholder: "923XXXXXXXXX", type: "text", icon: "📱", required: true }] : []),
                 ].map(({ field, label, placeholder, type, icon, required }) => (
                   <div key={field}>
                     <label className="block text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1.5">

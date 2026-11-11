@@ -53,6 +53,7 @@ import AiTutorMobile      from "@/modules/aiTutor/pages/AiTutorMobile";
 // ── Quiz / Assessment ──
 import SecondaryQuizFlow  from "../modules/assessments/pages/SecondaryQuizFlow";
 import PrimaryQuizFlow    from "../modules/assessments/pages/PrimaryQuizFlow";
+import { KgQuizApp }      from "../kgquizz";
 import QuizRouter         from "@/modules/courses/pages/QuizRouter";
 
 // ── Grade / Subject routers ──
@@ -85,6 +86,9 @@ import DashboardPage        from "../modules/lms/pages/dashboard/DashboardPage";
 import SetupGuard           from "../modules/lms/components/SetupGuard";
 import SocialCallbackPage       from "../modules/auth/pages/SocialCallbackPage";
 import SocialAuthPage           from "../modules/auth/pages/SocialAuthPage";
+import SocialProfileSetupPage   from "../modules/auth/pages/SocialProfileSetupPage";
+import SocialPaymentPage        from "../modules/auth/pages/SocialPaymentPage";
+import SocialAppDownloadPage    from "../modules/auth/pages/SocialAppDownloadPage";
 import MdcatLoginPage           from "../mdcat/pages/MdcatLoginPage";
 import MdcatSubscribePage       from "../mdcat/pages/MdcatSubscribePage";
 import MdcatSocialCallbackPage  from "../mdcat/pages/MdcatSocialCallbackPage";
@@ -95,12 +99,27 @@ import MwalletRecurring   from "../payment/MwalletRecurring";
 import RecurringSuccess   from "../payment/RecurringSuccess";
 import PaymentWithoutCnic from "../payment/PaymentWithoutCnic";
 import NotFound from "../pages/NotFound";
+import Thanku from "../pages/Thanku";
 import PrepExam from "../pages/PrepExam";
+import ScholarshipPage from "../pages/ScholarshipPage";
 
 
 // ─────────────────────────────────────────────────────────────────────────────
 const TitleSetter = ({ title }: { title: string }) => {
   useEffect(() => { document.title = title; }, [title]);
+  return null;
+};
+
+// JazzCash return route is shared: social flow (saved state) vs. old recurring flow
+const WalletReturnRouter = () =>
+  sessionStorage.getItem("social_payment_state") ? <SocialPaymentPage /> : <RecurringSuccess />;
+
+const ExternalRedirect = () => {
+  useEffect(() => {
+    window.location.replace(
+      window.location.pathname + window.location.search + window.location.hash
+    );
+  }, []);
   return null;
 };
 
@@ -126,6 +145,7 @@ const AppRoutes = () => {
           <Route path="/privacy"                     element={<><TitleSetter title="Zaheen | Privacy Policy" /><PrivacyPolicy /></>} />
           <Route path="/grade-view/:type"            element={<><TitleSetter title="Zaheen | Grades" /><GradesView /></>} />
           <Route path="/all-professional-courses"    element={<><TitleSetter title="Zaheen | Professional Courses" /><AllProfessionalCourses /></>} />
+          <Route path="/kg/quiz" element={<><TitleSetter title="Zaheen | KG Quiz" /><KgQuizApp /></>} />
           <Route path="/:classSlug"                  element={<ClassSubjectsRouter />} />
           <Route path="/:classSlug/:subjectSlug"     element={<SubjectLecturesRouter />} />
           <Route path="/:classSlug/quiz"             element={<QuizRouter />} />
@@ -149,11 +169,13 @@ const AppRoutes = () => {
           <Route path="/ai"                          element={<><TitleSetter title="Zaheen | AI Tutor" /><Chatbot /></>} />
           <Route path="/prep-exam"                   element={<><TitleSetter title="Zaheen | Prep Exam" /><PrepExam /></>} />
 
+          <Route path="/scholarship" element={<><TitleSetter title="Zaheen | Scholarships" /><ScholarshipPage /></>} />
+
           {/* ── Payment ── */}
           <Route path="/pay-with-jazzcash"                                     element={<><TitleSetter title="Zaheen | Pay with JazzCash" /><PaymentPage /></>} />
           <Route path="/pay-with-jazzcash/card"                                element={<><TitleSetter title="Zaheen | Card Payment" /><CardPaymentPage /></>} />
           <Route path="/pay-with-jazzcash/mwallet-recurring"                   element={<><TitleSetter title="Zaheen | Recurring Payment" /><MwalletRecurring /></>} />
-          <Route path="/pay-with-jazzcash/mwallet-recurring/recurring-success" element={<><TitleSetter title="Zaheen | Payment Successful" /><RecurringSuccess /></>} />
+          <Route path="/pay-with-jazzcash/mwallet-recurring/recurring-success" element={<><TitleSetter title="Zaheen | Payment Successful" /><WalletReturnRouter /></>} />
           <Route path="/pay-with-jazzcash/mwallet-withoutcnic"                 element={<><TitleSetter title="Zaheen | Pay without CNIC" /><PaymentWithoutCnic /></>} />
 
           {/* ── Login ── */}
@@ -164,7 +186,14 @@ const AppRoutes = () => {
 
           {/* ── Callbacks ── */}
           <Route path="/social-callback"      element={<><TitleSetter title="Zaheen | Connecting..." /><SocialCallbackPage /></>} />
-<Route path="/social-auth"          element={<><TitleSetter title="Zaheen | Setting up…"  /><SocialAuthPage /></>} />
+<Route path="/social-auth"             element={<><TitleSetter title="Zaheen | Setting up…"    /><SocialAuthPage /></>} />
+<Route path="/mdcat-profile-setup"     element={<><TitleSetter title="Zaheen | Profile Setup"  /><SocialProfileSetupPage /></>} />
+<Route path="/issb-profile-setup"      element={<><TitleSetter title="Zaheen | Profile Setup"  /><SocialProfileSetupPage /></>} />
+<Route path="/nat-profile-setup"       element={<><TitleSetter title="Zaheen | Profile Setup"  /><SocialProfileSetupPage /></>} />
+<Route path="/trading-profile-setup"   element={<><TitleSetter title="Zaheen | Profile Setup"  /><SocialProfileSetupPage /></>} />
+<Route path="/uniprep-profile-setup"   element={<><TitleSetter title="Zaheen | Profile Setup"  /><SocialProfileSetupPage /></>} />
+<Route path="/social-payment"          element={<><TitleSetter title="Zaheen | Payment"         /><SocialPaymentPage /></>} />
+<Route path="/social-app-download"     element={<><TitleSetter title="Zaheen | Get the App"     /><SocialAppDownloadPage /></>} />
           <Route path="/mdcat-login"           element={<><TitleSetter title="Zaheen | MDCAT Login" /><MdcatLoginPage /></>} />
 <Route path="/mdcat-subscribe"       element={<><TitleSetter title="Zaheen | MDCAT Subscribe" /><MdcatSubscribePage /></>} />
           <Route path="/mdcat-social-callback" element={<><TitleSetter title="Zaheen | MDCAT Connecting..." /><MdcatSocialCallbackPage /></>} />
@@ -194,8 +223,12 @@ const AppRoutes = () => {
         <Route path="/learning"              element={<><TitleSetter title="Zaheen | Learning" /><LearningPage /></>} />
         <Route path="/sub_enrollnow"         element={<><TitleSetter title="Zaheen | Subscribe & Enroll" /><SubEnrollNow /></>} />
         <Route path="thanks-for-subscribing" element={<><TitleSetter title="Zaheen | Subscribed!" /><SuccessScreen /></>} />
+        <Route path="/thanku" element={<><TitleSetter title="Zaheen | Thank You" /><Thanku /></>} />
 
         {/* ── Mini-apps ── */}
+        
+        <Route path="/issb/*" element={<ExternalRedirect />} />
+        <Route path="/nat/*"  element={<ExternalRedirect />} />
         <Route path="/mdcat/*"          element={<><TitleSetter title="Zaheen | MDCAT Prep — AI Practice" /><MdcatApp /></>} />
         <Route path="/mdcat-mobile/*"   element={<><TitleSetter title="Zaheen | MDCAT Prep — AI Practice" /><MdcatAppMobile /></>} />
         <Route path="/cosmokid/*"       element={<><TitleSetter title="Zaheen | Cosmokid" /><CosmokidApp /></>} />

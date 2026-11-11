@@ -14,7 +14,7 @@ import { getSetupStatus } from "@/modules/shared/services/lmsService";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type Portal = "web" | "mdcat" | "issb" | "nat";
+type Portal = "web" | "mdcat" | "issb" | "nat" | "trading" | "uniprep";
 type Step   = "LOADING" | "MOBILE" | "OTP" | "SAVING" | "DONE" | "ERROR";
 
 interface SocialAuthState {
@@ -33,39 +33,16 @@ interface SocialAuthState {
 // ── Portal redirect map ────────────────────────────────────────────────────
 
 const PORTAL_REDIRECT: Record<Portal, string> = {
-  web:  "/dashboard",
-  mdcat: "/mdcat",
-  issb:  "/issb/",
-  nat:   "/nat",
+  web:      "/dashboard",
+  mdcat:    "/mdcat",
+  issb:     "/issb/",
+  nat:      "/nat/",
+  trading:  "/skills/how-to-become-a-professional-trader",
+  uniprep:  "/uniprep/",
 };
 
-// ISSB sync — mirrors ISSB's own completeLogin logic
-const syncIssbSession = async (zaheenUser: {
-  id: string; name: string; email: string; msisdn: string;
-}) => {
-  const res = await fetch("https://api.zaheen.com.pk/testprep/api/auth/zaheen-sync", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      zaheen_id: zaheenUser.id,
-      name:      zaheenUser.name,
-      email:     zaheenUser.email,
-      phone:     zaheenUser.msisdn,
-    }),
-  });
-  const json = await res.json();
-  if (!json?.success) throw new Error("ISSB sync failed");
-
-  // Write to issb_auth so ISSB project reads it on load
-  const issbAuth = {
-    issbUserId: String(json.data.issb_user_id),
-    zaheenId:   zaheenUser.id,
-    msisdn:     zaheenUser.msisdn,
-    name:       json.data.name || zaheenUser.name,
-  };
-  localStorage.setItem("issb_auth",    JSON.stringify(issbAuth));
-  localStorage.setItem("issb_user_id", String(json.data.issb_user_id)); // compat
-};
+import { syncIssbSession } from "@/modules/shared/services/issbService";
+import { goToPortal } from "@/modules/shared/utils/portalRedirect";
 
 // ── Shared styles ──────────────────────────────────────────────────────────
 
@@ -88,6 +65,38 @@ const ErrorBox: React.FC<{ msg: string }> = ({ msg }) => (
 
 const Spinner = () => (
   <span className="inline-block w-4 h-4 rounded-full border-2 border-slate-900/30 border-t-slate-900 animate-spin" />
+);
+
+// ── Defined outside SocialAuthPage to prevent remount on state change ──
+
+const PrimaryBtn: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode }> =
+  ({ onClick, disabled, children }) => (
+    <button onClick={onClick} disabled={disabled}
+      className="w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+      style={{
+        background: disabled ? "rgba(240,180,41,0.4)" : "linear-gradient(135deg,#F0B429,#f59e0b)",
+        color: "#0f172a",
+        boxShadow: disabled ? "none" : "0 4px 16px rgba(240,180,41,0.35)",
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}>
+      {children}
+    </button>
+  );
+
+// ── Card shell — defined outside SocialAuthPage to prevent remount on state change ──
+const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="relative min-h-screen bg-slate-900 flex items-center justify-center px-4 py-12">
+    <div className="w-full max-w-md rounded-2xl overflow-hidden"
+      style={{
+        background: "rgba(15,23,42,0.88)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        backdropFilter: "blur(18px)",
+        boxShadow: "0 32px 64px rgba(0,0,0,0.55)",
+      }}>
+      <div className="h-1 w-full" style={{ background: "linear-gradient(90deg,#F0B429,#2DD4BF)" }} />
+      <div className="p-8">{children}</div>
+    </div>
+  </div>
 );
 
 // ── SocialAuthPage ─────────────────────────────────────────────────────────
@@ -121,7 +130,25 @@ const SocialAuthPage: React.FC = () => {
       return;
     }
     if (state.isNewAccount) {
-      setStep("MOBILE");
+      const portal = state.portal as Portal;
+      if (portal === "mdcat" || portal === "issb" || portal === "nat" || portal === "trading" || portal === "uniprep") {
+        // New account from these portals → profile setup page
+        // Pass all state through so profile page has name/email/token
+        const profileSetupRoutes: Record<string, string> = {
+          mdcat:    "/mdcat-profile-setup",
+          issb:     "/issb-profile-setup",
+          nat:      "/nat-profile-setup",
+          trading:  "/trading-profile-setup",
+          uniprep:  "/uniprep-profile-setup",
+        };
+        navigate(profileSetupRoutes[portal], {
+          replace: true,
+          state: { ...state },
+        });
+      } else {
+        // web portal → log in, then Zaheen profile setup (phone is collected there)
+        handleNewWebAccount();
+      }
     } else {
       handleExistingAccount();
     }
@@ -131,6 +158,33 @@ const SocialAuthPage: React.FC = () => {
 
   const redirectToPortal = async (portal: Portal, setupStatus?: any) => {
     const destination = PORTAL_REDIRECT[portal] ?? "/dashboard";
+
+    if (portal === "uniprep") {
+      localStorage.setItem("uniprep_auth", JSON.stringify({
+        userId: Number(state!.userId),
+        msisdn: state!.msisdn ?? "",
+        name:   state!.name || state!.email,
+      }));
+      localStorage.setItem("zaheen_user_id",   state!.userId);
+      localStorage.setItem("zaheen_user_name", state!.name || state!.email);
+      window.location.href = "https://zaheen.com.pk/uniprep/";
+      return;
+    }
+
+    if (portal === "nat") {
+      // Write nat_auth so NAT project reads it on load
+      const natAuth = {
+        userId: Number(state!.userId),
+        msisdn: state!.msisdn ?? "",
+        name:   state!.name || state!.email,
+      };
+      localStorage.setItem("nat_auth",        JSON.stringify(natAuth));
+      localStorage.setItem("zaheen_user_id",  state!.userId);
+      localStorage.setItem("user_id",         state!.userId);
+      localStorage.setItem("zaheen_user_name", state!.name || state!.email);
+      goToPortal("/nat/", navigate);
+      return;
+    }
 
     if (portal === "issb") {
       try {
@@ -143,7 +197,7 @@ const SocialAuthPage: React.FC = () => {
       } catch {
         // Non-critical — redirect anyway, ISSB will show login if sync failed
       }
-      navigate(destination, { replace: true });
+      goToPortal(destination, navigate);
       return;
     }
 
@@ -159,11 +213,25 @@ const SocialAuthPage: React.FC = () => {
         navigate("/dashboard", { replace: true });
       }
     } else {
-      navigate(destination, { replace: true });
+      goToPortal(destination, navigate);
     }
   };
 
   // ── Existing account flow ──────────────────────────────────────────────
+
+  const handleNewWebAccount = () => {
+    loginWithUser({
+      msisdn:           "",
+      userId:           Number(state!.userId),
+      isKid:            false,
+      role:             null,
+      selectedClassId:  null,
+      selectedCourseId: null,
+      displayName:      state!.name || state!.email,
+      token:            state!.token,
+    });
+    navigate("/profile?setup=true", { replace: true });
+  };
 
   const handleExistingAccount = async () => {
     setStep("LOADING");
@@ -314,36 +382,7 @@ const SocialAuthPage: React.FC = () => {
     );
   }
 
-  // ── Render: Card shell ──────────────────────────────────────────────────
-
-  const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="relative min-h-screen bg-slate-900 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl overflow-hidden"
-        style={{
-          background: "rgba(15,23,42,0.88)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backdropFilter: "blur(18px)",
-          boxShadow: "0 32px 64px rgba(0,0,0,0.55)",
-        }}>
-        <div className="h-1 w-full" style={{ background: "linear-gradient(90deg,#F0B429,#2DD4BF)" }} />
-        <div className="p-8">{children}</div>
-      </div>
-    </div>
-  );
-
-  const PrimaryBtn: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode }> =
-    ({ onClick, disabled, children }) => (
-      <button onClick={onClick} disabled={disabled}
-        className="w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
-        style={{
-          background: disabled ? "rgba(240,180,41,0.4)" : "linear-gradient(135deg,#F0B429,#f59e0b)",
-          color: "#0f172a",
-          boxShadow: disabled ? "none" : "0 4px 16px rgba(240,180,41,0.35)",
-          cursor: disabled ? "not-allowed" : "pointer",
-        }}>
-        {children}
-      </button>
-    );
+ 
 
   // ── Render: MOBILE step ─────────────────────────────────────────────────
 

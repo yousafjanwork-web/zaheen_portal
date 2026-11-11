@@ -25,7 +25,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import axios from "axios"
+import quizHttp from "../../../modules/shared/services/quizHttp"
 import { useParams, useLocation } from "react-router-dom"
 import { classIdFromSlug } from "@/config/classSlugs"
 import SubjectSkillSelector, { Skill } from "./SubjectSkillSelector"
@@ -137,7 +137,7 @@ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
     setFeedback(null); setShowExpl(false); setQuestion(null)
     startRef.current = Date.now()
     try {
-      const res = await axios.get<NextResponse>(
+      const res = await quizHttp.get<NextResponse>(
         `${BASE}/api/quiz/adaptive/next-by-skill`,
         { params: { userId: studentId, skillId } }
       )
@@ -185,7 +185,7 @@ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
     else if (optionId !== null)                                       body.selectedOptionId  = optionId
 
     try {
-      const res = await axios.post<SubmitResponse>(`${BASE}/api/quiz/adaptive/submit`, body)
+      const res = await quizHttp.post<SubmitResponse>(`${BASE}/api/quiz/adaptive/submit`, body)
       const d = res.data.data
       setFeedback(d); setMastery(d.masteryScore); setStreak(d.streak)
       const isCorrectAnswer = d.correct
@@ -232,7 +232,7 @@ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
         defaultSubjectId={defaultSubjectId}
         studentId={studentId}
         onStart={(s) => {
-          axios.get<{ success: boolean; data: { user_progress: SkillProgress | null } }>(
+          quizHttp.get<{ success: boolean; data: { user_progress: SkillProgress | null } }>(
             `${BASE}/api/quiz/adaptive/skill-info`,
             { params: { skillId: s.id, userId: studentId } }
           ).then(r => handleStart(s, r.data?.data?.user_progress ?? undefined))
@@ -273,7 +273,7 @@ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
             <button
               onClick={async () => {
                 if (!skill) return
-                await axios.post(`${BASE}/api/quiz/adaptive/reset-skill`, { userId: studentId, skillId: skill.id }).catch(() => {})
+                await quizHttp.post(`${BASE}/api/quiz/adaptive/reset-skill`, { userId: studentId, skillId: skill.id }).catch(() => {})
                 setAnswered(0); setCorrect(0); setMastery(0); setStreak(0)
                 setElapsed(0); setSessionQ(0); setQIndex(0); setNavStatus([]); setIsLast(false)
                 setPhase("quiz"); loadNext(skill.id, 0)
@@ -362,7 +362,13 @@ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
               )}
 
               <div style={{ padding: "24px 24px 20px" }}>
-                {question.image_url && <img src={question.image_url} alt="" style={{ maxWidth: "100%", borderRadius: 10, marginBottom: 16 }} />}
+                {question.image_url && (
+  <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+    <img src={question.image_url} alt=""
+      onError={e => { (e.currentTarget as HTMLElement).style.display = "none" }}
+      style={{ width: "auto", height: "auto", maxWidth: 320, maxHeight: 240, objectFit: "contain", borderRadius: 10 }} />
+  </div>
+)}
                 <p style={{ fontSize: 17, fontWeight: 700, color: "#111827", lineHeight: 1.6, margin: "0 0 24px" }}>
                   {question.prompt}
                 </p>
@@ -386,8 +392,12 @@ const studentId = (propId ?? Number(localStorage.getItem("user_id"))) || 2
                           <span style={{ width:30, height:30, borderRadius:"50%", flexShrink:0, background:hasFb&&isSel?(feedback!.correct?GREEN:RED):ACCENT, color:"#fff", fontWeight:700, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>
                             {String.fromCharCode(65+i)}
                           </span>
-                          <span style={{ flex:1 }}>{opt.option_text}</span>
-                          {opt.image_url && <img src={opt.image_url} alt="" style={{ width:44, borderRadius:6 }} />}
+                          <span style={{ flex:1 }}>{opt.image_url && opt.option_text.trim().length <= 1 ? "" : opt.option_text}</span>
+                          {opt.image_url && (
+  <img src={opt.image_url} alt={opt.option_text}
+    onError={e => { (e.currentTarget as HTMLElement).style.display = "none" }}
+    style={{ width: 88, height: 88, objectFit: "contain", borderRadius: 6, background: "#fff", flexShrink: 0 }} />
+)}
                           {hasFb && isSel && <span style={{ fontSize:16 }}>{feedback!.correct?"✓":"✗"}</span>}
                         </button>
                       )

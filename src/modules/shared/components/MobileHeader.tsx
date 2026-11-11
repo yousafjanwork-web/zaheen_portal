@@ -6,6 +6,10 @@ const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useUserDisplayName, clearDisplayNameCache } from "@/modules/shared/hooks/useUserDisplayName";
+import { classSlugFromId } from "@/config/classSlugs";
+import { SKILL_SEGMENTS } from "@/modules/shared/utils/skillsSegments";
+
+type SectionKey = "courses" | "skills" | "ai" | "prep" | null;
 
 const getInitials = (name: string) =>
   name.trim().split(" ").filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
@@ -13,8 +17,9 @@ const getInitials = (name: string) =>
 const MobileHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [section, setSection] = useState<SectionKey>(null);
 
-  const { msisdn, userId, isLoggedIn, logout } = useAuth();
+  const { msisdn, isLoggedIn, logout } = useAuth();
   const displayName = useUserDisplayName();
   const navigate = useNavigate();
 
@@ -30,6 +35,25 @@ const MobileHeader = () => {
   };
 
   const close = () => setMenuOpen(false);
+  const toggle = (k: Exclude<SectionKey, null>) => setSection(section === k ? null : k);
+
+  const itemCls =
+    "flex items-center px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-white/07 hover:text-white transition-colors";
+  const subCls =
+    "block px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/07 transition-colors";
+  const headCls =
+    "px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500";
+
+  const accordion = (k: Exclude<SectionKey, null>, label: React.ReactNode) => (
+    <button onClick={() => toggle(k)} className={`${itemCls} w-full justify-between`}>
+      <span className="flex items-center gap-2">{label}</span>
+      <ChevronDown
+        size={15}
+        className="transition-transform"
+        style={{ transform: section === k ? "rotate(180deg)" : "rotate(0deg)" }}
+      />
+    </button>
+  );
 
   return (
     <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-white/10 px-4 py-3 lg:hidden">
@@ -113,23 +137,111 @@ const MobileHeader = () => {
       {menuOpen && (
         <nav className="mt-4 pb-2 space-y-1">
 
-         {[
-            { href: "/",                label: t("menu.home") },
-            { href: "/grade-view/k-12", label: t("menu.courses") },
-            { href: "/practice",        label: t("learning.practice") },
-            { href: "/results",         label: t("learning.boardResults") },
-            { href: "/ai",              label: t("menu.ai_tutor") },
-            { href: "/prep-exam",           label: t("menu.test_prep") },
-          ].map(({ href, label }) => (
-            <Link
-              key={href}
-              to={href}
-              onClick={close}
-              className="flex items-center px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-white/07 hover:text-white transition-colors"
-            >
-              {label}
-            </Link>
-          ))}
+          {/* Home */}
+          <Link to="/" onClick={close} className={itemCls}>
+            {t("menu.home")}
+          </Link>
+
+          {/* Courses (K-12 only) */}
+          <div>
+            {accordion("courses", t("menu.courses"))}
+            {section === "courses" && (
+              <div className="ml-3 border-l border-white/10">
+                <p className={headCls}>{t("courses.k12")}</p>
+
+                <button
+                  onClick={() => {
+                    navigate(`/${classSlugFromId(1)}`, { state: { gradeType: "kg" } });
+                    close();
+                  }}
+                  className={`${subCls} w-full text-left`}
+                >
+                  {t("courses.kg")}
+                </button>
+                <Link to="/grade-view/1-5" onClick={close} className={subCls}>{t("courses.grade1to5")}</Link>
+                <Link to="/grade-view/6-8" onClick={close} className={subCls}>{t("courses.grade6to8")}</Link>
+                <Link to="/grade-view/9-12" onClick={close} className={subCls}>{t("courses.grade9to12")}</Link>
+              </div>
+            )}
+          </div>
+
+          {/* Skills (three segments) */}
+          <div>
+            {accordion("skills", t("menu.skills"))}
+            {section === "skills" && (
+              <div className="ml-3 border-l border-white/10 pb-1">
+                {SKILL_SEGMENTS.map((seg) => (
+                  <div key={seg.titleKey}>
+                    <p className={headCls}>{t(seg.titleKey)}</p>
+                    {seg.items.map((item) => (
+                      <Link key={item.to} to={item.to} onClick={close} className={subCls}>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Zaheen Intelligence Engine */}
+          <div>
+            {accordion(
+              "ai",
+              <>
+                {t("menu.intelligence_engine")}
+                <span className="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase leading-none">
+                  AI
+                </span>
+              </>
+            )}
+            {section === "ai" && (
+              <div className="ml-3 border-l border-white/10">
+                <Link to="/ai" onClick={close} className={subCls}>{t("menu.ai_tutor")}</Link>
+                <a
+                  href="https://zaheen.com.pk/ai_counselor/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={close}
+                  className={subCls}
+                >
+                  {t("menu.ai_counselor")}
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Test Prep */}
+          <div>
+            {accordion(
+              "prep",
+              <>
+                {t("menu.test_prep")}
+                <span
+                  dir="ltr"
+                  className="text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase leading-none"
+                  style={{ background: "linear-gradient(90deg,#ef4444,#f97316)" }}
+                >
+                  🔥 ISSB
+                </span>
+              </>
+            )}
+            {section === "prep" && (
+              <div className="ml-3 border-l border-white/10">
+                <Link to="/prep-exam" onClick={close} className={subCls}>{t("menu.all_test_prep")}</Link>
+                <a href="https://zaheen.com.pk/issb/" target="_blank" rel="noopener noreferrer" onClick={close} className={subCls}>
+                  {t("menu.issb")}
+                </a>
+                <a href="https://zaheen.com.pk/nat/" target="_blank" rel="noopener noreferrer" onClick={close} className={subCls}>
+                  {t("menu.nat")}
+                </a>
+                <Link to="/mdcat" onClick={close} className={subCls}>{t("menu.mdcat")}</Link>
+                <a href="https://zaheen.com.pk/uniprep/" target="_blank" rel="noopener noreferrer" onClick={close} className={subCls}>
+                  {t("menu.uniprep")}
+                </a>
+              </div>
+            )}
+          </div>
 
           <div
             className="mt-3 pt-3"
@@ -152,11 +264,11 @@ const MobileHeader = () => {
                     <p className="text-white font-semibold text-sm truncate">
                       {displayName || "Zaheen User"}
                     </p>
-                   {msisdn && <p className="text-slate-500 text-xs truncate">{msisdn}</p>}
+                    {msisdn && <p className="text-slate-500 text-xs truncate">{msisdn}</p>}
                   </div>
                 </div>
 
-             <Link
+                <Link
                   to="/profile"
                   onClick={close}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-white/07 hover:text-white transition-colors"
@@ -185,7 +297,7 @@ const MobileHeader = () => {
             ) : (
               <>
                 {/* Login always visible */}
-                             <button
+                <button
                   onClick={() => { close(); navigate("/login"); }}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold text-white mb-2 transition-colors hover:bg-white/10"
                   style={{ border: "1px solid rgba(255,255,255,0.2)" }}
@@ -195,17 +307,17 @@ const MobileHeader = () => {
 
                 {/* Subscribe button — hidden for MZA active users */}
                 {!isSubscribed && (
-                                <button
-                  onClick={() => { close(); navigate("/subscribe"); }}
-                  className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{
-                    background: "linear-gradient(135deg,#F0B429,#f59e0b)",
-                    color: "#0f172a",
-                    boxShadow: "0 4px 12px rgba(240,180,41,0.3)",
-                  }}
-                >
-                  {t("auth.subscribe")}
-                </button>
+                  <button
+                    onClick={() => { close(); navigate("/subscribe"); }}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      background: "linear-gradient(135deg,#F0B429,#f59e0b)",
+                      color: "#0f172a",
+                      boxShadow: "0 4px 12px rgba(240,180,41,0.3)",
+                    }}
+                  >
+                    {t("auth.subscribe")}
+                  </button>
                 )}
               </>
             )}

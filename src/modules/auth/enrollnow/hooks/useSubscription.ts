@@ -1,7 +1,24 @@
 import { useEffect, useState } from "react";
+import { trackPinSent } from "@/modules/shared/utils/metaPixel";
 import { sendPin, verifyPin } from "@/modules/shared/services/subscriptionService";
+import { useNavigate } from "react-router-dom";
+import { getUserProfile, ensureUser } from "@/modules/shared/services/profileService";
+
+const detectPortal = (): string | null => {
+  const page = (new URLSearchParams(window.location.search).get("page") ?? "").toLowerCase();
+  if (page.includes("mdcat"))   return "mdcat";
+  if (page.includes("issb"))    return "issb";
+  if (page.includes("uniprep")) return "uniprep";
+  if (page.includes("nat"))     return "nat";
+  if (page.includes("trading")) return "trading";
+  const urlPortal = new URLSearchParams(window.location.search).get("portal");
+  if (urlPortal) return urlPortal;
+  return null;
+};
+
 
 export const useSubscription = () => {
+  const navigate = useNavigate();
   const [msisdn, setMsisdn] = useState("");
   const [pin, setPin] = useState(["", "", "", ""]);
   const [txid, setTxid] = useState("");
@@ -77,10 +94,19 @@ export const useSubscription = () => {
 
     if (urlTransactionId) setTxid(urlTransactionId);
 
-    if (urlPin && urlPin.length === 4) {
+    const urlPage   = params.get("page");
+    const urlSource = params.get("source");
+    if (urlPage)   localStorage.setItem("page_name", urlPage);
+    if (urlSource) localStorage.setItem("source", urlSource);
+
+    if (urlMsisdn && urlMsisdn.trim() !== "" && urlPin && urlPin.length === 4) {
       setPin(urlPin.split(""));
+const u = new URL(window.location.href);
+u.searchParams.delete("pin");
+window.history.replaceState({}, "", u.toString());
     }
   }, []);
+
 
   useEffect(() => {
     if (alert) {
@@ -126,6 +152,7 @@ export const useSubscription = () => {
       if (res.status === "PIN_SENT") {
         setStep("OTP");
         setTimer(30);
+        trackPinSent();
         setAlert({ type: "success", message: "PIN sent successfully" });
       } else {
         setAlert({ type: "error", message: "Failed to send PIN" });
@@ -164,9 +191,39 @@ export const useSubscription = () => {
         subMethod
       );
 
-      if (res.status === "SUCCESS") {
-        // ✅ Redirect immediately to /thankyou — no resetForm() delay before redirect
-        window.location.href = "/thankyou";
+          if (res.status === "SUCCESS") {
+        const portal = detectPortal();
+
+        // No portal → plain thankyou (Google flow, untouched)
+        if (!portal) {
+          window.location.href = "/thankyou";
+          return;
+        }
+
+        try {
+          await ensureUser(formatted);
+          const raw: any = await getUserProfile(formatted);
+          if (!raw) throw new Error("no profile");
+          const profile = raw.user ?? raw;
+          const profileId = Number(profile.id);
+          if (!profileId) throw new Error("no profile id");
+
+          navigate(`/${portal}-profile-setup`, {
+            replace: true,
+            state: {
+              token: "",
+              userId: String(profileId),
+              name: profile.name || "",
+              email: profile.email || raw.user?.email || "",
+              msisdn: formatted,
+              portal,
+              fromMsisdn: true,
+            },
+          });
+        } catch {
+          window.location.href = "/thankyou";
+        }
+        return;
       } else {
         setAlert({ type: "error", message: "Invalid PIN" });
       }

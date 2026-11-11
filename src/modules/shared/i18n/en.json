@@ -3,15 +3,17 @@
     "home": "Home",
     "courses": "Courses",
     "learningHub": "Learning Hub",
-   "intelligence_engine": "Zaheen Intelligence Engine",
+    "skills": "Skills",
+   "intelligence_engine": "Intelligence Engine",
     "ai_tutor": "AI Tutor",
-    "mdcat_command": "MDCAT Command Center",
+   "ai_counselor": "AI Student Advisor",
     "mdcat_prep" : "MDCAT Prep",
-    "test_prep": "Test Prep",
+    "test_prep": " Exam Intelligence",
      "all_test_prep":"All Test Prep",
     "issb":"ISSB",
     "nat":"NAT",
     "mdcat":"MDCAT",
+    "uniprep": "University Preparation",
 
     "practiceCorner": "Practice Corner",
     "boardResults": "Board Results",
@@ -47,6 +49,12 @@
     "webDevelopment": "Web Development",
     "ai": "AI & Automation"
   },
+  "skills": {
+    "technical": "Technical Segment",
+    "women": "Women's Segment",
+    "trading": "Trading & Finance Segment",
+    "comingSoon": "Coming soon"
+  },
   "learning": {
     "practice": "Practice Corner",
     "studyMaterial": "Study Material",
@@ -72,6 +80,7 @@
     "country": "Pakistan",
     "unsubscribeSuccess": "Unsubscribed successfully",
     "unsubscribeFail": "Unsubscribe failed",
+    "scholarships": "Scholarships",
     "copyright": "© 2024 Zaheen Educational Portal"
   },
   "hero": {
@@ -80,7 +89,7 @@
   "highlight": "Prepare. Perform. Succeed.",
   "description": "Psychological Tests • Intelligence Tests • Mock Tests",
   "button": "Start ISSB Prep",
-  "link": "https://z.zaheen.com.pk/issb"
+  "link": "https://zaheen.com.pk/issb/"
 },
     "slide2": {
       "title": "Kindergarten",
@@ -365,7 +374,7 @@
       }
     },
     "quizzes": {
-      "title": "Quizzes",
+      "title": "Practice",
       "tagline": "Answer and win shiny stars!",
       "btnLabel": "Win Stars",
       "modalTitle": "Quizzes",

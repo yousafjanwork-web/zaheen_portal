@@ -5,8 +5,8 @@ import HeroMobile from "@/modules/home/sections/HeroMobile";
 import BrowseByGrade from "@/modules/home/sections/BrowseByGrade";
 import ProfessionalCourses from "@/modules/home/sections/ProfessionalCourses";
 import Pricing from "@/modules/home/sections/Pricing";
-import CTASection from "@/modules/home/sections/CTASection";
-import MDCATBanner from "../sections/MDCATMobileBanner";
+// import MDCATBanner from "../sections/MDCATMobileBanner";
+import PrepExamSlider from "../sections/PrepExamSlider";
 import ZaheenAppMobile from "../sections/ZaheenAppMobile";
 import SummerBreak from "../sections/SummerbreakSlider";
 import { useLocation } from "react-router-dom";
@@ -32,12 +32,10 @@ const HomeMobile = () => {
       <BrowseByGrade />
       <SummerBreak />
       <ProfessionalCourses />
-      <MDCATBanner />
+      {/* <MDCATBanner /> */}
+      <PrepExamSlider />
       <ZaheenAppMobile />
-
-      {/* ✅ Always show — sir didn't say to hide these */}
       <Pricing />
-      <CTASection />
     </>
   );
 

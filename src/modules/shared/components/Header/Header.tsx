@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 
 import CoursesMenu from "@/modules/shared/components/Header/CoursesMenu";
-import LearningMenu from "@/modules/shared/components/Header/LearningMenu";
+import SkillsMenu from "@/modules/shared/components/Header/SkillsMenu";
 import MobileMenu from "@/modules/shared/components/MobileHeader";
 
 import { useAuth } from "@/modules/shared/context/AuthContext";
@@ -162,9 +162,9 @@ const [prepOpen, setPrepOpen] = useState(false);
     onClick={() => { setLearningOpen(!learningOpen); setCoursesOpen(false); setIntelligenceOpen(false); setPrepOpen(false); }}
     className="flex items-center gap-1 hover:text-white/80"
   >
-    {t("menu.learningHub")} <ChevronDown size={16} />
+    {t("menu.skills")} <ChevronDown size={16} />
   </button>
-  <LearningMenu open={learningOpen} onClose={() => setLearningOpen(false)} />
+  <SkillsMenu open={learningOpen} onClose={() => setLearningOpen(false)} />
 </div>
 
 <div className="relative">
@@ -185,9 +185,9 @@ const [prepOpen, setPrepOpen] = useState(false);
                     <Link to="/ai" onClick={() => setIntelligenceOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
                       {t("menu.ai_tutor")}
                     </Link>
-                    <Link to="/mdcat" onClick={() => setIntelligenceOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
-                      {t("menu.mdcat_command")}
-                    </Link>
+                    <a href="https://zaheen.com.pk/ai_counselor/" target="_blank" rel="noopener noreferrer" onClick={() => setIntelligenceOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+  {t("menu.ai_counselor")}
+</a>
                   </div>
                 )}
               </div>
@@ -215,15 +215,18 @@ const [prepOpen, setPrepOpen] = useState(false);
        {t("menu.all_test_prep")}
       </Link>
       <div className="my-1 border-t border-slate-100" />
-      <a href="https://z.zaheen.com.pk/issb" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+      <a href="https://zaheen.com.pk/issb/" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
          {t("menu.issb")}
       </a>
-      <a href="https://z.zaheen.com.pk/nat" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+      <a href="https://zaheen.com.pk/nat/" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
          {t("menu.nat")}
       </a>
       <Link to="/mdcat" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
          {t("menu.mdcat")}
       </Link>
+      <a href="https://zaheen.com.pk/uniprep/" target="_blank" rel="noopener noreferrer" onClick={() => setPrepOpen(false)} className="block px-4 py-2 hover:bg-slate-100 rounded-md text-sm">
+         {t("menu.uniprep")}
+      </a>
     </div>
   )}
 </div>
