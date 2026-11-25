@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HomeScreen } from './components/HomeScreen';
 import { SubjectHub } from './components/SubjectHub';
 import { QuizPlayScreen } from './components/QuizPlayScreen';
@@ -25,9 +26,15 @@ import {
 import { CustomMediaItem, getAllCustomMedia } from './data/customMediaStorage';
 import { sounds } from './utils/audio';
 
-export default function App() {
-  const [currentView, setCurrentView] = useState<'home' | SubjectId | 'quiz' | 'stickers'>('home');
-  const [currentSubject, setCurrentSubject] = useState<SubjectId>('english');
+export default function App({ embedded = false }: { embedded?: boolean }) {
+  const navigate = useNavigate();
+  const paramSubject = new URLSearchParams(window.location.search).get('subject');
+  const initialSubject: SubjectId | null =
+    paramSubject === 'english' || paramSubject === 'urdu' || paramSubject === 'maths'
+      ? (paramSubject as SubjectId)
+      : null;
+  const [currentView, setCurrentView] = useState<'home' | SubjectId | 'quiz' | 'stickers'>(initialSubject ?? 'home');
+  const [currentSubject, setCurrentSubject] = useState<SubjectId>(initialSubject ?? 'english');
   const [currentStage, setCurrentStage] = useState<QuizTestStage | null>(null);
   const [activeQuestions, setActiveQuestions] = useState<QuizQuestion[]>([]);
   const [quizRunId, setQuizRunId] = useState(0);
@@ -226,12 +233,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF7] text-slate-800 flex flex-col font-fun selection:bg-amber-200">
+    <div className={`${embedded ? '' : 'min-h-screen'} bg-[#FFFDF7] text-slate-800 flex flex-col font-fun selection:bg-amber-200 rounded-3xl`}>
 
       {/* Main Viewport Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         {currentView === 'home' && (
           <HomeScreen
+            embedded={embedded}
             onSelectSubject={handleSelectSubject}
             onLaunchActivity={(actId) => {
               if (actId.startsWith('ur-')) handleLaunchFirstStageOfSubject('urdu');
@@ -250,7 +258,7 @@ export default function App() {
         {(currentView === 'english' || currentView === 'urdu' || currentView === 'maths') && (
           <SubjectHub
             subject={currentView}
-            onBack={() => setCurrentView('home')}
+            onBack={() => navigate('/kg')}
             onLaunchStage={handleLaunchStage}
             unlockedStageIndices={unlockedStageIndices}
             completedStageIds={completedStageIds}
@@ -276,7 +284,7 @@ export default function App() {
           <StickerBook
             unlockedStickerIds={unlockedStickerIds}
             totalStars={totalStars}
-            onBack={() => setCurrentView('home')}
+            onBack={() => setCurrentView(currentSubject)}
           />
         )}
       </main>

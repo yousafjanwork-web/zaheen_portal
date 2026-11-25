@@ -1,0 +1,28 @@
+{
+  "id": "/",
+  "name": "Zaheen - Learn, Grow & Succeed",
+  "short_name": "Zaheen",
+  "description": "Zaheen is an all-in-one learning platform for students, kids and professionals.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1565C0",
+  "categories": ["education", "learning", "productivity"],
+  "lang": "en-PK",
+  "icons": [
+    {
+      "src": "/icons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

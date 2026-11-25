@@ -26,3 +26,13 @@ createRoot(document.getElementById("root")!).render(
 requestAnimationFrame(() => {
   setTimeout(hideLoader, 400); // small delay so it doesn't flash away
 });
+
+// Register PWA service worker (production only)
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js", { scope: "/" })
+      .then((reg) => console.log("SW registered:", reg.scope))
+      .catch((err) => console.error("SW registration failed:", err));
+  });
+}

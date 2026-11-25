@@ -1,0 +1,380 @@
+/* ==========================================================================
+   Zaheen KG — subject list, lesson player, quiz. Scoped to .zkg (no globals).
+   ========================================================================== */
+
+.zkg-skeleton {
+  height: 106px;
+  border-radius: var(--zkg-radius);
+  background: linear-gradient(100deg, #eef0f8 30%, #f8f9fe 50%, #eef0f8 70%);
+  background-size: 200% 100%;
+  animation: zkg-shimmer 1.2s linear infinite;
+}
+.zkg-skeleton-tall {
+  height: 360px;
+}
+@keyframes zkg-shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+.zkg-error {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--zkg-coral-soft);
+  color: #b4473a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ---------- Subject page ---------- */
+
+.zkg-subject-head {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 26px;
+}
+@media (min-width: 820px) {
+  .zkg-subject-head {
+    grid-template-columns: auto minmax(0, 1fr) 260px;
+    align-items: center;
+    gap: 24px;
+  }
+}
+.zkg-subject-head .zkg-back {
+  justify-self: start;
+}
+.zkg-subject-head .zkg-h1 {
+  font-size: clamp(26px, 3.4vw, 36px);
+}
+
+.zkg-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zkg-muted);
+}
+.zkg-meter-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #e8ebf5;
+  overflow: hidden;
+}
+.zkg-meter-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--zkg-mint), #7ad9a8);
+  transition: width 0.4s ease;
+}
+
+.zkg-tiles {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+.zkg-tile {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 12px 14px;
+  background: var(--zkg-card);
+  border: 2px solid var(--zkg-line);
+  border-radius: 20px;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.zkg-tile:hover {
+  transform: translateY(-2px);
+  border-color: #cdb8e6;
+  box-shadow: var(--zkg-shadow);
+}
+.zkg-tile.is-done {
+  border-color: #bfe8d3;
+  background: #fbfffd;
+}
+.zkg-tile-glyph {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--zkg-purple-soft);
+  color: var(--zkg-purple);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.zkg-tile-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+.zkg-tile-body small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--zkg-muted);
+}
+.zkg-tile-body strong {
+  font-size: 15px;
+  line-height: 1.3;
+}
+.zkg-tile-body .zkg-ur {
+  font-size: 13px;
+  color: var(--zkg-muted);
+  line-height: 1.7;
+  text-align: left;
+}
+.zkg-tile-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.zkg-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--zkg-muted);
+}
+
+/* ---------- Lesson player ---------- */
+
+.zkg-lesson-wide {
+  max-width: 980px;
+}
+
+.zkg-play-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 18px;
+}
+.zkg-play-dots {
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+@media (max-width: 640px) {
+  .zkg-play-top {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .zkg-play-top .zkg-seg {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+}
+
+.zkg-play {
+  padding: 0;
+  overflow: hidden;
+}
+
+.zkg-teach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(100deg, #f3eafb, #e8f5fd);
+  border-bottom: 1px solid var(--zkg-line);
+}
+.zkg-teach img {
+  width: 44px;
+  height: 48px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 0 2px #fff;
+}
+.zkg-teach.is-speaking img {
+  box-shadow: 0 0 0 3px var(--zkg-sky);
+  animation: zkg-bob 1.1s ease-in-out infinite;
+}
+.zkg-teach > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+.zkg-teach strong {
+  font-size: 15px;
+}
+.zkg-teach span {
+  font-size: 13px;
+  color: var(--zkg-muted);
+}
+
+.zkg-play-body {
+  padding: 26px 20px 30px;
+  animation: zkg-rise 0.3s ease both;
+}
+@media (min-width: 700px) {
+  .zkg-play-body {
+    padding: 34px 40px 40px;
+  }
+}
+
+.zkg-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+}
+
+.zkg-big-text {
+  max-width: 640px;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  line-height: 1.35;
+}
+.zkg-big-text.zkg-ur {
+  line-height: 1.9;
+}
+.zkg-body-text {
+  max-width: 640px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--zkg-muted);
+}
+.zkg-body-text.zkg-ur {
+  font-size: 18px;
+  line-height: 2;
+}
+
+.zkg-count-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zkg-muted);
+}
+
+.zkg-video-wrap {
+  width: 100%;
+  margin: 0;
+}
+.zkg-video {
+  width: 100%;
+  max-height: 460px;
+  border-radius: 22px;
+  background: #0b1020;
+  box-shadow: var(--zkg-shadow);
+}
+.zkg-video-wrap figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--zkg-muted);
+}
+
+/* ---------- Activities (ported components use Tailwind inside this frame) ---------- */
+
+.zkg-act {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.zkg-act-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.zkg-act-title {
+  font-size: clamp(19px, 2.4vw, 24px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.zkg-skip {
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zkg-muted);
+  text-decoration: underline;
+}
+.zkg-act .zkg-actions {
+  justify-content: flex-end;
+}
+
+/* ---------- Quiz ---------- */
+
+.zkg-q {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+.zkg-q-prompt {
+  font-size: clamp(21px, 2.8vw, 28px);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.zkg-q-prompt.zkg-ur {
+  line-height: 1.9;
+}
+.zkg-q-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 680px;
+}
+.zkg-q-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 150px;
+  padding: 14px;
+  border-radius: 22px;
+  border: 3px solid var(--zkg-line);
+  background: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.zkg-q-option:hover:not(:disabled):not(.is-wrong) {
+  transform: translateY(-2px);
+  border-color: var(--zkg-sky);
+  background: #f2fafe;
+}
+.zkg-q-option.is-correct {
+  border-color: var(--zkg-mint);
+  background: var(--zkg-mint-soft);
+}
+.zkg-q-option.is-wrong {
+  border-color: #f4b8b0;
+  background: var(--zkg-coral-soft);
+  opacity: 0.75;
+  animation: zkg-shake 0.35s ease;
+}
+.zkg-q-option:disabled:not(.is-correct) {
+  opacity: 0.45;
+  cursor: default;
+}
+.zkg-q-tick {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--zkg-mint);
+  color: #fff;
+}

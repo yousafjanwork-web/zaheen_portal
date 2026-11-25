@@ -4,6 +4,7 @@ import { getLanguage } from "@/modules/shared/i18n";
 import { useGrades } from "@/modules/shared/hooks/useGrade";
 import { useClassSubjects } from "@/modules/shared/hooks/useClassSubjects";
 import { classSlugFromId } from "@/config/classSlugs";
+import { slugifySubject } from "@/config/subjectSlug";
 import { fetchChapters, fetchVideos } from "@/modules/shared/services/classService";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useVideoProgress } from "@/modules/shared/hooks/Usevideoprogress";
@@ -109,9 +110,10 @@ interface GradeCardProps {
   isUrdu: boolean;
   isLoggedIn: boolean;
   onExplore: (grade: any) => void;
+  onSubjectClick: (grade: any, subject: any) => void;
 }
 
-const GradeCard = ({ grade, index, isUrdu, isLoggedIn, onExplore }: GradeCardProps) => {
+const GradeCard = ({ grade, index, isUrdu, isLoggedIn, onExplore, onSubjectClick }: GradeCardProps) => {
   const { subjects, loading: subjLoading } = useClassSubjects(Number(grade.id));
 
   const subjectList: any[] = useMemo(
@@ -176,7 +178,14 @@ const GradeCard = ({ grade, index, isUrdu, isLoggedIn, onExplore }: GradeCardPro
       {!subjLoading && subjectList.length > 0 && (
         <div className="mg-subj-pills">
           {subjectList.map((s: any) => (
-            <span key={s.id} className="mg-subj-pill">
+            <span
+              key={s.id}
+              className="mg-subj-pill mg-subj-pill-link"
+              role="link"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); onSubjectClick(grade, s); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onSubjectClick(grade, s); } }}
+            >
               {isUrdu ? (s.urdu_name?.trim() || s.name) : s.name}
             </span>
           ))}
@@ -256,6 +265,11 @@ const MiddleGradesView = () => {
     return filtered.length > 0 ? filtered : raw;
   }, [grades68, gradesMid]);
 
+  const handleSubjectClick = (grade: any, subject: any) =>
+    navigate(`/${classSlugFromId(grade.id)}/${slugifySubject(subject.name)}`, {
+      state: { gradeType: grade.name, selectedSubject: subject, classTitle: grade.name },
+    });
+
   const handleExplore = (grade: any) =>
     navigate(`/${classSlugFromId(grade.id)}`, { state: { gradeType: grade.name, classTitle: grade.name } });
 
@@ -312,6 +326,8 @@ const MiddleGradesView = () => {
         .mg-g-prog-label { font-size:.7rem;font-weight:600;color:#64748B; }
 
         /* Subject pills */
+        .mg-subj-pill-link { cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .15s; }
+        .mg-subj-pill-link:hover, .mg-subj-pill-link:focus-visible { background:#1E40AF;color:#fff;border-color:#1E40AF;transform:translateY(-1px);outline:none; }
         .mg-subj-pills { display:flex;flex-wrap:wrap;gap:5px;margin-top:2px; }
         .mg-subj-pill  { font-size:.65rem;font-weight:600;color:#1E40AF;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:100px;padding:3px 9px;white-space:nowrap; }
         .mg-subj-pill-skel { display:inline-block;height:20px;width:52px;background:#F1F5F9;border-radius:100px;animation:mgPulse 1.4s ease-in-out infinite; }
@@ -408,6 +424,7 @@ const MiddleGradesView = () => {
                 isUrdu={isUrdu}
                 isLoggedIn={isLoggedIn}
                 onExplore={handleExplore}
+                onSubjectClick={handleSubjectClick}
               />
             ))}
           </div>

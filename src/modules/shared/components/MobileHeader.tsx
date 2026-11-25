@@ -6,7 +6,7 @@ const logo = "https://cdn.zaheen.com.pk/zaheen-web-img/ZaheenLogo.png";
 import { t, setLanguage, getLanguage } from "@/modules/shared/i18n";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 import { useUserDisplayName, clearDisplayNameCache } from "@/modules/shared/hooks/useUserDisplayName";
-import { classSlugFromId } from "@/config/classSlugs";
+
 import { SKILL_SEGMENTS } from "@/modules/shared/utils/skillsSegments";
 
 type SectionKey = "courses" | "skills" | "ai" | "prep" | null;
@@ -151,7 +151,7 @@ const MobileHeader = () => {
 
                 <button
                   onClick={() => {
-                    navigate(`/${classSlugFromId(1)}`, { state: { gradeType: "kg" } });
+                    navigate("/kg");
                     close();
                   }}
                   className={`${subCls} w-full text-left`}

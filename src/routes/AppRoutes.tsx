@@ -12,7 +12,7 @@
  * which redirects to /login if not authenticated.
  */
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 
 // ── Layouts ──
@@ -54,6 +54,7 @@ import AiTutorMobile      from "@/modules/aiTutor/pages/AiTutorMobile";
 import SecondaryQuizFlow  from "../modules/assessments/pages/SecondaryQuizFlow";
 import PrimaryQuizFlow    from "../modules/assessments/pages/PrimaryQuizFlow";
 import { KgQuizApp }      from "../kgquizz";
+import { KgLayout, KgHomePage, ChapterPage, LessonPlayPage, KgTodayPage } from "../src/kg";
 import QuizRouter         from "@/modules/courses/pages/QuizRouter";
 
 // ── Grade / Subject routers ──
@@ -84,6 +85,7 @@ import SetupGradeCoursePage from "../modules/lms/pages/setup/SetupGradeCoursePag
 import SetupAddChildPage    from "../modules/lms/pages/setup/SetupAddChildPage";
 import DashboardPage        from "../modules/lms/pages/dashboard/DashboardPage";
 import SetupGuard           from "../modules/lms/components/SetupGuard";
+import ProtectedRoute       from "../routes/ProtectedRoute";
 import SocialCallbackPage       from "../modules/auth/pages/SocialCallbackPage";
 import SocialAuthPage           from "../modules/auth/pages/SocialAuthPage";
 import SocialProfileSetupPage   from "../modules/auth/pages/SocialProfileSetupPage";
@@ -143,8 +145,18 @@ const AppRoutes = () => {
           <Route path="/faqzaheen"                   element={<><TitleSetter title="Zaheen | FAQ" /><FAQ /></>} />
           <Route path="/thankyou"                    element={<><TitleSetter title="Zaheen | Thank You" /><ThankYouPage /></>} />
           <Route path="/privacy"                     element={<><TitleSetter title="Zaheen | Privacy Policy" /><PrivacyPolicy /></>} />
+          <Route path="/grade-view/kg" element={<Navigate to="/kg" replace />} />
           <Route path="/grade-view/:type"            element={<><TitleSetter title="Zaheen | Grades" /><GradesView /></>} />
           <Route path="/all-professional-courses"    element={<><TitleSetter title="Zaheen | Professional Courses" /><AllProfessionalCourses /></>} />
+          <Route path="/kg" element={<KgLayout />}>
+            <Route index element={<><TitleSetter title="Zaheen | KG" /><KgHomePage /></>} />
+            <Route path="today" element={<><TitleSetter title="Zaheen | KG Today" /><KgTodayPage /></>} />
+            <Route element={<ProtectedRoute />}>
+            <Route path="chapter/:chapterId" element={<><TitleSetter title="Zaheen | KG" /><ChapterPage /></>} />
+            <Route path="lesson/:slug" element={<><TitleSetter title="Zaheen | KG Lesson" /><LessonPlayPage /></>} />
+            </Route>
+          
+          </Route>
           <Route path="/kg/quiz" element={<><TitleSetter title="Zaheen | KG Quiz" /><KgQuizApp /></>} />
           <Route path="/:classSlug"                  element={<ClassSubjectsRouter />} />
           <Route path="/:classSlug/:subjectSlug"     element={<SubjectLecturesRouter />} />

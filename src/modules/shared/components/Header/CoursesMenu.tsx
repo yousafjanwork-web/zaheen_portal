@@ -2,7 +2,6 @@ import React from "react";
 import { BookOpen } from "lucide-react";
 import { t, getLanguage } from "@/modules/shared/i18n";
 import { useNavigate } from "react-router-dom";
-import { classSlugFromId } from "@/config/classSlugs";
 
 interface CoursesMenuProps {
   open: boolean;
@@ -24,7 +23,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({ open, onClose }) => {
   const items: GradeItem[] = [
     {
       label: t("courses.kg"),
-      onClick: () => navigate(`/${classSlugFromId(1)}`, { state: { gradeType: "kg" } }),
+      onClick: () => navigate("/kg"),
     },
     { link: "/grade-view/1-5", label: t("courses.grade1to5") },
     { link: "/grade-view/6-8", label: t("courses.grade6to8") },

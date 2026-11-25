@@ -60,9 +60,24 @@ const Spinner = () => (
 
 const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate       = useNavigate();
+  const rawNavigate = useNavigate();
   const location       = useLocation();
   const { loginWithUser } = useAuth();
+
+  // Sent by ProtectedRoute: where the user wanted to go + the "log in first" message.
+  const redirectState = location.state as
+    | { from?: string | { pathname?: string; search?: string }; message?: string }
+    | null;
+  const loginMessage = "";
+  const returnTo = (() => {
+    const f = redirectState?.from;
+    if (!f) return null;
+    if (typeof f === "string") return f;
+    return f.pathname ? `${f.pathname}${f.search ?? ""}` : null;
+  })();
+  // After a normal login, go back to the page the user wanted instead of the dashboard.
+  const navigate = (to: string, opts?: { replace?: boolean }) =>
+    rawNavigate(to === "/dashboard" && returnTo ? returnTo : to, opts);
 
 
   const [mode,    setMode]    = useState<LoginMode>("CREDENTIALS");
@@ -415,7 +430,8 @@ const routeAfterLogin = async (profile: UserProfile, resolvedMsisdn: string, tok
             <p className="text-slate-400 text-sm mt-2">Choose how you want to log in</p>
           </div>
 
-       {/* Google sign-in */}
+
+          {/* Google sign-in */}
           <div className="mb-6">
             <button
               onClick={handleGoogleLogin}

@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { classSlugFromId } from "@/config/classSlugs";
+import { slugifySubject } from "@/config/subjectSlug";
 
 
 const GradeCard = ({ grade, navigate, type }: any) => {
@@ -30,7 +31,27 @@ const GradeCard = ({ grade, navigate, type }: any) => {
 
       <div className="flex flex-wrap gap-2 text-xs">
         {grade.subjects.map((s: string, i: number) => (
-          <span key={i} className="px-3 py-1 bg-slate-100 rounded-lg">
+          <span
+            key={i}
+            role="link"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/${classSlugFromId(grade.id)}/${slugifySubject(s)}`, {
+                state: { gradeType: type === "k-12" ? undefined : type },
+              });
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/${classSlugFromId(grade.id)}/${slugifySubject(s)}`, {
+                  state: { gradeType: type === "k-12" ? undefined : type },
+                });
+              }
+            }}
+            className="px-3 py-1 bg-slate-100 rounded-lg cursor-pointer transition-colors hover:bg-primary hover:text-white focus-visible:bg-primary focus-visible:text-white outline-none"
+          >
             {s}
           </span>
         ))}

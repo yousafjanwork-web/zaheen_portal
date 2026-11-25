@@ -11,6 +11,7 @@ import urduImg from '../assets/images/zaheen_urdu_garden_1790533270040.jpg';
 import mathsImg from '../assets/images/zaheen_maths_playground_1790533282644.jpg';
 
 interface HomeScreenProps {
+  embedded?: boolean;
   onSelectSubject: (subject: SubjectId) => void;
   onLaunchActivity: (activity: ActivityTypeId) => void;
   onViewStickers: () => void;
@@ -24,6 +25,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onViewStickers,
   onOpenMediaStudio,
   totalStars,
+  embedded = false,
 }) => {
   const speakWelcome = () => {
     sounds.playPop();
@@ -41,8 +43,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   return (
-    <div className="space-y-8 sm:space-y-12 pb-16">
-      {/* Hero Welcome Banner */}
+    <div className={embedded ? 'space-y-6 pb-4' : 'space-y-8 sm:space-y-12 pb-16'}>
+      {!embedded && (
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-400 via-orange-300 to-amber-300 p-6 sm:p-10 shadow-lg border-4 border-amber-200">
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center">
           <div className="md:col-span-7 space-y-4">
@@ -104,13 +106,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </div>
         </div>
-      </section>
+            </section>
+      )}
+
+      {/* Subject Selection Section */}
 
       {/* Subject Selection Section */}
       <section className="space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Choose Your Subject
+            Start Your Quizz
           </h2>
           <p className="text-base sm:text-lg text-slate-600 font-medium">
             Tap a colorful card below to practice English, Urdu, or Maths!
@@ -261,7 +266,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </section>
 
-      {/* Quick Launch Fun Activities */}
+      {!embedded && (
       <section className="bg-amber-100/60 rounded-3xl p-6 sm:p-8 border-2 border-amber-200 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -334,7 +339,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </div>
           </button>
         </div>
-      </section>
+            </section>
+      )}
+
+      {/* Parent & Teacher Personalization Studio Banner */}
 
       {/* Parent & Teacher Personalization Studio Banner */}
       <section className="hidden">

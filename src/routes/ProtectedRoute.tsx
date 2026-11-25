@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/modules/shared/context/AuthContext";
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ message }: { message?: string }) => {
   const location = useLocation();
   const { isLoggedIn } = useAuth();
 
@@ -11,7 +11,7 @@ const ProtectedRoute = () => {
     <Navigate 
       to="/login" 
       replace 
-      state={{ from: location }}
+      state={{ from: location, message }}
     />
   );
 };

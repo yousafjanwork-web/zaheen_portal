@@ -71,7 +71,7 @@ const ICON_HINT_MAP: Record<string, React.ElementType> = {
   Landmark, Globe, Cpu, Music, Palette, Gamepad2, Bot, Trophy,
 };
 
-const getKGMeta = (name: string, iconHint?: string): KGMeta => {
+export const getKGMeta = (name: string, iconHint?: string): KGMeta => {
   const hintIcon = iconHint ? ICON_HINT_MAP[iconHint] : undefined;
   const n = name.toLowerCase();
 
@@ -123,7 +123,7 @@ interface SubjectCardProps {
   thumbnailUrl?: string;
 }
 
-const SubjectCard = ({ meta, index, title, tagline, btnLabel, isRtl, onClick, badge, customBtn, thumbnailUrl }: SubjectCardProps) => {
+export const SubjectCard = ({ meta, index, title, tagline, btnLabel, isRtl, onClick, badge, customBtn, thumbnailUrl }: SubjectCardProps) => {
   const Icon    = meta.icon;
   const profile = getProfile(index);
   const dir     = isRtl ? "rtl" : "ltr";
